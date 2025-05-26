@@ -122,16 +122,15 @@ Response: 201 OK
 "message":"Password has been reset successfully",
 }
 
-<!--
 🛒 Products
 
-➡️ POST /products
+➡️ POST /products/
 
 Description: Create a new product (admin only)
 
 Headers:
 
-Authorization: Bearer <JWT_TOKEN>
+Authorization: Bearer <JWT_TOKEN> ADMIN TOKEN ONLY
 
 Form Data (multipart/form-data):
 
@@ -141,9 +140,15 @@ description: string
 
 price: number
 
+stock: number
+
 category: string (Category ID)
 
+sizes: array of strings ["XS", ...]
+
 images: array of image files (max 5)
+
+colors: array of strings ["#ssdfsfsfs" ...]
 
 Response: 201 Created
 
@@ -156,6 +161,9 @@ Response: 201 Created
 "price": 30,
 "images": [...],
 "category": { ... },
+"stock": 10,
+"isActive:true,
+"sizes": ["XS" ,"XL"...]
 "createdAt": "...",
 "updatedAt": "..."
 }
@@ -167,37 +175,189 @@ Description: Fetch all products
 
 Response: 200 OK
 
-[
 {
-"_id": "productId",
-"name": "Shirt",
-"description": "Cotton shirt",
-...
+"total": 15,
+"page": 1,
+"pages": 2,
+"limit": 10,
+"status": "success",
+"data": [
+{
+"\_id": "683452b9ff6e0257d95174d0",
+"name": "New Test Product2",
+"description": "A nice product",
+"colors": [
+"red",
+"blue"
+],
+"sizes": [
+"XL",
+"XS"
+],
+"price": 123,
+"category": "68335c83c02fdcea12545e06",
+"images": [
+{
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1748259513/products/rtt6kjgsjprhzhi0oilu.jpg",
+"publicId": "products/rtt6kjgsjprhzhi0oilu",
+"_id": "683452b9ff6e0257d95174d1"
+},
+{
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1748259512/products/ifbp52cos2daippg4ovy.jpg",
+"publicId": "products/ifbp52cos2daippg4ovy",
+"_id": "683452b9ff6e0257d95174d2"
+},
+{
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1748259513/products/ll30yx59xadinyrjyolm.jpg",
+"publicId": "products/ll30yx59xadinyrjyolm",
+"_id": "683452b9ff6e0257d95174d3"
 }
+],
+"stock": 0,
+"isActive": true,
+"averageRating": 0,
+"numReviews": 0,
+"createdAt": "2025-05-26T11:38:33.035Z",
+"updatedAt": "2025-05-26T11:38:33.035Z",
+"\_\_v": 0
+},
 ]
+}
 
-📂 Categories
+➡️ GET /products/productId
 
-➡️ GET /categories
+Description: Fetch single product
 
-Description: Retrieve all product categories
-
-➡️ POST /categories
-
-Description: Create a new category (admin only)
-
-Request Body:
+Response: 200 OK
 
 {
-"name": "Trousers",
-"description": "Optional description"
+"status": "success",
+"data": {
+"\_id": "683452b9ff6e0257d95174d0",
+"name": "New Test Product2",
+"description": "A nice product",
+"colors": [
+"red",
+"blue"
+],
+"sizes": [
+"XL",
+"XS"
+],
+"price": 123,
+"category": "68335c83c02fdcea12545e06",
+"images": [
+{
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1748259513/products/rtt6kjgsjprhzhi0oilu.jpg",
+"publicId": "products/rtt6kjgsjprhzhi0oilu",
+"_id": "683452b9ff6e0257d95174d1"
+},
+{
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1748259512/products/ifbp52cos2daippg4ovy.jpg",
+"publicId": "products/ifbp52cos2daippg4ovy",
+"_id": "683452b9ff6e0257d95174d2"
+},
+{
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1748259513/products/ll30yx59xadinyrjyolm.jpg",
+"publicId": "products/ll30yx59xadinyrjyolm",
+"_id": "683452b9ff6e0257d95174d3"
+}
+],
+"stock": 0,
+"isActive": true,
+"averageRating": 0,
+"numReviews": 0,
+"createdAt": "2025-05-26T11:38:33.035Z",
+"updatedAt": "2025-05-26T11:38:33.035Z",
+"\_\_v": 0
+}
+}
+
+➡️ PATCH /products/productId
+
+Description: Update a product
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN> ADMIN TOKEN ONLY
+
+Form Data (multipart/form-data):
+
+name: string (optional)
+
+description: string (optional)
+
+price: number (optional)
+
+stock: number (optional)
+
+category: string (Category ID) (optional)
+
+sizes: array of strings ["XS", ...] (optional)
+
+images: array of image files (max 5) (optional)you can add more if not more than 5
+
+colors: array of strings ["#ssdfsfsfs" ...] (optional)
+
+removeImageIds: array of string ["publicId", "publicId",...] (optional) pictures to remove
+
+Response: 200 OK
+
+{
+"status": "success",
+"message": "Product updated",
+"data": {
+"\_id": "683452b9ff6e0257d95174d0",
+"name": "New Test Product2",
+"description": "A nice product (UPDATED)",
+"colors": [
+"red",
+"blue"
+],
+"sizes": [
+"XL",
+"XS"
+],
+"price": 123,
+"category": "68335c83c02fdcea12545e06",
+"images": [
+{
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1748259513/products/rtt6kjgsjprhzhi0oilu.jpg",
+"publicId": "products/rtt6kjgsjprhzhi0oilu",
+"_id": "683452b9ff6e0257d95174d1"
+},
+...
+],
+"stock": 0,
+"isActive": true,
+"averageRating": 0,
+"numReviews": 0,
+"createdAt": "2025-05-26T11:38:33.035Z",
+"updatedAt": "2025-05-26T23:06:14.158Z",
+"\_\_v": 0
+}
+}
+
+➡️ DELETE /products/productId
+
+Description: Delete single product
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN> ADMIN TOKEN ONLY
+
+Response: 200 OK
+
+{
+"status": "success",
+"message": "Product deleted successfully"
 }
 
 🛒 Cart
 
-➡️ POST /cart
+➡️ POST /cart/
 
-Description: Add a product to user's cart
+Description: Add product to user's cart
 
 Headers:
 
@@ -206,16 +366,308 @@ Authorization: Bearer <JWT_TOKEN>
 Request Body:
 
 {
-"productId": "productId",
-"quantity": 2
+"productId": "productId"
 }
 
 Response: 200 OK
 
 {
+"status": "success",
 "message": "Item added to cart",
-"cart": { ... }
+"data": {
+"\_id": "6834cb306f3bcfee44826d7e",
+"user": "6833293e29b457ee82505c26",
+"items": [
+{
+"product": "682e79596418bd6a5ed71b1e",
+"quantity": 2,
+"_id": "6834f5c6da616b0fa646e296"
 }
+],
+"createdAt": "2025-05-26T20:12:32.713Z",
+"updatedAt": "2025-05-26T23:14:18.772Z",
+"\_\_v": 2
+}
+}
+
+➡️ GET /cart/
+
+Description: Get products in cart
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Response: 200 OK
+
+{
+"status": "success",
+"message": "Cart retrieved successfully",
+"data": [
+{
+"product": {
+"colors": [],
+"sizes": [],
+"\_id": "682e79596418bd6a5ed71b1e",
+"name": "Sports Water Bottle",
+"description": "Leak-proof and BPA-free water bottle.",
+"price": 12.49,
+"brand": "HydroLife",
+"images": [
+{
+"url": "https://via.placeholder.com/300x300.png?text=Water+Bottle",
+"publicId": "water_bottle_001",
+"_id": "682e79596418bd6a5ed71b1f"
+}
+],
+"stock": 196,
+"isActive": true,
+"averageRating": 4.4,
+"numReviews": 60,
+"createdAt": "2025-05-22T01:09:45.792Z",
+"updatedAt": "2025-05-22T16:28:38.666Z",
+"\_\_v": 0
+},
+"quantity": 2,
+"\_id": "6834f5c6da616b0fa646e296"
+}
+],
+"totalItems": 1,
+"page": 1,
+"Pages": 1
+}
+
+➡️ DELETE /cart/productId
+
+Description: Remove product from cart
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Response: 200 OK
+
+{
+"status": "success",
+"message": "Item removed from cart"
+}
+
+➡️ DELETE /cart/clear
+
+Description: Remove all products from cart
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Response: 200 OK
+
+{
+"status": "success",
+"message": "Cart cleared"
+}
+
+📝Wishlist
+
+➡️ POST /wishlist/
+
+Description: Add product to user's wishlist
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Request Body:
+
+{
+"productId": "productId"
+}
+
+Response: 200 OK
+
+{
+"status": "success",
+"message": "Added to wishlist"
+}
+
+➡️ GET /wishlist/
+
+Description: Get products from wishlist
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Response: 200 OK
+
+{
+"status": "success",
+"page": 1,
+"limit": 10,
+"total": 1,
+"pages": 1,
+"data": [
+{
+"_id": "682e79596418bd6a5ed71b1e",
+"addedAt": "2025-05-26T23:28:10.926Z"
+}
+]
+}
+
+➡️ DELETE /wishlist/productId
+
+Description: Remove product from wishlist
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Response: 200 OK
+
+{
+"status": "success",
+"message": "Removed from wishlist"
+}
+
+➡️ DELETE /cart/clear
+
+Description: Remove all products from cart
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Response: 200 OK
+
+{
+"status": "success",
+"message": "Wishlist cleared"
+}
+
+📂 Categories
+
+➡️ GET /categories/
+
+Description: Retrieve all product categories ADMIN ONLY
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Response: 200 OK
+
+{
+"status": "success",
+"data": [
+{
+"_id": "68335c83c02fdcea12545e07",
+"name": "Shorts",
+"description": "Casual shorts",
+"parentCategory": null,
+"createdAt": "2025-05-25T18:08:03.875Z",
+"updatedAt": "2025-05-25T18:08:03.875Z",
+"__v": 0
+},
+.....
+]
+}
+
+➡️ POST /categories
+
+Description: Create a new category (admin only)
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Request Body:
+
+{
+"name":"Shots",
+"description":"Category for Shorts"
+}
+
+Response: 201 CREATED
+
+{
+"name": "Shots",
+"description": "Category for Shorts",
+"parentCategory": null,
+"\_id": "6834fd27f5f4b570292e1165",
+"createdAt": "2025-05-26T23:45:43.280Z",
+"updatedAt": "2025-05-26T23:45:43.280Z",
+"\_\_v": 0
+}
+
+➡️ GET /categories/categoryId
+
+Description: Get a single categogy (admin only)
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Response: 200 OK
+
+{
+"status": "success",
+"data": {
+"\_id": "68335c83c02fdcea12545e09",
+"name": "Shirts",
+"description": "Formal or casual shirts",
+"parentCategory": null,
+"createdAt": "2025-05-25T18:08:03.876Z",
+"updatedAt": "2025-05-25T18:08:03.876Z",
+"\_\_v": 0
+}
+}
+
+➡️ PATCH/categories/
+
+Description: update a category (admin only)
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Request Body:
+
+{
+"name":"Shots",
+"description":"Category for Shorts"
+}
+
+Response: 200 OK
+
+{
+"status": "success",
+"data": {
+"\_id": "68335c83c02fdcea12545e09",
+"name": "Tee Shirts",
+"description": "Formal or casual shirts",
+"parentCategory": null,
+"createdAt": "2025-05-25T18:08:03.876Z",
+"updatedAt": "2025-05-26T23:53:41.545Z",
+"\_\_v": 0
+}
+}
+
+➡️ DELETE /categories/categoryId
+
+Description: Remove a category
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+Response: 200 OK
+
+{
+"status": "success",
+"message": "Category deleted successfully"
+}
+
+<!--
 
 🧾 Orders
 
