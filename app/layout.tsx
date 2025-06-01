@@ -5,10 +5,10 @@ import Nav from "./ui/nav";
 
 
 const manrop = Manrope({
-  variable:"--font-manrop",
-  style:['normal']
-})
-
+  variable: '--font-manrop',
+  style: ['normal'],
+  subsets: ['latin'], 
+});
 
 export const metadata: Metadata = {
   title: "E-come",
