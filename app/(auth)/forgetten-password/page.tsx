@@ -43,7 +43,7 @@ export default function Forgotten() {
           label="Email"
           name="email"
         />
-        <Submit type="idle" />
+        <Submit type="idle" submitType='sign-in' />
       </form>
     </div>
   );
