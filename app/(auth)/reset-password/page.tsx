@@ -38,7 +38,7 @@ export default function ResetPassword() {
           name="password"
           style="mt-3"
         />
-        <Submit type="submitted"/>
+        <Submit type="submitted" submitType='sign-in'/>
       </form>
     </div>
   );

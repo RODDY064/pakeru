@@ -10,7 +10,7 @@ export default function Submit({
   subStyle
 }: {
   type: "loading" | "idle" | "submitted" | "error";
-  submitType: "otp" | "sign-in" | "sign-up"| "in-touch";
+  submitType?: "otp" | "sign-in" | "sign-up"| "in-touch";
   subStyle?:String
 }) {
   const getButtonText = () => {
