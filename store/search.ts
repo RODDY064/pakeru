@@ -1,8 +1,6 @@
 import { type StateCreator } from "zustand";
 import { Store } from "./store";
 
-
-
 export type SearchStore = {
   navSearch: string;
   setNavSearch: (word: string) => void;
@@ -10,9 +8,11 @@ export type SearchStore = {
   setProductSearch: () => void;
   curtain: "show" | "hide";
   navContent: "mens" | "search" | "new in" | "outlet" | "idle";
-  curtainState: (curt: "mens" | "search" | "new in" | "outlet" | "idle") => void;
-  hideCurtain:()=>void,
-  showCurtain:()=>void
+  curtainState: (
+    curt: "mens" | "search" | "new in" | "outlet" | "idle"
+  ) => void;
+  hideCurtain: () => void;
+  showCurtain: () => void;
 };
 
 export const useSearch: StateCreator<
@@ -30,13 +30,16 @@ export const useSearch: StateCreator<
       navSearch: word,
     }),
   setProductSearch: () => {},
-  curtainState:(curt)=> set({
-    navContent:curt
-  }),
-  hideCurtain:()=> set({
-    curtain:'hide'
-  }),
-  showCurtain:()=>set({
-    curtain:"show"
-  })
+  curtainState: (curt) =>
+    set({
+      navContent: curt,
+    }),
+  hideCurtain: () =>
+    set({
+      curtain: "hide",
+    }),
+  showCurtain: () =>
+    set({
+      curtain: "show",
+    }),
 });

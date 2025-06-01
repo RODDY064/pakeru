@@ -7,7 +7,7 @@ import React from "react";
 import CartContainer from "./cartContainer";
 
 export default function Modal() {
-  const { modal, closeModal, modalDisplay } = useBoundStore();
+  const { modal, closeModal, modalDisplay , cartItems } = useBoundStore();
 
   return (
     <div
@@ -22,7 +22,7 @@ export default function Modal() {
         initial={{ opacity: 0 }}
         animate={modal ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="w-full  flex justify-end z-20 pt-12 relative px-0 md:p-[10px] ">
+        className="w-full h-full  flex justify-end z-20 mt-12 relative px-0 md:p-[10px] ">
         <motion.div
           initial={{ x: 500, opacity: 0 }}
           animate={modal ? { x: 0, opacity: 1 } : { x: 500, opacity: 0 }}
@@ -32,7 +32,7 @@ export default function Modal() {
             damping: 30,
             delay: modal ? 0.1 : 0,
           }}
-          className="w-[95%] md:w-3/5 lg:w-[35%] h-[95vh] md:h-[98vh] pb-4 bg-white pt-10  overflow-hidden relative  flex-col flex rounded">
+          className="w-[95%] md:w-3/5 xl:w-[35%] h-[95%] md:h-[98%] pb-4 bg-white pt-10  overflow-hidden relative  flex-col flex rounded">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={modal ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -45,8 +45,8 @@ export default function Modal() {
               <p className="font-manrop text-xl font-black">
                 {modalDisplay === "cart" ? "Your Cart" : "Your Bookmark"}
               </p>
-              <div className="absolute top-[-1.2rem] right-[-1rem] size-6 border  border-red-500 rounded-full flex items-center justify-center">
-                <p className="text-0 text-xs font-manrop font-bold">2</p>
+              <div className="absolute top-[-1.2rem] right-[-1rem] size-6 border  border-red-600 rounded-full flex items-center justify-center">
+                <p className="text-0 text-xs font-manrop font-bold">{cartItems.length}</p>
               </div>
             </div>
             <div onClick={closeModal}>
@@ -66,7 +66,7 @@ export default function Modal() {
               delay: modal ? 0.25 : 0,
               duration: 0.2,
             }}
-            className="w-full border-t-[0.5px] mt-4 py-6  px-4 md:p-6 overflow-y-scroll">
+            className="w-full min-h-[700px] border-t-[0.5px] mt-4 py-6  px-4 md:p-6 overflow-y-scroll">
             <CartContainer />
           </motion.div>
            <motion.div
@@ -76,7 +76,7 @@ export default function Modal() {
               delay: modal ? 0.25 : 0,
               duration: 0.2,
             }}
-            className="w-full    left-0 h-fit border-t-2 border-black/10 text-black px-6 py-3  bg-white z-10">
+            className="w-full   h-fit pb-10 border-t-2  border-black/10 text-black px-6 py-3  bg-white z-10">
               <div className="flex justify-between items-center">
                 <p className="font-manrop font-black text-md md:text-lg">SUBTOTAL</p>
                  <p className="font-manrop font-black  text-black/50 text-md md:text-lg">GHS 12000</p>

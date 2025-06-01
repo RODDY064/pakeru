@@ -53,7 +53,7 @@ export default function Filter() {
         <>
           <div
             className={cn(
-              "fixed w-full top-0 h-screen bg-black/60 backdrop-blur-sm z-[99] invisible opacity-0",
+              "fixed w-full top-0 h-screen bg-black/60 backdrop-blur-sm z-[90] invisible opacity-0",
               {
                 "visible opacity-100": filter,
               }

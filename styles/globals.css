@@ -17,9 +17,31 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.nav-slider {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+.nav-slider::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+
+.nav-slider  {
+  overflow-x: auto;
+  scroll-behavior: smooth; /* native smooth scrolling */
+  display: flex;
+   -webkit-overflow-scrolling: touch;
+}
+
+
+.text-overlay {
+  clip-path: circle(0.1% at 0 100%);
+}
+
+/* 
 .vail {
   transition: opacity .2s cubic-bezier(.4,0,.6,1) 80ms,visibility .2s step-end 10ms;
 }
-
+ */
 
 
