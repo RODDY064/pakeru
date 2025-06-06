@@ -7,9 +7,10 @@ import { CartStore, useCartStore } from "./cart";
 import { ModalStore, useModalStore } from "./modal";
 import { ImgSlideStore, useSliderStore } from "./slider";
 import { UserStore, useUserStore } from "./user";
+import { GeneralStore, useGenralStore } from "./general";
 
 
-export type Store = ScrollStore & SearchStore & FilterStore & CartStore & ModalStore & ImgSlideStore & UserStore
+export type Store = ScrollStore & SearchStore & FilterStore & CartStore & ModalStore & ImgSlideStore & UserStore & GeneralStore
 
 
 export const useBoundStore = create<Store>()(
@@ -20,7 +21,8 @@ export const useBoundStore = create<Store>()(
       ...useCartStore(...a),
       ...useModalStore(...a),
       ...useSliderStore(...a),
-      ...useUserStore(...a)
+      ...useUserStore(...a),
+      ...useGenralStore(...a)
     }))
 )
 

@@ -57,7 +57,7 @@ export default function Submit({
   return (
     <div
       className={cn(
-        "w-full h-11 mt-8 rounded font-manrop font-semibold text-md flex items-center justify-center overflow-hidden border-[0.5px]",
+        "w-full h-11 mt-8 rounded font-avenir font-semibold text-md flex items-center justify-center overflow-hidden border-[0.5px]",
         {
           "border-gray-400 bg-black hover:bg-black/5 hover:border-black text-white hover:text-black cursor-pointer":
             type === "idle",
@@ -70,28 +70,28 @@ export default function Submit({
         <input
           type="submit"
           value={getButtonText()}
-          className="w-full h-full cursor-pointer font-manrop"
+          className="w-full h-full cursor-pointer font-avenir"
         />
       )}
 
       {type === "loading" && (
         <div className="flex gap-3 items-center justify-center">
           <Image src="/icons/loader.svg" width={20} height={20} alt="loader" />
-          <p className="text-sm font-manrop text-black/50">{getLoadingText()}</p>
+          <p className="text-sm font-avenir text-black/50">{getLoadingText()}</p>
         </div>
       )}
 
       {type === "submitted" && (
         <div className="flex gap-3 items-center justify-center">
           <Image src="/icons/tick.svg" width={24} height={20} alt="tick" />
-          <p className="text-sm font-manrop text-white">{getSuccessText()}</p>
+          <p className="text-sm font-avenir text-white">{getSuccessText()}</p>
         </div>
       )}
 
       {type === "error" && (
         <div className="flex gap-3 items-center justify-center">
           <Image src="/icons/cancel-w.svg" width={14} height={14} alt="cancel" />
-          <p className="text-sm font-manrop text-white">Something went wrong. Try again</p>
+          <p className="text-sm font-avenir text-white">Something went wrong. Try again</p>
         </div>
       )}
     </div>

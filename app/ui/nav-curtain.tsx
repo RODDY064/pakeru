@@ -19,8 +19,6 @@ gsap.registerPlugin(ScrollToPlugin);
 const navImages = [
   "/images/img4.png",
   "/images/img7.png",
-  "/images/im3.png",
-  "/images/nm2.png",
 ];
 
 export default function NavCurtain({
@@ -28,11 +26,13 @@ export default function NavCurtain({
   animate,
   isSearching,
   handleSearchBlur,
+  handleHoverEnd
 }: {
   type: "search" | "nav" | "mobile";
   animate?: { container: any; content: any };
   isSearching?: boolean;
   handleSearchBlur?: any;
+  handleHoverEnd?:any
 }) {
   const { navSearch, curtain } = useBoundStore();
 
@@ -97,19 +97,26 @@ export default function NavCurtain({
         <motion.div
           variants={animate?.container}
           className={cn(
-            " absolute w-full h-0   max-sm:hidden flex-none  overflow-hidden   md:top-[2.8rem] left-0  z-[-10]"
+            " absolute w-full h-0   max-sm:hidden flex-none  overflow-hidden   md:top-[2.8rem] left-0  "
           )}
         >
           <motion.div className="bg-white overflow-hidden  relative mt-4  z-20 text-black  border-t-black border-t-[0.5px] h-fit">
             <motion.div variants={animate?.content}>
-              <div className="w-full   flex items-start">
-                <div className="w-[62%] px-4 md:px-8  py-8 h-full flex-none">
-                  <p className="pb-6  text-sm font-manrop md:text-lg  uppercase font-black  text-black px-[2px]">
+              <div className="w-full   flex items-start overflow-hidden">
+                <div className="w-[62%] px-4 md:px-8  py-4 h-full flex-none">
+                  <div className="w-full flex justify-between">
+                    <p className="pb-6  text-sm font-avenir md:text-lg  uppercase font-black  text-black px-[2px]">
                     NEW IN
                   </p>
+                  <p 
+                  onClick={()=>handleHoverEnd()}
+                  className="text-red-500/50 hover:text-red-500 cursor-pointer text-sm font-bold font-avenir">
+                   CLOSE MODAL
+                  </p>
+                  </div>
                   <NavSlider />
                 </div>
-                <div className="w-[38%] h-[530px] lg:h-[685px] items-end  grid md:grid-cols-1 xl:grid-cols-2">
+                <div className="w-[38%] min-h-[538px] items-end  grid md:grid-cols-1 xl:grid-cols-2">
                   {navImages.map((item, index) => (
                     <motion.div
                       key={index}
@@ -134,7 +141,7 @@ export default function NavCurtain({
                         />
                       </motion.div>
 
-                      <div className="w-full h-full absolute top-0 flex flex-col items-center pb-4 justify-end">
+                      <div className="w-full h-full absolute bg-black/20 top-0 flex flex-col items-center pb-4 justify-end">
                         <motion.div
                           variants={textMovement}
                           className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
@@ -145,7 +152,7 @@ export default function NavCurtain({
                           />
                           <div className="flex gap-2 items-center relative z-20 flex-none">
                             <div className="size-1.5 bg-white rounded-full" />
-                            <p className="font-manrop font-bold text-md text-white">
+                            <p className="font-avenir font-bold text-md text-white">
                               T-SHIRT
                             </p>
                             <motion.div variants={imgDiv}>
@@ -178,15 +185,15 @@ export default function NavCurtain({
             <motion.div className="bg-white overflow-hidden  relative mt-4  z-20 text-black  border-black border-t-[0.5px] px-4 md:px-8 py-8 h-fit">
               <motion.div variants={animate?.content}>
                 <div className="w-full flex justify-between items-center">
-                  <p className="pb-6  text-sm font-manrop md:text-md text-black/30 font-semibold uppercase">
+                  <p className="pb-6  text-sm font-avenir md:text-md text-black/30 font-semibold uppercase">
                     SHOWING RESULT'S FOR:
-                    <span className="font-manrop font-semibold  text-black mx-2">
+                    <span className="font-avenir font-semibold  text-black mx-2">
                       {navSearch}
                     </span>
                   </p>
                   <div onClick={(e) => handleSearchBlur(e)}>
                     <Image
-                      className="cursor-pointer pb-6"
+                      className="cursor-pointer pb-4"
                       src="/icons/cancel.svg"
                       width={16}
                       height={16}
@@ -243,24 +250,24 @@ export const NavSlider = ({
   return (
     <div className="w-full " tabIndex={0}>
       <div ref={sliderRef} className="w-full flex gap-3  pr-10 nav-slider">
-        {products.map((product) => (
+        {products.map((product,index) => (
           <ProductCard
             type="small"
             key={product.id}
             productData={product}
-            cardRef={product.id === 1 ? cardRef : undefined}
+            cardRef={index === 0 ? cardRef : undefined}
           />
         ))}
       </div>
 
-      <div className="w-full flex items-center justify-between mt-4">
+      <div className="w-full flex items-center justify-between mt-2">
         <p className="opacity-0">SEE MORE PRODUCTS</p>
         <div className="flex items-center justify-center gap-6 md:gap-12">
           <button
             ref={prevBtnRef}
             aria-label="Scroll left"
             className={cn(
-              "size-10 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev",
+              "size-8 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev",
               {
                 visible: !isStart,
               }
@@ -268,15 +275,15 @@ export const NavSlider = ({
           >
             <Image
               src="/icons/arrow.svg"
-              width={18}
+              width={16}
               height={18}
               alt="arrow"
               className="rotate-90 group-hover/a:hidden"
             />
             <Image
               src="/icons/arrow-w.svg"
-              width={18}
-              height={18}
+              width={16}
+              height={16}
               alt="arrow"
               className="hidden rotate-90 group-hover/a:flex"
             />
@@ -286,7 +293,7 @@ export const NavSlider = ({
             ref={nextBtnRef}
             aria-label="Scroll right"
             className={cn(
-              "size-10 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next",
+              "size-8 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next",
               {
                 visible: !isEnd,
               }
@@ -294,22 +301,22 @@ export const NavSlider = ({
           >
             <Image
               src="/icons/arrow.svg"
-              width={18}
-              height={18}
+              width={16}
+              height={16}
               alt="arrow"
               className="rotate-270 group-hover/w:hidden"
             />
             <Image
               src="/icons/arrow-w.svg"
-              width={18}
-              height={18}
+              width={16}
+              height={16}
               alt="arrow"
               className="hidden rotate-270 group-hover/w:flex"
             />
           </button>
         </div>
         <div onClick={(e) => handleSeeMore(e)} className="cursor-pointer">
-          <p className="font-manrop underline-offset-3 text-md font-bold underline hover:text-blue-500">
+          <p className="font-avenir underline-offset-3 text-sm font-bold underline hover:text-blue-500">
             SEE MORE PRODUCTS
           </p>{" "}
         </div>

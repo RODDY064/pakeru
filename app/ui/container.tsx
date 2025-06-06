@@ -29,7 +29,6 @@ export default function Container({ children }: { children: React.ReactNode }) {
   return (
     <main>
       <Nav />
-      <Modal/>
       {children}
       <Footer/>
     </main>

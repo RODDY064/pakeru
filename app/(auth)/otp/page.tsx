@@ -164,10 +164,10 @@ export default function OTP() {
 
   return (
     <div className="flex flex-col items-center pt-16 md:pt-24">
-      <h1 className="text-3xl md:text-4xl font-manrop font-bold">
+      <h1 className="text-3xl md:text-4xl font-avenir font-bold">
         Email Verification
       </h1>
-      <p className="font-manrop text-md md:text-lg font-medium my-4 text-center">
+      <p className="font-avenir text-md md:text-lg font-medium my-4 text-center">
         Verify your email with the 6-digit code <br /> sent to
         <span>
           {user?.userType === "unverified" && (
@@ -218,7 +218,7 @@ export default function OTP() {
             onClick={handleResend}
             disabled={isResendDisabled}
             className={`
-              font-medium font-manrop transition-colors duration-200
+              font-medium font-avenir transition-colors duration-200
               ${
                 isResendDisabled
                   ? "text-black/30 cursor-not-allowed"
@@ -230,7 +230,7 @@ export default function OTP() {
           </button>
 
           {isResendDisabled && (
-            <p className="text-black/60 font-medium font-manrop">
+            <p className="text-black/60 font-medium font-avenir">
               {formatTime(counter)}
             </p>
           )}

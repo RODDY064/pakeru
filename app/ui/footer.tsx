@@ -13,11 +13,11 @@ export default function Footer() {
       <div className="w-full h-full border-t-2 border-t-black/5 py-6 flex flex-col xl:flex-row">
         <div className="xl:w-[60%] flex gap-2 ">
           <div className="flex-none hidden md:flex">
-            <p className="text-sm font-black font-manrop text-black/20 cursor-pointer">
+            <p className="text-sm font-black font-avenir text-black/20 cursor-pointer">
               PAKERU {">"}
             </p>
           </div>
-          <div className="ml-4 font-manrop grid items-stretch justify-between grid-cols-2 gap-10 md:grid-cols-4 w-full">
+          <div className="ml-4 font-avenir grid items-stretch justify-between grid-cols-2 gap-10 md:grid-cols-4 w-full">
             {/* Shopping Links */}
             <div className="text-black/70">
               <p className="text-sm font-bold">SHOP</p>

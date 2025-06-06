@@ -4,6 +4,7 @@ import { ProductType } from "@/store/cart";
 import { useBoundStore } from "@/store/store";
 import { motion } from "motion/react";
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 export default function ProductCard({
@@ -46,7 +47,7 @@ export default function ProductCard({
       className={cn(
         "",
         {
-          "mb-8 md:mb-24": type === "large",
+          "mb-8 md:mb-12": type === "large",
         },
         cardStyle
       )}
@@ -56,18 +57,18 @@ export default function ProductCard({
         whileHover="show"
         initial="hide"
         className={cn(
-          "w-[180px] h-[180px] md:w-[200px] md:h-[250px] lg:w-[300px] lg:h-[430px] flex border borde-[1px] border-black/5 flex-shrink-0 rounded-[2px] relative cursor-pointer overflow-hidden transition-all duration-500 ease-in-out",
+          "flex border borde-[1px] border-black/5 flex-shrink-0 rounded-[2px] relative cursor-pointer overflow-hidden transition-all duration-500 ease-in-out",
           {
             "[width:calc(25%-1rem)] min-w-[310px] h-[400px]": type === "large",
             "md:[width:calc(25%-2rem)] md:min-w-[270px] md:h-[450px]":
               type === "large",
-            "lg:[width:calc(25%-3.5rem)] lg:min-w-[270px] lg:h-[520px]":
+            "lg:[width:calc(25%-3.5rem)] lg:min-w-[270px] lg:h-[500px]":
               type === "large",
-            "xl:[width:calc(20%-4.5rem)] xl:min-w-[400px] xl:h-[600px]":
+            "xl:[width:calc(20%-4.5rem)] xl:min-w-[400px] xl:h-[550px]":
               type === "large",
+              "w-[180px] h-[200px] md:w-[18px] md:h-[250px] lg:w-[250px] lg:h-[300px]": type === "small"
           }
-        )}
-      >
+        )}>
         <div className="w-full h-full absolute">
           <Image
             src={productData.mainImage}
@@ -77,44 +78,27 @@ export default function ProductCard({
           />
         </div>
         <div className="absolute w-full h-full flex flex-col justify-end z-20 ">
+          <Link href={`/product/${productData.id}`} className={cn("w-full h-full top-0  absolute")}></Link>
           <div className="absolute top-2 left-2 p-1 px-2 flex items-center gap-1 bg-black">
             <div className="size-[6px] rounded-full bg-white" />
             <p className="text-white text-[11px]">NEW</p>
           </div>
-          <motion.div
-            onClick={()=>handleAddToCart(productData)}
-            variants={CartAnimate}
-            className="w-full bg-black h-24 flex-none overflow-hidden  flex  gap-2 items-center justify-center text-white"
-          >
-            <p className="text-sm md:text-md font-manrop mt-0.5">ADD TO BAG</p>
-            <Image
-              src="/icons/bag-b-w.svg"
-              width={20}
-              height={20}
-              className="hidden md:block"
-              alt="bag"
-            />
-            <Image
-              src="/icons/bag-b-w.svg"
-              width={18}
-              height={18}
-              className="md:hidden flex"
-              alt="bag"
-            />
-          </motion.div>
         </div>
       </motion.div>
       <div
         className={cn("pb-4 pt-3 w-full   px-3 ", {
-          "w-[150px] md:w-[200px]  lg:w-[300px] ": type === "small",
-        })}
-      >
+          "w-[150px] md:w-[150px]  lg:w-[250px] ": type === "small",
+        })}>
         <div className="w-full flex items-start justify-between">
-          <div className="w-[60%] text-[16px] md:text-md font-bold text-black/70">
+          <div className={cn("w-[60%] text-[16px] md:text-md font-[400]  text-black/70",{
+            "text-[14px]" : type === 'small'
+          })}>
             {productData.name.toLocaleUpperCase()}
           </div>
           <div className="w-[30%] flex items-start  justify-end ">
-            <p className="font-manrop font-black text-[16px] md:text-md text-black/50">
+            <p className={cn("font-avenir font-[400] text-[16px] md:text-md text-black/50",{
+              "text-sm": type === "small"
+            })}>
               GHS {productData.price}
             </p>
           </div>
@@ -126,9 +110,9 @@ export default function ProductCard({
                 onClick={()=> updateColor(productData.id,item)}
                 key={item}
                 className={cn(
-                  "size-[15px] hover:border border-black/70 rounded-full p-[1.5px] cursor-pointer flex items-center justify-center",
+                  "size-[15px] md:size-[13px] hover:border border-black/70 rounded-full p-[1.5px] cursor-pointer flex items-center justify-center",
                   {
-                    "border-2 border-black": item === productData.selectedColor, 
+                    "border-2 md:border-1 border-black": item === productData.selectedColor, 
                   }
                 )}>
                 <div
@@ -138,9 +122,9 @@ export default function ProductCard({
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-center gap-1">
-            <p className="font-manrop text-sm font-bold">{productData.rating}</p>
-            <Image src="/icons/star.svg" width={12} height={12} alt="star" />
+          <div className="flex items-center gap-1">
+            <p className="font-avenir text-sm font-[300] mt-1">{productData.rating}</p>
+            <Image src="/icons/star.svg" width={11} height={11} alt="star" />
           </div>
         </div>
       </div>
