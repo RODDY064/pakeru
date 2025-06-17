@@ -2,6 +2,73 @@
 
 Base URL: https://e-come-backend.onrender.com/api/v1
 
+LANDING PAGE
+➡️ GET /landing-page/
+
+Description: Get Data For Landing page
+
+Response: 200 Ok
+
+{
+"section1": [
+{
+"_id": "684770a0c087cfe49a8f7646",
+"image": {
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1749513499/products/tijlslludhqbsfp2ca4o.jpg",
+"publicId": "products/tijlslludhqbsfp2ca4o",
+"_id": "684774f0b679747f388e59c4"
+},
+"title": "Best Outfit Store(Updated)",
+"description": "Stand out and be who you are",
+"__v": 0
+}
+],
+"section2": [
+{
+"categoryName": "Trousers",
+"categoryId": "68335c83c02fdcea12545e06",
+"description": "Various trousers",
+"images": []
+},
+{
+"categoryName": "Shorts",
+"categoryId": "68335c83c02fdcea12545e07",
+"description": "Casual shorts",
+"images": []
+},
+{
+"categoryName": "T-shirts",
+"categoryId": "68335c83c02fdcea12545e0a",
+"description": "Cool T-shirts",
+"images": []
+},
+{
+"categoryName": "Caps",
+"categoryId": "68335c83c02fdcea12545e0b",
+"description": "Headwear caps",
+"images": []
+},
+{
+"categoryName": "Vest",
+"categoryId": "68335c83c02fdcea12545e08",
+"description": "Inner or sleeveless tops",
+"images": []
+},
+{
+"categoryName": "Shades",
+"categoryId": "68471b88f21c2aeeda95fd48",
+"description": "Your best shades for life!",
+"images": [
+{
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1749490610/products/l6skg4k4rxinkxng6spp.jpg",
+"publicId": "products/l6skg4k4rxinkxng6spp",
+"_id": "68471b88f21c2aeeda95fd49"
+}
+]
+}
+]
+}
+
 🔐 Authentication
 
 ➡️ GET /auth/google
@@ -57,6 +124,26 @@ Request Body:
 {
 "email": "johndoe@example.com",
 "password": "your_password"
+}
+
+Response: 200 OK
+
+{
+"status":"success",
+"message": "Login successful",
+"user": { \_id, firstName,firstName, email, role, isEmailVerified},
+"token": "JWT_TOKEN"
+}
+
+➡️ POST /auth/verify-email
+
+Description: verify email address before logging in
+
+Request Body:
+
+{
+"email": "johndoe@example.com",
+"code": "112312"
 }
 
 Response: 200 OK
