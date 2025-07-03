@@ -19,7 +19,9 @@ import Modal from "./Modal";
 import Search from "./search";
 import SearchIcon from "./searchIcon";
 import Icon from "./Icon";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { handleNavigation } from "@/libs/navigate";
+import { useStoreInitialization } from "@/libs/cartPersist";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -75,7 +77,7 @@ const iconTabs = [
   {
     name: "bookmark",
     src: "/icons/bookmark.svg",
-    src_w: "/icons/bookmark-w.svg",
+    src_w: "/icons/bookmark2.svg",
     link: "/account",
     width: 22,
     height: 22,
@@ -86,7 +88,24 @@ export default function Nav() {
   const [isSnap, setIsSnap] = useState<boolean>(false);
   const [currentAd, setCurrentAd] = useState(0);
   const [paused, setPaused] = useState(false);
-  const pathname = usePathname()
+  const pathname = usePathname();
+  const router = useRouter();
+  const {
+    setModal,
+    cartItems,
+    setIsMobile,
+    routeChange,
+    setRouteChange,
+    loadProducts,
+    loadCategories,
+    products,
+    modalDisplay,
+    modal,
+    bookMarks,
+    assignCatID
+  } = useBoundStore();
+
+  useStoreInitialization();
 
   useEffect(() => {
     if (paused) return;
@@ -98,24 +117,19 @@ export default function Nav() {
     return () => clearInterval(interval);
   }, [paused, ads.length]);
 
-  const {
-    scrollAmount,
-    setNavSearch,
-    setModal,
-    cartItems,
-    setDevice,
-    modal,
-    setIsMobile
-  } = useBoundStore();
+  useEffect(()=>{
+    console.log(products.slice(0,4))
+  },[products])
 
   useEffect(() => {
+    loadProducts();
+    assignCatID()
+
     const handleResize = () => {
       if (window.innerWidth < 1000) {
         setIsMobile(true);
-        setDevice("mobile");
       } else {
         setIsMobile(false);
-        setDevice("desktop");
       }
     };
 
@@ -126,56 +140,56 @@ export default function Nav() {
   }, []);
 
   useGSAP(() => {
-  // Clean up any existing ScrollTriggers first
-  ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-  
-  // Small delay to ensure DOM is ready after route change
-  const timer = setTimeout(() => {
-    gsap.to(".nav-ads", {
-      y: -40,
-      duration: 0.3,
-      scrollTrigger: {
-        trigger: ".nav-ads",
-        start: "top top",
-        scrub: 1,
-      },
-    });
+    // Clean up any existing ScrollTriggers first
+    ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
 
-    gsap.to(".navbar", {
-      y: -40,
-      scrollTrigger: {
-        trigger: ".nav-ads",
-        start: "top top",
-        scrub: 1,
-        onEnter: () => {
-          setIsSnap(true);
+    // Small delay to ensure DOM is ready after route change
+    const timer = setTimeout(() => {
+      gsap.to(".nav-ads", {
+        y: -40,
+        duration: 0.3,
+        scrollTrigger: {
+          trigger: ".nav-ads",
+          start: "top top",
+          scrub: 1,
         },
-        onLeaveBack: () => {
-          setIsSnap(false);
-        }
-      },
-    });
+      });
 
-    gsap.to(".menuIcon", {
-      y: -40,
-      scrollTrigger: {
-        trigger: ".nav-ads",
-        start: "top top",
-        scrub: 1,
-      },
-    });
+      gsap.to(".navbar", {
+        y: -40,
+        scrollTrigger: {
+          trigger: ".nav-ads",
+          start: "top top",
+          scrub: 1,
+          onEnter: () => {
+            setIsSnap(true);
+          },
+          onLeaveBack: () => {
+            setIsSnap(false);
+          },
+        },
+      });
 
-    ScrollTrigger.refresh();
-  }, 100);
+      gsap.to(".menuIcon", {
+        y: -40,
+        scrollTrigger: {
+          trigger: ".nav-ads",
+          start: "top top",
+          scrub: 1,
+        },
+      });
 
-  return () => {
-    clearTimeout(timer);
-    ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-  };
-}, [pathname]); 
+      ScrollTrigger.refresh();
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    };
+  }, [pathname]);
 
   return (
-    <div className="fixed top-0 w-full left-0 z-[90] ">
+    <div className="fixed top-0 w-full left-auto z-[90] ">
       <div className="w-full">
         <div className="w-full flex items-center px-4 md:px-8 py-4 bg-black text-white overflow-hidden h-[40px] nav-ads justify-between">
           <p className="opacity-0">h</p>
@@ -190,6 +204,7 @@ export default function Nav() {
             >
               <Link
                 href={ads[currentAd].link}
+                // onClick={(e)=> handleNavigation(e,ads[currentAd].link,router,setRouteChange,300)}
                 className="font-avenir text-xs flex-none flex-nowrap"
               >
                 {ads[currentAd].ad}
@@ -214,16 +229,41 @@ export default function Nav() {
             />
           </div>
         </div>
-        <div className={cn("w-full flex flex-row justify-between px-3 md:px-8 py-4 pt-4.5 items-center navbar",{
-          "bg-white border-[1px] border-black/20": isSnap
-        })}>
-          <div className="w-10 md:w-20 flex-none flex overflow-visible  relative gap-4 items-center ">
-            <SearchIcon style="hidden md:flex"/>
+        <div
+          className={cn(
+            "w-full flex flex-row justify-between px-3 md:px-8 py-4 pt-4.5 items-center navbar",
+            {
+              "bg-white border-[1px] border-black/20": isSnap,
+            }
+          )}>
+          <div
+            className={`w-10 md:w-20 flex-none flex overflow-visible  relative gap-4 items-center ${
+              !routeChange ? "pointer-events-auto" : "pointer-events-none"
+            }`}>
+            <SearchIcon style="hidden md:flex" />
           </div>
-          <Link href="/" className="flex-none w-24 h-[24px]">
-            <Image src="/icons/textLogo.svg" width={150} height={12} alt="logo" className="mt-[-2.4rem]" />
+          <Link
+            href="/"
+            onClick={(e) =>
+              handleNavigation(e, "/", router, setRouteChange, 200)
+            }
+            className={`flex-none w-24 h-[24px] ${
+              !routeChange ? "pointer-events-auto" : "pointer-events-none"
+            }`}
+          >
+            <Image
+              src="/icons/textLogo.svg"
+              width={150}
+              height={12}
+              alt="logo"
+              className="mt-[-2.4rem]"
+            />
           </Link>
-          <div className="flex md:gap-4">
+          <div
+            className={`flex md:gap-4 max-sm:mr-1 ${
+              !routeChange ? "pointer-events-auto" : "pointer-events-none"
+            }`}
+          >
             {iconTabs.map((icon, index) => (
               <div key={icon.name} className="relative">
                 {icon.name !== "user" ? (
@@ -234,12 +274,16 @@ export default function Nav() {
                         : setModal("wardrope")
                     }
                     className={cn("md:flex hidden cursor-pointer", {
-                      "flex": index === 0,
+                      flex: index === 0,
                     })}
-                    key={index}>
+                    key={index}
+                  >
                     <Image
-                      className=""
-                      src={icon.src}
+                      src={
+                        icon.name === "bookmark" && bookMarks.length > 0
+                          ? icon.src_w
+                          : icon.src
+                      }
                       width={22}
                       height={22}
                       alt={icon.name}
@@ -274,12 +318,19 @@ export default function Nav() {
           </div>
         </div>
       </div>
-      <div className="w-20 flex-none flex  relative z-[98] gap-4 top-[-2.5rem] left-2 md:left-8 items-center menuIcon ">
-            <Icon name="menu" onToggle={()=>setModal('menu')}/>
+      <div
+        className={cn(
+          `w-20 flex-none  relative flex gap-4 top-[-2.5rem] left-2 md:left-8 items-center menuIcon ${
+            !routeChange ? "pointer-events-auto" : "pointer-events-none"
+          } `,
+          {
+            "z-[98]": modalDisplay === "menu",
+          }
+        )}>
+        <Icon name="menu" onToggle={() => setModal("menu")} />
       </div>
-      <Modal  />
-      <Search/>
+      <Modal />
+      <Search />
     </div>
   );
 }
-

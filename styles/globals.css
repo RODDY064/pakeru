@@ -50,3 +50,8 @@ body {
   visibility: hidden;
 }
 
+
+
+.hero-gird {
+  grid-template-columns: repeat(auto-fit,minmax(400px,1fr));
+}

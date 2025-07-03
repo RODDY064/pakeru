@@ -29,7 +29,7 @@ export default function Input({
   
 }) {
   return (
-    <div className={cn(style)}>
+    <div key={name} className={cn("",style)}>
       <label className={cn("font-avenir text-md md:text-lg font-medium",textStyle)}>
         {label}
       </label>

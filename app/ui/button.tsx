@@ -13,7 +13,7 @@ export default function Button({
   word: string;
   bagIcon?: boolean;
   backColor?:'white' |'black',
-  action?:()=>void
+  action?:(e:any)=>void
 }) 
 {
 

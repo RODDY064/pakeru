@@ -18,10 +18,10 @@ export default function LookAt() {
   const router = useRouter();
 
   const handleLink = () => {
-    router.push(SlideInview?.link as string);
-    setTimeout(() => {
-      setLookAt(SlideInview?.id as any);
-    }, 500);
+    // router.push(SlideInview?.link as string);
+    // setTimeout(() => {
+    //   setLookAt(SlideInview?.id as any);
+    // }, 500);
   };
 
 
@@ -60,7 +60,7 @@ const { isStart, isEnd } = useGsapSlider({
       <motion.div
         animate={lookAt && SlideInview?.inView ? { y: 0 } : { y: 400 }}
         transition={{ ease: ease }}
-        className="w-[90%] md:w-[80%]  xl:w-[70%] h-[70vh] md:h-[85vh] bg-white relative z-20 p-4 md:p-10 overflow-y-scroll"
+        className="w-[98%] md:w-[80%]  xl:w-[70%] h-[70vh] md:h-[85vh] bg-white relative z-20 p-4 md:p-10 overflow-y-scroll"
       >
         <div className="w-full">
           <div className="w-full flex justify-between items-center">
@@ -133,9 +133,9 @@ const { isStart, isEnd } = useGsapSlider({
             <div className="overflow-hidden">
          <div 
             ref={sliderRef}
-            className="w-full my-4 flex gap-3 pr-10 nav-slider">
-              {products.map((product,index) => (
-                <ProductCard type="small" key={product.id+"lookAt"} productData={product}   cardRef={index === 0 ? cardRef : undefined} />
+            className="w-full my-4 grid grid-flow-col auto-cols-[98%] md:auto-cols-[50%] lg:auto-cols-[40%]  xl:auto-cols-[40%] gap-3 pr-10 nav-slider">
+              {products?.map((product,index) => (
+                <ProductCard type="small" key={product.id} productData={product}   cardRef={index === 0 ? cardRef : undefined} />
               ))}
             </div>
             </div>

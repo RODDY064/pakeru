@@ -192,10 +192,9 @@ export default function Search() {
           className="w-full h-full searchParent  border-black/10 mt-6 items-center justify-center flex"
         >
           <div
-            className={`w-[80%] h-full pt-5 pb-72 flex gap-6 flex-wrap overflow-y-scroll searchCon ${
-              searchProduct.length === 0 ? "items-center justify-center" : ""
-            }`}
-          >
+            className={cn("w-[90%] xl:w-[80%] h-full pt-5 pb-72 px-2  gap-6  grid md:grid-cols-2 lg:grid-cols-3  overflow-y-scroll searchCon",{
+              "flex items-center justify-center": searchProduct.length === 0 
+            })}>
             {renderSearchContent()}
           </div>
         </motion.div>

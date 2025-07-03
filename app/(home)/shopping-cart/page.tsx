@@ -1,18 +1,32 @@
 "use client";
 
+import Button from "@/app/ui/button";
 import CartCard from "@/app/ui/cartCard";
 import Icon from "@/app/ui/Icon";
 import { cn } from "@/libs/cn";
+import { handleNavigation } from "@/libs/navigate";
+import { ProductType } from "@/store/cart";
 import { useBoundStore } from "@/store/store";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useRef } from "react";
 
 export default function YourCart() {
-  const { isMobile } = useBoundStore();
-    const totalRef = useRef<HTMLDivElement>(null);
-    const cartDiv = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
+  const { isMobile, cartItems, setRouteChange } = useBoundStore();
+  const totalRef = useRef<HTMLDivElement>(null);
+  const cartDiv = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
+  const router = useRouter()
+
+  const handleLink = (e:any)=>{
+     handleNavigation(e, "/product", router, setRouteChange, 200)
+  }
+
+  const handlePayment = (e:any)=>{
+     handleNavigation(e, "/payment", router, setRouteChange, 200)
+  }
 
   useGSAP(() => {
     if (isMobile) return;
@@ -21,8 +35,6 @@ export default function YourCart() {
 
     const sticky = totalRef.current;
     const image = cartDiv.current;
-
-    
 
     gsap.to(image, {
       scrollTrigger: {
@@ -39,7 +51,10 @@ export default function YourCart() {
   return (
     <div className="w-full min-h-screen flex flex-col items-center text-black ">
       <div className="w-full h-full flex-col md:flex-row  bg-white flex overflow-hidden gap-4 pt-24">
-        <div ref={cartDiv} className="md:w-[65%] lg:w-[70%] min-h-[100vh] bg-[#f2f2f2] flex flex-col items-center flex-none cartDiv">
+        <div
+          ref={cartDiv}
+          className="md:w-[65%] lg:w-[70%] min-h-[100vh] bg-[#f2f2f2] flex flex-col items-center flex-none cartDiv"
+        >
           <div className="w-[95%] lg:w-[85%] xl:w-[75%] h-full py-12">
             <div className="flex justify-between max-sm:px-1">
               <div className="relative">
@@ -48,22 +63,55 @@ export default function YourCart() {
                 </p>
                 <div className="absolute size-5 border top-[-1.2rem]  right-[-1.2rem] items-center justify-center flex rounded-full">
                   <p className="font-avenir font-[400] text-sm text-red-500">
-                    0
+                    {cartItems.length}
                   </p>
                 </div>
               </div>
-              <p className="hidden md:flex md:text-sm font-[300] underline underline-offset-3 cursor-pointer">
+              <p onClick={handleLink} className="hidden md:flex md:text-sm font-[300] underline underline-offset-3 cursor-pointer">
                 CONTINUE SHOPPING
               </p>
             </div>
-            <div className="mt-4">
-              {[1, 2].map((item) => (
-                <CartCard key={item} />
-              ))}
-            </div>
+
+            {cartItems.length > 0 ? (
+              <>
+                <div className="mt-4">
+                  {cartItems?.map((cart) => (
+                    <CartCard key={cart.id} cartData={cart} />
+                  ))}
+                </div>{" "}
+              </>
+            ) : (
+              <>
+                <div className="w-full h-full flex items-center flex-col pt-12 lg:pt-24 xl:pt-32">
+                  <Image
+                    src="/icons/cart.svg"
+                    width={300}
+                    height={64}
+                    alt="cart"
+                    className="hidden md:flex"
+                  />
+                  <Image
+                    src="/icons/cart.svg"
+                    width={200}
+                    height={64}
+                    alt="cart"
+                    className="md:hidden"
+                  />
+                  <p className="text-gray-400 font-avenir font-[400] text-sm">
+                    YOUR CART IS EMPTY.
+                  </p>
+                  <div className="my-10">
+                    <Button action={handleLink} word="GO TO SHOP" />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
-        <div ref={totalRef} className="md:w-[35%] lg:w-[30%] pt-12 px-6 md:px-3 lg:px-10 w-full flex flex-col items-center totalDiv">
+        <div
+          ref={totalRef}
+          className="md:w-[35%] lg:w-[30%] pt-12 px-6 md:px-3 lg:px-10 w-full flex flex-col items-center totalDiv"
+        >
           <div className="w-full">
             <div className="w-full flex items-center justify-between">
               <p className="font-avenir font-[400] text-md">SUBTOTAL</p>
@@ -80,11 +128,12 @@ export default function YourCart() {
               <p className="font-avenir font-[400] text-md">TOTAL</p>
               <p className="font-avenir font-[400] text-md">GHS 1020.00</p>
             </div>
-            <div className="mt-4 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black   border border-black/20  group/add cursor-pointer transition-all">
+            <Link href="/payment">
+            <div  className="mt-4 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black   border border-black/20  group/add cursor-pointer transition-all">
               <p className="font-avenir font-[400] text-sm pt-[4px] text-white ">
                 PROCEED TO CHECHOUT
               </p>
-            </div>
+            </div></Link>
             <div className="px-3 py-4 rounded-md bg-gray-100 my-4">
               <p className="text-sm font-avenir text-black/60 font-[400]">
                 By selecting any Express Payment option, you confirm that you

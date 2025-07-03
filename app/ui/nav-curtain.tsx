@@ -34,7 +34,7 @@ export default function NavCurtain({
   handleSearchBlur?: any;
   handleHoverEnd?:any
 }) {
-  const { navSearch, curtain } = useBoundStore();
+  const {} = useBoundStore();
 
   useGSAP(() => {
     // clip-path: circle(0.1% at 0 100%);
@@ -100,7 +100,7 @@ export default function NavCurtain({
             " absolute w-full h-0   max-sm:hidden flex-none  overflow-hidden   md:top-[2.8rem] left-0  "
           )}
         >
-          <motion.div className="bg-white overflow-hidden  relative mt-4  z-20 text-black  border-t-black border-t-[0.5px] h-fit">
+          {/* <motion.div className="bg-white overflow-hidden  relative mt-4  z-20 text-black  border-t-black border-t-[0.5px] h-fit">
             <motion.div variants={animate?.content}>
               <div className="w-full   flex items-start overflow-hidden">
                 <div className="w-[62%] px-4 md:px-8  py-4 h-full flex-none">
@@ -171,10 +171,10 @@ export default function NavCurtain({
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </motion.div> */}
         </motion.div>
       )}
-      {type === "search" && (
+      {/* {type === "search" && (
         <div className="w-full absolute left-0   ">
           <motion.div
             variants={animate?.container}
@@ -209,7 +209,7 @@ export default function NavCurtain({
             </motion.div>
           </motion.div>
         </div>
-      )}
+      )} */}
     </>
   );
 }
@@ -250,7 +250,7 @@ export const NavSlider = ({
   return (
     <div className="w-full " tabIndex={0}>
       <div ref={sliderRef} className="w-full flex gap-3  pr-10 nav-slider">
-        {products.map((product,index) => (
+        {products?.map((product,index) => (
           <ProductCard
             type="small"
             key={product.id}

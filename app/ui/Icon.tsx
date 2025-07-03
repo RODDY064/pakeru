@@ -31,8 +31,6 @@ export default function Icon({ name, onToggle }: MenuIconProps) {
     const middle = menuRef.current.querySelector("#middle");
     const last = menuRef.current.querySelector("#last");
 
-    console.log(name);
-
     // For non-animatable icons, use gsap.set() when active
     if (!canAnimate) {
       gsap.set(first, {
@@ -143,8 +141,7 @@ export default function Icon({ name, onToggle }: MenuIconProps) {
           e.preventDefault();
           handleToggle();
         }
-      }}
-    >
+      }}>
       <svg
         ref={menuRef}
         id="menu"
@@ -152,8 +149,7 @@ export default function Icon({ name, onToggle }: MenuIconProps) {
         height="24"
         viewBox="0 0 24 24"
         fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
+        xmlns="http://www.w3.org/2000/svg">
         <path
           id="first"
           d="M2.30005 7.39014H21.7001"

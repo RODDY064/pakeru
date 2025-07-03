@@ -21,7 +21,7 @@ export default function RootLayout({
   
   return (
     <html lang="en">
-      <body className={` ${avenir.variable} ${blackMango.style}  antialiased`}> 
+      <body className={` ${avenir.variable} ${blackMango.style}  antialiased `}> 
        {children}
       </body>
     </html>

@@ -26,8 +26,7 @@ export function useGsapSlider({
       !sliderRef.current ||
       !prevRef.current ||
       !nextRef.current ||
-      !cardRef.current
-    )
+      !cardRef.current)
       return;
 
     const slider = sliderRef.current;
