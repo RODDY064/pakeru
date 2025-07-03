@@ -248,8 +248,7 @@ export default function Nav() {
             }
             className={`flex-none w-24 h-[24px] ${
               !routeChange ? "pointer-events-auto" : "pointer-events-none"
-            }`}
-          >
+            }`}>
             <Image
               src="/icons/textLogo.svg"
               width={150}
