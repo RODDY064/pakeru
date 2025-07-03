@@ -13,7 +13,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import { cn } from "@/libs/cn";
-import NavCurtain from "./nav-curtain";
 import { useSearchAndHoverControls } from "@/libs/navAnimation";
 import Modal from "./Modal";
 import Search from "./search";
