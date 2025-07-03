@@ -250,7 +250,7 @@ export default function Nav() {
               !routeChange ? "pointer-events-auto" : "pointer-events-none"
             }`}>
             <Image
-              src="/icons/textLogo.svg"
+              src="/icons/text-logo.svg"
               width={150}
               height={12}
               alt="logo"
