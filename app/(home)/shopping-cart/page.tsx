@@ -53,7 +53,7 @@ export default function YourCart() {
       <div className="w-full h-full flex-col md:flex-row  bg-white flex overflow-hidden gap-4 pt-24">
         <div
           ref={cartDiv}
-          className="md:w-[65%] lg:w-[70%] min-h-[100vh] bg-[#f2f2f2] flex flex-col items-center flex-none cartDiv"
+          className="md:w-[65%] lg:w-[70%] min-h-[100vh] bg-[#f2f2f2] flex flex-col items-center flex-none cartDiv max-sm:px-3"
         >
           <div className="w-[95%] lg:w-[85%] xl:w-[75%] h-full py-12">
             <div className="flex justify-between max-sm:px-1">
@@ -78,7 +78,7 @@ export default function YourCart() {
                   {cartItems?.map((cart) => (
                     <CartCard key={cart.id} cartData={cart} />
                   ))}
-                </div>{" "}
+                </div>
               </>
             ) : (
               <>

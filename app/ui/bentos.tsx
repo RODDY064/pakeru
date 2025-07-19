@@ -105,7 +105,7 @@ export default function Bentos() {
                 split={splits}
                 reverse={true}
                 render={[
-                  <div className="text-black bg-amber-300 w-full h-full relative overflow-hidden rounded-[64px] p-6">
+                  <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   Splits One
                 </div>,
                   <div className="text-black  w-full h-full p-6  rounded-4xl ">
@@ -118,7 +118,7 @@ export default function Bentos() {
               />
             </div>
           </div>
-          <div className="w-full flex-nowrap flex-none h-[400px] xl:h-[860px]   flex items-center justify-center">
+          <div className="w-full flex-nowrap flex-none h-[600px] xl:h-[860px]   flex items-center justify-center">
             <SVGMorph
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">

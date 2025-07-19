@@ -4,6 +4,8 @@ import gsap from "gsap";
 import { MorphSVGPlugin } from "gsap/MorphSVGPlugin";
 import { useGSAP } from "@gsap/react";
 import { cn } from "@/libs/cn";
+import Lottie from "lottie-react";
+import loaderAnimation from "../../public/lottie/pakeru.json";
 
 gsap.registerPlugin(MorphSVGPlugin);
 
@@ -203,7 +205,7 @@ export default function SVGMorph({
     setShowLoader(true);
     splitOccuringtime.current = setTimeout(() => {
       setShowLoader(false);
-    }, 800);
+    }, 1200);
 
     return () => {
       if (splitOccuringtime.current) clearTimeout(splitOccuringtime.current);
@@ -256,11 +258,22 @@ export default function SVGMorph({
               >
                 {
                   <>
-                    {showLoader && <div className="text-center absolute"></div>}
+                    { showLoader &&
+                      <div className="text-center absolute z-20 bottom-3 right-4 rounded-4xl w-16 h-16 flex items-center justify-center">
+                        <div className="size-12 relative z-10">
+                          <Lottie
+                            animationData={loaderAnimation}
+                            loop={true}
+                            style={{ width: "100%", height: "100%" }}
+                          />
+                        </div>
+                      </div>
+                    }
                     <div
                       className={cn(
                         "w-full h-full flex flex-col items-center justify-center renderBox"
-                      )}>
+                      )}
+                    >
                       {render[i]}
                     </div>
                   </>
@@ -278,7 +291,8 @@ export default function SVGMorph({
         height="100%"
         className="px-2"
         viewBox={`0 0 ${size.width} ${size.height}`}
-        preserveAspectRatio="xMidYMid meet" >
+        preserveAspectRatio="xMidYMid meet"
+      >
         <defs>
           <filter id="goo">
             <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />

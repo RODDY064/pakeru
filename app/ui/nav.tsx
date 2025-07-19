@@ -39,24 +39,6 @@ const ads = [
   },
 ];
 
-const Links = [
-  {
-    name: "NEW IN",
-    link: "/",
-  },
-  {
-    name: "MEN",
-    link: "/",
-  },
-  {
-    name: "OUR STORIES",
-    link: "/",
-  },
-  {
-    name: "OUTLET",
-    link: "/",
-  },
-];
 
 const iconTabs = [
   {
@@ -192,20 +174,16 @@ export default function Nav() {
       <div className="w-full">
         <div className="w-full flex items-center px-4 md:px-8 py-4 bg-black text-white overflow-hidden h-[40px] nav-ads justify-between">
           <p className="opacity-0">h</p>
-
           <AnimatePresence mode="wait">
             <motion.div
               key={currentAd}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
+              transition={{ duration: 0.3, ease: "easeInOut" }}>
               <Link
                 href={ads[currentAd].link}
-                // onClick={(e)=> handleNavigation(e,ads[currentAd].link,router,setRouteChange,300)}
-                className="font-avenir text-xs flex-none flex-nowrap"
-              >
+                className="font-avenir text-xs flex-none flex-nowrap">
                 {ads[currentAd].ad}
               </Link>
             </motion.div>
@@ -233,6 +211,7 @@ export default function Nav() {
             "w-full flex flex-row justify-between px-3 md:px-8 py-4 pt-4.5 items-center navbar",
             {
               "bg-white border-[1px] border-black/20": isSnap,
+              "border-none": pathname.includes("/account")
             }
           )}>
           <div
@@ -243,12 +222,8 @@ export default function Nav() {
           </div>
           <Link
             href="/"
-            onClick={(e) =>
-              handleNavigation(e, "/", router, setRouteChange, 200)
-            }
-            className={`flex-none w-24 h-[24px] ${
-              !routeChange ? "pointer-events-auto" : "pointer-events-none"
-            }`}>
+            onClick={(e) => handleNavigation(e, "/", router, setRouteChange, 200)}
+            className={`flex-none w-24 h-[24px] ${!routeChange ? "pointer-events-auto" : "pointer-events-none"}`}>
             <Image
               src="/icons/text-logo.svg"
               width={150}
@@ -260,8 +235,7 @@ export default function Nav() {
           <div
             className={`flex md:gap-4 max-sm:mr-1 ${
               !routeChange ? "pointer-events-auto" : "pointer-events-none"
-            }`}
-          >
+            }`}>
             {iconTabs.map((icon, index) => (
               <div key={icon.name} className="relative">
                 {icon.name !== "user" ? (
@@ -274,13 +248,10 @@ export default function Nav() {
                     className={cn("md:flex hidden cursor-pointer", {
                       flex: index === 0,
                     })}
-                    key={index}
-                  >
+                    key={index}>
                     <Image
                       src={
-                        icon.name === "bookmark" && bookMarks.length > 0
-                          ? icon.src_w
-                          : icon.src
+                        icon.name === "bookmark" && bookMarks.length > 0 ? icon.src_w : icon.src
                       }
                       width={22}
                       height={22}
@@ -300,10 +271,8 @@ export default function Nav() {
                     className={cn("md:flex hidden", {
                       flex: index === 0,
                     })}
-                    key={index}
-                  >
+                    key={index}>
                     <Image
-                      className=""
                       src={icon.src}
                       width={22}
                       height={22}

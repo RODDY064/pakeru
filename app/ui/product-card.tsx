@@ -54,7 +54,9 @@ export default function ProductCard({
         whileHover="show"
         initial="hide"
         className={cn(
-          "flex  border-[1px] border-black/5 flex-shrink-0 rounded-[2px] relative cursor-pointer overflow-hidden transition-all duration-500 ease-in-out w-full h-[350px] md:h-[450px] lg:h-[460px] xl:h-[550px]")}>
+          "flex  border-[1px] border-black/5 flex-shrink-0 rounded-[2px] relative cursor-pointer overflow-hidden transition-all duration-500 ease-in-out w-full h-[400px] md:h-[450px] lg:h-[460px] xl:h-[550px]",{
+            "xl:h-[300px]": type === "small"
+          })}>
         <div className="w-full h-full absolute">
           <Image
             src={productData?.images[0]?.url}
@@ -77,9 +79,8 @@ export default function ProductCard({
       </motion.div>
       <div
         className={cn("pb-4 pt-3 w-full   px-3 ", {
-          "w-[150px] md:w-[150px]  lg:w-[250px] ": type === "small",
-        })}
-      >
+          "w-[200px] md:w-[250px]  lg:w-[300px] ": type === "small",
+        })}>
         <div className="w-full flex items-start justify-between">
           <div
             className={cn(

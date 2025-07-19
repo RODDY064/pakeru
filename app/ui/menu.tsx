@@ -20,6 +20,7 @@ import { useGsapSlider } from "@/libs/gsapScroll";
 import { cn } from "@/libs/cn";
 import SearchIcon from "./searchIcon";
 import { MenuItem } from "@/store/modal";
+import Link from "next/link";
 
 export default function Menu() {
   const {
@@ -30,6 +31,7 @@ export default function Menu() {
     renderedSubBar,
     setModal,
     bookMarks,
+    closeModal
   } = useBoundStore();
   const [currentActiveItem, setCurrentActiveItem] = useState<string | null>(
     null
@@ -146,7 +148,7 @@ export default function Menu() {
         </div>
 
         <div className="border-t border-black/20">
-          <p className="font-avenir font-[400] text-lg text-black/30 p-6 pb-2">
+          <p className="font-avenir font-[400] text-lg text-black/30 p-6 pb-4">
             TRENDING
           </p>
           <div className="w-full pl-6">
@@ -474,15 +476,13 @@ export default function Menu() {
         animate={modal ? "open" : "close"}
         initial="close"
         exit="close"
-        className="w-[100%] h-0 relative bg-white flex-col gap-4 pt-[120px] px-12 flex md:hidden menu-mobile"
-      >
+        className="w-[100%] h-0 relative bg-white flex-col gap-4 pt-[120px] px-12 flex md:hidden menu-mobile">
         {menuItems.map((item, index) => (
           <motion.div
             variants={list}
             key={index}
             onClick={() => handleMobileMenuClick(item.title)}
-            className="font-avenir w-fit text-lg cursor-pointer"
-          >
+            className="font-avenir w-fit text-lg cursor-pointer">
             {item.title}
             <p className="w-full h-[1px] bg-amber-600"></p>
           </motion.div>
@@ -502,10 +502,12 @@ export default function Menu() {
             />
             <p className="font-avenir font-[400] text-sm mt-[4px]">BOOKMARK</p>
           </div>
-          <div className="flex items-center gap-1.5 mt-3">
+          <Link
+          onClick={closeModal}
+           href="/account" className="flex items-center gap-1.5 mt-3">
             <Image src="/icons/user.svg" width={16} height={16} alt="user" />
             <p className="font-avenir font-[400] text-sm mt-[8px]">ACCOUNT</p>
-          </div>
+          </Link>
         </motion.div>
       </motion.div>
 
@@ -518,8 +520,7 @@ export default function Menu() {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="w-full h-full absloute top-0 z-[99] bg-white"
-          >
+            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white">
             {RenderMobileTAB(mobileActiveItem)}
           </motion.div>
         )}

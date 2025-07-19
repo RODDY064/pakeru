@@ -11,6 +11,7 @@ import ProductCard from "@/app/ui/product-card";
 import { useGsapSlider } from "@/libs/gsapScroll";
 import { ProductType } from "@/store/cart";
 import { useSearchParams } from "next/navigation";
+import SizeGuild from "./size-guild";
 
 export default function ProductContainer({ nameID }: { nameID: string }) {
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -26,6 +27,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     cartState,
     addBookmark,
     isBookmarked,
+    setSizeGuild
   } = useBoundStore();
   const [showButtons, setShowButtons] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -81,11 +83,12 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     gsap.to(image, {
       scrollTrigger: {
         trigger: sticky,
-        start: "top 10%",
+        start: "top 8%",
         end: "bottom bottom",
         pin: true,
         pinSpacing: false,
         scrub: 1,
+        anticipatePin: 1,
       },
     });
   });
@@ -130,7 +133,8 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   };
 
   return (
-    <div className="w-full min-h-dvh flex flex-col items-center text-black bg-white home-main pt-24  transition-all">
+    <div className="w-full min-h-dvh flex flex-col items-center text-black bg-white home-main   ">
+      <div className="pt-18 opacity-0">hell</div>
       <div className="w-full flex flex-col md:flex-row ">
         <div className="w-full md:w-[50%] relative">
           <div
@@ -210,7 +214,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
         </div>
         <div
           ref={stickyRef}
-          className="md:w-[50%] flex flex-col items-center pt-10 md:pt-4 lg:pt-20 sticky"
+          className="md:w-[50%] flex flex-col items-center pt-10 md:pt-4 lg:pt-20 "
         >
           <div className="w-full px-6 md:px-8 md:w-[90%] lg:w-[80%] xl:w-[60%]">
             <div className="flex  justify-between items-center">
@@ -286,7 +290,9 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                   >
                     SIZE
                   </p>
-                  <p className="underline text-sm font-avenir font-[400] underline-offset-4 underline-black/40 text-black/30 cursor-pointer">
+                  <p 
+                  onClick={setSizeGuild}
+                  className="underline text-sm font-avenir font-[400] underline-offset-4 underline-black/40 text-black/30 cursor-pointer">
                     SIZE GUILD
                   </p>
                 </div>
@@ -313,8 +319,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
               </div>
               <div
                 onClick={() => handleAdd(productData as ProductType)}
-                className="mt-10 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black  hover:bg-green-500 hover:border-green-500 border border-black/20  group/add cursor-pointer transition-all"
-              >
+                className="mt-10 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black  hover:bg-green-500 hover:border-green-500 border border-black/20  group/add cursor-pointer transition-all">
                 <p className="font-avenir font-[400] text-sm pt-[4px] text-white ">
                   ADD TO CART
                 </p>
@@ -327,7 +332,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                   className=""
                 />
               </div>
-              <div className="mt-8 border-t border-black/30 w-full pt-4">
+              <div className="mt-8 border-t border-black/30 w-full pt-10">
                 <div className="flex gap-10 items-center justify-center">
                   <div className="flex flex-col items-center">
                     <Image
@@ -420,6 +425,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           </div>
         </div>
       </div>
+      <SizeGuild/>
     </div>
   );
 }

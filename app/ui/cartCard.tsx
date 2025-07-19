@@ -13,13 +13,13 @@ export default function CartCard({cartData}:{ cartData:CartItemType}) {
       <div className="w-full md:w-[50%] h-[150px] max-sm:gap-3 md:h-auto  flex flex-none p-2">
         <div className="w-[50%] md:w-full h-full bg-[#f2f2f2] relative">
           <Image
-            src="/images/hero-2.png"
+            src={cartData?.mainImage}
             fill
             className="object-cover"
             alt="hero"
           />
         </div>
-        <div className="md:hidden">
+        <div className="md:hidden mt-1">
               <p className="text-xs md:text-sm font-avenir text-black/50 font-[300] ">NEW</p>
           <p className="mt-2 mb-1 font-avenir font-[400] text-sm md:text-md">
            {cartData?.name.toLocaleUpperCase()}
@@ -80,9 +80,9 @@ export default function CartCard({cartData}:{ cartData:CartItemType}) {
                   </div>
                 </div>
               </div>
-              <div className="text-sm font-avenir font-[400] text-black/30 underline underline-offset-4 decoration-black/20 cursor-pointer">
+              {/* <div className="text-sm font-avenir font-[400] text-black/30 underline underline-offset-4 decoration-black/20 cursor-pointer">
                 SIZE GUILD
-              </div>
+              </div> */}
             </div>
           </div>
           <div className="mt-4 my-3 lg:mt-6 flex gap-2">
