@@ -1,34 +1,65 @@
-name: Playwright Tests
+name: Playwright + Vercel Gated Deploy
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, "*" ]  # include all branches for preview builds
   pull_request:
     branches: [ main, master ]
 
 jobs:
-  test:
-    timeout-minutes: 60
+  deploy_preview:
+    name: Deploy Preview to Vercel
     runs-on: ubuntu-latest
+    outputs:
+      preview_url: ${{ steps.vercel.outputs.preview_url }}
     steps:
       - uses: actions/checkout@v4
 
-      # Setup Node.js
+      # Install pnpm + deps (needed if your build runs before deploy)
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: 'pnpm'
 
-      # Cache pnpm store
-      - name: Setup pnpm
+      - name: Install pnpm
         run: npm install -g pnpm
 
-      - name: Cache pnpm dependencies
-        uses: actions/cache@v3
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Optional: build locally to speed up Vercel with --prebuilt
+      - name: Build locally
+        run: pnpm build
+
+      # Deploy to Vercel (Preview)
+      - name: Vercel Preview Deploy
+        id: vercel
+        uses: amondnet/vercel-action@v25
         with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: .
+          vercel-args: '--prebuilt' # uses local build output if supported
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  playwright_test:
+    name: Run Playwright Tests (Preview)
+    needs: deploy_preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      BASE_URL: ${{ needs.deploy_preview.outputs.preview_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -42,16 +73,65 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
 
-      # Install Playwright browsers only if not cached
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
 
-      - name: Run Playwright tests
-        run: pnpm exec playwright test
+      # Wait for Vercel Preview URL to be ready (sometimes deploy ends before fully live)
+      - name: Wait for Preview to be Ready
+        run: |
+          echo "Waiting for $BASE_URL to respond..."
+          for i in {1..30}; do
+            if curl -fsS "$BASE_URL" >/dev/null; then
+              echo "Preview is live!"
+              exit 0
+            fi
+            echo "Not ready yet... ($i/30)"
+            sleep 5
+          done
+          echo "Preview never became ready."
+          exit 1
 
+      # Run Playwright tests against the live preview
+      - name: Run Playwright tests
+        run: pnpm exec playwright test --config=playwright.config.ts
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ env.BASE_URL }}
+
+      # Upload Playwright HTML report (always, unless cancelled)
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+  deploy_prod:
+    name: Deploy to Production (after passing tests)
+    needs: [playwright_test]
+    if: >
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+      needs.playwright_test.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Optional: build locally for prod deploy
+      - name: Build locally
+        run: pnpm build
+
+      # Deploy Production to Vercel
+      - name: Vercel Production Deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: .
+          vercel-args: '--prebuilt --prod'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
