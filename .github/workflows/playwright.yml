@@ -2,7 +2,7 @@ name: Playwright + Vercel Gated Deploy
 
 on:
   push:
-    branches: ['**']        # build previews for every branch
+    branches: ['**'] # build previews for all branches
   pull_request:
     branches: [main, master]
 
@@ -15,10 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Install pnpm (respects packageManager in package.json if present)
+      # Install pnpm (with version specified)
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
+          version: 9
           run_install: false
 
       # Install Node & enable pnpm caching
@@ -61,6 +62,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
+          version: 9
           run_install: false
 
       - name: Setup Node
@@ -73,7 +75,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # (Optional) Cache Playwright browser binaries — not generally recommended, but available
+      # Cache Playwright browsers
       - name: Cache Playwright Browsers
         uses: actions/cache@v3
         with:
@@ -85,7 +87,7 @@ jobs:
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
 
-      # Wait for Vercel Preview to be reachable
+      # Wait for Vercel Preview to be ready
       - name: Wait for Preview to be Ready
         run: |
           echo "Waiting for $PLAYWRIGHT_BASE_URL to respond..."
@@ -123,6 +125,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
+          version: 9
           run_install: false
 
       - name: Setup Node
