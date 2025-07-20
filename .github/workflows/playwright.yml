@@ -2,7 +2,7 @@ name: Playwright + Vercel Gated Deploy
 
 on:
   push:
-    branches: ['**'] 
+    branches: ['**']
   pull_request:
     branches: [main, master]
 
@@ -33,7 +33,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      # Deploy to Vercel (Preview) - let Vercel build remotely
+      # Force link Vercel project
+      - name: Link Vercel Project
+        run: npx vercel link --token=${{ secrets.VERCEL_TOKEN }} --project ${{ secrets.VERCEL_PROJECT_ID }} --confirm
+
+      # Deploy to Vercel (Preview)
       - name: Vercel Preview Deploy
         id: vercel
         uses: amondnet/vercel-action@v25
@@ -71,7 +75,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      # Cache Playwright browsers (optional speed‑up)
+      # Cache Playwright browsers
       - name: Cache Playwright Browsers
         uses: actions/cache@v3
         with:
@@ -134,7 +138,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      # Deploy to Vercel Production (remote build)
+      # Force link Vercel project
+      - name: Link Vercel Project
+        run: npx vercel link --token=${{ secrets.VERCEL_TOKEN }} --project ${{ secrets.VERCEL_PROJECT_ID }} --confirm
+
+      # Deploy to Vercel Production
       - name: Vercel Production Deploy
         uses: amondnet/vercel-action@v25
         with:
@@ -142,5 +150,5 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: .
-          vercel-args: '--prod' # no --prebuilt
+          vercel-args: '--prod'
           github-token: ${{ secrets.GITHUB_TOKEN }}
