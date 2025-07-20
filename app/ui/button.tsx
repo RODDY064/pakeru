@@ -13,23 +13,23 @@ export default function Button({
   word: string;
   bagIcon?: boolean;
   backColor?:'white' |'black',
-  action?:()=>void
+  action?:(e:any)=>void
 }) 
 {
 
 
   return <div 
   onClick={action}
-  className="max-w-64  bg-white text-black my-4 cursor-pointer px-8 md:px-10 py-2 flex items-center justify-center gap-2 rounded-[0.1rem]">
-    <p className="capitalize font-manrop font-[500] text-sm md:text-lg mt-1">{word}</p>
+  className=" bg-black text-white mt-2 cursor-pointer px-6 py-2 flex items-center justify-center gap-2 rounded-[0.1rem]">
+    <p className="capitalize font-avenir font-[400] text-sm md:text-sm mt-1">{word}</p>
     <Image 
-    src="/icons/bag-b.svg"
-    width={22}
-    height={22}
+    src="/icons/bag-w.svg"
+    width={18}
+    height={18}
     className="hidden md:block"
     alt="bag"/>
     <Image 
-    src="/icons/bag-b.svg"
+    src="/icons/bag-w.svg"
     width={18}
     height={18}
     className="md:hidden"

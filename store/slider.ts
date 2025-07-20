@@ -30,7 +30,7 @@ export const useSliderStore: StateCreator<
   slider: [
     {
       id: 0,
-      title: "T-SHIRTS",
+      title: "SHIRTS",
       description:
         "The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate. The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate.",
       mainImage: "/images/nm2.png",

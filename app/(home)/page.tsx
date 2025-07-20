@@ -16,13 +16,15 @@ import { cubicBezier } from "motion";
 import LookAt from "../ui/lookAt";
 import ProductCard from "../ui/product-card";
 import SliderButton from "../ui/sliderButton";
-import Video from "../ui/video";
+import Video from "../ui/bentos";
 import { useGsapSlider } from "@/libs/gsapScroll";
+import { handleNavigation } from "@/libs/navigate";
+import Loader from "../ui/loader";
 
 const easing = cubicBezier(0.37, 0.24, 0.38, 0.99);
 
 export default function Home() {
-  const { scrollAmount } = useBoundStore();
+  const { scrollAmount, setRouteChange } = useBoundStore();
   const router = useRouter();
   useGSAP(() => {
     //  console.log(scrollAmount)
@@ -33,14 +35,14 @@ export default function Home() {
     }
   }, [scrollAmount]);
 
-  const handleAction = () => {
-    router.push("/product");
-  };
-
   return (
-    <div className="w-full min-h-screen  flex flex-col items-center bg-black home-main">
-      <ImageSlider action={handleAction} />
-      <div className="w-full  mt-24 pt-4 bg-white  ">
+    <div className="w-full min-h-dvh  flex flex-col items-center bg-black home-main">
+      <Images
+        action={(e: any) =>
+          handleNavigation(e, "/product", router, setRouteChange, 200)
+        }
+      />
+      <div className="w-full mt-[1px]  pt-4 bg-white  ">
         <Slider />
         <LookAt />
         <Product />
@@ -50,25 +52,41 @@ export default function Home() {
   );
 }
 
-const ImageSlider = ({ action }: { action: any }) => {
+const Images = ({ action }: { action: any }) => {
   return (
-    <div className="w-full h-[500px] md:h-[700px] slider-container font-manrop">
+    <div className="w-full h-[95vh] md:h-[90vh] lg:h-[100vh] slider-container font-avenir">
       <div className="slider w-full  h-full">
-        <div className="w-full h-full relative ">
-          <Image
-            src="/images/shop.jpg"
-            fill
-            className="object-cover"
-            alt="shop"
-            priority
-          />
-          <div className="absolute w-full h-full flex  flex-col  justify-end   ">
-            <div className="w-full h-24 md:h-64 bg-gradient-to-b bg-transparent to-black flex flex-col gap-2 items-center justify-center">
-              <h1 className="text-white font-manrop font-bold text-3xl md:text-4xl">
-                IN THE TROPICS
+        <div className="w-full  h-full bg-white  relative overflow-hidden ">
+          <div className="w-full max-sm:h-[70%] max-sm:mt-8 mt-24 xl:mt-auto h-[70%]   xl:h-[80%] relative">
+            <Image
+              src="/images/12.png"
+              fill
+              className="object-cover xl:flex hidden"
+              alt="shop"
+              priority
+            />
+            <Image
+              src="/images/hero-pad.png"
+              fill
+              className="object-cover md:flex hidden xl:hidden"
+              alt="shop"
+              priority
+            />
+            <Image
+              src="/images/hero-m.png"
+              fill
+              className="object-cover md:hidden"
+              alt="shop"
+              priority
+            />
+          </div>
+          <div className="absolute w-full h-full flex  flex-col top-0 justify-end z-20 ">
+            <div className="w-full  md:h-[20%] mb-[15%] md:mb-0  flex flex-col gap-2 items-center ">
+              <h1 className="text-black font-avenir font-bold text-[20px] md:text-3xl ">
+                GET THE LOOKS, ROCK IT
               </h1>
-              <p className="capitalise text-white tex-sm md:text-md text-center px-12 ">
-                EVERY PRODUCT WE CRAFT IS DESIGNED TO FUEL YOUR.
+              <p className="capitalise text-black font-avenir font-medium tex-[15px] md:text-sm text-center px-10 cursor-pointer ">
+                EVERY PRODUCT WE CRAFT IS DESIGNED TO FUEL YOUR LOOKS.
               </p>
               <Button action={action} word="SHOP NOW" />
             </div>
@@ -129,13 +147,12 @@ const Slider = () => {
               key={product.id}
               onClick={() => setLookAt(product.id)}
               className={cn(
-                "w-[calc(90vw)] md:w-[calc(70vw)] card h-[400px] flex-shrink-0  relative lg:h-[600px]  flex-none  flex items-center justify-center overflow-hidden  ",
+                "w-[calc(90vw)] md:w-[calc(70vw)] card h-[350px]  flex-shrink-0  relative lg:h-[calc(35vw)]  flex-none  flex items-center justify-center overflow-hidden  ",
                 {
                   "pl-1 md:pl-3 ": product.id === 0,
                   "border border-black/5": product.id !== 0,
                 }
-              )}
-            >
+              )}>
               {product.id === 0 ? (
                 <div className="w-[calc(90vw)] md:w-[calc(70vw)] h-full relative  overflow-hidden border border-black/5">
                   <motion.div
@@ -158,20 +175,24 @@ const Slider = () => {
                       priority
                     />
                     <div className="w-full h-full flex items-end justify-center text-white relative z-10">
-                      <div className="w-full h-24 flex items-end justify-center pb-4 bg-gradient-to-b from-transparent to-black/20">
-                        <motion.div variants={veiwT}>
-                          <p className="font-manrop font-black text-lg">
-                            {product.title}
-                          </p>
-                        </motion.div>
+                      <div className="w-full h-24 flex items-end justify-center pb-10 bg-gradient-to-b from-transparent to-black/20">
                         <motion.div
-                          variants={viewB}
-                          className="min-w-24 h-10 translate-y-[40px] px-6 cursor-pointer bg-black  absolute flex items-center
-                           justify-center rounded-[2px]"
+                          variants={textMovement}
+                          className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
                         >
-                          <p className="text-white font-manrop font-black text-lg">
-                            TAKE A LOOK
-                          </p>
+                          <motion.div
+                            variants={textOverlay}
+                            className="w-full h-full bg-black absolute text-overlay"
+                          />
+                          <div className="flex gap-2 items-center relative z-20 flex-none">
+                            <div className="size-1.5 bg-white rounded-full" />
+                            <p className="font-avenir font-[400] text-white">
+                              T-SHIRT
+                            </p>
+                            <motion.div variants={imgDiv}>
+                              <p>-- TAKE A LOOK</p>
+                            </motion.div>
+                          </div>
                         </motion.div>
                       </div>
                     </div>
@@ -198,23 +219,23 @@ const Slider = () => {
                     priority
                   />
                   <div className="w-full h-full flex items-end justify-center text-white relative z-10">
-                    <div className="w-full h-24 flex flex-col items-center justify-end pb-4 bg-gradient-to-b from-transparent to-black/20">
-                      <motion.div variants={veiwT}>
-                        <div className="flex items-center gap-3">
-                          <div className="size-2 bg-white rounded-full" />
-                          <p className="font-manrop font-black text-lg">
+                    <div className="w-full h-24 flex items-end justify-center pb-10 bg-gradient-to-b from-transparent to-black/20">
+                      <motion.div
+                        variants={textMovement}
+                        className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center">
+                        <motion.div
+                          variants={textOverlay}
+                          className="w-full h-full bg-black absolute text-overlay"
+                        />
+                        <div className="flex gap-2 items-center relative z-20 flex-none">
+                          <div className="size-1.5 bg-white rounded-full" />
+                          <p className="font-avenir font-[400] text-white">
                             {product.title}
                           </p>
+                          <motion.div variants={imgDiv}>
+                            <p>-- TAKE A LOOK</p>
+                          </motion.div>
                         </div>
-                      </motion.div>
-                      <motion.div
-                        variants={viewB}
-                        className="min-w-24 h-10 translate-y-[40px] px-6 cursor-pointer bg-black  absolute flex items-center 
-                        justify-center rounded-[2px]"
-                      >
-                        <p className="text-white font-manrop font-bold md:font-black text-md md:text-lg">
-                          TAKE A LOOK
-                        </p>
                       </motion.div>
                     </div>
                   </div>
@@ -229,6 +250,31 @@ const Slider = () => {
       </div>
     </motion.div>
   );
+};
+
+const textOverlay = {
+  show: {
+    clipPath: "circle(150% at 0 100%)",
+  },
+  hide: {
+    clipPath: "circle(0.1% at 0 100%)",
+  },
+};
+
+const imgDiv = {
+  show: { opacity: 1 },
+  hide: { opacity: 0 },
+};
+
+const textMovement = {
+  show: {
+    x: -8,
+    transition: { type: "spring", stiffness: 150, damping: 16, mass: 0.6 },
+  },
+  hide: {
+    x: 35,
+    transition: { type: "spring", stiffness: 150, damping: 16, mass: 0.6 },
+  },
 };
 
 const ImgC = {
@@ -275,81 +321,97 @@ const Product = () => {
   );
   const cardRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
 
+  const { isStart, isEnd } = useGsapSlider({
+    sliderRef,
+    prevRef: prevBtnRef,
+    nextRef: nextBtnRef,
+    cardRef,
+    speed: 0.5,
+  });
 
-    const { isStart, isEnd } = useGsapSlider({
-      sliderRef,
-      prevRef: prevBtnRef,
-      nextRef: nextBtnRef,
-      cardRef,
-      speed: 0.5,
-    });
-  
-    const { products }  = useBoundStore()
-   
+  const { products, cartState } = useBoundStore();
 
   return (
     <div className="w-full mt-24 px-4 md:px-8">
-      <p className="text-xl font-black font-manrop mb-6">SHOP ALL</p>
+      <p className="text-xl font-bold font-avenir mb-6">SHOP ALL</p>
       <div
-      ref={sliderRef}
-       className="flex gap-4 overflow-x-scroll overflow-hidden nav-slider">
-        {products.map((product) => (
-          <ProductCard key={product.id}  productData={product} type="large" cardRef={product.id === 1 ? cardRef : undefined} cardStyle="md:mb-6" />
-        ))}
-      </div>
-       <div className="md:flex items-center justify-center gap-6 md:gap-12 hidden ">
-                <button
-                  ref={prevBtnRef}
-                  aria-label="Scroll left"
-                  className={cn(
-                    "size-14 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev",
-                    {
-                      visible: !isStart,
-                    }
-                  )}
-                >
-                  <Image
-                    src="/icons/arrow.svg"
-                    width={18}
-                    height={18}
-                    alt="arrow"
-                    className="rotate-90 group-hover/a:hidden"
-                  />
-                  <Image
-                    src="/icons/arrow-w.svg"
-                    width={18}
-                    height={18}
-                    alt="arrow"
-                    className="hidden rotate-90 group-hover/a:flex"
-                  />
-                </button>
-      
-                <button
-                  ref={nextBtnRef}
-                  aria-label="Scroll right"
-                  className={cn(
-                    "size-14 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next",
-                    {
-                      visible: !isEnd,
-                    }
-                  )}
-                >
-                  <Image
-                    src="/icons/arrow.svg"
-                    width={20}
-                    height={20}
-                    alt="arrow"
-                    className="rotate-270 group-hover/w:hidden"
-                  />
-                  <Image
-                    src="/icons/arrow-w.svg"
-                    width={20}
-                    height={20}
-                    alt="arrow"
-                    className="hidden rotate-270 group-hover/w:flex"
-                  />
-                </button>
+        ref={sliderRef}
+        className={cn("grid grid-flow-col auto-cols-[minmax(320,2fr)] md:auto-cols-[minmax(400,2fr)] gap-4 overflow-x-scroll overflow-hidden nav-slider",{
+          "auto-cols-[100%]  md:auto-cols-[100%] lg:auto-cols-[100%]  xl:auto-cols-[100%]" : cartState === "loading" || cartState === "error" 
+        })} >
+     {cartState === "loading" || cartState === "error" || cartState === "idle"? (
+           <div className="w-full  h-[400px] md:h-[450px] flex items-center justify-center">
+             <div className="flex items-center justify-center gap-1">
+              <Image src="/icons/loader.svg" width={24} height={24} alt="loader"/>
+              <p className="font-avenir font-[400] text-md mt-1 text-black/50">Loading</p>
+              </div> 
           </div>
+        ) : (
+          <>
+            {products?.map((product, index) => (
+              <ProductCard
+                key={product.id}
+                productData={product}
+                type="large"
+                cardRef={index === 0 ? cardRef : undefined}
+                cardStyle="md:mb-6"
+              />
+            ))}
+          </>
+        )}
+      </div>
+      {cartState === "success" && (<div className="md:flex items-center justify-center gap-6 md:gap-12 hidden ">
+        <button
+          ref={prevBtnRef}
+          aria-label="Scroll left"
+          className={cn(
+            "size-10 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev",
+            {
+              visible: !isStart,
+            }
+          )}>
+          <Image
+            src="/icons/arrow.svg"
+            width={18}
+            height={18}
+            alt="arrow"
+            className="rotate-90 group-hover/a:hidden"
+          />
+          <Image
+            src="/icons/arrow-w.svg"
+            width={18}
+            height={18}
+            alt="arrow"
+            className="hidden rotate-90 group-hover/a:flex"
+          />
+        </button>
+
+        <button
+          ref={nextBtnRef}
+          aria-label="Scroll right"
+          className={cn(
+            "size-10 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next",
+            {
+              visible: !isEnd,
+            }
+          )}
+        >
+          <Image
+            src="/icons/arrow.svg"
+            width={20}
+            height={20}
+            alt="arrow"
+            className="rotate-270 group-hover/w:hidden"
+          />
+          <Image
+            src="/icons/arrow-w.svg"
+            width={20}
+            height={20}
+            alt="arrow"
+            className="hidden rotate-270 group-hover/w:flex"
+          />
+        </button>
+      </div>) }
     </div>
   );
 };

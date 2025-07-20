@@ -1,1 +1,24 @@
-<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <rect width="24" height="24" fill="none"></rect> <path d="M9 9H6.84713C6.35829 9 5.9411 9.35341 5.86073 9.8356L4.19407 19.8356C4.09248 20.4451 4.56252 21 5.18046 21H18.8195C19.4375 21 19.9075 20.4451 19.8059 19.8356L18.1393 9.8356C18.0589 9.35341 17.6417 9 17.1529 9H15M9 9H15M9 9C8.66667 7.66667 8 3 12 3C16 3 15.3333 7.66667 15 9" stroke="#000000" stroke-linejoin="round"></path> </g></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24">
+  <!-- Generator: Adobe Illustrator 29.1.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 142)  -->
+  <defs>
+    <style>
+      .st0 {
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .st0, .st1 {
+        stroke: #000;
+      }
+
+      .st1 {
+        fill: none;
+        stroke-miterlimit: 10;
+      }
+    </style>
+  </defs>
+  <path class="st1" d="M17.8,22.4H5.9c-1.2,0-2.1-1-2-2.2l1.1-10.9c0-.3.3-.5.6-.5h3.6c.3.3,1.2,1.3,2.7,1.3s2.4-1,2.7-1.3h3.6c.3,0,.5.2.6.5l1.1,10.9c.1,1.2-.8,2.2-2,2.2h0Z"/>
+  <path id="handle" class="st1" d="M6.3,8.7c-.5-3.7,2.4-6.8,5.6-6.8,3.1,0,6,3.1,5.5,6.8"/>
+  <path id="space" class="st0" d="M14.6,8.7c-.3.4-1.2,1.3-2.7,1.3-1.5,0-2.5-1-2.7-1.3h5.4Z"/>
+</svg>

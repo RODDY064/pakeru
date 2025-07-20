@@ -2,13 +2,10 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "../styles/globals.css";
 import Nav from "./ui/nav";
+import { avenir, blackMango } from "./fonts/font";
 
 
-const manrop = Manrope({
-  variable: '--font-manrop',
-  style: ['normal'],
-  subsets: ['latin'], 
-});
+
 
 export const metadata: Metadata = {
   title: "E-come",
@@ -20,9 +17,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  
   return (
     <html lang="en">
-      <body className={`${manrop.variable}  antialiased`}> 
+      <body className={` ${avenir.variable} ${blackMango.style}  antialiased `}> 
        {children}
       </body>
     </html>

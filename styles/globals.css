@@ -8,28 +8,32 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-manrop:var(--font-manrop)
+  --font-avenir:var(--font-avenir);
+  --font-mango:var(--font-mango)
+}
+
+* {
+box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-avenir), var(--font-mango),sans-serif;
 }
 
 .nav-slider {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none; 
 }
 .nav-slider::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none; 
 }
 
 
 .nav-slider  {
   overflow-x: auto;
-  scroll-behavior: smooth; /* native smooth scrolling */
-  display: flex;
+  scroll-behavior: smooth; 
    -webkit-overflow-scrolling: touch;
 }
 
@@ -38,10 +42,16 @@ body {
   clip-path: circle(0.1% at 0 100%);
 }
 
-/* 
-.vail {
-  transition: opacity .2s cubic-bezier(.4,0,.6,1) 80ms,visibility .2s step-end 10ms;
+.modal-visible {
+  visibility: visible;
 }
- */
+
+.modal-invisible {
+  visibility: hidden;
+}
 
 
+
+.hero-gird {
+  grid-template-columns: repeat(auto-fit,minmax(400px,1fr));
+}

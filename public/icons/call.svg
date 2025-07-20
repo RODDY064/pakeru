@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="pause" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #231f20;
+      }
+
+      .cls-1, .cls-2 {
+        stroke: #010101;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .cls-2 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <rect class="cls-2" x="5" y=".75" width="14" height="22.4" rx="1.44" ry="1.44"/>
+  <line class="cls-2" x1="7.94" y1="20.5" x2="16.06" y2="20.5"/>
+  <circle class="cls-1" cx="12" cy="3.5" r=".5"/>
+</svg>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <ellipse id="circle" cx="11.98" cy="11.81" rx="11.25" ry="11.22" style="fill: none; stroke: #fff; stroke-miterlimit: 10;"/>
+  <g id="bars">
+    <line id="bar" x1="9.85" y1="16.62" x2="9.85" y2="7" style="fill: none; stroke: #fff; stroke-linecap: round; stroke-linejoin: round;"/>
+    <line id="bar-2" data-name="bar" x1="14.12" y1="16.62" x2="14.12" y2="7" style="fill: none; stroke: #fff; stroke-linecap: round; stroke-linejoin: round;"/>
+  </g>
+</svg>

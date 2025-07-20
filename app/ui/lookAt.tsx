@@ -10,18 +10,18 @@ import React, { useRef } from "react";
 import ProductCard from "./product-card";
 import { useGsapSlider } from "@/libs/gsapScroll";
 
-const ease = cubicBezier(0.32, 0.17, 0.45, 0.98);
-const easingShow = cubicBezier(0.4, 0, 0.2, 1);
+const ease = cubicBezier(.32, .17, .45, .98);
+const easingShow = cubicBezier(.4, 0, .2, 1);
 
 export default function LookAt() {
   const { lookAt, SlideInview, setLookAt , products } = useBoundStore();
   const router = useRouter();
 
   const handleLink = () => {
-    router.push(SlideInview?.link as string);
-    setTimeout(() => {
-      setLookAt(SlideInview?.id as any);
-    }, 500);
+    // router.push(SlideInview?.link as string);
+    // setTimeout(() => {
+    //   setLookAt(SlideInview?.id as any);
+    // }, 500);
   };
 
 
@@ -60,11 +60,11 @@ const { isStart, isEnd } = useGsapSlider({
       <motion.div
         animate={lookAt && SlideInview?.inView ? { y: 0 } : { y: 400 }}
         transition={{ ease: ease }}
-        className="w-[90%] md:w-[80%]  xl:w-[70%] h-[70vh] md:h-[85vh] bg-white relative z-20 p-4 md:p-10 overflow-y-scroll"
+        className="w-[98%] md:w-[80%]  xl:w-[70%] h-[70vh] md:h-[85vh] bg-white relative z-20 p-4 md:p-10 overflow-y-scroll"
       >
         <div className="w-full">
           <div className="w-full flex justify-between items-center">
-            <p className="font-black font-manrop text-xl md:text-2xl">
+            <p className="font-bold font-avenir text-xl ">
               {SlideInview?.title}
             </p>
             <Image
@@ -76,9 +76,9 @@ const { isStart, isEnd } = useGsapSlider({
               alt="cancel"
             />
           </div>
-          <div className="mt-6">
+          <div className="mt-4">
             <div className="">
-              <p className="mt-2 text-md md:text-lg font-manrop font-medium  lg:pr-6">
+              <p className="mt-2 text-md md:text-lg font-avenir font-[400]  lg:pr-6">
                 The preparation for becoming a great copywriter is a lifestyle.
                 It’s a hunger for knowledge, a curiosity and a desire to
                 participate in life that is broad-based and passionate. The
@@ -115,10 +115,10 @@ const { isStart, isEnd } = useGsapSlider({
                     <Image src={item} fill className="object-cover" alt="" />
                     <motion.div
                       variants={viewB}
-                      className="absolute bottom-4 px-4 py-1.5 text-white bg-black overflow-hidden">
+                      className="absolute bottom-4 px-3 py-1.5 text-white bg-black overflow-hidden">
                       <div className="w-full h-full">
                         {" "}
-                        <p className="font-manrop text-sm font-black">SHOP NOW</p>
+                        <p className="font-avenir text-sm font-[400]">SHOP NOW</p>
                       </div>
                     </motion.div>
                   </motion.div>
@@ -127,15 +127,15 @@ const { isStart, isEnd } = useGsapSlider({
             </div>
           </div>
           <div className="mt-14">
-            <p className="font-black font-manrop text-lg md:text-xl">
+            <p className="font-black font-avenir text-lg md:text-xl">
               PRODUCTS
             </p>
             <div className="overflow-hidden">
          <div 
             ref={sliderRef}
-            className="w-full my-4 flex gap-3 pr-10 nav-slider">
-              {products.map((product) => (
-                <ProductCard type="small" key={product.id} productData={product}   cardRef={product.id === 1 ? cardRef : undefined} />
+            className="w-full my-4 grid grid-flow-col auto-cols-[98%] md:auto-cols-[50%] lg:auto-cols-[40%]  xl:auto-cols-[40%] gap-3 pr-10 nav-slider">
+              {products?.map((product,index) => (
+                <ProductCard type="small" key={product.id} productData={product}   cardRef={index === 0 ? cardRef : undefined} />
               ))}
             </div>
             </div>

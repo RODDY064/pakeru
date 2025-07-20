@@ -64,9 +64,8 @@ export default function Filter() {
             animate={filter ? "show" : "hide"}
             initial="hide"
             className={cn(
-              "font-manrop text-black md:flex flex-col bg-white   z-[99]  py-4 hidden h-full relative mt-[-2px] border-black"
-            )}
-          >
+              "font-avenir text-black md:flex flex-col bg-white   z-[99]  py-4 hidden h-full relative mt-[-2px] border-black"
+            )}>
             <motion.div
               variants={ParentSub}
               className="fixed h-full z-50 w-0   bg-white border-r-[0.5px] "

@@ -100,17 +100,17 @@ export default function SignIn() {
   };
 
   return (
-    <div className="flex flex-col items-center pt-16 md:pt-24 font-manrop">
-      <h1 className="text-3xl md:text-4xl font-manrop font-bold">
+    <div className="flex flex-col items-center pt-16 md:pt-24 font-avenir">
+      <h1 className="text-3xl md:text-4xl font-avenir font-bold">
         Welcome Back
       </h1>
-      <p className="font-manrop text-md md:text-lg font-medium my-3">
+      <p className="font-avenir text-md md:text-lg font-medium my-3">
         Please sign-in with your credentials
       </p>
       <div className="w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%] bg-black/10 h-11 mt-6  flex items-center justify-center rounded">
         <Link
           href="/sign-in"
-          className="w-1/2 h-full font-manrop bg-black cursor-pointer flex items-center justify-center text-white rounded-l"
+          className="w-1/2 h-full font-avenir bg-black cursor-pointer flex items-center justify-center text-white rounded-l"
         >
           <p className="text-md font-medium">Sign in</p>
         </Link>
@@ -157,10 +157,10 @@ export default function SignIn() {
         </div>
         <div className="flex items-center justify-between gap-2">
           <div className="w-full h-[1px] bg-black/20"></div>
-          <p className="text-sm text-black/30 font-manrop">or</p>
+          <p className="text-sm text-black/30 font-avenir">or</p>
           <div className="w-full h-[1px] bg-black/20"></div>
         </div>
-        <div className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-manrop font-semibold text-black  text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
+        <div className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black  text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
           <Image src="/icons/google.svg" width={16} height={16} alt="google" />
           <p className="">Google</p>
         </div>

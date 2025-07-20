@@ -1,18 +1,13 @@
 import { type StateCreator } from "zustand";
 import { Store } from "./store";
+import { ProductType } from "./cart";
 
 export type SearchStore = {
-  navSearch: string;
+  search: string;
+  isSearching: boolean;
   setNavSearch: (word: string) => void;
-  productSearch: string;
-  setProductSearch: () => void;
-  curtain: "show" | "hide";
-  navContent: "mens" | "search" | "new in" | "outlet" | "idle";
-  curtainState: (
-    curt: "mens" | "search" | "new in" | "outlet" | "idle"
-  ) => void;
-  hideCurtain: () => void;
-  showCurtain: () => void;
+  toggleSearch: () => void;
+  searchProduct: ProductType[];
 };
 
 export const useSearch: StateCreator<
@@ -20,26 +15,36 @@ export const useSearch: StateCreator<
   [["zustand/immer", never]],
   [],
   SearchStore
-> = (set) => ({
-  navSearch: "",
-  productSearch: "",
-  curtain: "hide",
-  navContent: "idle",
+> = (set, get) => ({
+  search: "",
+  isSearching: false,
+  searchProduct: [],
   setNavSearch: (word) =>
-    set({
-      navSearch: word,
+    set((state) => {
+      state.search = word;
+      
+      // Filter products based on search term
+      if (word.trim() === "") {
+        state.searchProduct = [];
+      } else {
+        const allProducts = get().products || [];
+        state.searchProduct = allProducts.filter((product) => {
+          const searchTerm = word.toLowerCase();
+          return (
+            product.name.toLowerCase().includes(searchTerm) ||
+            product.category.toLowerCase().includes(searchTerm)
+          );
+        });
+      }
     }),
-  setProductSearch: () => {},
-  curtainState: (curt) =>
-    set({
-      navContent: curt,
-    }),
-  hideCurtain: () =>
-    set({
-      curtain: "hide",
-    }),
-  showCurtain: () =>
-    set({
-      curtain: "show",
+  toggleSearch: () =>
+    set((state) => {
+      state.isSearching = !state.isSearching;
+      
+      // Clear search results when closing search
+      if (state.isSearching === false) {
+        state.search = "";
+        state.searchProduct = [];
+      }
     }),
 });

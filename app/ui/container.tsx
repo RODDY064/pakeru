@@ -9,6 +9,7 @@ import { useBoundStore } from "@/store/store";
 import CartModal from "./Modal";
 import Modal from "./Modal";
 import Footer from "./footer";
+import Loader from "./loader";
 
 export default function Container({ children }: { children: React.ReactNode }) {
   const { setScrollAmount, setScrollRef } = useBoundStore();
@@ -28,8 +29,8 @@ export default function Container({ children }: { children: React.ReactNode }) {
 
   return (
     <main>
+       <Loader/>
       <Nav />
-      <Modal/>
       {children}
       <Footer/>
     </main>

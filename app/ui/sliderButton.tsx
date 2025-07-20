@@ -81,9 +81,9 @@ export default function SliderButton() {
   }, []);
 
   return (
-    <div className="w-[5%] h-20 rounded-full bg-black navButton  items-center text-white justify-center opacity-0 lg:flex hidden px-4">
+    <div className="w-[5%] h-16 rounded-full bg-black navButton  items-center text-white justify-center opacity-0 lg:flex hidden px-3">
        <div className="flex items-center justify-between w-full">
-        <div className="size-14 hover:border-white/50  cursor-pointer flex items-center justify-center border rounded-full prev flex-none ">
+        <div className="size-10 hover:border-white/50  cursor-pointer flex items-center justify-center border rounded-full prev flex-none ">
        
           <Image
             src="/icons/arrow-w.svg"
@@ -93,8 +93,8 @@ export default function SliderButton() {
             className="rotate-90 group-hover/sc:hidden"
           />
         </div>
-        <p className="font-manrop drag-text opacity-0 flex-none flex mx-4 text-center">Drag the slider or click the buttons to slide</p>
-        <div className="size-14 cursor-pointer flex items-center justify-center border rounded-full next hover:border-white/50 flex-none ">
+        <p className="font-avenir font-[300] drag-text opacity-0 flex-none flex mx-4 text-center text-md">Drag the slider or click the buttons to slide</p>
+        <div className="size-10 cursor-pointer flex items-center justify-center border rounded-full next hover:border-white/50 flex-none ">
         
           <Image
             src="/icons/arrow-w.svg"

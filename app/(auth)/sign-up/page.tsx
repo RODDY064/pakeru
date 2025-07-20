@@ -100,11 +100,11 @@ const onSubmit: SubmitHandler<SignUpSchema> = async (data) => {
 
 
   return (
-    <div className="flex flex-col items-center pt-16 md:py-24 font-manrop">
-      <h1 className="text-3xl md:text-4xl font-manrop font-bold">
+    <div className="flex flex-col items-center pt-16 md:py-24 font-avenir">
+      <h1 className="text-3xl md:text-4xl font-avenir font-bold">
         Create Account
       </h1>
-      <p className="font-manrop text-md md:text-lg font-medium my-3 text-center text-gray-700 px-5">
+      <p className="font-avenir text-md md:text-lg font-medium my-3 text-center text-gray-700 px-5">
         Enter your details below to create your account.
       </p>
       <div className=" w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%] bg-black/10 h-11 mt-6  flex items-center justify-center rounded">
@@ -178,7 +178,7 @@ const onSubmit: SubmitHandler<SignUpSchema> = async (data) => {
           <p className="text-sm text-black/30">or</p>
           <div className="w-full h-[1px] bg-black/20"></div>
         </div>
-        <div className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-manrop font-semibold text-black  text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
+        <div className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black  text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
           <Image src="/icons/google.svg" width={16} height={16} alt="google"/>
           <p className="">Google</p>
         </div>
