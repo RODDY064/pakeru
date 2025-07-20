@@ -2,7 +2,7 @@ name: Playwright + Vercel Gated Deploy
 
 on:
   push:
-    branches: ['**'] # build previews for all branches
+    branches: ['**'] 
   pull_request:
     branches: [main, master]
 
