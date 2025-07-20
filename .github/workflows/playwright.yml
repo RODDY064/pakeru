@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Install pnpm (with version specified)
+      # Install pnpm
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -31,13 +31,9 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
-      # Optional local build to speed up Vercel (lets us use --prebuilt)
-      - name: Build locally
-        run: pnpm build
-
-      # Deploy to Vercel (Preview)
+      # Deploy to Vercel (Preview) - let Vercel build remotely
       - name: Vercel Preview Deploy
         id: vercel
         uses: amondnet/vercel-action@v25
@@ -46,7 +42,7 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: .
-          vercel-args: '--prebuilt'
+          vercel-args: '' # no --prebuilt
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
   playwright_test:
@@ -73,9 +69,9 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
-      # Cache Playwright browsers
+      # Cache Playwright browsers (optional speed‑up)
       - name: Cache Playwright Browsers
         uses: actions/cache@v3
         with:
@@ -136,11 +132,9 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
-      - name: Build locally
-        run: pnpm build
-
+      # Deploy to Vercel Production (remote build)
       - name: Vercel Production Deploy
         uses: amondnet/vercel-action@v25
         with:
@@ -148,5 +142,5 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: .
-          vercel-args: '--prebuilt --prod'
+          vercel-args: '--prod' # no --prebuilt
           github-token: ${{ secrets.GITHUB_TOKEN }}
