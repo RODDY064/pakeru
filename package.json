@@ -11,9 +11,13 @@
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@hookform/resolvers": "^5.0.1",
+    "@lexical/react": "^0.33.1",
+    "@nivo/core": "^0.99.0",
+    "@nivo/line": "^0.99.0",
     "clsx": "^2.1.1",
     "gsap": "^3.13.0",
     "immer": "^10.1.1",
+    "lexical": "^0.33.1",
     "lodash.isequal": "^4.5.0",
     "lottie-react": "^2.4.1",
     "motion": "^12.15.0",

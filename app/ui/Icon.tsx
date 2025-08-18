@@ -8,9 +8,10 @@ import React, { useEffect, useRef } from "react";
 type MenuIconProps = {
   name: string; // e.g. "menu", "cart", etc
   onToggle: (name?: string) => void;
+  stroke?: "black" | "white";
 };
 
-export default function Icon({ name, onToggle }: MenuIconProps) {
+export default function Icon({ name, onToggle, stroke }: MenuIconProps) {
   const menuRef = useRef<SVGSVGElement | null>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
   const tl = useRef<GSAPTimeline | null>(null);
@@ -26,7 +27,7 @@ export default function Icon({ name, onToggle }: MenuIconProps) {
   // Setup GSAP animation for animatable icons only
   useGSAP(() => {
     if (!menuRef.current) return;
-    
+
     const first = menuRef.current.querySelector("#first");
     const middle = menuRef.current.querySelector("#middle");
     const last = menuRef.current.querySelector("#last");
@@ -34,19 +35,19 @@ export default function Icon({ name, onToggle }: MenuIconProps) {
     // For non-animatable icons, use gsap.set() when active
     if (!canAnimate) {
       gsap.set(first, {
-          y: 4.5,
-          rotate: 45,
-          transformOrigin: "center",
-        });
-        gsap.set(last, {
-          y: -4.5,
-          rotate: -45,
-          transformOrigin: "center",
-        });
-        gsap.set(middle, {
-          scaleX: 0,
-          transformOrigin: "center",
-        });
+        y: 4.5,
+        rotate: 45,
+        transformOrigin: "center",
+      });
+      gsap.set(last, {
+        y: -4.5,
+        rotate: -45,
+        transformOrigin: "center",
+      });
+      gsap.set(middle, {
+        scaleX: 0,
+        transformOrigin: "center",
+      });
       return;
     }
 
@@ -141,7 +142,8 @@ export default function Icon({ name, onToggle }: MenuIconProps) {
           e.preventDefault();
           handleToggle();
         }
-      }}>
+      }}
+    >
       <svg
         ref={menuRef}
         id="menu"
@@ -149,25 +151,26 @@ export default function Icon({ name, onToggle }: MenuIconProps) {
         height="24"
         viewBox="0 0 24 24"
         fill="none"
-        xmlns="http://www.w3.org/2000/svg">
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <path
           id="first"
           d="M2.30005 7.39014H21.7001"
-          stroke="black"
+          stroke={stroke ?? "black"}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           id="middle"
           d="M2.30005 12H21.7001"
-          stroke="black"
+          stroke={stroke ?? "black"}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           id="last"
           d="M2.30005 16.6104H7.59005H21.7001"
-          stroke="black"
+          stroke={stroke ?? "black"}
           strokeLinecap="round"
           strokeLinejoin="round"
         />

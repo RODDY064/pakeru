@@ -10,8 +10,10 @@ import { ImgSlideStore, useSliderStore } from "./slider";
 import { UserStore, useUserStore } from "./user";
 import { GeneralStore, useGenralStore } from "./general";
 import { CategoryStore, useCategory } from "./category";
+import { OrdersStore, useOrdersStore } from "./dashbaord/orders";
+import { StoreProductStore, useStoreProductStore} from "./dashbaord/products";
 
-export type Store = ScrollStore & SearchStore & FilterStore & CartStore & ModalStore & ImgSlideStore & UserStore & GeneralStore & CategoryStore;
+export type Store = ScrollStore & SearchStore & FilterStore & CartStore & ModalStore & ImgSlideStore & UserStore & GeneralStore & CategoryStore & OrdersStore & StoreProductStore;
 
 // 🔖  persisted state 
 type PersistedState = Pick<Store, 'cartItems' | 'cartInView' | 'bookMarks'>;
@@ -117,7 +119,7 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
     const persisted = persistedState as PersistedState;
     
     // Ensure bookmarks array exists and is valid
-    const validBookmarks = Array.isArray(persisted.bookMarks) 
+    const validBookmarks = Array.isArray(persisted?.bookMarks) 
       ? persisted.bookMarks.filter(bookmark => 
           bookmark && 
           typeof bookmark.id === 'string' && 
@@ -245,7 +247,9 @@ export const useBoundStore = create<Store>()(
       ...useSliderStore(...a),
       ...useUserStore(...a),
       ...useGenralStore(...a),
-      ...useCategory(...a)
+      ...useCategory(...a),
+      ...useOrdersStore(...a),
+      ...useStoreProductStore(...a)
     })),
     persistOptions
   )
