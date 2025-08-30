@@ -7,7 +7,7 @@ import Icon from "../Icon";
 
 export default function Navbar() {
   return (
-    <div className="w-full fixed z-20 py-2 md:py-4 px-2 md:px-8 bg-black text-white font-avenir font-[500] flex items-center justify-between">
+    <div className="w-full fixed z-[99] py-2 md:py-4 px-2 md:px-8 bg-black text-white font-avenir font-[500] flex items-center justify-between">
       <div>
         <Image
           src="/icons/text-logo-w.svg"
@@ -47,13 +47,7 @@ export default function Navbar() {
         <div className="size-11 rounded-full  items-center justify-center bg-white/15 hidden md:flex cursor-pointer">
           <p className="font-avenir font-[500] text-md">MS</p>
         </div>
-        <div className="mt-4 md:hidden">
-          <div className="flex flex-col items-center gap-1.5">
-            <div className="w-6 h-[0.8px] bg-white"></div>
-            <div className="w-6 h-[0.8px] bg-white"></div>
-            <div className="w-6 h-[0.8px] bg-white"></div>
-          </div>
-        </div>
+    
       </div>
     </div>
   );

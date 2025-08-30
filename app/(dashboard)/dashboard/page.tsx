@@ -4,7 +4,7 @@ import React from "react";
 
 export default function Dashboard() {
   return (
-    <div className="px-4 md:px-8  md:ml-[20%]  pt-24">
+    <div className="min-h-dvh md:h-dvh px-4 md:px-8  md:ml-[20%] py-20 md:pt-24">
       <div className="flex">
         <div className="bg-white border border-black/15 rounded-lg cursor-pointer py-1.5  px-4 flex items-center gap-2 flex-none">
           <Image
@@ -25,7 +25,7 @@ export default function Dashboard() {
           </select>
         </div>
       </div>
-      <div className="bg-white mt-4 w-[100%] xl:w-[80%] min-h-[400px] pb-6 border border-black/15 rounded-3xl p-4 relative">
+      <div className="bg-white mt-4 w-[100%] xl:w-[80%] min-h-[400px] pb-6 border border-black/15 rounded-3xl md:p-4 relative">
         <div className="flex gap-4 items-center mt-2 px-2">
           <div className="md:w-[180px] flex-none flex flex-col gap-1 bg-black text-white px-6 md:px-4 py-2 rounded-xl border border-black/10 cursor-pointer">
             <p className="font-avenir font-[500] text-sm">Total Orders</p>
@@ -45,7 +45,7 @@ export default function Dashboard() {
         <div className="">
           <Lines />
         </div>
-        <div className="w-full flex items-center justify-end px-8 mt-6">
+        <div className="w-full flex items-center justify-center md:justify-end md:px-8 mt-6">
           <div className="flex gap-6 items-center ">
             <div className="bg-white border border-black/15 rounded-lg cursor-pointer py-1.5  px-4 flex items-center gap-2 flex-none">
               <p className="font-avenir font-[500] text-sm pt-[3px]">

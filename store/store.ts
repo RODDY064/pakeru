@@ -12,8 +12,9 @@ import { GeneralStore, useGenralStore } from "./general";
 import { CategoryStore, useCategory } from "./category";
 import { OrdersStore, useOrdersStore } from "./dashbaord/orders";
 import { StoreProductStore, useStoreProductStore} from "./dashbaord/products";
+import { PaginationStore, usePaginationStore } from "./dashbaord/pagination";
 
-export type Store = ScrollStore & SearchStore & FilterStore & CartStore & ModalStore & ImgSlideStore & UserStore & GeneralStore & CategoryStore & OrdersStore & StoreProductStore;
+export type Store = ScrollStore & SearchStore & FilterStore & CartStore & ModalStore & ImgSlideStore & UserStore & GeneralStore & CategoryStore & OrdersStore & StoreProductStore & PaginationStore;
 
 // 🔖  persisted state 
 type PersistedState = Pick<Store, 'cartItems' | 'cartInView' | 'bookMarks'>;
@@ -249,13 +250,14 @@ export const useBoundStore = create<Store>()(
       ...useGenralStore(...a),
       ...useCategory(...a),
       ...useOrdersStore(...a),
-      ...useStoreProductStore(...a)
+      ...useStoreProductStore(...a),
+      ...usePaginationStore(...a)
     })),
     persistOptions
   )
 );
 
-// 🚀 Enhanced store initialization
+// 🚀store initialization
 export const initializeStore = async () => {
   if (typeof window !== 'undefined') {
     try {
@@ -266,7 +268,7 @@ export const initializeStore = async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Load fresh product data
-      await useBoundStore.getState().loadProducts();
+      await useBoundStore.getState().loadStoreProducts();
       
       // Sync bookmarks with products (this will clean up invalid bookmarks)
       useBoundStore.getState().syncBookmarksWithProducts();

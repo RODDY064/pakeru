@@ -77,7 +77,7 @@ export default function Nav() {
     setIsMobile,
     routeChange,
     setRouteChange,
-    loadProducts,
+    loadStoreProducts,
     loadCategories,
     products,
     modalDisplay,
@@ -103,7 +103,7 @@ export default function Nav() {
   },[products])
 
   useEffect(() => {
-    loadProducts();
+    loadStoreProducts();
     assignCatID()
 
     const handleResize = () => {

@@ -5,17 +5,16 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useBoundStore } from "@/store/store";
 import ProductCard from "@/app/ui/product-card";
 import { useGsapSlider } from "@/libs/gsapScroll";
-import { ProductType } from "@/store/cart";
-import { useSearchParams } from "next/navigation";
+import { ProductData  } from "@/store/dashbaord/products";
 import SizeGuild from "./size-guild";
 
 export default function ProductContainer({ nameID }: { nameID: string }) {
   const stickyRef = useRef<HTMLDivElement>(null);
   const imageDiv = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
+  const imageDivSim = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const {
     isMobile,
     products,
@@ -27,15 +26,21 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     cartState,
     addBookmark,
     isBookmarked,
-    setSizeGuild
+    setSizeGuild,
   } = useBoundStore();
   const [showButtons, setShowButtons] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [productData, setProductData] = useState<ProductType | null>(null);
+  const [productData, setProductData] = useState<ProductData | null>(null);
   const [sizeSelected, setSizeSelected] = useState<{
     shown: boolean;
     active: boolean;
   }>({ shown: false, active: false });
+
+  // Pinch zoom states
+  const [pinchZoom, setPinchZoom] = useState({
+    show: false,
+    currentImageIndex: 0,
+  });
 
   useEffect(() => {
     if (nameID && products.length > 0) {
@@ -54,6 +59,66 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     hideTimeoutRef.current = setTimeout(() => {
       setShowButtons(false);
     }, 3000);
+  };
+
+  // Pinch detection on main images
+  const pinchDetectionRef = useRef({
+    isPinching: false,
+    initialDistance: 0,
+  });
+
+  // Handle pinch start on main images
+  const handleImageTouchStart = (e: React.TouchEvent, imageIndex: number) => {
+    if (e.touches.length === 2) {
+      const distance = Math.sqrt(
+        Math.pow(e.touches[1].clientX - e.touches[0].clientX, 2) +
+          Math.pow(e.touches[1].clientY - e.touches[0].clientY, 2)
+      );
+      pinchDetectionRef.current = {
+        isPinching: true,
+        initialDistance: distance,
+      };
+    }
+  };
+
+  // Handle pinch move on main images
+  const handleImageTouchMove = (e: React.TouchEvent, imageIndex: number) => {
+    if (e.touches.length === 2 && pinchDetectionRef.current.isPinching) {
+      e.preventDefault(); // Prevent default zoom
+
+      const distance = Math.sqrt(
+        Math.pow(e.touches[1].clientX - e.touches[0].clientX, 2) +
+          Math.pow(e.touches[1].clientY - e.touches[0].clientY, 2)
+      );
+
+      const scaleChange = distance / pinchDetectionRef.current.initialDistance;
+
+      // If user pinches out (zoom in gesture), open the zoom modal
+      if (scaleChange > 1.1) {
+        setPinchZoom({
+          show: true,
+          currentImageIndex: imageIndex,
+        });
+        pinchDetectionRef.current.isPinching = false;
+      }
+    }
+  };
+
+  // Handle pinch end on main images
+  const handleImageTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length < 2) {
+      pinchDetectionRef.current.isPinching = false;
+    }
+  };
+
+  // Handle image click for pinch zoom (fallback for non-touch devices)
+  const handleImageClick = (imageIndex: number) => {
+    if (isMobile) {
+      setPinchZoom({
+        show: true,
+        currentImageIndex: imageIndex,
+      });
+    }
   };
 
   useEffect(() => {
@@ -102,15 +167,15 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   );
   const cardRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
 
-  const { isStart, isEnd } = useGsapSlider({
-    sliderRef: imageDiv,
+  const { isStart, isEnd, currentPage, goToPage, totalPages } = useGsapSlider({
+    sliderRef: imageDivSim,
     prevRef: prevBtnRef,
     nextRef: nextBtnRef,
     cardRef,
     speed: 0.5,
   });
 
-  const handleAdd = (product: ProductType) => {
+  const handleAdd = (product: ProductData) => {
     if (!product.selectedSize) {
       if (!sizeSelected.active) {
         setSizeSelected((stat) => ({ ...stat, shown: true }));
@@ -118,10 +183,6 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
       }
     }
 
-    // if (!sizeSelected.active || !product.selectedSize) {
-    //   setSizeSelected((stat) => ({ ...stat, shown: true }));
-    //   return;
-    // }
     closeModal();
     addToCart(product);
     setModal("cart");
@@ -130,6 +191,17 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   const handleSize = (id: string, newSize: string) => {
     setSizeSelected({ active: true, shown: false });
     updateSize(id, newSize);
+  };
+
+  // Get all product images
+  const getProductImages = () => {
+    const images = [];
+    if (productData?.mainImage) {
+      images.push(productData.mainImage);
+    }
+    // Add additional images here - you might want to add them to your ProductData
+    images.push("/images/hero-2.png"); // This is the second image you had hardcoded
+    return images;
   };
 
   return (
@@ -143,23 +215,33 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           >
             <div
               ref={cardRef}
-              className="w-full h-[400px] flex-none md:h-[70vh] lg:h-[80vh] relative border border-black/10"
+              className="w-full h-[400px] flex-none md:h-[70vh] lg:h-[80vh] relative border border-black/10 cursor-pointer touch-pan-y"
+              onClick={() => handleImageClick(0)}
+              onTouchStart={(e) => handleImageTouchStart(e, 0)}
+              onTouchMove={(e) => handleImageTouchMove(e, 0)}
+              onTouchEnd={handleImageTouchEnd}
             >
               {productData?.mainImage && (
                 <Image
                   src={productData.mainImage}
                   fill
                   priority
-                  className="object-cover"
+                  className="object-cover select-none"
                   alt={productData?.name || "Product image"}
                 />
               )}
             </div>
-            <div className="w-full h-[400px] flex-none  md:h-[70vh] lg:h-[80vh] relative border border-black/10">
+            <div
+              className="w-full h-[400px] flex-none  md:h-[70vh] lg:h-[80vh] relative border border-black/10 cursor-pointer touch-pan-y"
+              onClick={() => handleImageClick(1)}
+              onTouchStart={(e) => handleImageTouchStart(e, 1)}
+              onTouchMove={(e) => handleImageTouchMove(e, 1)}
+              onTouchEnd={handleImageTouchEnd}
+            >
               <Image
                 src="/images/hero-2.png"
                 fill
-                className="object-cover"
+                className="object-cover select-none"
                 alt="hero"
               />
             </div>
@@ -222,7 +304,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                 A440-2
               </p>
               <Image
-                onClick={() => addBookmark(productData as ProductType)}
+                onClick={() => addBookmark(productData as ProductData)}
                 src={
                   isBookmarked(
                     productData?.id as string,
@@ -290,9 +372,10 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                   >
                     SIZE
                   </p>
-                  <p 
-                  onClick={setSizeGuild}
-                  className="underline text-sm font-avenir font-[400] underline-offset-4 underline-black/40 text-black/30 cursor-pointer">
+                  <p
+                    onClick={setSizeGuild}
+                    className="underline text-sm font-avenir font-[400] underline-offset-4 underline-black/40 text-black/30 cursor-pointer"
+                  >
                     SIZE GUILD
                   </p>
                 </div>
@@ -318,8 +401,9 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                 </div>
               </div>
               <div
-                onClick={() => handleAdd(productData as ProductType)}
-                className="mt-10 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black  hover:bg-green-500 hover:border-green-500 border border-black/20  group/add cursor-pointer transition-all">
+                onClick={() => handleAdd(productData as ProductData)}
+                className="mt-10 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black  hover:bg-green-500 hover:border-green-500 border border-black/20  group/add cursor-pointer transition-all"
+              >
                 <p className="font-avenir font-[400] text-sm pt-[4px] text-white ">
                   ADD TO CART
                 </p>
@@ -385,7 +469,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
         <div className="mt-4">
           <div className="w-full flex items-center justify-center ">
             <div
-              // ref={sliderRef}
+              ref={imageDivSim}
               className={cn(
                 "grid grid-flow-col auto-cols-[90%] md:auto-cols-[30%] px-4 md:pl-8  xl:auto-cols-[25%] productSlider  gap-4 overflow-x-scroll overflow-hidden nav-slider",
                 {
@@ -423,9 +507,257 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
               )}
             </div>
           </div>
+          <div className="flex flex-col items-center mb-4">
+            <div className="w-[80%] md:w-full mb-4 flex flex-wrap items-center justify-center gap-1 md:gap-3">
+              {Array.from({ length: totalPages - 1 }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goToPage(i)}
+                  className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full ${
+                    i === currentPage ? "bg-black" : "bg-black/20"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+          {cartState === "success" && (
+            <div className="md:flex items-center justify-center gap-6 md:gap-12 hidden mt-2 ">
+              <button
+                ref={prevBtnRef}
+                aria-label="Scroll left"
+                className={cn(
+                  "size-10 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev",
+                  {
+                    visible: !isStart,
+                  }
+                )}
+              >
+                <Image
+                  src="/icons/arrow.svg"
+                  width={18}
+                  height={18}
+                  alt="arrow"
+                  className="rotate-90 group-hover/a:hidden"
+                />
+                <Image
+                  src="/icons/arrow-w.svg"
+                  width={18}
+                  height={18}
+                  alt="arrow"
+                  className="hidden rotate-90 group-hover/a:flex"
+                />
+              </button>
+
+              <button
+                ref={nextBtnRef}
+                aria-label="Scroll right"
+                className={cn(
+                  "size-10 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next",
+                  {
+                    visible: !isEnd,
+                  }
+                )}
+              >
+                <Image
+                  src="/icons/arrow.svg"
+                  width={20}
+                  height={20}
+                  alt="arrow"
+                  className="rotate-270 group-hover/w:hidden"
+                />
+                <Image
+                  src="/icons/arrow-w.svg"
+                  width={20}
+                  height={20}
+                  alt="arrow"
+                  className="hidden rotate-270 group-hover/w:flex"
+                />
+              </button>
+            </div>
+          )}
         </div>
       </div>
-      <SizeGuild/>
+      <SizeGuild />
+
+      {/* Pinch Zoom Modal */}
+      {pinchZoom.show && (
+        <PinchZoom
+          title={productData?.name || "Product"}
+          images={getProductImages()}
+          show={pinchZoom.show}
+          currentIndex={pinchZoom.currentImageIndex}
+          onClose={() => setPinchZoom({ show: false, currentImageIndex: 0 })}
+          onImageChange={(index) =>
+            setPinchZoom((prev) => ({ ...prev, currentImageIndex: index }))
+          }
+        />
+      )}
     </div>
   );
 }
+
+const PinchZoom = ({
+  title,
+  images,
+  show,
+  currentIndex,
+  onClose,
+  onImageChange,
+}: {
+  title: string;
+  images: string[];
+  show: boolean;
+  currentIndex: number;
+  onClose: () => void;
+  onImageChange: (index: number) => void;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
+  const [transform, setTransform] = useState({
+    scale: 1,
+    x: 0,
+    y: 0,
+  });
+  const [isZooming, setIsZooming] = useState(false);
+  const lastTouchRef = useRef({ distance: 0, center: { x: 0, y: 0 } });
+  const initialTouchRef = useRef({ distance: 0, center: { x: 0, y: 0 } });
+
+  // Get distance between two touch points
+  const getDistance = (touch1: React.Touch, touch2: React.Touch) => {
+    return Math.sqrt(
+      Math.pow(touch2.clientX - touch1.clientX, 2) +
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+    );
+  };
+
+  // Get center point between two touches
+  const getCenter = (touch1: React.Touch, touch2: React.Touch) => {
+    return {
+      x: (touch1.clientX + touch2.clientX) / 2,
+      y: (touch1.clientY + touch2.clientY) / 2,
+    };
+  };
+
+  // Handle touch start
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      setIsZooming(true);
+      const distance = getDistance(e.touches[0], e.touches[1]);
+      const center = getCenter(e.touches[0], e.touches[1]);
+
+      lastTouchRef.current = { distance, center };
+      initialTouchRef.current = { distance, center };
+    }
+  };
+
+  // Navigation functions
+  const goToPrevious = () => {
+    const newIndex = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
+    onImageChange(newIndex);
+    setTransform({ scale: 1, x: 0, y: 0 }); // Reset zoom when changing images
+  };
+
+  const goToNext = () => {
+    const newIndex = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
+    onImageChange(newIndex);
+    setTransform({ scale: 1, x: 0, y: 0 }); // Reset zoom when changing images
+  };
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed top-0 left-0 bg-white z-[90] w-full h-full p-6 md:p-10 text-black font-avenir">
+      <div className="flex items-center justify-between pt-2">
+        <p className="font-[400] text-lg">{title.toUpperCase()}</p>
+        <div
+          onClick={onClose}
+          className="size-10 border  border-black/30 md:size-12 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/5"
+        >
+          <div className="w-[1.5px] h-[20px] md:h-[24px] bg-black rotate-[45deg]"></div>
+          <div className="w-[1.5px] h-[20px] md:h-[24px] bg-black rotate-[-45deg]"></div>
+        </div>
+      </div>
+
+      <div
+        ref={containerRef}
+        className="relative flex h-full  pt-4 pb-10 overflow-hidden"
+        onTouchStart={handleTouchStart}
+      >
+        <div
+          ref={imageRef}
+          className="w-full h-[80%] relative overflow-hidden select-none"
+          style={{
+            transform: `scale(${transform.scale}) translate(${
+              transform.x / transform.scale
+            }px, ${transform.y / transform.scale}px)`,
+            transition: isZooming ? "none" : "transform 0.3s ease",
+            transformOrigin: "center center",
+          }}
+        >
+          <Image
+            src={images[currentIndex]}
+            fill
+            className="object-cover pointer-events-none"
+            alt={title}
+            priority
+          />
+        </div>
+
+        {/* Navigation buttons - only show if not zoomed */}
+        {transform.scale <= 1.1 && images.length > 1 && (
+          <div className="absolute bottom-[12%] flex justify-between z-10 w-full px-4 md:px-6">
+            <button
+              onClick={goToPrevious}
+              className="cursor-pointer border border-black/20 size-10 rounded-full flex items-center justify-center hover:bg-black/5 bg-white/80 backdrop-blur-sm"
+              aria-label="Previous image"
+            >
+              <Image
+                src="/icons/arrow.svg"
+                width={20}
+                height={20}
+                alt="arrow"
+                className="rotate-[90deg]"
+              />
+            </button>
+            <button
+              onClick={goToNext}
+              className="cursor-pointer border border-black/20 size-10 rounded-full flex items-center justify-center hover:bg-black/5 bg-white/80 backdrop-blur-sm"
+              aria-label="Next image"
+            >
+              <Image
+                src="/icons/arrow.svg"
+                width={20}
+                height={20}
+                alt="arrow"
+                className="rotate-[-90deg]"
+              />
+            </button>
+          </div>
+        )}
+
+        {/* Image indicator dots */}
+        {images.length > 1 && (
+          <div className="absolute bottom-[15%] left-1/2 transform -translate-x-1/2 flex gap-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => onImageChange(index)}
+                className={cn("w-2 h-2 rounded-full transition-all", {
+                  "bg-black w-6": index === currentIndex,
+                  "bg-black/30": index !== currentIndex,
+                })}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Zoom level indicator */}
+        {transform.scale > 1.1 && (
+          <div className="absolute top-4 right-4 bg-black/80 text-white px-3 py-1 rounded-full text-sm">
+            {Math.round(transform.scale * 100)}%
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

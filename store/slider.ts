@@ -1,7 +1,7 @@
 import { type StateCreator } from "zustand";
 import { Store } from "./store";
-import { ProductType } from "./cart";
-import produce from "immer";
+import { ProductData } from "./dashbaord/products";
+
 
 export type ImgSlide = {
   id: number;
@@ -10,7 +10,7 @@ export type ImgSlide = {
   images: string[];
   description: string;
   link: string;
-  products: ProductType[];
+  products: ProductData[];
   inView: boolean;
 };
 

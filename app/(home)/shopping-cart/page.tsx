@@ -5,20 +5,23 @@ import CartCard from "@/app/ui/cartCard";
 import Icon from "@/app/ui/Icon";
 import { cn } from "@/libs/cn";
 import { handleNavigation } from "@/libs/navigate";
-import { ProductType } from "@/store/cart";
 import { useBoundStore } from "@/store/store";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export default function YourCart() {
-  const { isMobile, cartItems, setRouteChange } = useBoundStore();
+  const { isMobile, cartItems, setRouteChange, getCartStats } = useBoundStore();
   const totalRef = useRef<HTMLDivElement>(null);
   const cartDiv = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const router = useRouter()
+  const [cartStat,setCartStat] = useState({
+    totalPrice:0,
+    totalItems:0
+  })
 
   const handleLink = (e:any)=>{
      handleNavigation(e, "/product", router, setRouteChange, 200)
@@ -47,6 +50,16 @@ export default function YourCart() {
       },
     });
   });
+
+  useEffect(()=>{
+   const { totalItems, totalPrice} = getCartStats()
+
+   setCartStat({
+    totalItems,
+    totalPrice
+   })
+
+  },[getCartStats,cartItems])
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center text-black ">
@@ -115,9 +128,9 @@ export default function YourCart() {
           <div className="w-full">
             <div className="w-full flex items-center justify-between">
               <p className="font-avenir font-[400] text-md">SUBTOTAL</p>
-              <p className="font-avenir font-[400] text-md">GHS 1020.00</p>
+              <p className="font-avenir font-[400] text-md">GHS {cartStat.totalPrice.toFixed(2)}</p>
             </div>
-            <div className="w-full flex items-center justify-between mt-1">
+            <div className="w-full flex items-center justify-between mt-1 text-black/50">
               <p className="font-avenir font-[400] text-md">SHIPPING</p>
               <p className="font-avenir font-[400] text-md">GHS 0.00</p>
             </div>
@@ -126,7 +139,7 @@ export default function YourCart() {
             </p>
             <div className="w-full flex items-center justify-between my-6">
               <p className="font-avenir font-[400] text-md">TOTAL</p>
-              <p className="font-avenir font-[400] text-md">GHS 1020.00</p>
+              <p className="font-avenir font-[400] text-md">GHS {cartStat.totalPrice.toFixed(2)}</p>
             </div>
             <Link href="/payment">
             <div  className="mt-4 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black   border border-black/20  group/add cursor-pointer transition-all">

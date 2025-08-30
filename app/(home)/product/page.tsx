@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 export default function Product() {
-  const { cartState, loadProducts, products } = useBoundStore();
+  const { cartState, loadStoreProducts, products } = useBoundStore();
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -17,7 +17,7 @@ export default function Product() {
     setIsRefreshing(true);
     try {
       
-      await loadProducts();
+      await loadStoreProducts();
        await new Promise((res) => setTimeout(res, 500))
       router.refresh();
     } finally {

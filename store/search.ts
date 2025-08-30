@@ -1,13 +1,13 @@
 import { type StateCreator } from "zustand";
 import { Store } from "./store";
-import { ProductType } from "./cart";
+import { ProductData } from "./dashbaord/products"; 
 
 export type SearchStore = {
   search: string;
   isSearching: boolean;
   setNavSearch: (word: string) => void;
   toggleSearch: () => void;
-  searchProduct: ProductType[];
+  searchProduct: ProductData[];
 };
 
 export const useSearch: StateCreator<

@@ -31,7 +31,7 @@ export default function Menu() {
     renderedSubBar,
     setModal,
     bookMarks,
-    closeModal
+    closeModal,
   } = useBoundStore();
   const [currentActiveItem, setCurrentActiveItem] = useState<string | null>(
     null
@@ -114,9 +114,7 @@ export default function Menu() {
     );
 
     console.log("Memoized products:", memoizedProducts);
-    console.log("data menu ",data )
-
- 
+    console.log("data menu ", data);
 
     return (
       <div className="w-full h-full">
@@ -153,19 +151,20 @@ export default function Menu() {
           </p>
           <div className="w-full pl-6">
             {/* Fixed slider - removed conflicting layout animation */}
-            <div
-              ref={sliderRef}
-              className="w-full my-4 flex gap-3 pr-20 nav-slider " >
-              <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait">
+              <div
+                ref={sliderRef}
+                className="w-full my-4 grid grid-flow-col auto-cols-[minmax(300,2fr)] md:auto-cols-[minmax(100,270px)]  pr-20 nav-slider ">
                 <motion.div
                   key={`${data.title}-products-${contentKey}`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex gap-3">
+                  className="flex gap-3 w-full relative ">
                   {memoizedProducts.map((product, index) => (
                     <motion.div
+                    className="w-full"
                       key={`${product.id}-${
                         product.selectedColor || "default"
                       }-${index}`} >
@@ -177,8 +176,8 @@ export default function Menu() {
                     </motion.div>
                   ))}
                 </motion.div>
-              </AnimatePresence>
-            </div>
+              </div>
+            </AnimatePresence>
 
             {/* Navigation buttons */}
             <div className="hidden md:flex items-center pt-2 justify-center gap-6 md:gap-12">
@@ -476,13 +475,15 @@ export default function Menu() {
         animate={modal ? "open" : "close"}
         initial="close"
         exit="close"
-        className="w-[100%] h-0 relative bg-white flex-col gap-4 pt-[120px] px-12 flex md:hidden menu-mobile">
+        className="w-[100%] h-0 relative bg-white flex-col gap-4 pt-[120px] px-12 flex md:hidden menu-mobile"
+      >
         {menuItems.map((item, index) => (
           <motion.div
             variants={list}
             key={index}
             onClick={() => handleMobileMenuClick(item.title)}
-            className="font-avenir w-fit text-lg cursor-pointer">
+            className="font-avenir w-fit text-lg cursor-pointer"
+          >
             {item.title}
             <p className="w-full h-[1px] bg-amber-600"></p>
           </motion.div>
@@ -503,8 +504,10 @@ export default function Menu() {
             <p className="font-avenir font-[400] text-sm mt-[4px]">BOOKMARK</p>
           </div>
           <Link
-          onClick={closeModal}
-           href="/account" className="flex items-center gap-1.5 mt-3">
+            onClick={closeModal}
+            href="/account"
+            className="flex items-center gap-1.5 mt-3"
+          >
             <Image src="/icons/user.svg" width={16} height={16} alt="user" />
             <p className="font-avenir font-[400] text-sm mt-[8px]">ACCOUNT</p>
           </Link>
@@ -520,7 +523,8 @@ export default function Menu() {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white">
+            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white"
+          >
             {RenderMobileTAB(mobileActiveItem)}
           </motion.div>
         )}

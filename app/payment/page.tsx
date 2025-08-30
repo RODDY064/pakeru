@@ -5,14 +5,32 @@ import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Input from "../ui/input";
+import { CartItemType } from "@/store/cart";
 
 export default function Payment() {
-  const { setRouteChange } = useBoundStore();
+  const { setRouteChange, cartItems,getCartStats } = useBoundStore();
   const router = useRouter();
   const { register } = useForm();
+   const [cartStat,setCartStat] = useState({
+      totalPrice:0,
+      totalItems:0
+    })
+
+
+      useEffect(()=>{
+       const { totalItems, totalPrice} = getCartStats()
+    
+       setCartStat({
+        totalItems,
+        totalPrice
+       })
+    
+      },[getCartStats,cartItems])
+    
+    
 
   return (
     <div className="w-full min-h-dvh flex flex-col items-center bg-[#f2f2f2] pb-20">
@@ -160,19 +178,19 @@ export default function Payment() {
               <p className="font-avenir font-[400] text-sm">MY SHOPPING CART</p>
             </div>
             <div className="mt-4 flex flex-col">
-              {[1, 2,3 ].map((item) => (
-                <PaymentCard key={item} />
+              {cartItems?.map((cart) => (
+                <PaymentCard key={cart.id}  cart={cart}/>
               ))}
             </div>
             <div className="mt-10">
               <div className="w-full flex items-center justify-between">
-                <p className="font-avenir font-[400] text-sm">SUBTOTAL</p>
-                <p className="font-avenir font-[400] text-sm">GHS 0.00</p>
+                <p className="font-avenir font-[400] text-sm">TOTAL</p>
+                <p className="font-avenir font-[400] text-sm">GHS {cartStat?.totalPrice.toFixed(2)}</p>
               </div>
-              <div className="w-full flex items-center justify-between mt-1">
+              {/* <div className="w-full flex items-center justify-between mt-1 text-black/50">
                 <p className="font-avenir font-[400] text-sm">SHIPPING</p>
                 <p className="font-avenir font-[400] text-sm">GHS 0.00</p>
-              </div>
+              </div> */}
             </div>
           </div>
           <div className="w-full h-full bg-white rounded-md px-4 py-6 ">
@@ -213,24 +231,24 @@ export default function Payment() {
   );
 }
 
-const PaymentCard = () => {
+const PaymentCard = ({ cart}:{ cart:CartItemType}) => {
   return (
     <div className="py-4 border-b border-black/10 flex items-end gap-3">
       <div className="w-[30%] md:w-[20%] h-20 lg:h-20 rounded relative overflow-hidden">
         <Image
-          src="/images/hero-2.png"
+          src={cart?.mainImage as string}
           fill
           className="object-cover"
-          alt="hero"
+          alt={cart?.name}
         />
       </div>
       <div>
-        <p className="font-avenir font-[400] text-sm">PORLO MEN'S WEAR</p>
+        <p className="font-avenir font-[400] text-sm uppercase">{cart?.name}</p>
         <p className="font-avenir  font-[400]  text-sm text-black/50  ">
-          GHS 550
+          GHS {cart?.price}
         </p>
         <p className="font-avenir  font-[400]  text-xs text-black/50   mt-2">
-          QUANTITY: 2
+          QUANTITY: {cart?.quantity}
         </p>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { useGSAP } from "@gsap/react";
 import { cn } from "@/libs/cn";
 import Lottie from "lottie-react";
 import loaderAnimation from "../../public/lottie/pakeru.json";
+import Image from "next/image";
 
 gsap.registerPlugin(MorphSVGPlugin);
 
@@ -225,15 +226,34 @@ export default function SVGMorph({
   }, [showLoader]);
 
   return (
-    <div className={`relative w-full h-full ${className}  overflow-hidden `}>
+    <div className={`relative  w-full h-full ${className}  overflow-hidden `}>
       {!split && !reverse ? (
         <div
           ref={(el) => {
             contentRefs.current[0] = el;
           }}
-          className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden p-2"
-          style={{ borderRadius: rounded }}
-        >
+          className="absolute  inset-0 flex items-center justify-center  overflow-hidden p-2"
+          style={{ borderRadius: rounded }}>
+          <div className="text-center absolute z-20 bottom-0  right-0 rounded-4xl w-full h-full flex ">
+            <div className="relative top-10 left-10">
+              <p className="font-avenir text-lg">Hello</p>
+            </div>
+            <div className="size-12 absolute z-9- bottom-6 right-8   flex items-center justify-center">
+              {/* <Lottie
+                animationData={loaderAnimation}
+                loop={true}
+                style={{ width: "100%", height: "100%" }}
+              /> */}
+              <div className="size-10  bg-black/5 rounded-full cursor-pointer  flex items-center justify-center">
+                <Image
+                  src="/icons/bag.svg"
+                  width={24}
+                  height={24}
+                  alt="shopping bag"
+                />
+              </div>
+            </div>
+          </div>
           {render[0]}
         </div>
       ) : (
@@ -247,7 +267,7 @@ export default function SVGMorph({
                 ref={(el) => {
                   contentRefs.current[i] = el;
                 }}
-                className="absolute flex items-center justify-center p-2 overflow-hidden pointer-events-none"
+                className="absolute flex items-center justify-center p-2 overflow-hidden "
                 style={{
                   left: x,
                   top: y,
@@ -258,23 +278,24 @@ export default function SVGMorph({
               >
                 {
                   <>
-                    { showLoader &&
-                      <div className="text-center absolute z-20 bottom-3 right-4 rounded-4xl w-16 h-16 flex items-center justify-center">
-                        <div className="size-12 relative z-10">
-                          <Lottie
-                            animationData={loaderAnimation}
-                            loop={true}
-                            style={{ width: "100%", height: "100%" }}
-                          />
-                        </div>
-                      </div>
-                    }
                     <div
                       className={cn(
                         "w-full h-full flex flex-col items-center justify-center renderBox"
                       )}
                     >
                       {render[i]}
+                      <div className="text-center absolute z-20 bottom-1.5  w-full h-full  right-1.5 rounded-4xl  flex items-center justify-center">
+                        <div className="size-12 absolute z-9- bottom-3 right-3   flex items-center justify-center">
+                           <div className="size-10  bg-black/5 rounded-full cursor-pointer  flex items-center justify-center">
+                            <Image
+                              src="/icons/bag.svg"
+                              width={24}
+                              height={24}
+                              alt="shopping bag"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </>
                 }
@@ -289,13 +310,13 @@ export default function SVGMorph({
         ref={svgRef}
         width="100%"
         height="100%"
-        className="px-2"
+        className="px"
         viewBox={`0 0 ${size.width} ${size.height}`}
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
           <filter id="goo">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
             <feColorMatrix
               in="blur"
               type="matrix"

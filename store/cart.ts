@@ -1,43 +1,19 @@
 import { type StateCreator } from "zustand";
 import { Store } from "./store";
-import { persist, PersistOptions } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
+import {  ProductData } from "./dashbaord/products";
 
-// 🧩 Product Type
-export type ProductType = {
-  id: string;
-  name: string;
-  description?: string;
-  sizes: string[];
-  mainImage: string;
-  images: {
-    _id: string;
-    publicId: string;
-    url: string;
-  }[];
-  colors: string[];
-  price: number;
-  category: string;
-  selectedSize?: string;
-  selectedColor?: string;
-  rating: number;
-  numReviews?: number;
-  stock: number;
-  isActive: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-};
 
 // 🛒 Cart Item with unique identifier for color/size combinations
-export type CartItemType = ProductType & {
+export type CartItemType = ProductData & {
   quantity: number;
   cartItemId: string; // Unique ID for this specific cart item combination
 };
 
-// 🔖 Bookmark Type - Now properly extends ProductType
-export type BookmarkType = ProductType & {
+// 🔖 Bookmark Type - Now properly extends ProductData
+export type BookmarkType = ProductData & {
   bookmarkId: string; // Unique ID for this specific bookmark combination
-  bookmarkCreatedAt: string; // Renamed to avoid conflict with ProductType.createdAt
+  bookmarkCreatedAt: string; // Renamed to avoid conflict with ProductData.createdAt
 };
 
 // 📊 Cart Statistics
@@ -58,7 +34,7 @@ export type BookmarkStats = {
 export type CartStore = {
   cartItems: CartItemType[];
   cartInView: boolean;
-  products: ProductType[];
+  products: ProductData[];
   cartState: "idle" | "loading" | "success" | "error";
   error: string | null;
   bookMarks: BookmarkType[];
@@ -82,7 +58,7 @@ export type CartStore = {
 
   // Actions
   setCartInView: (inView?: boolean) => void;
-  addToCart: (product: ProductType, quantity?: number) => void;
+  addToCart: (product: ProductData, quantity?: number) => void;
   removeFromCart: (cartItemId: string) => void;
   clearCart: () => void;
   increaseQuantity: (cartItemId: string) => void;
@@ -92,9 +68,9 @@ export type CartStore = {
   updateColor: (cartItemId: string, newColor: string) => void;
 
   // Bookmark actions
-  addBookmark: (product: ProductType) => void;
+  addBookmark: (product: ProductData) => void;
   removeBookmark: (bookmarkId: string) => void;
-  toggleBookmark: (product: ProductType) => void;
+  toggleBookmark: (product: ProductData) => void;
   clearBookmarks: () => void;
 
   // Bulk operations
@@ -103,11 +79,11 @@ export type CartStore = {
   removeMultipleBookmarks: (bookmarkIds: string[]) => void;
 
   // Product management
-  loadProducts: () => Promise<void>;
+  loadStoreProducts: () => Promise<void>;
   refreshProducts: () => Promise<void>;
   syncCartWithProducts: () => void;
   syncBookmarksWithProducts: () => void;
-  getProductById: (productId: string) => ProductType | undefined;
+  getProductById: (productId: string) => ProductData | undefined;
 };
 
 // 🔧 Helper function to generate unique cart item ID
@@ -129,7 +105,7 @@ const generateBookmarkId = (
 };
 
 // 🔧 Helper function to validate product before adding to cart
-const validateProduct = (product: ProductType): boolean => {
+const validateProduct = (product: ProductData): boolean => {
   return !!(
     product.id &&
     product.name &&
@@ -672,8 +648,8 @@ export const useCartStore: StateCreator<
         .filter(Boolean) as BookmarkType[]; // Remove null items
     }),
 
-  // Enhanced loadProducts to sync with cart and bookmarks after loading
-  loadProducts: async () => {
+  // Enhanced loadStoreProducts to sync with cart and bookmarks after loading
+  loadStoreProducts: async () => {
     set((state) => {
       state.cartState = "loading";
       state.error = null;
@@ -700,14 +676,15 @@ export const useCartStore: StateCreator<
       }
 
       const result = await response.json();
+      console.log(result)
 
       if (!result || !Array.isArray(result.data)) {
         throw new Error(
-          "Invalid response format: expected { data: ProductType[] }"
+          "Invalid response format: expected { data: ProductData[] }"
         );
       }
 
-      const products: ProductType[] = result.data.map((product: any) => ({
+      const products: ProductData[] = result.data.map((product: any) => ({
         ...product,
         id: product._id,
         selectedColor: product?.colors?.[0] || undefined,
@@ -736,6 +713,6 @@ export const useCartStore: StateCreator<
   },
 
   refreshProducts: async () => {
-    await get().loadProducts();
-  },
+    await get().loadStoreProducts();
+  }
 });

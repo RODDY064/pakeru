@@ -12,6 +12,8 @@ export type CategoryStore = {
   categories: CategoryType[];
   loadCategories: () => Promise<void>;
   getProductsWithID: (categoryId: string) => void;
+  findCategories: () => void;
+  getCategoryNameById: (categoryId: string) => string | null;
 };
 
 export const useCategory: StateCreator<
@@ -19,7 +21,7 @@ export const useCategory: StateCreator<
   [["zustand/immer", never]],
   [],
   CategoryStore
-> = (set) => ({
+> = (set, get) => ({
   categories: [],
 
   loadCategories: async () => {
@@ -45,7 +47,6 @@ export const useCategory: StateCreator<
 
       console.log(res);
 
-      // Normalize _id to id
       const categories: CategoryType[] = res.data.map((item: any) => ({
         id: item._id,
         name: item.name,
@@ -64,5 +65,15 @@ export const useCategory: StateCreator<
   getProductsWithID: (categoryId: string) => {
     console.log("getProductsWithID called for category:", categoryId);
     // implement filtering logic if you have products in store
+  },
+
+  findCategories: () => {
+    console.log("findCategories called");
+    // stub for now
+  },
+
+  getCategoryNameById: (categoryId: string) => {
+    const category = get().categories.find((c) => c.id === categoryId);
+    return category ? category.name : null;
   },
 });

@@ -36,7 +36,7 @@ export default function Home() {
   }, [scrollAmount]);
 
   return (
-    <div className="w-full min-h-dvh  flex flex-col items-center bg-black home-main">
+    <div className="w-full min-h-dvh  flex flex-col items-center bg-black home-main overflow-hidden">
       <Images
         action={(e: any) =>
           handleNavigation(e, "/product", router, setRouteChange, 200)
@@ -56,8 +56,8 @@ const Images = ({ action }: { action: any }) => {
   return (
     <div className="w-full h-[95vh] md:h-[90vh] lg:h-[100vh] slider-container font-avenir">
       <div className="slider w-full  h-full">
-        <div className="w-full  h-full bg-white  relative overflow-hidden ">
-          <div className="w-full max-sm:h-[70%] max-sm:mt-8 mt-24 xl:mt-auto h-[70%]   xl:h-[80%] relative">
+        <div className="w-full  h-full bg-white  relative overflow-hidden  ">
+          <div className="w-full max-sm:h-[70%] max-sm:mt-8  lg:mt-24  flex fle-col items-end  xl:mt-[2%] h-[70%]   xl:h-[75%] relative">
             <Image
               src="/images/12.png"
               fill
@@ -152,7 +152,8 @@ const Slider = () => {
                   "pl-1 md:pl-3 ": product.id === 0,
                   "border border-black/5": product.id !== 0,
                 }
-              )}>
+              )}
+            >
               {product.id === 0 ? (
                 <div className="w-[calc(90vw)] md:w-[calc(70vw)] h-full relative  overflow-hidden border border-black/5">
                   <motion.div
@@ -222,7 +223,8 @@ const Slider = () => {
                     <div className="w-full h-24 flex items-end justify-center pb-10 bg-gradient-to-b from-transparent to-black/20">
                       <motion.div
                         variants={textMovement}
-                        className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center">
+                        className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
+                      >
                         <motion.div
                           variants={textOverlay}
                           className="w-full h-full bg-black absolute text-overlay"
@@ -321,7 +323,15 @@ const Product = () => {
   );
   const cardRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
 
-  const { isStart, isEnd } = useGsapSlider({
+  const {
+    isStart,
+    isEnd,
+    currentPage,
+    itemsArray,
+    totalPages,
+    goToPage,
+    reinitialize,
+  } = useGsapSlider({
     sliderRef,
     prevRef: prevBtnRef,
     nextRef: nextBtnRef,
@@ -331,20 +341,41 @@ const Product = () => {
 
   const { products, cartState } = useBoundStore();
 
+  useEffect(() => {
+    if (products && products.length > 0) {
+      console.log("Products loaded, reinitializing slider");
+      reinitialize();
+    }
+  }, [products]);
+
   return (
-    <div className="w-full mt-24 px-4 md:px-8">
+    <div className="w-full mt-24 px-4 md:px-8 lg:mx-2">
       <p className="text-xl font-bold font-avenir mb-6">SHOP ALL</p>
       <div
         ref={sliderRef}
-        className={cn("grid grid-flow-col auto-cols-[minmax(320,2fr)] md:auto-cols-[minmax(400,2fr)] gap-4 overflow-x-scroll overflow-hidden nav-slider",{
-          "auto-cols-[100%]  md:auto-cols-[100%] lg:auto-cols-[100%]  xl:auto-cols-[100%]" : cartState === "loading" || cartState === "error" 
-        })} >
-     {cartState === "loading" || cartState === "error" || cartState === "idle"? (
-           <div className="w-full  h-[400px] md:h-[450px] flex items-center justify-center">
-             <div className="flex items-center justify-center gap-1">
-              <Image src="/icons/loader.svg" width={24} height={24} alt="loader"/>
-              <p className="font-avenir font-[400] text-md mt-1 text-black/50">Loading</p>
-              </div> 
+        className={cn(
+          "grid grid-flow-col auto-cols-[minmax(320,2fr)] md:auto-cols-[minmax(400,2fr)] gap-4 overflow-x-scroll overflow-hidden nav-slider",
+          {
+            "auto-cols-[100%]  md:auto-cols-[100%] lg:auto-cols-[100%]  xl:auto-cols-[100%]":
+              cartState === "loading" || cartState === "error",
+          }
+        )}
+      >
+        {cartState === "loading" ||
+        cartState === "error" ||
+        cartState === "idle" ? (
+          <div className="w-full  h-[400px] md:h-[450px] flex items-center justify-center">
+            <div className="flex items-center justify-center gap-1">
+              <Image
+                src="/icons/loader.svg"
+                width={24}
+                height={24}
+                alt="loader"
+              />
+              <p className="font-avenir font-[400] text-md mt-1 text-black/50">
+                Loading
+              </p>
+            </div>
           </div>
         ) : (
           <>
@@ -355,63 +386,80 @@ const Product = () => {
                 type="large"
                 cardRef={index === 0 ? cardRef : undefined}
                 cardStyle="md:mb-6"
+                showDetails={true}
               />
             ))}
           </>
         )}
       </div>
-      {cartState === "success" && (<div className="md:flex items-center justify-center gap-6 md:gap-12 hidden ">
-        <button
-          ref={prevBtnRef}
-          aria-label="Scroll left"
-          className={cn(
-            "size-10 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev",
-            {
-              visible: !isStart,
-            }
-          )}>
-          <Image
-            src="/icons/arrow.svg"
-            width={18}
-            height={18}
-            alt="arrow"
-            className="rotate-90 group-hover/a:hidden"
-          />
-          <Image
-            src="/icons/arrow-w.svg"
-            width={18}
-            height={18}
-            alt="arrow"
-            className="hidden rotate-90 group-hover/a:flex"
-          />
-        </button>
+      <div className="flex flex-col items-center">
+        <div className="w-[80%] md:w-full mb-4 flex flex-wrap items-center justify-center gap-1 md:gap-3">
+          {Array.from({ length: totalPages - 1 }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => goToPage(i)}
+              className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full ${
+                i === currentPage ? "bg-black" : "bg-black/20"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+      {cartState === "success" && (
+        <div className="md:flex items-center justify-center gap-6 md:gap-12 hidden ">
+          <button
+            ref={prevBtnRef}
+            aria-label="Scroll left"
+            className={cn(
+              "size-10 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev",
+              {
+                visible: !isStart,
+              }
+            )}
+          >
+            <Image
+              src="/icons/arrow.svg"
+              width={18}
+              height={18}
+              alt="arrow"
+              className="rotate-90 group-hover/a:hidden"
+            />
+            <Image
+              src="/icons/arrow-w.svg"
+              width={18}
+              height={18}
+              alt="arrow"
+              className="hidden rotate-90 group-hover/a:flex"
+            />
+          </button>
 
-        <button
-          ref={nextBtnRef}
-          aria-label="Scroll right"
-          className={cn(
-            "size-10 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next",
-            {
-              visible: !isEnd,
-            }
-          )}
-        >
-          <Image
-            src="/icons/arrow.svg"
-            width={20}
-            height={20}
-            alt="arrow"
-            className="rotate-270 group-hover/w:hidden"
-          />
-          <Image
-            src="/icons/arrow-w.svg"
-            width={20}
-            height={20}
-            alt="arrow"
-            className="hidden rotate-270 group-hover/w:flex"
-          />
-        </button>
-      </div>) }
+          <button
+            ref={nextBtnRef}
+            aria-label="Scroll right"
+            className={cn(
+              "size-10 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next",
+              {
+                visible: !isEnd,
+              }
+            )}
+          >
+            <Image
+              src="/icons/arrow.svg"
+              width={20}
+              height={20}
+              alt="arrow"
+              className="rotate-270 group-hover/w:hidden"
+            />
+            <Image
+              src="/icons/arrow-w.svg"
+              width={20}
+              height={20}
+              alt="arrow"
+              className="hidden rotate-270 group-hover/w:flex"
+            />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

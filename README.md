@@ -713,3 +713,58 @@ Request Body:
 "rating": 4,
 "comment": "Very nice product"
 } -->
+
+
+
+
+
+// NEW PRODUCT FEILD 
+
+export type ProductVariant = {
+  id: string;
+  color: string;
+  colorHex?: string;
+  description: string;
+  sizes: string[];
+  images: string[];
+  stock: number;
+};
+
+// Product structure
+export type ProductData = {
+  id: string;
+  name: string;
+  slug?: string;
+  description?: string;
+  date: string;
+  time: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  totalNumber: number;
+  category: string;
+  tags?: string[];
+  status: "out-of-stock" | "active" | "inactive" | "draft";
+  selectedSize?: string;
+  selectedColor?: string;
+  rating: number;
+  numReviews?: number;
+  stock: number;
+  isActive: boolean;
+  price: number;
+  comparePrice?: number;
+  variants: ProductVariant[];
+  seo?: {
+    title?: string;
+    description?: string;
+    keywords?: string[];
+  };
+  visibility?: "public" | "private" | "hidden";
+  sizes: string[];
+  mainImage: string;
+  images: {
+    _id: string;
+    publicId: string;
+    url: string;
+  }[];
+  colors: string[];
+};

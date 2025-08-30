@@ -32,6 +32,8 @@ export type OrdersStore = {
   orderShipped: number;
   pendingOrders: number;
   cancelledOrders: number;
+  showOrderModal:boolean;
+  setOrderModal:() => void;
   setStatus: (
     type: "paymentStatus" | "deliveryStatus",
     action: "completed" | "pending" | "cancelled"
@@ -74,6 +76,14 @@ export const useOrdersStore: StateCreator<
   orderShipped: 0,
   pendingOrders: 0,
   cancelledOrders: 0,
+  showOrderModal:false,
+
+  setOrderModal:()=>{
+    set((state)=>{
+      state.showOrderModal = !state.showOrderModal
+    })
+  },
+
 
   setStatus: (type, action) => {
     set((state) => {

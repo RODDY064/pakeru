@@ -10,30 +10,6 @@ gsap.registerPlugin(ScrollTrigger);
 export default function Bentos() {
   const [splits, setSplits] = useState<boolean>(true);
 
-  useGSAP(() => {
-    const triggerInstance = ScrollTrigger.create({
-      trigger: ".splitParentTrigger",
-      start: "top top",
-      end: "bottom bottom",
-      scrub: 1,
-      markers:false,
-      toggleActions: "play reverse play reverse",
-      onEnter: () => {
-        console.log("splits");
-        setSplits(true);
-      },
-      onLeaveBack: () => {
-        setSplits(false);
-      },
-    });
-
-    ScrollTrigger.refresh();
-
-    return () => {
-      triggerInstance.kill(); //
-    };
-  }, []);
-
   return (
     <div className="w-full my-24 text-black flex flex-col items-center bg-[#f2f2f2] overflow-hidden">
       <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 py-24 px-4 gap-1 xl:gap-1 w-full splitParentTrigger">
@@ -41,18 +17,18 @@ export default function Bentos() {
           <div className="w-full flex-nowrap flex-none h-[400px] xl:h-[550px]  items-center justify-center">
             <SVGMorph
               render={[
-                <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
+                <div className="text-black w-full h-full  relative overflow-hidden rounded-[64px] p-6">
                   <Image
                     src="/bentos/bento1.png"
                     fill
                     alt="image"
-                    className="object-cover"
+                    className="object-cover "
                   />
-                </div>
+                </div>,
               ]}
               rounded={64}
               items={1}
-              className="px-2"
+              className="px-2 absolute bot"
             />
           </div>
           <div className="w-full  h-[200px] xl:h-[270px]   items-center justify-center">
@@ -78,39 +54,55 @@ export default function Bentos() {
               ]}
               split={splits}
               items={2}
-              className="w-full h-full "
+              className="w-full h-full mt-2"
               gap={16}
             />
           </div>
           <div className="w-full  h-[200px] xl:h-[300px]   items-center justify-center">
             <SVGMorph
               rounded={46}
-              split={splits}
+              split={true}
               render={[
-                <div className="text-black">Hello</div>,
-                <div className="text-black">Yello</div>,
+                <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
+                  <Image
+                    src="/bentos/bento3.png"
+                    fill
+                    alt="image"
+                    className="object-cover"
+                  />
+                </div>,
               ]}
-              items={2}
+              items={1}
               reverse={true}
-              className="w-full h-full "
+              className="w-full h-full mt-3"
               gap={16}
             />
           </div>
         </div>
-        <div className="flex flex-col gap-2 xl:gap-3 md:hidden lg:flex ">
+        <div className="flex flex-col gap-2 xl:gap-3 md:hidden lg:flex  max-sm:mt-3">
           <div className="flex gap-2 xl:gap-3 w-full">
             <div className="w-full  h-[200px] xl:h-[270px] flex items-center justify-center">
               <SVGMorph
                 rounded={46}
                 split={splits}
-                reverse={true}
+                reverse={false}
                 render={[
                   <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
-                  Splits One
-                </div>,
-                  <div className="text-black  w-full h-full p-6  rounded-4xl ">
-                    Splits Two
-                  </div>
+                    <Image
+                      src="/bentos/bento3.png"
+                      fill
+                      alt="image"
+                      className="object-cover"
+                    />
+                  </div>,
+                  <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
+                    <Image
+                      src="/bentos/bento2.png"
+                      fill
+                      alt="image"
+                      className="object-cover"
+                    />
+                  </div>,
                 ]}
                 items={2}
                 className="w-full h-full "
@@ -128,14 +120,13 @@ export default function Bentos() {
                     alt="image"
                     className="object-cover"
                   />
-                </div>,
-                <div className="text-black">Hello, Sup</div>,
+                </div>
               ]}
               rounded={64}
-              items={2}
+              items={1}
               split={splits}
               direction="column"
-              className="px-2 w-full"
+              className="px-0 mx-3"
             />
           </div>
         </div>
@@ -150,11 +141,11 @@ export default function Bentos() {
                     alt="image"
                     className="object-cover"
                   />
-                </div>
+                </div>,
               ]}
               rounded={64}
               items={1}
-              className="px-2"
+              className="px-2 "
             />
           </div>
           <div className="w-full  h-[200px] xl:h-[270px]   items-center justify-center">
@@ -168,7 +159,7 @@ export default function Bentos() {
                     alt="image"
                     className="object-cover"
                   />
-                  </div>,
+                </div>,
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
                     src="/bentos/bento9.png"
@@ -176,11 +167,11 @@ export default function Bentos() {
                     alt="image"
                     className="object-cover"
                   />
-                </div>
+                </div>,
               ]}
               items={2}
               split={splits}
-              className="w-full h-full "
+              className="w-full h-full mt-2"
               gap={16}
             />
           </div>
@@ -188,10 +179,19 @@ export default function Bentos() {
             <SVGMorph
               rounded={46}
               split={splits}
-              items={2}
+              items={1}
               reverse={true}
-              render={[<div className="text-black">Hello</div>]}
-              className="w-full h-full "
+              render={[
+                <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
+                  <Image
+                    src="/bentos/bento3.png"
+                    fill
+                    alt="image"
+                    className="object-cover"
+                  />
+                </div>,
+              ]}
+              className="w-full h-full mt-3"
               gap={16}
             />
           </div>
