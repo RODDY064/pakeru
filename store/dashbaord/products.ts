@@ -10,7 +10,7 @@ export type ProductVariant = {
   colorHex?: string;
   description: string;
   sizes: string[];
-  images: string[];
+  images: Array<{ id:string, url:string , productId:string} >;
   stock: number;
 };
 
@@ -18,14 +18,12 @@ export type ProductVariant = {
 export type ProductData = {
   id: string;
   name: string;
-  slug?: string;
   description?: string;
-  date: string;
-  time: string;
   createdAt?: Date;
   updatedAt?: Date;
   totalNumber: number;
   category: string;
+  subCategory?:string;
   tags?: string[];
   status: "out-of-stock" | "active" | "inactive" | "draft";
   selectedSize?: string;
@@ -114,7 +112,6 @@ export type StoreProductStore = {
   // Selection and navigation
   setSelectedProduct: (product: ProductData | null) => void;
   getProductById: (id: string) => ProductData | undefined;
-  getProductBySlug: (slug: string) => ProductData | undefined;
 
   // Data management
   clearProducts: () => void;
@@ -233,14 +230,7 @@ const transformApiProduct = (apiProduct: any, cart: string): ProductData => {
   return {
     id: apiProduct._id || apiProduct.id,
     name: apiProduct.name || "Untitled Product",
-    slug: createSlug(apiProduct.name || "untitled-product"),
     description: apiProduct.description || "",
-    date: apiProduct.createdAt
-      ? new Date(apiProduct.createdAt).toISOString().split("T")[0]
-      : now.toISOString().split("T")[0],
-    time: apiProduct.createdAt
-      ? new Date(apiProduct.createdAt).toTimeString().split(" ")[0]
-      : now.toTimeString().split(" ")[0],
     createdAt: apiProduct.createdAt ? new Date(apiProduct.createdAt) : now,
     updatedAt: apiProduct.updatedAt ? new Date(apiProduct.updatedAt) : now,
     category: cart,
@@ -314,6 +304,7 @@ export const useStoreProductStore: StateCreator<
         tags: productData.tags,
         price: productData.price,
         comparePrice: productData.comparePrice,
+        subCategory:productData.subCategory,
         stock: productData.stock || productData.totalNumber,
         status: productData.status,
         variants: productData.variants,
@@ -481,7 +472,6 @@ export const useStoreProductStore: StateCreator<
         id: _,
         createdAt,
         updatedAt,
-        slug,
         ...productData
       } = duplicatedProduct;
       await get().addProduct(productData);
@@ -531,9 +521,7 @@ export const useStoreProductStore: StateCreator<
     return get().storeProducts.find((p) => p.id === id);
   },
 
-  getProductBySlug: (slug) => {
-    return get().storeProducts.find((p) => p.slug === slug);
-  },
+  
 
   // Data management
   clearProducts: () =>
@@ -915,3 +903,204 @@ export const useStoreProductStore: StateCreator<
     }
   },
 });
+
+
+
+
+// // Enhanced product generator with better data
+// const getRandomElement = <T>(arr: T[]): T =>
+//   arr[Math.floor(Math.random() * arr.length)];
+
+// const luxuryAdjectives = [
+//   "Elegant",
+//   "Chic",
+//   "Sleek",
+//   "Classic",
+//   "Signature",
+//   "Modern",
+//   "Vintage",
+//   "Refined",
+//   "Iconic",
+//   "Essential",
+//   "Premium",
+//   "Luxe",
+// ];
+
+// const luxuryItems = [
+//   "Tote",
+//   "Sneakers",
+//   "Jacket",
+//   "Blazer",
+//   "Loafers",
+//   "Clutch",
+//   "Backpack",
+//   "Dress",
+//   "Trench Coat",
+//   "Hoodie",
+//   "Sweater",
+//   "Pants",
+// ];
+
+// const luxuryCollections = [
+//   "Monogram",
+//   "Heritage",
+//   "Urban Series",
+//   "Luxe Line",
+//   "Artisan Edition",
+//   "Paris Drop",
+//   "Runway Edition",
+//   "Studio Fit",
+//   "Classic Collection",
+// ];
+
+// const generateLuxuryName = (): string => {
+//   return `${getRandomElement(luxuryAdjectives)} ${getRandomElement(
+//     luxuryCollections
+//   )} ${getRandomElement(luxuryItems)}`;
+// };
+
+// export const generateProduct = (count: number = 7): ProductData[] => {
+//   const colors = [
+//     { name: "Black", hex: "#000000" },
+//     { name: "White", hex: "#FFFFFF" },
+//     { name: "Navy", hex: "#1e293b" },
+//     { name: "Gray", hex: "#6b7280" },
+//     { name: "Brown", hex: "#92400e" },
+//     { name: "Beige", hex: "#d6d3d1" },
+//   ];
+
+//   const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
+//   const statuses: ProductData["status"][] = [
+//     "active",
+//     "inactive",
+//     "out-of-stock",
+//     "draft",
+//   ];
+//   const categories = [
+//     "Apparel",
+//     "Footwear",
+//     "Accessories",
+//     "Outerwear",
+//     "Athleisure",
+//   ];
+//   const subcategories = {
+//     Apparel: ["Shirts", "Pants", "Dresses", "Tops"],
+//     Footwear: ["Sneakers", "Boots", "Sandals", "Heels"],
+//     Accessories: ["Bags", "Belts", "Jewelry", "Watches"],
+//     Outerwear: ["Jackets", "Coats", "Blazers", "Vests"],
+//     Athleisure: ["Hoodies", "Joggers", "Sports Bras", "Leggings"],
+//   };
+
+//   return Array.from({ length: count }, () => {
+//     const now = new Date();
+//     const createdDate = new Date(
+//       now.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000
+//     ); // Random date within last 30 days
+//     const category = getRandomElement(categories);
+//     const subcategory = getRandomElement(
+//       subcategories[category as keyof typeof subcategories]
+//     );
+
+//     const variantCount = Math.floor(Math.random() * 3) + 1;
+//     const usedColors = new Set<string>();
+
+//     const variants: ProductVariant[] = Array.from(
+//       { length: variantCount },
+//       () => {
+//         let colorObj = getRandomElement(colors);
+//         while (usedColors.has(colorObj.name)) {
+//           colorObj = getRandomElement(colors);
+//         }
+//         usedColors.add(colorObj.name);
+
+//         return {
+//           id: uuidv4(),
+//           color: colorObj.name,
+//           colorHex: colorObj.hex,
+//           description: `${generateLuxuryName()} in ${
+//             colorObj.name
+//           }. Crafted with premium materials and attention to detail.`,
+//           sizes: sizes.slice(0, Math.floor(Math.random() * sizes.length) + 2),
+//           images: [
+//             `/images/product.png`,
+//             `/images/product2.png`,
+//             `/images/product1.png`,
+//           ],
+//           stock: Math.floor(Math.random() * 100),
+//           sku: `${category.slice(0, 3).toUpperCase()}-${colorObj.name
+//             .slice(0, 3)
+//             .toUpperCase()}-${Date.now().toString().slice(-4)}`,
+//         };
+//       }
+//     );
+
+//     const basePrice = parseFloat((Math.random() * 300 + 50).toFixed(2));
+//     const name = generateLuxuryName();
+
+//     return {
+//       id: uuidv4(),
+//       name,
+//       slug: createSlug(name),
+//       description: `Experience luxury and comfort with our ${name}. Designed for the modern individual who appreciates quality and style.`,
+//       shortDescription: `Premium ${subcategory.toLowerCase()} with exceptional craftsmanship.`,
+//       date: createdDate.toISOString().split("T")[0],
+//       time: createdDate.toTimeString().split(" ")[0],
+//       createdAt: createdDate,
+//       updatedAt: now,
+//       category,
+//       subcategory,
+//       tags: [
+//         category.toLowerCase(),
+//         subcategory.toLowerCase(),
+//         "premium",
+//         "luxury",
+//       ],
+//       totalNumber: calculateTotalStock(variants),
+//       status: getRandomElement(statuses),
+//       price: basePrice,
+//       comparePrice:
+//         Math.random() > 0.7
+//           ? parseFloat((basePrice * 1.2).toFixed(2))
+//           : undefined,
+//       variants,
+//       features: [
+//         {
+//           id: uuidv4(),
+//           label: "Material",
+//           value: getRandomElement([
+//             "Cotton",
+//             "Wool",
+//             "Silk",
+//             "Linen",
+//             "Cashmere",
+//           ]),
+//         },
+//         {
+//           id: uuidv4(),
+//           label: "Care",
+//           value: getRandomElement([
+//             "Machine Wash",
+//             "Dry Clean Only",
+//             "Hand Wash",
+//           ]),
+//         },
+//         {
+//           id: uuidv4(),
+//           label: "Origin",
+//           value: getRandomElement(["Italy", "France", "USA", "Japan", "UK"]),
+//         },
+//       ],
+//       seo: {
+//         title: `${name} |  ${category}`,
+//         description: `Shop the ${name} - premium ${subcategory.toLowerCase()} crafted with exceptional quality and style.`,
+//         keywords: [
+//           category.toLowerCase(),
+//           subcategory.toLowerCase(),
+//           "luxury",
+//           "premium",
+//         ],
+//       },
+//       visibility: Math.random() > 0.1 ? "public" : "private",
+//     };
+//   });
+// };
