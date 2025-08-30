@@ -12,3 +12,4 @@ test("has title", async ({ page, baseURL }) => {
   await page.goto(baseURL || `${url}`);
   await expect(page).toHaveTitle(/E-come/i);
 });
+
