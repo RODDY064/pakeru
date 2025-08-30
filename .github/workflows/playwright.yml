@@ -49,9 +49,14 @@ jobs:
           echo "{\"orgId\":\"${{ secrets.VERCEL_ORG_ID }}\",\"projectId\":\"${{ secrets.VERCEL_PROJECT_ID }}\"}" > .vercel/project.json
           
           # Deploy and capture URL
+          echo "Starting deployment..."
           DEPLOYMENT_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes)
           echo "preview-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          echo "Preview deployed to: $DEPLOYMENT_URL"
+          echo "Deployment initiated: $DEPLOYMENT_URL"
+          
+          # Wait for deployment to be ready at Vercel level
+          echo "Waiting for Vercel deployment to complete..."
+          vercel inspect $DEPLOYMENT_URL --token=${{ secrets.VERCEL_TOKEN }} --wait
 
   playwright_test:
     name: Run Playwright Tests (Preview)
@@ -95,15 +100,41 @@ jobs:
       - name: Wait for Preview to be Ready
         run: |
           echo "Waiting for $PLAYWRIGHT_BASE_URL to respond..."
-          for i in {1..60}; do  # Increased timeout
-            if curl -fsS --connect-timeout 10 --max-time 30 "$PLAYWRIGHT_BASE_URL" >/dev/null 2>&1; then
-              echo "Preview is live!"
+          
+          # First, wait a bit for Vercel to start the deployment
+          echo "Initial wait for deployment to start..."
+          sleep 30
+          
+          # Then check with exponential backoff
+          for i in {1..40}; do
+            echo "Checking deployment status... ($i/40)"
+            
+            # Check if the URL responds with any HTTP status (even errors mean it's live)
+            if curl -fsS --connect-timeout 15 --max-time 45 "$PLAYWRIGHT_BASE_URL" >/dev/null 2>&1; then
+              echo "✅ Preview is live and responding!"
               exit 0
             fi
-            echo "Not ready yet... ($i/60)"
-            sleep 10  # Increased sleep time
+            
+            # Check if it's just returning an error but is actually accessible
+            HTTP_CODE=$(curl -o /dev/null -s -w "%{http_code}" --connect-timeout 15 --max-time 45 "$PLAYWRIGHT_BASE_URL" || echo "000")
+            if [ "$HTTP_CODE" != "000" ] && [ "$HTTP_CODE" != "" ]; then
+              echo "✅ Preview is live! (HTTP $HTTP_CODE)"
+              exit 0
+            fi
+            
+            echo "Not ready yet... (HTTP: $HTTP_CODE)"
+            
+            # Progressive backoff: start with 15s, increase to 30s after attempt 10
+            if [ $i -lt 10 ]; then
+              sleep 15
+            else
+              sleep 30
+            fi
           done
-          echo "Preview never became ready."
+          
+          echo "❌ Preview never became ready after 20+ minutes."
+          echo "URL: $PLAYWRIGHT_BASE_URL"
+          echo "This might be a Vercel deployment issue. Check the Vercel dashboard."
           exit 1
       
       - name: Run Playwright tests
@@ -153,6 +184,10 @@ jobs:
         run: |
           # Install Vercel CLI
           npm i -g vercel@latest
+          
+          # Set up Vercel project configuration
+          mkdir -p .vercel
+          echo "{\"orgId\":\"${{ secrets.VERCEL_ORG_ID }}\",\"projectId\":\"${{ secrets.VERCEL_PROJECT_ID }}\"}" > .vercel/project.json
           
           # Deploy to production
           vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
