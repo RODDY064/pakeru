@@ -44,6 +44,10 @@ jobs:
           # Install Vercel CLI
           npm i -g vercel@latest
           
+          # Set up Vercel project configuration
+          mkdir -p .vercel
+          echo "{\"orgId\":\"${{ secrets.VERCEL_ORG_ID }}\",\"projectId\":\"${{ secrets.VERCEL_PROJECT_ID }}\"}" > .vercel/project.json
+          
           # Deploy and capture URL
           DEPLOYMENT_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes)
           echo "preview-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
