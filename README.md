@@ -227,32 +227,95 @@ description: string
 
 price: number
 
-stock: number
+totalNumber: number
 
 category: string (Category ID)
 
-sizes: array of strings ["XS", ...]
+tags: Array[String]
 
-images: array of image files (max 5)
-
-colors: array of strings ["#ssdfsfsfs" ...]
+variants: Array[
+{
+"color";"red",
+"colorHex":"#453234",
+"sizes":["XL","S"],
+"images":["imageName.jpg","imageName2.jpg"]
+"stock":20
+},
+{
+"color";"red",
+"colorHex":"#453234",
+"sizes":["XL","S"],
+"images":["imageName.jpg","imageName2.jpg"]
+"stock":20
+}
+]
 
 Response: 201 Created
 
 {
 "status": "success",
 "data": {
-"\_id": "productId",
-"name": "Shirt",
-"description": "Cotton shirt",
-"price": 30,
-"images": [...],
-"category": { ... },
+"name": "New Test 2",
+"description": "This is a toto trouser",
+"tags": [
+"trouser",
+"teee",
+"T"
+],
+"price": 100,
+"category": "68335c83c02fdcea12545e06",
+"totalNumber": 30,
+"status": "active",
+"mainImage": {
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1756606118/products/wuziso3c5q8queqrb3ne.jpg",
+"publicId": "products/wuziso3c5q8queqrb3ne"
+},
+"variants": [
+{
+"color": "red",
+"colorHex": "#FF0000",
+"sizes": [
+[
+"S",
+"M",
+"L"
+]
+],
+"images": [
+{
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1756606118/products/wuziso3c5q8queqrb3ne.jpg",
+"publicId": "products/wuziso3c5q8queqrb3ne",
+"_id": "68b3ae9d29f7198ad5564aa2"
+},
+{
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1756606119/products/migyhc30hv8mg8ibgbnn.jpg",
+"publicId": "products/migyhc30hv8mg8ibgbnn",
+"_id": "68b3ae9d29f7198ad5564aa3"
+},
+{
+"url": "https://res.cloudinary.com/dqkum3eru/image/upload/v1756606121/products/c5fzmjmurcagoz6vyf1x.jpg",
+"publicId": "products/c5fzmjmurcagoz6vyf1x",
+"_id": "68b3ae9d29f7198ad5564aa4"
+}
+],
 "stock": 10,
-"isActive:true,
-"sizes": ["XS" ,"XL"...]
-"createdAt": "...",
-"updatedAt": "..."
+"\_id": "68b3ae9d29f7198ad5564aa1"
+}
+],
+"seo": {
+"title": "New Test 2",
+"description": "This is a toto trouser",
+"keywords": [
+"trouser, teee, T"
+]
+},
+"visibility": "public",
+"averageRating": 0,
+"numReviews": 0,
+"\_id": "68b3ae9d29f7198ad5564aa0",
+"createdAt": "2025-08-31T02:08:30.005Z",
+"updatedAt": "2025-08-31T02:08:30.005Z",
+"\_\_v": 0
 }
 }
 
