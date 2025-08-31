@@ -77,13 +77,15 @@ export default function Nav() {
     setIsMobile,
     routeChange,
     setRouteChange,
-    loadStoreProducts,
+    loadProducts,
     loadCategories,
     products,
     modalDisplay,
     modal,
     bookMarks,
-    assignCatID
+    assignCatID,
+    filter,
+    filterState
   } = useBoundStore();
 
   useStoreInitialization();
@@ -103,7 +105,7 @@ export default function Nav() {
   },[products])
 
   useEffect(() => {
-    loadStoreProducts();
+    loadProducts();
     assignCatID()
 
     const handleResize = () => {
@@ -171,7 +173,7 @@ export default function Nav() {
 
   return (
     <div className="fixed top-0 w-full left-auto z-[90] ">
-      <div className="w-full">
+      <div className="w-full ">
         <div className="w-full flex items-center px-4 md:px-8 py-4 bg-black text-white overflow-hidden h-[40px] nav-ads justify-between">
           <p className="opacity-0">h</p>
           <AnimatePresence mode="wait">
@@ -208,7 +210,7 @@ export default function Nav() {
         </div>
         <div
           className={cn(
-            "w-full flex flex-row justify-between px-3 md:px-8 py-4 pt-4.5 items-center navbar",
+            "w-full flex flex-row 0 justify-between px-3 md:px-8 py-4 pt-4.5 items-center navbar",
             {
               "bg-white border-[1px] border-black/20": isSnap,
               "border-none": pathname.includes("/account")
@@ -218,12 +220,12 @@ export default function Nav() {
             className={`w-10 md:w-20 flex-none flex overflow-visible  relative gap-4 items-center ${
               !routeChange ? "pointer-events-auto" : "pointer-events-none"
             }`}>
-            <SearchIcon style="hidden md:flex" />
+            <SearchIcon style="hidden md:flex  mt-4" />
           </div>
           <Link
             href="/"
             onClick={(e) => handleNavigation(e, "/", router, setRouteChange, 200)}
-            className={`flex-none w-24 h-[24px] ${!routeChange ? "pointer-events-auto" : "pointer-events-none"}`}>
+            className={`flex-none pt-3 w-24 h-[24px] ${!routeChange ? "pointer-events-auto" : "pointer-events-none"}`}>
             <Image
               src="/icons/text-logo.svg"
               width={150}
@@ -233,7 +235,7 @@ export default function Nav() {
             />
           </Link>
           <div
-            className={`flex md:gap-4 max-sm:mr-1 ${
+            className={`flex md:gap-4 max-sm:mr-1 pt-3 ${
               !routeChange ? "pointer-events-auto" : "pointer-events-none"
             }`}>
             {iconTabs.map((icon, index) => (
@@ -287,14 +289,19 @@ export default function Nav() {
       </div>
       <div
         className={cn(
-          `w-20 flex-none  relative flex gap-4 top-[-2.5rem] left-2 md:left-8 items-center menuIcon ${
+          `w-20 flex-none  relative flex gap-4 top-[-2.5rem] left-2 md:left-8  menuIcon ${
             !routeChange ? "pointer-events-auto" : "pointer-events-none"
           } `,
           {
             "z-[98]": modalDisplay === "menu",
           }
         )}>
-        <Icon name="menu" onToggle={() => setModal("menu")} />
+        <Icon style="pt-[3px]" name="menu" onToggle={() => setModal("menu")} />
+          {pathname.includes("/product") && !modal &&  <div onClick={()=>filterState(!filter)} className="hidden sm:flex md:ml-30 lg:ml-36 py-[1px]  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1">
+            <p>Filter</p>
+            <Image src="/icons/filter-w.svg" width={16} height={16} alt="filter"/>
+          </div> }
+
       </div>
       <Modal />
       <Search />

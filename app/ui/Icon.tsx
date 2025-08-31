@@ -9,9 +9,10 @@ type MenuIconProps = {
   name: string; // e.g. "menu", "cart", etc
   onToggle: (name?: string) => void;
   stroke?: "black" | "white";
+  style?:string
 };
 
-export default function Icon({ name, onToggle, stroke }: MenuIconProps) {
+export default function Icon({ name, onToggle, stroke , style }: MenuIconProps) {
   const menuRef = useRef<SVGSVGElement | null>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
   const tl = useRef<GSAPTimeline | null>(null);
@@ -133,7 +134,7 @@ export default function Icon({ name, onToggle, stroke }: MenuIconProps) {
   return (
     <div
       onClick={handleToggle}
-      className="cursor-pointer flex gap-2 items-center"
+      className={`cursor-pointer flex gap-2 items-center ${style}`}
       role="button"
       aria-pressed={isActive}
       tabIndex={0}
@@ -142,8 +143,7 @@ export default function Icon({ name, onToggle, stroke }: MenuIconProps) {
           e.preventDefault();
           handleToggle();
         }
-      }}
-    >
+      }}>
       <svg
         ref={menuRef}
         id="menu"

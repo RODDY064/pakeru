@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 export default function Product() {
-  const { cartState, loadStoreProducts, products } = useBoundStore();
+  const { cartState, loadProducts, products } = useBoundStore();
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -17,7 +17,7 @@ export default function Product() {
     setIsRefreshing(true);
     try {
       
-      await loadStoreProducts();
+      await loadProducts();
        await new Promise((res) => setTimeout(res, 500))
       router.refresh();
     } finally {
@@ -26,9 +26,9 @@ export default function Product() {
   };
 
   return (
+   <>
     <div className="w-full min-h-screen  flex flex-col items-center text-black bg-black home-main  transition-all">
       <div className="w-full h-full  bg-white flex overflow-hidden gap-4 pt-24">
-        {/* <Filter/> */}
         {cartState === "loading" ||
         cartState === "error" ||
         cartState === "idle" ? (
@@ -73,5 +73,7 @@ export default function Product() {
         )}
       </div>
     </div>
+    <Filter/>
+   </>
   );
 }

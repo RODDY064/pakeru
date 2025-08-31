@@ -228,7 +228,7 @@ export const usePaginationStore: StateCreator<
     
     // Prevent concurrent page changes
     if (pagination.isPagLoading) {
-      console.log('Page change blocked - already loading');
+      // console.log('Page change blocked - already loading');
       return;
     }
     

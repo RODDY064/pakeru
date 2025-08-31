@@ -268,7 +268,7 @@ export const initializeStore = async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Load fresh product data
-      await useBoundStore.getState().loadStoreProducts();
+      await useBoundStore.getState().loadProducts();
       
       // Sync bookmarks with products (this will clean up invalid bookmarks)
       useBoundStore.getState().syncBookmarksWithProducts();

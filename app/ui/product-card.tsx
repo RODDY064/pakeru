@@ -83,26 +83,34 @@ export default function ProductCard({
           </div>
         </div>
       </motion.div>
-      {!showDetails && (
+      {showDetails && (
         <div
           className={cn("pb-4 pt-3 w-full   px-3 ", {
             "w-[200px] md:w-[250px]  lg:w-[270px] ": type === "small",
+          })}
+        >
+          <div className="w-full flex items-start justify-between">
+            <div className={cn(
+                "w-[60%] text-[16px] md:text-md font-[400]  text-black/70",
+                {"text-[14px]": type === "small" })}>
+              {productData?.name.toLocaleUpperCase()}
+            </div>
+          </div>
+        </div>
+      )}
+      {!showDetails && (
+        <div className={cn("pb-4 pt-3 w-full   px-3 ", {
+            "w-[200px] md:w-[250px]  lg:w-[270px] ": type === "small",
           })}>
           <div className="w-full flex items-start justify-between">
-            <div
-              className={cn(
+            <div  className={cn(
                 "w-[60%] text-[16px] md:text-md font-[400]  text-black/70",
-                {
-                  "text-[14px]": type === "small",
-                }
-              )}
-            >
+                {  "text-[14px]": type === "small",})}>
               {productData?.name.toLocaleUpperCase()}
             </div>
             <div className="w-[30%] flex items-start  justify-end ">
               <p
-                className={`font-avenir font-[400] text-[16px] md:text-md text-black/50 `}
-              >
+                className={`font-avenir font-[400] text-[16px] md:text-md text-black/50 `}>
                 GHS {productData?.price}
               </p>
             </div>

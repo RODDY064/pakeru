@@ -82,13 +82,13 @@ const Images = ({ action }: { action: any }) => {
           </div>
           <div className="absolute w-full h-full flex  flex-col top-0 justify-end z-20 ">
             <div className="w-full  md:h-[20%] mb-[15%] md:mb-0  flex flex-col gap-2 items-center ">
-              <h1 className="text-black font-avenir font-bold text-[20px] md:text-3xl ">
+              <h1 className="text-black font-avenir font-bold text-[20px] md:text-3xl main-hero-head">
                 GET THE LOOKS, ROCK IT
               </h1>
-              <p className="capitalise text-black font-avenir font-medium tex-[15px] md:text-sm text-center px-10 cursor-pointer ">
+              <p className="capitalise text-black font-avenir font-medium tex-[15px] hero-desc md:text-sm text-center px-10 cursor-pointer ">
                 EVERY PRODUCT WE CRAFT IS DESIGNED TO FUEL YOUR LOOKS.
               </p>
-              <Button action={action} word="SHOP NOW" />
+              <Button ID="shop-button" action={action} word="SHOP NOW" />
             </div>
           </div>
         </div>
@@ -135,25 +135,22 @@ const Slider = () => {
       animate={{ opacity: 1 }}
       initial={{ opacity: 0 }}
       transition={{ duration: 0.6, ease: "easeInOut" }}
-      className="w-full h-full mt-10"
-    >
+      className="w-full h-full mt-10">
       <div>
         <div
           ref={sliderRef}
-          className="flex gap-1 md:gap-3 overflow-hidden text-white relative"
-        >
+          className="flex gap-1 md:gap-3 overflow-hidden text-white relative hero-slider-div">
           {slider.map((product) => (
             <div
               key={product.id}
               onClick={() => setLookAt(product.id)}
               className={cn(
-                "w-[calc(90vw)] md:w-[calc(70vw)] card h-[350px]  flex-shrink-0  relative lg:h-[calc(35vw)]  flex-none  flex items-center justify-center overflow-hidden  ",
+                "w-[calc(90vw)] slider-element md:w-[calc(70vw)] card h-[350px]  flex-shrink-0  relative lg:h-[calc(35vw)]  flex-none  flex items-center justify-center overflow-hidden  ",
                 {
                   "pl-1 md:pl-3 ": product.id === 0,
                   "border border-black/5": product.id !== 0,
                 }
-              )}
-            >
+              )}>
               {product.id === 0 ? (
                 <div className="w-[calc(90vw)] md:w-[calc(70vw)] h-full relative  overflow-hidden border border-black/5">
                   <motion.div

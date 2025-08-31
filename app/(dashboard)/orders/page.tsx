@@ -100,9 +100,6 @@ const Tables = () => {
   const headerScrollRef = useRef<HTMLDivElement | null>(null);
   const contentScrollRef = useRef<HTMLDivElement | null>(null);
   const {
-    productFilters,
-    setProductFilters,
-    setProducts,
     storeProducts,
     setOrderModal,
   } = useBoundStore();

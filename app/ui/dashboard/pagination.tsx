@@ -22,21 +22,10 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
   } = useBoundStore();
 
   useEffect(() => {
-    console.log(pagination, "pagination");
+    // console.log(pagination, "pagination");
     const pages = getVisiblePages();
     setVisiblePage(pages);
   }, [pagination]);
-
-  useEffect(() => {
-    console.log(visiblePages, " visible pages");
-  }, [visiblePages]);
-
-  //   const loadData = React.useMemo(() => {
-  //     console.log("it run")
-  //     return store[loadFunction as keyof typeof store] as
-  //       | ((force?: boolean) => void)
-  //       | undefined;
-  //   }, [store, loadFunction]);
 
   const handlePageChange = React.useCallback(
     (page: number) => {

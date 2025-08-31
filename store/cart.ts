@@ -79,7 +79,7 @@ export type CartStore = {
   removeMultipleBookmarks: (bookmarkIds: string[]) => void;
 
   // Product management
-  loadStoreProducts: () => Promise<void>;
+  loadProducts: () => Promise<void>;
   refreshProducts: () => Promise<void>;
   syncCartWithProducts: () => void;
   syncBookmarksWithProducts: () => void;
@@ -648,8 +648,8 @@ export const useCartStore: StateCreator<
         .filter(Boolean) as BookmarkType[]; // Remove null items
     }),
 
-  // Enhanced loadStoreProducts to sync with cart and bookmarks after loading
-  loadStoreProducts: async () => {
+  // Enhanced loadProducts to sync with cart and bookmarks after loading
+  loadProducts: async () => {
     set((state) => {
       state.cartState = "loading";
       state.error = null;
@@ -713,6 +713,6 @@ export const useCartStore: StateCreator<
   },
 
   refreshProducts: async () => {
-    await get().loadStoreProducts();
+    await get().loadProducts();
   }
 });

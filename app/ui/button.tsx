@@ -8,11 +8,13 @@ export default function Button({
   word,
   bagIcon,
   backColor,
-  action
+  action,
+  ID
 }: {
   word: string;
   bagIcon?: boolean;
-  backColor?:'white' |'black',
+  backColor?:'white' |'black'
+  ID?:string
   action?:(e:any)=>void
 }) 
 {
@@ -20,6 +22,7 @@ export default function Button({
 
   return <div 
   onClick={action}
+  id={ID}
   className=" bg-black text-white mt-2 cursor-pointer px-6 py-2 flex items-center justify-center gap-2 rounded-[0.1rem]">
     <p className="capitalize font-avenir font-[400] text-sm md:text-sm mt-1">{word}</p>
     <Image 

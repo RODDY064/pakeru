@@ -57,7 +57,6 @@ export type Filters = {
   category: string;
   subcategory?: string;
   priceRange?: [number, number];
-  stockStatus?: "in-stock" | "low-stock" | "out-of-stock" | "all";
   tags?: string[];
   search?: string;
 };
@@ -88,7 +87,7 @@ export type StoreProductStore = {
   // State
   selectedProduct: ProductData | null;
   storeProducts: ProductData[];
-  filteredProducts: ProductData[];
+  filteredStoreProducts: ProductData[];
   dashboardProductLoading: LoadingState;
   dashboardProductErrors: ErrorState;
 
@@ -115,28 +114,23 @@ export type StoreProductStore = {
 
   // Data management
   clearProducts: () => void;
-  loadProducts: (force?: boolean,pagination?:number) => Promise<void>;
-  loadProduct: (id: string) => Promise<void>;
+  loadStoreProducts: (force?: boolean,pagination?:number) => Promise<void>;
+  loadStoreProduct: (id: string) => Promise<void>;
   refreshProducts: () => Promise<void>;
 
   // Filtering and search
-  productFilters: Filters;
+  storeProductFilters: Filters;
   sortOption: SortOption;
   resetFilters: () => void;
-  setProductFilters: (filters: Partial<Filters>) => void;
+  setStoreProductFilters: (filters: Partial<Filters>) => void;
   setSortOption: (sort: SortOption) => void;
-  searchProducts: (query: string) => void;
+  searchStoreProducts: (query: string) => void;
   applyFilters: () => void;
 
-  // Pagination
-  setPage: (page: number) => void;
-  setItemsPerPage: (items: number) => void;
-  goToNextPage: () => void;
-  goToPreviousPage: () => void;
 
   // Batch operations
-  setProducts: (products: ProductData[]) => void;
-  addProducts: (products: ProductData[]) => void;
+  setStoreProducts: (products: ProductData[]) => void;
+  addStoreProducts: (products: ProductData[]) => void;
 
   // Computed getters
   getProductsByCategory: (category: string) => ProductData[];
@@ -168,32 +162,9 @@ export type StoreProductStore = {
   removeVariant: (productId: string, variantId: string) => Promise<void>;
 };
 
-// Utility functions
-const createSlug = (name: string): string => {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-};
 
-const calculateTotalStock = (variants: ProductVariant[]): number => {
-  return variants.reduce((total, variant) => total + variant.stock, 0);
-};
 
-const determineStockStatus = (
-  stock: number
-): "in-stock" | "low-stock" | "out-of-stock" => {
-  if (stock === 0) return "out-of-stock";
-  if (stock < 10) return "low-stock";
-  return "in-stock";
-};
 
-// Helper function for random selection
-const getRandomElement = <T>(array: T[]): T => {
-  return array[Math.floor(Math.random() * array.length)];
-};
-
-// API helper functions
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   if (!baseUrl) {
@@ -269,7 +240,7 @@ export const useStoreProductStore: StateCreator<
   // Initial state
   selectedProduct: null,
   storeProducts: [],
-  filteredProducts: [],
+  filteredStoreProducts: [],
   dashboardProductLoading: {
     products: false,
     product: false,
@@ -528,15 +499,14 @@ export const useStoreProductStore: StateCreator<
     set(
       produce((state: Store) => {
         state.storeProducts = [];
-        state.filteredProducts = [];
+        state.filteredStoreProducts = [];
         state.selectedProduct = null;
         state.totalItems = 0;
         state.totalPages = 0;
-        state.currentPage = 1;
       })
     ),
 
-  loadProducts: async (force = false, pagination = 1) => {
+  loadStoreProducts: async (force = false, pagination = 1) => {
     const state = get();
     if (state.storeProducts.length > 0 && !force) return;
 
@@ -567,7 +537,7 @@ export const useStoreProductStore: StateCreator<
       });
 
 
-      get().setProducts(transformedProducts);
+      get().setStoreProducts(transformedProducts);
     } catch (error) {
       console.error("Error loading products:", error);
       set(
@@ -585,7 +555,7 @@ export const useStoreProductStore: StateCreator<
     }
   },
 
-  loadProduct: async (id) => {
+  loadStoreProduct: async (id) => {
     set(
       produce((state: Store) => {
         state.dashboardProductLoading.product = true;
@@ -640,13 +610,13 @@ export const useStoreProductStore: StateCreator<
   },
 
   refreshProducts: async () => {
-    await get().loadProducts(true);
+    await get().loadStoreProducts(true);
   },
 
   // Filtering and search
-  productFilters: {
+  storeProductFilters: {
     status: "all",
-    category: "",
+    category: "all",
     stockStatus: "all",
   },
 
@@ -655,11 +625,10 @@ export const useStoreProductStore: StateCreator<
     direction: "desc",
   },
 
-  setProductFilters: (filters) => {
+  setStoreProductFilters: (filters) => {
     set(
       produce((state: Store) => {
-        state.productFilters = { ...state.productFilters, ...filters };
-        state.currentPage = 1;
+        state.storeProductFilters = { ...state.storeProductFilters, ...filters };
       })
     );
     get().applyFilters();
@@ -674,48 +643,34 @@ export const useStoreProductStore: StateCreator<
     get().applyFilters();
   },
 
-  searchProducts: (query) => {
-    get().setProductFilters({ search: query });
+  searchStoreProducts: (query) => {
+    get().setStoreProductFilters({ search: query });
   },
 
   applyFilters: () => {
-    const { storeProducts, productFilters, sortOption } = get();
+    const { storeProducts, storeProductFilters, sortOption } = get();
     let filtered = [...storeProducts];
 
     // Apply status filter
-    if (productFilters.status !== "all") {
-      filtered = filtered.filter((p) => p.status === productFilters.status);
+    if (storeProductFilters.status !== "all") {
+      filtered = filtered.filter((p) => p.status === storeProductFilters.status);
     }
 
     // Apply category filter
-    if (productFilters.category) {
-      filtered = filtered.filter((p) => p.category === productFilters.category);
+    if (storeProductFilters.category !== "all") {
+      filtered = filtered.filter((p) => p.category === storeProductFilters.category);
     }
 
-    // Apply stock status filter
-    if (productFilters.stockStatus && productFilters.stockStatus !== "all") {
-      filtered = filtered.filter((p) => {
-        const stockStatus = determineStockStatus(p.totalNumber);
-        return stockStatus === productFilters.stockStatus;
-      });
-    }
-
+    
     // Apply search filter
-    if (productFilters.search) {
-      const query = productFilters.search.toLowerCase();
+    if (storeProductFilters.search) {
+      const query = storeProductFilters.search.toLowerCase();
       filtered = filtered.filter(
         (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.description?.toLowerCase().includes(query) ||
-          p.category.toLowerCase().includes(query)
+          p.name.toLowerCase().includes(query) 
       );
     }
 
-    // Apply price range filter
-    if (productFilters.priceRange) {
-      const [min, max] = productFilters.priceRange;
-      filtered = filtered.filter((p) => p.price >= min && p.price <= max);
-    }
 
     // Apply sorting
     filtered.sort((a, b) => {
@@ -742,7 +697,7 @@ export const useStoreProductStore: StateCreator<
 
     set(
       produce((state: Store) => {
-        state.filteredProducts = filtered;
+        state.filteredStoreProducts = filtered;
         state.totalItems = filtered.length;
         state.totalPages = Math.ceil(filtered.length / state.itemsPerPage);
       })
@@ -752,10 +707,9 @@ export const useStoreProductStore: StateCreator<
   resetFilters: () => {
     set(
       produce((state: Store) => {
-        state.productFilters = {
+        state.storeProductFilters = {
           status: "all",
           category: "",
-          stockStatus: "all",
         };
         state.currentPage = 1;
       })
@@ -763,41 +717,8 @@ export const useStoreProductStore: StateCreator<
     get().applyFilters();
   },
 
-  // Pagination
-  setPage: (page) => {
-    set(
-      produce((state: Store) => {
-        state.currentPage = Math.max(1, Math.min(page, state.totalPages));
-      })
-    );
-  },
-
-  setItemsPerPage: (items) => {
-    set(
-      produce((state: Store) => {
-        state.itemsPerPage = items;
-        state.currentPage = 1;
-        state.totalPages = Math.ceil(state.totalItems / items);
-      })
-    );
-  },
-
-  goToNextPage: () => {
-    const { currentPage, totalPages } = get();
-    if (currentPage < totalPages) {
-      get().setPage(currentPage + 1);
-    }
-  },
-
-  goToPreviousPage: () => {
-    const { currentPage } = get();
-    if (currentPage > 1) {
-      get().setPage(currentPage - 1);
-    }
-  },
-
   // Batch operations
-  setProducts: (products) => {
+  setStoreProducts: (products) => {
     set(
       produce((state: Store) => {
         state.storeProducts = products;
@@ -808,7 +729,7 @@ export const useStoreProductStore: StateCreator<
     get().applyFilters();
   },
 
-  addProducts: (products) => {
+  addStoreProducts: (products) => {
     set(
       produce((state: Store) => {
         state.storeProducts.push(...products);

@@ -85,11 +85,11 @@ const Tables = () => {
   );
 
   const {
-    productFilters,
-    setProductFilters,
-    setProducts,
+    storeProductFilters,
+    setStoreProductFilters,
+    filteredStoreProducts,
     storeProducts,
-    loadProducts,
+    loadStoreProducts,
     dashboardProductLoading,
     dashboardProductErrors,
     getPaginatedSlice,
@@ -98,8 +98,11 @@ const Tables = () => {
     pagination,
   } = useBoundStore();
 
+
+ 
+
   useEffect(() => {
-    loadProducts();
+    loadStoreProducts();
   }, []);
 
   useEffect(() => {
@@ -112,17 +115,20 @@ const Tables = () => {
   }, []);
 
   useEffect(() => {
-    updatePaginationFromAPI({ totalItems: storeProducts.length,currentBackendPage:1  });
-  }, [storeProducts]);
+    updatePaginationFromAPI({ totalItems: filteredStoreProducts.length,currentBackendPage:1  });
+  }, [storeProducts,filteredStoreProducts]);
 
   useEffect(() => {
-    const sliceData = getPaginatedSlice(storeProducts);
+
+
+    const sliceData = getPaginatedSlice(filteredStoreProducts);
     setCurrentPageProducts(sliceData);
-  }, [pagination]);
 
-  useEffect(() => {
-    console.log(currentPageProducts, "current pagination");
-  }, [currentPageProducts]);
+  }, [pagination,storeProductFilters,storeProducts]);
+
+  // useEffect(() => {
+  //   console.log(currentPageProducts, "current pagination");
+  // }, [currentPageProducts]);
 
   // Synchronize scroll between header and content
   const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -181,9 +187,12 @@ const Tables = () => {
     }
   };
 
-  useEffect(() => {
-    console.log(storeProducts);
-  }, [storeProducts, dashboardProductLoading]);
+
+
+  // useEffect(()=>{
+  //  console.log(storeProductFilters, 'fitler fields')
+  //  console.log(filteredStoreProducts, "filterd array")
+  // },[storeProductFilters,storeProducts,pagination])
 
   return (
     <div className="mt-4 w-full h-[94%] bg-white border border-black/15 rounded-2xl overflow-hidden hidden md:block">
@@ -191,6 +200,10 @@ const Tables = () => {
         <div className="px-2 w-[50%] py-2 bg-black/10 rounded-xl border-black/15 border flex gap-1 items-center">
           <Image src="/icons/search.svg" width={16} height={16} alt="search" />
           <input
+           value={storeProductFilters.search}
+            onChange={(e) =>
+                  setStoreProductFilters({ search: e.target.value })
+                }
             placeholder="Search for products"
             className="w-full h-full focus:outline-none px-2"
           />
@@ -200,13 +213,13 @@ const Tables = () => {
             <p className="font-avenir font-[500] text-sm">Category: </p>
             <div className="relative flex items-center">
               <select
-                value={productFilters.category}
+                value={storeProductFilters.category}
                 onChange={(e) =>
-                  setProductFilters({ category: e.target.value })
+                  setStoreProductFilters({ category: e.target.value })
                 }
                 className="appearance-none text-gray-600 focus:outline-none px-2 py-[0.8px] rounded-md font-avenir font-[500] text-sm bg-gray-200 border border-gray-500/10 pr-7"
               >
-                <option value="Clothing">Clothing</option>
+                <option value="Clothing">All</option>
                 <option value="None">None</option>
               </select>
               <Image
@@ -222,32 +235,28 @@ const Tables = () => {
             <p className="font-avenir font-[500] text-sm">Status: </p>
             <div className="relative flex items-center">
               <select
-                value={productFilters.status}
-                onChange={(e) =>
-                  setProductFilters({
-                    status: e.target.value as
-                      | "active"
-                      | "inactive"
-                      | "all"
-                      | "draft"
-                      | "out-of-stock",
-                  })
-                }
+                value={storeProductFilters.status}
+                // onChange={(e) =>
+                //   setStoreProductFilters((prev)=>{
+                //     ...prev,
+
+                //   })
+                // }
                 className={cn(
                   "appearance-none focus:outline-none px-2 py-[0.8px] rounded-md font-avenir font-[500] text-sm border-[0.5px] pr-7 border-black/20",
                   {
                     "bg-green-50 border-green-500 text-green-600":
-                      productFilters.status === "active",
+                      storeProductFilters.status === "active",
                     "bg-gray-200 border-gray-500 text-gray-600":
-                      productFilters.status === "inactive",
+                      storeProductFilters.status === "inactive",
                     "bg-red-50  border-red-500 text-red-600":
-                      productFilters.status === "out-of-stock",
+                      storeProductFilters.status === "out-of-stock",
                     "bg-yellow-50 border-yellow-500 text-yellow-600":
-                      productFilters.status === "draft",
+                      storeProductFilters.status === "draft",
                   }
                 )}
               >
-                <option>All</option>
+                <option value="all">All</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
                 <option value="draft">Draft</option>

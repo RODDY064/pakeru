@@ -1,6 +1,6 @@
 import { StateCreator } from "zustand";
 import { Store } from "./store";
-import { ProductType } from "./cart";
+import { ProductData } from "./dashbaord/products";
 type ModalDisplay = "idle" | "cart" | "menu" | "wardrope";
 
 export type MenuItem = {
@@ -11,7 +11,7 @@ export type MenuItem = {
     title: string;
   }[];
   catID?: string | null;
-  menuProducts: ProductType[];
+  menuProducts: ProductData[]
 };
 
 export type ModalStore = {

@@ -42,48 +42,15 @@ export default function SliderButton() {
       }
     });
 
-    // Alternative approach with direct ScrollTrigger
-    // ScrollTrigger.create({
-    //   trigger: "body",
-    //   start: "580px top",
-    //   end: "bottom bottom",
-    //     markers:true,
-    //   onEnter: () => {
-    //     gsap.timeline({ defaults: { duration: 0.4, ease: "power2.out" } })
-    //       .to(".navButton", { opacity: 1, scale: 1.1, duration: 0.3 })
-    //       .to(".navButton", { scale: 1, duration: 0.2 }, "-=0.1")
-    //       .to(".navButton", { width: "35%", duration: 0.4 }, "<");
-    //   },
-    //   onLeave: () => {
-    //     gsap.timeline({ defaults: { duration: 0.4, ease: "power2.out" } })
-    //       .to(".navButton", { opacity: 0, scale: 0.9, duration: 0.3 })
-    //       .to(".navButton", { width: "5%", duration: 0.4 }, "<+=0.2")
-    //       .to(".navButton", { scale: 1, duration: 0.2 }, "<");
-    //   },
-    //   onEnterBack: () => {
-    //     gsap.timeline({ defaults: { duration: 0.4, ease: "power2.out" } })
-    //       .to(".navButton", { opacity: 1, scale: 1.1, duration: 0.3 })
-    //       .to(".navButton", { scale: 1, duration: 0.2 }, "-=0.1")
-    //       .to(".navButton", { width: "35%", duration: 0.4 }, "<");
-    //   },
-    //   onLeaveBack: () => {
-    //     gsap.timeline({ defaults: { duration: 0.4, ease: "power2.out" } })
-    //       .to(".navButton", { opacity: 0, scale: 0.9, duration: 0.3 })
-    //       .to(".navButton", { width: "5%", duration: 0.4 }, "<+=0.2")
-    //       .to(".navButton", { scale: 1, duration: 0.2 }, "<");
-    //   }
-    // });
-
-    // Cleanup function
     return () => {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
   }, []);
 
   return (
-    <div className="w-[5%] h-16 rounded-full bg-black navButton  items-center text-white justify-center opacity-0 lg:flex hidden px-3">
+    <div className="w-[5%]  h-16 rounded-full bg-black navButton  items-center text-white justify-center opacity-0 lg:flex hidden px-3">
        <div className="flex items-center justify-between w-full">
-        <div className="size-10 hover:border-white/50  cursor-pointer flex items-center justify-center border rounded-full prev flex-none ">
+        <div className="size-10 hero-slider-prev hover:border-white/50  cursor-pointer flex items-center justify-center border rounded-full prev flex-none ">
        
           <Image
             src="/icons/arrow-w.svg"
@@ -94,7 +61,7 @@ export default function SliderButton() {
           />
         </div>
         <p className="font-avenir font-[300] drag-text opacity-0 flex-none flex mx-4 text-center text-md">Drag the slider or click the buttons to slide</p>
-        <div className="size-10 cursor-pointer flex items-center justify-center border rounded-full next hover:border-white/50 flex-none ">
+        <div className="size-10 hero-slider-next cursor-pointer flex items-center justify-center border rounded-full next hover:border-white/50 flex-none ">
         
           <Image
             src="/icons/arrow-w.svg"
