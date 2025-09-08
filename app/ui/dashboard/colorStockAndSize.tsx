@@ -1,4 +1,4 @@
-import { ProductColor } from '@/app/(dashboard)/store-products/product-actions/page';
+import { ProductColor } from '@/app/(dashboard)/store-products/product-actions/action';
 import Image from 'next/image';
 import React, { useState } from 'react'
 
