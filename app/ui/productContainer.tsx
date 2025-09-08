@@ -347,7 +347,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
               </p>
               {/* <p className="my-4 text-black/60 font-avenir text-lg">{productData?.description}</p> */}
               <div
-                className="my-4 text-black/60 font-avenir text-lg responsive-description"
+                className="my-4 font-avenir text-lg responsive-description"
                 dangerouslySetInnerHTML={{
                   __html: productData?.description || "",
                 }}

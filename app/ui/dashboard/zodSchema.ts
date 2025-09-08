@@ -5,7 +5,12 @@ const ProductImageSchema = z.object({
   id: z.number(),
   url: z.union([z.string(), z.instanceof(ArrayBuffer)]),
   name: z.string(),
-  file: z.instanceof(File).optional(),
+  file:  z.custom<File | Blob>((val) => {
+    if (!val) return true; // optional field
+    return (val instanceof File) || 
+           (val instanceof Blob) || 
+           (typeof val === 'object' && 'size' in val && 'type' in val);
+  }).optional(),
 });
 
 // Updated Color/Variant schema with stock and sizes per color

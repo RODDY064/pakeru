@@ -28,6 +28,7 @@ const injectStyles = () => {
       padding: 10px 12px !important;
       border-radius: 0 0 20px 20px !important;
       border-top: 1px solid rgba(0, 0, 0, 0.2) !important;
+      font-size: 16px !important;
     }
   `;
 

@@ -90,3 +90,11 @@ body {
 .scrollbar-hide::-webkit-scrollbar{
   display: none;
 }
+
+.responsive-description * {
+  all: revert;    
+  font-family: 'Avenir', sans-serif !important;
+  font-size: 1.125rem !important; 
+  line-height: 1.6 !important;
+
+}

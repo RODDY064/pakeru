@@ -25,7 +25,7 @@ export type ProductImage = {
   id: number;
   url: string | ArrayBuffer;
   name: string;
-  file?: File;
+  file?: File | Blob;
 };
 
 export type ProductColor = {
