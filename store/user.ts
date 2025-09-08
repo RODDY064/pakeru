@@ -9,7 +9,7 @@ export type User = {
   username?: string;
   firstname?: string;
   lastname?: string;
-  userType: "unverified" | "verified";
+  userType?: "unverified" | "verified";
   role?: string;
 };
 
@@ -17,25 +17,26 @@ export type UserStore = {
   user: User | null;
   token: string | null;
 
-  setUserEmail: (email: string) => void;
+  setUser: (user: User) => void;
   completeUserProfile: (userData: Partial<User>) => void;
   storeUserToken: (token: string) => void;
   loadUserToken: () => void;
   clearUser: () => void;
-  setUserType:(type:"unverified" | "verified")=>void;
+  setUserType: (type: "unverified" | "verified") => void;
 };
 
 export const useUserStore: StateCreator<
   Store,
-  [['zustand/immer', never]],
+  [["zustand/immer", never]],
   [],
   UserStore> = (set, get) => ({
   user: null,
   token: null,
 
-  setUserEmail: (email) => {
+
+  setUser: (user) => {
     set((state) => {
-      state.user = { email, userType: "unverified" };
+      state.user = user;
     });
   },
 
@@ -75,10 +76,10 @@ export const useUserStore: StateCreator<
       sessionStorage.removeItem("userToken");
     }
   },
-  setUserType: (type) => set((state) => {
-    if (state.user) {
-      state.user.userType = type;
-    }
-  })
+  setUserType: (type) =>
+    set((state) => {
+      if (state.user) {
+        state.user.userType = type;
+      }
+    }),
 });
-

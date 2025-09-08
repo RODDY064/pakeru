@@ -32,7 +32,7 @@ export default function SignIn() {
     resolver: zodResolver(signIn),
   });
 
-  const { user, setUserEmail , completeUserProfile , loadUserToken , storeUserToken } = useBoundStore()
+  const { user, setUser , completeUserProfile , loadUserToken , storeUserToken } = useBoundStore()
 
   const router = useRouter();
 
@@ -61,6 +61,7 @@ export default function SignIn() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            //  "ngrok-skip-browser-warning": "true",
           },
           body: JSON.stringify(newData),
         }
@@ -71,10 +72,8 @@ export default function SignIn() {
        console.log(res);
 
        if(res.msg === "Email not verified. Check your inbox for a verification code." && res.status === 400){
-
-        
-
-       }
+           throw new Error("Email not verified. Check your inbox for a verification code.");
+        }
 
       if (req.ok) {
         setSignState("submitted");
@@ -84,6 +83,15 @@ export default function SignIn() {
       } else {
         throw new Error(" Error fetching data");
       }
+
+      setUser(res)
+
+      
+
+      const res2 = await fetch("/api/product",{
+        method:"POST",
+        body: JSON.stringify(res)
+      })
 
       // Show feedback for 3 seconds
       await new Promise((resolve) => setTimeout(resolve, 3000));

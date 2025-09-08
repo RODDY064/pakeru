@@ -13,7 +13,8 @@ export default function Input({
   label,
   name,
   register,
-  error
+  error,
+  disbale = false
 }: {
   type: string;
   placeH: string;
@@ -26,6 +27,7 @@ export default function Input({
   name: string;
   register:any,
   error?:any
+  disbale?:boolean
   
 }) {
   return (
@@ -41,6 +43,7 @@ export default function Input({
         <div className="w-[1px] h-[70%] bg-black/30 "></div>
         <input
           {...register(name,{ required:true })}
+          disabled={disbale}
          type={type} className="w-full h-full px-2 focus:outline-none font-avenir" placeholder={placeH}/>
       </div>
       {error && error[name] && <p className="text-sm text-red-500 my-1 font-avenir">{error[name].message}</p>}

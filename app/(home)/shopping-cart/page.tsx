@@ -89,7 +89,7 @@ export default function YourCart() {
               <>
                 <div className="mt-4">
                   {cartItems?.map((cart) => (
-                    <CartCard key={cart.id} cartData={cart} />
+                    <CartCard key={cart.id + cart.selectedColor} cartData={cart} />
                   ))}
                 </div>
               </>
@@ -131,7 +131,7 @@ export default function YourCart() {
               <p className="font-avenir font-[400] text-md">GHS {cartStat.totalPrice.toFixed(2)}</p>
             </div>
             <div className="w-full flex items-center justify-between mt-1 text-black/50">
-              <p className="font-avenir font-[400] text-md">SHIPPING</p>
+              <p className="font-avenir font-[400] text-md">DISCOUNT</p>
               <p className="font-avenir font-[400] text-md">GHS 0.00</p>
             </div>
             <p className="text-sm md:text-sm font-avenir font-[300] md:font-[400] my-2 text-black/50">

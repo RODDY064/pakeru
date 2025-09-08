@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/libs/cn";
 import { gsap } from "gsap";
@@ -22,6 +22,7 @@ export default function BagCard({
   const { modalDisplay, addBookmarksToCart, removeBookmark } = useBoundStore();
   const imageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [colorName,setColorName] = useState("")
 
   const updateImageHeight = () => {
     if (imageRef.current && contentRef.current) {
@@ -42,12 +43,24 @@ export default function BagCard({
     };
   }, []);
 
+    useEffect(() => {
+      if (cartData) {
+        const activeVariant = cartData.variants?.find(
+          (variant) => variant.id === cartData.selectedColor
+        );
+  
+        if (activeVariant) {
+          setColorName(activeVariant.color);
+        }
+      }
+    }, [cartData]);
+
   return (
     <div className="border-b-2 pb-6 border-black/4">
       <div className="flex gap-3 items-start">
         <div className="w-[120px] flex-none md:w-[200px] h-[120px] md:h-[220px] rounded-[1px] overflow-hidden mt-[4px] relative border-[0.5px] border-black/10">
           <Image
-            src={cartData.mainImage}
+            src={cartData.variants[0].images[0].url}
             fill
             className="object-cover"
             alt="image"
@@ -63,7 +76,7 @@ export default function BagCard({
             {cartData.name.toLocaleUpperCase()}
           </p>
           <p className="font-avenir text-md font-[400] text-[16px] md:text-md text-black/50   mt-1">
-            GHS {cartData.price}
+            GHS {cartData.price} | {colorName}
           </p>
           {modalDisplay === "wardrope" && (
             <div className="mt-6 hidden md:block ">

@@ -3,15 +3,11 @@
 import Checkbox from "@/app/ui/dashboard/checkbox";
 import OrderModal from "@/app/ui/dashboard/order-modal";
 import { cn } from "@/libs/cn";
-import {
-  generateMockOrders,
-  OrdersData,
-  OrdersStore,
-} from "@/store/dashbaord/orders";
+import { OrdersData, OrdersStore } from "@/store/dashbaord/orders";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 export default function Orders() {
   return (
@@ -28,17 +24,11 @@ export default function Orders() {
 }
 
 function StatsCard() {
-  const {
-    totalOrders,
-    orderShipped,
-    ordersDelivered,
-    pendingOrders,
-    cancelledOrders,
-  } = useBoundStore();
+  const { ordersStats } = useBoundStore();
 
   const [stats, setStats] = useState([
     { label: "Total Orders", value: 0 },
-    { label: "Returns", value: 0 },
+    { label: "Fulfilled orders", value: 0 },
     { label: "Orders Delivered", value: 0 },
     { label: "Orders Shipped", value: 0 },
     { label: "Pending Orders", value: 0 },
@@ -47,20 +37,14 @@ function StatsCard() {
 
   useEffect(() => {
     setStats([
-      { label: "Total Orders", value: totalOrders },
-      { label: "Returns", value: 0 },
-      { label: "Orders Delivered", value: ordersDelivered },
-      { label: "Orders Shipped", value: orderShipped },
-      { label: "Pending Orders", value: pendingOrders },
-      { label: "Cancelled Orders", value: cancelledOrders },
+      { label: "Total Orders", value: ordersStats.totalOrders },
+      { label: "Fulfilled orders", value: 0 },
+      { label: "Orders Delivered", value: ordersStats.ordersDelivered },
+      { label: "Orders Shipped", value: ordersStats.orderShipped },
+      { label: "Pending Orders", value: ordersStats.pendingOrders },
+      { label: "Cancelled Orders", value: ordersStats.cancelledOrders },
     ]);
-  }, [
-    totalOrders,
-    orderShipped,
-    ordersDelivered,
-    pendingOrders,
-    cancelledOrders,
-  ]);
+  }, [ordersStats]);
 
   return (
     <div className="mt-4 w-full h-fit bg-white border border-black/15  sm:rounded-2xl grid grid-cols-2 md:flex md:px-4  ">
@@ -72,8 +56,7 @@ function StatsCard() {
           alt="calendar"
         />
         <p className="font-avenir font-[500] text-sm md:text-md mt-[3px] md:mt-[2px]">
-          {" "}
-          Monday <span className="md:hidden">25 August</span>
+          Today <span className="md:hidden">,25 August</span>
         </p>
       </div>
       {stats.map((item, index) => (
@@ -95,14 +78,18 @@ function StatsCard() {
 }
 
 const Tables = () => {
-  const filters = ["All", "Pending", "Cancelled", "Completed"];
+  const filters = [
+    "All",
+    "Fulfilled",
+    "Unfulfilled",
+    "Pending",
+    "Cancelled",
+    "Completed",
+  ];
   const [activeFilter, setActiveFilter] = useState("All");
   const headerScrollRef = useRef<HTMLDivElement | null>(null);
   const contentScrollRef = useRef<HTMLDivElement | null>(null);
-  const {
-    storeProducts,
-    setOrderModal,
-  } = useBoundStore();
+  const [search, setSearch] = useState<string>("");
 
   const {
     orders,
@@ -112,13 +99,58 @@ const Tables = () => {
     selectedOrders,
     sortDate,
     toggleDateSorting,
+    setOrderModal,
+    loadOrders,
+    showOrderModal,
+    ordersState,
+    setOrderInView,
+    loadStoreProducts,
+    storeProducts
   } = useBoundStore();
 
   useEffect(() => {
-    const orders = generateMockOrders(10);
-    useBoundStore.getState().setOrders(orders);
+    loadOrders();
+    loadStoreProducts()
   }, []);
 
+
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      // Filter logic
+      let passesFilter = false;
+
+      if (activeFilter === "All") {
+        passesFilter = true;
+      } else {
+        // Check payment status, delivery status, and fulfilled status
+        const paymentMatch =
+          order.paymentStatus.toLowerCase() === activeFilter.toLowerCase();
+        const fulfillmentMatch =
+          order.fulfilledStatus.toLowerCase() === activeFilter.toLowerCase();
+        const deliveredMatch =
+          order.deliveryStatus.toLowerCase() === activeFilter.toLowerCase();
+
+        passesFilter = paymentMatch || fulfillmentMatch || deliveredMatch;
+      }
+
+      // Search logic - search by date, customer name, total, and order ID
+      let passesSearch = true;
+      if (search.trim() !== "") {
+        const searchLower = search.toLowerCase();
+        const customerName =
+          `${order.user.firstname} ${order.user.lastname}`.toLowerCase();
+        const dateMatch = order.date.toLowerCase().includes(searchLower);
+        const customerMatch = customerName.includes(searchLower);
+        const totalMatch = order.total.toString().includes(searchLower);
+        const orderIdMatch = order.id.toLowerCase().includes(searchLower);
+
+        passesSearch = dateMatch || customerMatch || totalMatch || orderIdMatch;
+      }
+
+      return passesFilter && passesSearch;
+    });
+  }, [orders, activeFilter, search]);
 
   // Synchronize scroll between header and content
   const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -177,6 +209,18 @@ const Tables = () => {
     }
   };
 
+
+  const handleSelect = ( order:OrdersData)=>{
+    setOrderInView(order)
+    setOrderModal(!showOrderModal)
+  }
+
+
+  const handleRefresh = ()=>{
+    loadOrders()
+    loadStoreProducts()
+  }
+
   return (
     <div className="mt-4 w-full h-[94%] bg-white border border-black/15 rounded-2xl overflow-hidden hidden md:block">
       <div className="flex items-center justify-between border-b border-black/15">
@@ -191,7 +235,7 @@ const Tables = () => {
                   : "hover:bg-gray-100"
               }`}
             >
-              <p className="font-avenir font-[500] text-md">{filter}</p>
+              <p className="font-avenir font-[500] text-sm">{filter}</p>
             </div>
           ))}
         </div>
@@ -205,6 +249,9 @@ const Tables = () => {
               className="absolute opacity-60"
             />
             <input
+              value={search}
+              onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
+              type="text"
               placeholder="Search bg date, customer & total "
               className="w-full h-full pl-6 focus:outline-none font-avenir font-[500] text-sm"
             />
@@ -255,7 +302,7 @@ const Tables = () => {
               </div>
               <div
                 onClick={toggleDateSorting}
-                className="w-[150px] flex-shrink-0  flex  gap-2 items-center cursor-pointer"
+                className="w-[200px]  flex-shrink-0  flex  gap-2 items-center cursor-pointer"
               >
                 <p className="font-avenir font-[500] text-md">Date</p>
                 <div className="flex flex-col gap-[2px] ">
@@ -280,7 +327,7 @@ const Tables = () => {
                   />
                 </div>
               </div>
-              <div className="w-[180px] flex-shrink-0  flex  gap-2 items-center">
+              <div className="w-[230px] flex-shrink-0  flex  gap-2 items-center">
                 <p className="font-avenir font-[500] text-md">Customer</p>
               </div>
               <div className="w-[150px] flex flex-shrink-0 items-center">
@@ -294,33 +341,57 @@ const Tables = () => {
                   Delivery Status
                 </p>
               </div>
-              <div className="w-[120px] flex flex-shrink-0  items-center">
+              <div className="w-[100px] flex flex-shrink-0  items-center">
                 <p className="font-avenir font-[500] text-md">Items</p>
               </div>
-              <div className="w-[120px] flex flex-shrink-0 items-center">
-                <p className="font-avenir font-[500] text-md">Discount</p>
+              <div className="w-[180px] flex  flex-shrink-0 items-center">
+                <p className="font-avenir font-[500] text-md">
+                  Fulfilled Status
+                </p>
               </div>
-              <div className="w-[60px]  flex  flex-shrink-0  items-center ">
+              {/* <div className="w-[60px]  flex  flex-shrink-0  items-center ">
                 <p className="font-avenir font-[500] text-md">Actions</p>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
         <div
           ref={contentScrollRef}
           onScroll={handleContentScroll}
-          className="flex-1 overflow-x-auto overflow-y-auto scrollbar-hide">
+          className="flex-1 overflow-x-auto overflow-y-auto scrollbar-hide"
+        >
           <div className="min-w-fit">
-            {orders
-              .filter((order) =>
-                activeFilter === "All"
-                  ? true
-                  : order.paymentStatus.toLowerCase() ===
-                    activeFilter.toLowerCase()
-              )
-              .map((order, index, filteredOrders) => (
+            {ordersState === "loading" && (
+              <>
+                <div className="w-full h-[300px] flex items-center justify-center gap-2">
+                  <Image
+                    src="/icons/loader.svg"
+                    width={28}
+                    height={28}
+                    alt="loading"
+                  />
+                  <p className="font-avenir pt-[3px] text-lg text-black/50 ">
+                    Loading Orders
+                  </p>
+                </div>
+              </>
+            )}
+            {ordersState === "failed" && (
+              <div className="w-full h-[300px] flex items-center justify-center gap-2  flex-col">
+                <p className="font-avenir pt-[3px] text-lg  text-red-500 ">
+                  Something went wrong
+                </p>
+                <p
+                  onClick={() => handleRefresh}
+                  className="px-10 py-2 cursor-pointer bg-black text-center text-xl mt-4 font-avenir text-white">
+                  Refresh to load Orders
+                </p>
+              </div>
+            )}
+            {ordersState === "success" &&
+              filteredOrders?.map((order) => (
                 <div
-                  onClick={setOrderModal}
+                  onClick={() => handleSelect(order)}
                   key={order.id}
                   className={cn(
                     "py-4 px-4 bg-white flex items-center border-black/15 border-b cursor-pointer"
@@ -333,21 +404,27 @@ const Tables = () => {
                       }
                     />
                     <p className="font-avenir font-[500] text-sm lg:text-md relative text-black/60 ">
-                      #{order.id}
+                      #{order.IDTrim}
                     </p>
                   </div>
-                  <div className="w-[150px]  flex  gap-2">
+                  <div className="w-[200px]  flex  gap-2">
                     <p className="font-avenir font-[500] text-md text-black/60 relative ">
                       {new Date(order.date).toLocaleDateString("en-US", {
-                        month: "short",
+                        month: "long",
                         day: "numeric",
                       })}
                       , {order.time}
                     </p>
                   </div>
-                  <div className="w-[180px]  flex  gap-2 ">
-                    <p className="font-avenir font-[500] text-md text-black/60 relative  cursor-pointer line-clamp-1">
-                      {order.customer.firstname + " " + order.customer.lastname}
+                  <div className="w-[230px]  flex  gap-2 ">
+                    <p className="font-avenir font-[500] text-md text-black/60 relative cursor-pointer line-clamp-1">
+                      {`${order.user.firstname
+                        .charAt(0)
+                        .toUpperCase()}${order.user.firstname.slice(
+                        1
+                      )} ${order.user.lastname
+                        .charAt(0)
+                        .toUpperCase()}${order.user.lastname.slice(1)}`}
                     </p>
                   </div>
                   <div className="w-[150px]  flex  gap-2">
@@ -383,17 +460,31 @@ const Tables = () => {
                       />
                     </div>
                   </div>
-                  <div className="w-[120px]  flex  gap-2">
+                  <div className="w-[100px]  flex  gap-2">
                     <p className="font-avenir font-[500] text-md text-black/60 relative  cursor-pointer">
                       {order.items.numOfItems}
                     </p>
                   </div>
-                  <div className="w-[120px]  flex  gap-2">
-                    <p className="font-avenir font-[500] text-md text-black/60 relative  cursor-pointer">
-                      GHS {order.discount}
-                    </p>
+                  <div className="w-[180px]  flex  gap-2">
+                    <div className="relative flex  items-center">
+                      <select
+                        value={order.fulfilledStatus}
+                        disabled={true}
+                        className="appearance-none px-4 py-1 pr-8 text-sm border border-yellow-500/50 text-yellow-600 cursor-pointer bg-yellow-50 rounded-lg focus:outline-none"
+                      >
+                        <option>Unfulfilled</option>
+                        <option>fulfilled</option>
+                      </select>
+                      <Image
+                        src="/icons/arrow-y.svg"
+                        width={12}
+                        height={12}
+                        alt="arrow"
+                        className="absolute right-3 opacity-100"
+                      />
+                    </div>
                   </div>
-                  <div className="w-[60px] flex gap-2 relative ">
+                  {/* <div className="w-[60px] flex gap-2 relative ">
                     <div className="relative group/delete">
                       <Image
                         typeof="delete"
@@ -420,7 +511,7 @@ const Tables = () => {
                         Comment
                       </span>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               ))}
           </div>

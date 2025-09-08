@@ -6,6 +6,7 @@ import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 export default function Products() {
@@ -14,7 +15,7 @@ export default function Products() {
       <div className="flex items-center justify-between max-sm:px-3">
         <p className="font-avenir text-xl md:text-2xl font-bold">Products</p>
         <Link
-          href="/store-products/create-product"
+          href="/store-products/product-actions"
           className="p-1.5 sm:px-3  md:py-2  bg-black flex items-center gap-2 cursor-pointer rounded-full md:rounded-lg"
         >
           <p className="font-avenir text-sm font-[500] text-white mt-[3px] sm:flex hidden">
@@ -83,6 +84,8 @@ const Tables = () => {
   const [currentPageProducts, setCurrentPageProducts] = useState<ProductData[]>(
     []
   );
+  const [categoriesSelect, setCategoriesSelect] = useState<string[]>([]);
+  const router = useRouter();
 
   const {
     storeProductFilters,
@@ -96,14 +99,21 @@ const Tables = () => {
     setPaginationConfig,
     updatePaginationFromAPI,
     pagination,
+    categories,
+    loadCategories,
+    setSelectedProduct,
+    getCategoryNameById,
   } = useBoundStore();
 
-
- 
+  useEffect(() => {
+    loadStoreProducts(true);
+    loadCategories();
+  }, []);
 
   useEffect(() => {
-    loadStoreProducts();
-  }, []);
+    const catNames = categories.map((cat) => cat.name);
+    setCategoriesSelect(catNames);
+  }, [categories]);
 
   useEffect(() => {
     setPaginationConfig({
@@ -115,16 +125,16 @@ const Tables = () => {
   }, []);
 
   useEffect(() => {
-    updatePaginationFromAPI({ totalItems: filteredStoreProducts.length,currentBackendPage:1  });
-  }, [storeProducts,filteredStoreProducts]);
+    updatePaginationFromAPI({
+      totalItems: filteredStoreProducts.length,
+      currentBackendPage: 1,
+    });
+  }, [storeProducts, filteredStoreProducts]);
 
   useEffect(() => {
-
-
     const sliceData = getPaginatedSlice(filteredStoreProducts);
     setCurrentPageProducts(sliceData);
-
-  }, [pagination,storeProductFilters,storeProducts]);
+  }, [pagination, storeProductFilters, storeProducts]);
 
   // useEffect(() => {
   //   console.log(currentPageProducts, "current pagination");
@@ -187,12 +197,14 @@ const Tables = () => {
     }
   };
 
+  // handle link
 
-
-  // useEffect(()=>{
-  //  console.log(storeProductFilters, 'fitler fields')
-  //  console.log(filteredStoreProducts, "filterd array")
-  // },[storeProductFilters,storeProducts,pagination])
+  const handleLink = (product: ProductData) => {
+    setSelectedProduct(product);
+    router.push(
+      `/store-products/product-actions?productID=${product.id}&productName=${product.name}`
+    );
+  };
 
   return (
     <div className="mt-4 w-full h-[94%] bg-white border border-black/15 rounded-2xl overflow-hidden hidden md:block">
@@ -200,10 +212,13 @@ const Tables = () => {
         <div className="px-2 w-[50%] py-2 bg-black/10 rounded-xl border-black/15 border flex gap-1 items-center">
           <Image src="/icons/search.svg" width={16} height={16} alt="search" />
           <input
-           value={storeProductFilters.search}
+            value={storeProductFilters.search ?? ""}
             onChange={(e) =>
-                  setStoreProductFilters({ search: e.target.value })
-                }
+              setStoreProductFilters({
+                ...storeProductFilters,
+                search: e.target.value,
+              })
+            }
             placeholder="Search for products"
             className="w-full h-full focus:outline-none px-2"
           />
@@ -215,12 +230,16 @@ const Tables = () => {
               <select
                 value={storeProductFilters.category}
                 onChange={(e) =>
-                  setStoreProductFilters({ category: e.target.value })
+                  setStoreProductFilters({
+                    ...storeProductFilters,
+                    category: e.target.value,
+                  })
                 }
-                className="appearance-none text-gray-600 focus:outline-none px-2 py-[0.8px] rounded-md font-avenir font-[500] text-sm bg-gray-200 border border-gray-500/10 pr-7"
-              >
+                className="appearance-none text-gray-600 focus:outline-none px-2 py-[0.8px] rounded-md font-avenir font-[500] text-sm bg-gray-200 border border-gray-500/10 pr-7">
                 <option value="Clothing">All</option>
-                <option value="None">None</option>
+                {categoriesSelect.map((cat, index) => (
+                  <option key={index}>{cat}</option>
+                ))}
               </select>
               <Image
                 src="/icons/arrow.svg"
@@ -236,12 +255,17 @@ const Tables = () => {
             <div className="relative flex items-center">
               <select
                 value={storeProductFilters.status}
-                // onChange={(e) =>
-                //   setStoreProductFilters((prev)=>{
-                //     ...prev,
-
-                //   })
-                // }
+                onChange={(e) =>
+                  setStoreProductFilters({
+                    ...storeProductFilters,
+                    status: e.target.value as
+                      | "active"
+                      | "inactive"
+                      | "all"
+                      | "out-of-stock"
+                      | "draft",
+                  })
+                }
                 className={cn(
                   "appearance-none focus:outline-none px-2 py-[0.8px] rounded-md font-avenir font-[500] text-sm border-[0.5px] pr-7 border-black/20",
                   {
@@ -335,22 +359,22 @@ const Tables = () => {
                   />
                 </div>
               </div>
-              <div className="w-[180px] flex items-center flex-shrink-0">
+              <div className="w-[150px] flex items-center flex-shrink-0">
                 <p className="font-avenir font-[500] text-md">Status</p>
+              </div>
+               <div className="w-[100px] flex items-center flex-shrink-0">
+                <p className="font-avenir font-[500] text-md">Price</p>
+              </div>
+              <div className="w-[150px] flex items-center flex-shrink-0">
+                <p className="font-avenir font-[500] text-md">Category</p>
               </div>
               <div className="w-[180px] flex items-center flex-shrink-0">
                 <p className="font-avenir font-[500] text-md">Inventory</p>
               </div>
-              <div className="w-[200px] flex items-center flex-shrink-0">
-                <p className="font-avenir font-[500] text-md">Category</p>
-              </div>
-              <div className="w-[250px] flex items-center flex-shrink-0">
+              <div className="w-[240px] flex items-center flex-shrink-0">
                 <p className="font-avenir font-[500] text-md">
                   Colors in Stock
                 </p>
-              </div>
-              <div className="w-[50px] flex justify-end flex-shrink-0">
-                <p className="opacity-0">h</p>
               </div>
             </div>
           </div>
@@ -381,15 +405,20 @@ const Tables = () => {
               <>
                 {dashboardProductErrors.products ? (
                   <>
-                    <div className="w-full h-[300px] flex items-center justify-center gap-2">
+                    <div className="w-full h-[300px] flex items-center justify-center gap-2  flex-col">
                       {/* <Image
                     src="/icons/loader.svg"
                     width={28}
                     height={28}
                     alt="loading"
                   /> */}
-                      <p className="font-avenir pt-[3px] text-lg text-red-500 ">
+                      <p className="font-avenir pt-[3px] text-lg  text-red-500 ">
                         Something went wrong
+                      </p>
+                      <p
+                        onClick={() => loadStoreProducts()}
+                        className="px-10 py-2 cursor-pointer bg-black text-center text-lg mt-4 font-avenir text-white" >
+                        Refresh to load Products 
                       </p>
                     </div>
                   </>
@@ -397,6 +426,7 @@ const Tables = () => {
                   <>
                     {currentPageProducts?.map((product) => (
                       <div
+                        onClick={() => handleLink(product)}
                         key={product.id}
                         className="py-6 px-4 cursor-pointer flex items-center border-b border-black/15"
                       >
@@ -439,7 +469,7 @@ const Tables = () => {
                             {product.name}
                           </p>
                         </div>
-                        <div className="w-[180px] flex-shrink-0 flex items-center">
+                        <div className="w-[150px] flex-shrink-0 flex items-center">
                           <p
                             className={cn(
                               "font-avenir font-[500] text-md rounded-lg px-4 py-[0.5px]",
@@ -458,40 +488,35 @@ const Tables = () => {
                             {product.status}
                           </p>
                         </div>
-                        <div className="w-[180px] flex-shrink-0 flex items-center">
+                        <div className="w-[100px] flex-shrink-0 flex items-center">
+                          <p className="font-avenir font-[500] text-md">
+                            {product.price}
+                          </p>
+                        </div>
+                        <div className="w-[150px] flex-shrink-0 flex items-center">
+                          <p className="font-avenir font-[500] text-md">
+                            {getCategoryNameById(product.category)}
+                          </p>
+                        </div>
+                         <div className="w-[180px] flex-shrink-0 flex items-center">
                           <p className="font-avenir font-[500] text-md">
                             {product.totalNumber} in stocks
                           </p>
                         </div>
-                        <div className="w-[200px] flex-shrink-0 flex items-center">
-                          <p className="font-avenir font-[500] text-md">
-                            {product.category}
-                          </p>
-                        </div>
-                        <div className="w-[250px] flex-shrink-0 flex items-center gap-2">
-                          <div className="flex items-center gap-2">
-                            <p>7</p>
-                            <div className="size-4 border border-black/15 rounded-sm bg-green-300"></div>
-                          </div>
-                          ,
-                          <div className="flex items-center gap-2">
-                            <p>13</p>
-                            <div className="size-4 border border-black/15 rounded-sm bg-gray-200"></div>
-                          </div>
-                          ,
-                          <div className="flex items-center gap-2">
-                            <p>60</p>
-                            <div className="size-4 border border-black/15 rounded-sm bg-red-300"></div>
-                          </div>
-                        </div>
-                        <div className="w-[50px] flex-shrink-0 flex justify-end h-full">
-                          <Image
-                            src="/icons/arrow.svg"
-                            width={13}
-                            height={13}
-                            className="rotate-270 opacity-30"
-                            alt="arrow"
-                          />
+                        <div className="w-[240px] flex-shrink-0 flex items-center gap-1">
+                          {product?.variants?.map((variant, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-1"
+                            >
+                              <p>{variant.stock}</p>
+                              <div
+                                style={{ backgroundColor: variant.colorHex }}
+                                className="size-4 border border-black/15 rounded-sm "
+                              ></div>
+                              ,
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ))}

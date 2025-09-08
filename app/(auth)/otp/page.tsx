@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useRef, useEffect } from "react";
 
 export default function OTP() {
-  const { user, setUserEmail } = useBoundStore();
+  const { user, setUser } = useBoundStore();
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(""));
   const [counter, setCounter] = useState<number>(300); // 5 minutes in seconds
   const [isResendDisabled, setIsResendDisabled] = useState<boolean>(true);

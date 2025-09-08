@@ -5,11 +5,14 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useBoundStore } from "@/store/store";
 import ProductCard from "@/app/ui/product-card";
 import { useGsapSlider } from "@/libs/gsapScroll";
-import { ProductData  } from "@/store/dashbaord/products";
+import { ProductData } from "@/store/dashbaord/products";
 import SizeGuild from "./size-guild";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function ProductContainer({ nameID }: { nameID: string }) {
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -31,6 +34,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   const [showButtons, setShowButtons] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [productData, setProductData] = useState<ProductData | null>(null);
+  const [colorActive, setColorActive] = useState({ id: "", name: "" });
   const [sizeSelected, setSizeSelected] = useState<{
     shown: boolean;
     active: boolean;
@@ -48,6 +52,21 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
       setProductData(singleProduct || null);
     }
   }, [nameID, products]);
+
+  useEffect(() => {
+    if (productData) {
+      const activeVariant = productData.variants?.find(
+        (variant) => variant.id === productData.selectedColor
+      );
+
+      if (activeVariant) {
+        setColorActive({
+          id: activeVariant.id,
+          name: activeVariant.color,
+        });
+      }
+    }
+  }, [productData]);
 
   const handleInteraction = () => {
     setShowButtons(true);
@@ -145,18 +164,25 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     const sticky = stickyRef.current;
     const image = imageDiv.current;
 
-    gsap.to(image, {
-      scrollTrigger: {
-        trigger: sticky,
-        start: "top 8%",
-        end: "bottom bottom",
-        pin: true,
-        pinSpacing: false,
-        scrub: 1,
-        anticipatePin: 1,
-      },
+    // Clear any existing ScrollTriggers for this element
+    ScrollTrigger.getAll().forEach((trigger) => {
+      if (trigger.trigger === image || trigger.vars.pin === sticky) {
+        trigger.kill();
+      }
     });
-  });
+
+    ScrollTrigger.create({
+      trigger: image,
+      start: "top top",
+      end: "bottom 80%",
+      pin: sticky,
+      pinSpacing: false,
+      anticipatePin: 1,
+      refreshPriority: -1,
+    });
+
+    ScrollTrigger.refresh();
+  }, [colorActive, productData]);
 
   // buttons ref
   const prevBtnRef = useRef<HTMLButtonElement>(
@@ -183,6 +209,8 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
       }
     }
 
+    // console.log("adding product", product)
+
     closeModal();
     addToCart(product);
     setModal("cart");
@@ -200,7 +228,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
       images.push(productData.mainImage);
     }
     // Add additional images here - you might want to add them to your ProductData
-    images.push("/images/hero-2.png"); // This is the second image you had hardcoded
+
     return images;
   };
 
@@ -211,40 +239,27 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
         <div className="w-full md:w-[50%] relative">
           <div
             ref={imageDiv}
-            className="w-full flex flex-row md:flex-col  image-div relative overflow-x-scroll"
+            className="w-full flex flex-row md:flex-col  image-div relative overflow-x-scroll md:overflow-x-hidden"
           >
-            <div
-              ref={cardRef}
-              className="w-full h-[400px] flex-none md:h-[70vh] lg:h-[80vh] relative border border-black/10 cursor-pointer touch-pan-y"
-              onClick={() => handleImageClick(0)}
-              onTouchStart={(e) => handleImageTouchStart(e, 0)}
-              onTouchMove={(e) => handleImageTouchMove(e, 0)}
-              onTouchEnd={handleImageTouchEnd}
-            >
-              {productData?.mainImage && (
-                <Image
-                  src={productData.mainImage}
-                  fill
-                  priority
-                  className="object-cover select-none"
-                  alt={productData?.name || "Product image"}
-                />
-              )}
-            </div>
-            <div
-              className="w-full h-[400px] flex-none  md:h-[70vh] lg:h-[80vh] relative border border-black/10 cursor-pointer touch-pan-y"
-              onClick={() => handleImageClick(1)}
-              onTouchStart={(e) => handleImageTouchStart(e, 1)}
-              onTouchMove={(e) => handleImageTouchMove(e, 1)}
-              onTouchEnd={handleImageTouchEnd}
-            >
-              <Image
-                src="/images/hero-2.png"
-                fill
-                className="object-cover select-none"
-                alt="hero"
-              />
-            </div>
+            {productData?.variants
+              .find((variant) => variant.id === colorActive.id)
+              ?.images.map((img, index) => (
+                <div
+                  key={index}
+                  className="w-full h-[400px] flex-none  md:h-[70vh] lg:h-[80vh] relative border border-black/10 cursor-pointer touch-pan-y"
+                  onClick={() => handleImageClick(1)}
+                  onTouchStart={(e) => handleImageTouchStart(e, 1)}
+                  onTouchMove={(e) => handleImageTouchMove(e, 1)}
+                  onTouchEnd={handleImageTouchEnd}
+                >
+                  <Image
+                    src={img.url}
+                    fill
+                    className="object-cover select-none"
+                    alt={productData.name}
+                  />
+                </div>
+              ))}
           </div>
           <div className="w-full h-full  absolute top-0 pointer-events-none  md:hidden z-20 flex items-center ">
             <div
@@ -330,35 +345,45 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
               <p className="text-black/50 font-avenir font-[400] text-md">
                 GHS {productData?.price}
               </p>
-              <p className="my-4 text-black/60">{productData?.description}</p>
+              {/* <p className="my-4 text-black/60 font-avenir text-lg">{productData?.description}</p> */}
+              <div
+                className="my-4 text-black/60 font-avenir text-lg responsive-description"
+                dangerouslySetInnerHTML={{
+                  __html: productData?.description || "",
+                }}
+              />
             </div>
             <div className="my-4 mt-10 md:mt-6">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-avenir font-[400]">COLORS </p>
                 <div className="text-sm font-avenir font-[400] text-black/50 flex items-center gap-2 ml-4">
                   <div className="w-12 h-[1px] bg-black/30"></div>
-                  {productData?.selectedColor}
+                  <p className="font-avenir uppercase text-xs">
+                    {colorActive.name}
+                  </p>
                 </div>
               </div>
               <div className="my-3 grid grid-cols-4 gap-3 md:gap-4 w-fit">
-                {productData?.colors.map((item, index) => (
-                  <div
-                    onClick={() => updateColor(productData?.id, item)}
-                    key={item}
-                    className={cn(
-                      "size-16 md:w-18 lg:size-20 border border-black/30 rounded-xl cursor-pointer relative overflow-hidden p-[2px]",
-                      {
-                        "border-2": item === productData?.selectedColor,
-                      }
-                    )}
-                  >
-                    <div className="w-full h-full relative overflow-hidden">
-                      <Image
-                        src="/images/hero-2.png"
-                        fill
-                        className="object-cover"
-                        alt="hero"
-                      />
+                {productData?.variants.map((variant, index) => (
+                  <div key={index}>
+                    <div
+                      onClick={() => updateColor(productData?.id, variant.id)}
+                      key={variant.id}
+                      className={cn(
+                        "size-16 md:w-18 lg:size-20 border border-black/30 rounded-xl cursor-pointer relative overflow-hidden p-[3px]",
+                        {
+                          "border-2": variant.id === productData?.selectedColor,
+                        }
+                      )}
+                    >
+                      <div className="w-full h-full relative overflow-hidden rounded-lg">
+                        <Image
+                          src={variant.images[0].url}
+                          fill
+                          className="object-cover"
+                          alt="hero"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -380,7 +405,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                   </p>
                 </div>
                 <div className="w-full flex items-center gap-2 md:gap-3 my-4">
-                  {productData?.sizes.map((item) => (
+                  {productData?.sizes?.map((item) => (
                     <div
                       onClick={() => handleSize(productData.id, item)}
                       key={item}
@@ -605,7 +630,11 @@ const PinchZoom = ({
   onImageChange,
 }: {
   title: string;
-  images: string[];
+  images: Array<{
+    _id: string;
+    publicId: string;
+    url: string;
+  }>;
   show: boolean;
   currentIndex: number;
   onClose: () => void;
@@ -695,7 +724,7 @@ const PinchZoom = ({
           }}
         >
           <Image
-            src={images[currentIndex]}
+            src={images[currentIndex].url}
             fill
             className="object-cover pointer-events-none"
             alt={title}
@@ -761,3 +790,5 @@ const PinchZoom = ({
     </div>
   );
 };
+
+// deescription function

@@ -7,7 +7,7 @@ let stylesInjected = false;
 
 const injectStyles = () => {
   if (stylesInjected) return;
-  
+
   const styleSheet = document.createElement("style");
   styleSheet.id = "quill-custom-styles"; // Add ID to prevent duplicates
   styleSheet.textContent = `
@@ -30,34 +30,41 @@ const injectStyles = () => {
       border-top: 1px solid rgba(0, 0, 0, 0.2) !important;
     }
   `;
-  
+
   document.head.appendChild(styleSheet);
   stylesInjected = true;
 };
 
-export default function Editor({ onChange}:{ onChange:any}) {
+export default function Editor({
+  onChange,
+  value,
+}: {
+  onChange: any;
+  value: string;
+}) {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const quillInstance = useRef<any>(null);
   const isInitializing = useRef<boolean>(false);
   const isInitialized = useRef<boolean>(false);
-  
-  const [content, setContent] = useState<string>("");
   const [isLoaded, setIsLoaded] = useState(false);
+  const isSettingValue = useRef<boolean>(false); // Flag to prevent onChange during setValue
 
   // Memoized content change handler
   const handleTextChange = useCallback(() => {
-    if (!editorRef.current) return;
+    if (!editorRef.current || isSettingValue.current) return;
     const html = editorRef.current.querySelector(".ql-editor")?.innerHTML;
     onChange(html || "");
-  }, []);
+  }, [onChange]);
 
   // Optimized initialization with guards
   const initializeQuill = useCallback(async () => {
     // Multiple guards to prevent double initialization
-    if (!editorRef.current || 
-        quillInstance.current || 
-        isInitializing.current || 
-        isInitialized.current) {
+    if (
+      !editorRef.current ||
+      quillInstance.current ||
+      isInitializing.current ||
+      isInitialized.current
+    ) {
       return;
     }
 
@@ -91,15 +98,21 @@ export default function Editor({ onChange}:{ onChange:any}) {
       // Attach event listener
       quillInstance.current.on("text-change", handleTextChange);
 
+      // Set initial value if provided
+      if (value && value.trim() !== "") {
+        isSettingValue.current = true;
+        quillInstance.current.clipboard.dangerouslyPasteHTML(value);
+        isSettingValue.current = false;
+      }
+
       isInitialized.current = true;
       setIsLoaded(true);
-      
     } catch (error) {
       console.error("Failed to initialize Quill:", error);
     } finally {
       isInitializing.current = false;
     }
-  }, [handleTextChange]);
+  }, [handleTextChange, value]);
 
   useEffect(() => {
     // Use setTimeout to ensure DOM is ready and avoid double calls
@@ -110,7 +123,7 @@ export default function Editor({ onChange}:{ onChange:any}) {
     // Cleanup function
     return () => {
       clearTimeout(timeoutId);
-      
+
       if (quillInstance.current) {
         try {
           quillInstance.current.off("text-change", handleTextChange);
@@ -119,11 +132,41 @@ export default function Editor({ onChange}:{ onChange:any}) {
         }
         quillInstance.current = null;
       }
-      
+
       isInitialized.current = false;
       isInitializing.current = false;
     };
   }, []); // Empty dependency array - initialize only once
+
+  // Fixed value setting effect
+  useEffect(() => {
+    if (quillInstance.current && isLoaded && value !== undefined) {
+      const editor = quillInstance.current;
+      const currentHtml = editor.root.innerHTML;
+      
+      // Normalize both values for comparison (remove extra whitespace/formatting)
+      const normalizeHtml = (html: string) => html.replace(/\s+/g, ' ').trim();
+      const normalizedValue = normalizeHtml(value || "");
+      const normalizedCurrent = normalizeHtml(currentHtml || "");
+
+      if (normalizedValue !== normalizedCurrent) {
+        isSettingValue.current = true;
+        
+        if (value === "" || value === null) {
+          // Clear the editor content
+          editor.setContents([]);
+        } else {
+          // Set the HTML content
+          editor.clipboard.dangerouslyPasteHTML(value);
+        }
+        
+        // Use setTimeout to reset flag after Quill processes the change
+        setTimeout(() => {
+          isSettingValue.current = false;
+        }, 0);
+      }
+    }
+  }, [value, isLoaded]);
 
   return (
     <div className="w-full font-avenir">

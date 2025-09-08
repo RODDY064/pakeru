@@ -57,7 +57,7 @@ export default function SideMenu() {
             key={item.name}
             className={cn(
               "cursor-pointer flex w-full gap-2 px-4 py-2 rounded-xl border border-black/0 hover:bg-white/20 hover:border-[#888888]/20",
-              { "bg-white/60  hover:bg-bg-white/60 border-black/10  hover:border-black/10 ": pathname === item.path }
+              { "bg-white/60  hover:bg-bg-white/60 border-black/10  hover:border-black/10 ": pathname.includes(item.path) }
             )}>
              <Image
                 src={`/icons/${item.icon}`}

@@ -112,8 +112,10 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
   const pageSizeOptions = [2,5, 7, 10, 15, 20, 25, 50];
 
   return (
-    <div className="w-full h-fit flex items-center justify-end pt-4 px-10 gap-4 border-t border-black/10">
-      {showPageSize && (
+    <div className="w-full h-fit flex items-center justify-between pt-4 px-10 gap-4 border-t border-black/10">
+    <p className="font-avenir font-[500] text-md text-black/50">Showing: {pagination.currentPage}/{pagination.totalPages} </p>
+     <div className="flex items-center gap-4 ">
+       {showPageSize && (
         <div className="h-12 border border-black/15 items-center flex rounded-xl">
           <p className="px-6 font-avenir font-[500] text-md text-black/50">
             Page Size
@@ -123,8 +125,7 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
               <select
                 value={pagination.itemsPerPage}
                 onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                className="font-avenir font-[500] text-md appearance-none h-full focus:outline-none cursor-pointer"
-              >
+                className="font-avenir font-[500] text-md appearance-none h-full focus:outline-none cursor-pointer">
                 {pageSizeOptions.map((size) => (
                   <option key={size} value={size}>
                     {size}
@@ -192,38 +193,10 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
               );
             })}
           </div>
-          {/* <div className="flex items-center gap-2">
-            
-            <div
-            onClick={()=>  handlePageChange(1)}
-             className="size-7.5 rounded-md bg-black/5 border border-black/25 flex items-center justify-center">
-              <p className="font-avenir text-sm font-[500]">1</p>
-            </div>
-            <div
-            onClick={()=>  handlePageChange(2)}
-             className="size-7.5 rounded-md bg-black/30 border border-black/25 flex items-center justify-center">
-              <p className="font-avenir text-sm font-[500]">2</p>
-            </div>
-            <div
-            onClick={()=>  handlePageChange(3)}
-             className="size-7.5 rounded-md bg-black/5 border border-black/25 flex items-center justify-center">
-              <p className="font-avenir text-sm font-[500]">3</p>
-            </div>
-            <div className="h-7.5 rounded-md flex items-center justify-center">
-              <Image
-                src="/icons/dots.svg"
-                width={15}
-                height={15}
-                alt="dots"
-                className="rotate-90"
-              />
-            </div>
-          </div> */}
         </div>
         <div
           onClick={handleNextPage}
-          className="flex hover:bg-black/10 h-full items-center justify-center px-4 border-l border-black/15 gap-2"
-        >
+          className="flex hover:bg-black/10 h-full items-center justify-center px-4 border-l border-black/15 gap-2">
           <p>Next</p>
           <Image
             src="/icons/arrow.svg"
@@ -234,121 +207,8 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
           />
         </div>
       </div>
+     </div>
     </div>
   );
 }
 
-//  return (
-//     <div className="w-full h-fit flex items-center justify-end pt-4 px-10 gap-4 border-t border-black/10">
-//       {/* Page Size Selector */}
-//       {showPageSize && (
-//         <div className="h-12 border border-black/15 items-center flex rounded-xl">
-//           <p className="px-6 font-avenir font-[500] text-md text-black/50">
-//             Page Size
-//           </p>
-//           <div className="px-3 pl-4 border-l border-black/15 h-full flex items-center justify-center">
-//             <div className="flex items-center gap-2 cursor-pointer">
-//               <select
-//                 className="font-avenir font-[500] text-md appearance-none h-full focus:outline-none cursor-pointer bg-transparent"
-//                 value={pagination.itemsPerPage}
-//                 onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-//                 disabled={isLoading}
-//               >
-//                 {pageSizeOptions.map(size => (
-//                   <option key={size} value={size}>{size}</option>
-//                 ))}
-//               </select>
-//               <Image
-//                 src="/icons/arrow.svg"
-//                 width={13}
-//                 height={16}
-//                 alt="arrow"
-//                 className="opacity-50"
-//               />
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Main Pagination Controls */}
-//       <div className="h-12 border border-black/15 flex rounded-xl items-center justify-center">
-//         {/* Previous Button */}
-//         <button
-//           className={`flex items-center justify-center px-4 gap-2 border-r h-full border-black/15 transition-opacity ${
-//             !pagination.hasPrevPage || isLoading
-//               ? 'opacity-50 cursor-not-allowed'
-//               : 'cursor-pointer hover:bg-black/5'
-//           }`}
-//           onClick={handlePrevPage}
-//           disabled={!pagination.hasPrevPage || isLoading}
-//         >
-//           <Image
-//             src="/icons/arrow.svg"
-//             width={13}
-//             height={16}
-//             alt="arrow"
-//             className="opacity-50 rotate-90"
-//           />
-//           <p className="text-black/70 font-avenir font-[500] text-md">
-//             Previous
-//           </p>
-//         </button>
-
-//         {/* Page Numbers */}
-//         <div className="px-4 py-4">
-//           <div className="flex items-center gap-2">
-//             {visiblePages.map((page, index) => {
-//               if (page === '...') {
-//                 return (
-//                   <div key={`ellipsis-${index}`} className="h-7.5 rounded-md flex items-center justify-center">
-//                     <Image
-//                       src="/icons/dots.svg"
-//                       width={15}
-//                       height={15}
-//                       alt="dots"
-//                       className="rotate-90"
-//                     />
-//                   </div>
-//                 );
-//               }
-
-//               const isCurrentPage = page === pagination.currentPage;
-
-//               return (
-//                 <button
-//                   key={page}
-//                   className={`size-7.5 rounded-md border border-black/25 flex items-center justify-center transition-all ${
-//                     isCurrentPage
-//                       ? 'bg-black/30 text-white'
-//                       : 'bg-black/5 hover:bg-black/10 cursor-pointer'
-//                   } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-//                   onClick={() => handlePageClick(page)}
-//                   disabled={isLoading}
-//                 >
-//                   <p className="font-avenir text-sm font-[500]">{page}</p>
-//                 </button>
-//               );
-//             })}
-//           </div>
-//         </div>
-
-//         {/* Next Button */}
-//         <button
-//           className={`flex h-full items-center justify-center px-4 border-l border-black/15 gap-2 transition-opacity ${
-//             !pagination.hasNextPage || isLoading
-//               ? 'opacity-50 cursor-not-allowed'
-//               : 'cursor-pointer hover:bg-black/5'
-//           }`}
-//           onClick={handleNextPage}
-//           disabled={!pagination.hasNextPage || isLoading}
-//         >
-//           <p className="text-black/70 font-avenir font-[500] text-md">Next</p>
-//           <Image
-//             src="/icons/arrow.svg"
-//             width={13}
-//             height={16}
-//             alt="arrow"
-//             className="opacity-50 -rotate-90"
-//           />
-//         </button>
-//       </div>

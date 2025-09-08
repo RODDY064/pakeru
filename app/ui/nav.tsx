@@ -101,7 +101,7 @@ export default function Nav() {
   }, [paused, ads.length]);
 
   useEffect(()=>{
-    console.log(products.slice(0,4))
+    // console.log(products.slice(0,4))
   },[products])
 
   useEffect(() => {
@@ -213,7 +213,9 @@ export default function Nav() {
             "w-full flex flex-row 0 justify-between px-3 md:px-8 py-4 pt-4.5 items-center navbar",
             {
               "bg-white border-[1px] border-black/20": isSnap,
-              "border-none": pathname.includes("/account")
+              "border-none": pathname.includes("/account"),
+              "bg-white border-[1px] border-black/20 ": pathname.includes("/product"),
+
             }
           )}>
           <div

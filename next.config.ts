@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+   experimental: {
+    serverActions: {
+      bodySizeLimit: '100mb' 
+    }
+  },
   images: {
     remotePatterns: [
       {
@@ -13,6 +18,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Max-Age',
+            value: '86400'
+          }
+        ]
+      }
+    ]
+  }
 };
 
 export default nextConfig;

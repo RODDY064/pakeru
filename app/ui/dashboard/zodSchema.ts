@@ -12,8 +12,8 @@ const ProductImageSchema = z.object({
 const ProductColorSchema = z.object({
   id: z.number(),
   name: z.string().min(1, "Color name is required"),
-  color: z.string().regex(/^#[0-9A-F]{6}$/i, "Must be a valid hex color"),
-  hex: z.string().regex(/^[0-9A-F]{6}$/i, "Must be a valid hex value"),
+  color: z.string().optional(),
+  hex: z.string().regex(/^#[0-9A-F]{6}$/i, "Must be a valid hex value"),
   images: z.array(ProductImageSchema)
     .min(3, "Each color must have at least 3 images")
     .max(5, "Each color can have maximum 5 images"),
@@ -34,7 +34,7 @@ export const ProductFormSchema = z.object({
     const num = parseInt(val);
     return !isNaN(num) && num > 0;
   }, "Total number must be a positive integer"),
-  status: z.enum(["active", "inactive", "out-of-stock"], {
+  status: z.enum(["active", "inactive", "out-of-stock","draft"], {
     required_error: "Status is required",
     invalid_type_error: "Status must be active, inactive, or out-of-stock",
   }),

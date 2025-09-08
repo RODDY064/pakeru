@@ -22,13 +22,6 @@ export default function ProductCard({
   productData: ProductData;
   showDetails?: boolean;
 }) {
-  function isPrime(n: number) {
-    if (n < 2) return false;
-    for (let i = 2; i <= Math.sqrt(n); i++) {
-      if (n % i === 0) return false;
-    }
-    return true;
-  }
 
   const colorMap: { [key: number]: string } = {
     1: "bg-black",
@@ -65,7 +58,7 @@ export default function ProductCard({
       >
         <div className="w-full h-full absolute">
           <Image
-            src={productData?.images[0]?.url}
+            src={productData?.mainImage?.url as string ??"/images/hero-2.png"} 
             fill
             alt="shop"
             className="object-cover"
