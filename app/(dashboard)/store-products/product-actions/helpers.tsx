@@ -1,5 +1,5 @@
 import { ProductFormData } from "@/app/ui/dashboard/zodSchema";
-import { ProductColor, ProductImage } from "./page";
+import { ProductColor, ProductImage } from "./action";
 import { compressImage } from "@/libs/imageCompression";
 import { ProductVariant } from "@/store/dashbaord/products";
 
