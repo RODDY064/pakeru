@@ -9,7 +9,7 @@ const injectStyles = () => {
   if (stylesInjected) return;
 
   const styleSheet = document.createElement("style");
-  styleSheet._id = "quill-custom-styles"; // Add ID to prevent duplicates
+  styleSheet.id = "quill-custom-styles"; // Add ID to prevent duplicates
   styleSheet.textContent = `
     .ql-toolbar.ql-snow {
       border: 1px solid rgba(0, 0, 0, 0.2) !important;
