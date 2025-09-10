@@ -68,7 +68,7 @@
 //             className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl">
 //             <option value="">Select category</option>
 //             {categories?.map((cat) => (
-//               <option key={cat.id} value={cat.id}>
+//               <option key={cat._id} value={cat._id}>
 //                 {cat.name}
 //               </option>
 //             ))}
@@ -104,7 +104,7 @@
 //             <div className="mt-2  border flex flex-col border-black/20 ">
 //               {categories?.map((cat, index) => (
 //                 <div
-//                   key={cat.id}
+//                   key={cat._id}
 //                   className={`w-full h-12 flex items-center justify-between ${
 //                     index % 2 === 0 ? "bg-black/10" : "bg-transparent"
 //                   }`}>
@@ -229,7 +229,7 @@ export default function Category({
       setShowForm(false);
       
       // Optionally select the newly created category
-      setSelectedCategory(newCategory.id);
+      setSelectedCategory(newCategory._id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create category");
     } finally {
@@ -309,7 +309,7 @@ export default function Category({
             className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl">
             <option value="">Select category</option>
             {categories?.map((cat) => (
-              <option key={cat.id} value={cat.id}>
+              <option key={cat._id} value={cat._id}>
                 {cat.name}
               </option>
             ))}
@@ -409,7 +409,7 @@ export default function Category({
                 ) : (
                   categories?.map((cat, index) => (
                     <div
-                      key={cat.id}
+                      key={cat._id}
                       className={`w-full h-12 flex items-center justify-between ${
                         index % 2 === 0 ? "bg-black/10" : "bg-transparent"
                       }`}>
@@ -426,7 +426,7 @@ export default function Category({
                           height={20}
                           alt="delete"
                           className="cursor-pointer hover:opacity-70 transition-opacity"
-                          onClick={() => handleDeleteCategory(cat.id)}
+                          onClick={() => handleDeleteCategory(cat._id)}
                         />
                       </div>
                     </div>

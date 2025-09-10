@@ -165,7 +165,7 @@ export default function Menu() {
                   {memoizedProducts.map((product, index) => (
                     <motion.div
                     className="w-full"
-                      key={`${product.id}-${
+                      key={`${product._id}-${
                         product.selectedColor || "default"
                       }-${index}`} >
                       <ProductCard
@@ -318,7 +318,7 @@ export default function Menu() {
               >
                 {memoizedProducts.map((product, index) => (
                   <motion.div
-                    key={`mobile-${product.id}-${index}`}
+                    key={`mobile-${product._id}-${index}`}
                     className="flex-shrink-0"
                   >
                     <ProductCard type="small" productData={product} />

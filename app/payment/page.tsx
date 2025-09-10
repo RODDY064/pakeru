@@ -37,6 +37,9 @@ type UserDetailsForm = z.infer<typeof userDetailsSchema>;
 export default function Payment() {
   const { setRouteChange, cartItems, getCartStats, user } = useBoundStore();
   const [payError, setPayError] = useState<string>("");
+  const [payState, setPayState] = useState<"success" | "idle" | "error">(
+    "idle"
+  );
   const router = useRouter();
   const {
     register,
@@ -74,9 +77,9 @@ export default function Payment() {
     console.log("Form submitted:", data);
 
     const productsArray = cartItems?.map((cart) => ({
-      productId: cart.id,
+      productId: cart._id,
       quantity: cart.quantity,
-      variantID: cart.variants?.find((v) => v.id === cart.selectedColor)?.id,
+      variantID: cart.variants?.find((v) => v._id === cart.selectedColor)?._id,
       size: cart.selectedSize,
     }));
 
@@ -92,26 +95,36 @@ export default function Payment() {
         products: productsArray,
       },
       totalPrice: cartStat?.totalPrice,
-      discountCode:""
+      discountCode: "",
     };
 
     console.log(paymentPayload, "payload");
 
     try {
-      const baseURL = "https://148d845ca813.ngrok-free.app/api/v1";
+      const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
       const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
 
       const res = await fetch(`${baseURL}/orders`, {
         method: "POST",
+        credentials: "include",
         headers: {
-           Authorization: `Bearer ${token}`,
-           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify(paymentPayload),
       });
 
-      console.log(res);
+      if (res.ok) {
+        const response = await res.json();
+        const { paymentUrl }  = response
+
+        console.log(response)
+
+        router.push(paymentUrl.data.authorization_url)
+      }
+
+      // router.push("/payment/notifications")
     } catch (error) {
       console.log(error);
     }
@@ -120,9 +133,9 @@ export default function Payment() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex mt-8 h-fit w-[95%] md:w-[94%] lg:w-[80%]  flex-col md:flex-row items-start justify-center  gap-4 "
+      className="flex h-fit w-[95%] md:w-[94%] lg:w-[80%]  flex-col md:flex-row items-stretch justify-center  gap-4 mt-20"
     >
-      <div className="flex w-full   md:w-[60%]  lg:w-[45%] flex-none flex-col  ">
+      <div className="flex w-full    md:w-[60%]  lg:w-[45%] flex-none flex-col  ">
         <div
           onClick={() => router.back()}
           className="flex gap-2 items-center cursor-pointer"
@@ -136,7 +149,7 @@ export default function Payment() {
           />
           <p className="font-avenir text-md font-[400] mt-[4px]">Back</p>
         </div>
-        <div className="w-full  bg-white mt-3.5 rounded-md px-6 py-6 pb-8">
+        <div className="w-full   bg-white border-[0.5px] border-black/20 mt-3.5 rounded-md px-6 py-6 pb-8">
           <div className="flex items-center justify-between">
             <p className="font-avenir font-[400] text-sm">IDENTIFICATION</p>
           </div>
@@ -182,7 +195,7 @@ export default function Payment() {
             </div>
           </div>
         </div>
-        <div className="w-full  bg-white mt-3.5 rounded-md px-6 py-6 pb-8">
+        <div className="w-full h-full  bg-white border-[0.5px] border-black/20  mt-3.5 rounded-md px-6 py-6 pb-8">
           <div className="flex items-center justify-between">
             <p className="font-avenir font-[400] text-sm">SHIPPING ADDRESS</p>
           </div>
@@ -246,20 +259,36 @@ export default function Payment() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-black text-white py-4 font-avenir font-[500] text-lg cursor-pointer mt-6 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="bg-black text-white py-4 font-avenir font-[500] text-lg cursor-pointer mt-6 md:block hidden rounded-md disabled:bg-gray-100 disabled:text-black
+            disabled:border-black/10 disabled:border
+           disabled:cursor-not-allowed transition-colors"
         >
-          {isSubmitting ? "Processing..." : "Submit"}
+          {isSubmitting ? (
+            <div className="flex items-center gap-2 justify-center">
+              <Image
+                src="/icons/loader.svg"
+                width={24}
+                height={24}
+                alt="loader"
+              />
+              <p className="font-avenir font-[500] text-lg pt-[2px]">
+                Processing...
+              </p>
+            </div>
+          ) : (
+            "Submit"
+          )}
         </button>
       </div>
 
-      <div className="flex h-fit w-full md:w-[40%] lg:w-[35%]  flex-col gap-4 flex-none pt-10  ">
-        <div className="w-full  bg-white rounded-md px-4 py-6">
+      <div className="flex min-h-24 w-full md:w-[40%] lg:w-[35%]  flex-col gap-4 flex-none pt-4 md:pt-10  ">
+        <div className="w-full  bg-white  border-[0.5px] border-black/20 rounded-md px-4 py-6">
           <div className="flex items-center justify-between">
             <p className="font-avenir font-[400] text-sm">MY SHOPPING CART</p>
           </div>
           <div className="mt-4 flex flex-col">
             {cartItems?.map((cart) => (
-              <PaymentCard key={cart.id} cart={cart} />
+              <PaymentCard key={cart._id} cart={cart} />
             ))}
           </div>
           <div className="mt-10">
@@ -275,7 +304,7 @@ export default function Payment() {
               </div> */}
           </div>
         </div>
-        <div className="w-full h-full bg-white rounded-md px-4 py-6 ">
+        <div className="w-full h-[200px] bg-white  border-[0.5px] border-black/20 rounded-md px-4 py-6 ">
           <div className="flex items-start gap-3 py-4 border-b border-black/10">
             <Image
               src="/icons/payment.svg"
@@ -307,6 +336,48 @@ export default function Payment() {
             </div>
           </div>
         </div>
+        <div className="w-full  h-[200px] bg-white  border-[0.5px] border-black/20 rounded-md px-4 py-6">
+          <div>
+            <p className="font-avenir font-[400] text-sm">DISCOUNT</p>
+            <div className="mt-3">
+              <label className="font-avenir text-md md:text-lg font-medium">
+                Enter your discount code
+              </label>
+              <div className="flex items-center h-10 gap-2">
+                <input
+                  type="text"
+                  placeholder="AHDJ049"
+                  className="mt-1 w-[70%] h-full border border-black/30 rounded flex items-center focus:outline-none focus-within:border-blue-600 p-3"
+                />
+                <div className="w-[30%] h-full bg-black/20 flex border-[0.5px] border-black/30 items-center justify-center rounded cursor-pointer">
+                  <p className="font-avenir font-[500] text-md">Verify</p>
+                </div>
+              </div>
+              <p className="my-3 text-sm font-avenir text-black/50">
+                Discount are applid to the quantity of items being purchased
+              </p>
+            </div>
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-black text-white py-4 md:hidden font-avenir font-[500] text-lg cursor-pointer mt-2 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        >
+          {isSubmitting ? (
+            <div className="flex items-center gap-2">
+              <p>Processing...</p>
+              <Image
+                src="/icons/loader.svg"
+                width={20}
+                height={20}
+                alt="loader"
+              />
+            </div>
+          ) : (
+            "Submit"
+          )}
+        </button>
         <div className="text-center">
           {payError && (
             <p className="font-avenir text-md text-red-500">{payError}</p>

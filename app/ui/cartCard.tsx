@@ -13,7 +13,7 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
   useEffect(() => {
     if (cartData) {
       const activeVariant = cartData.variants?.find(
-        (variant) => variant.id === cartData.selectedColor
+        (variant) => variant._id === cartData.selectedColor
       );
 
       if (activeVariant) {

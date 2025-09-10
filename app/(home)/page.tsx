@@ -19,7 +19,7 @@ import SliderButton from "../ui/sliderButton";
 import Video from "../ui/bentos";
 import { useGsapSlider } from "@/libs/gsapScroll";
 import { handleNavigation } from "@/libs/navigate";
-import Loader from "../ui/loader";
+
 
 const easing = cubicBezier(0.37, 0.24, 0.38, 0.99);
 
@@ -57,7 +57,7 @@ const Images = ({ action }: { action: any }) => {
     <div className="w-full h-[95vh] md:h-[90vh] lg:h-[100vh] slider-container font-avenir">
       <div className="slider w-full  h-full">
         <div className="w-full  h-full bg-white  relative overflow-hidden  ">
-          <div className="w-full max-sm:h-[70%] max-sm:mt-8  lg:mt-24  flex fle-col items-end  xl:mt-[2%] h-[70%]   xl:h-[75%] relative">
+          <div className="w-full max-sm:h-[70%] max-sm:mt-12  lg:mt-24  flex fle-col items-end  xl:mt-[2%] h-[70%]   xl:h-[75%] relative">
             <Image
               src="/images/12.png"
               fill
@@ -81,7 +81,7 @@ const Images = ({ action }: { action: any }) => {
             />
           </div>
           <div className="absolute w-full h-full flex  flex-col top-0 justify-end z-20 ">
-            <div className="w-full  md:h-[20%] mb-[15%] md:mb-0  flex flex-col gap-2 items-center ">
+            <div className="w-full  md:h-[20%] mb-[20%] md:mb-0  flex flex-col gap-2 items-center ">
               <h1 className="text-black font-avenir font-bold text-[20px] md:text-3xl main-hero-head">
                 GET THE LOOKS, ROCK IT
               </h1>
@@ -142,16 +142,16 @@ const Slider = () => {
           className="flex gap-1 md:gap-3 overflow-hidden text-white relative hero-slider-div">
           {slider.map((product) => (
             <div
-              key={product.id}
-              onClick={() => setLookAt(product.id)}
+              key={product._id}
+              onClick={() => setLookAt(product._id)}
               className={cn(
                 "w-[calc(90vw)] slider-element md:w-[calc(70vw)] card h-[350px]  flex-shrink-0  relative lg:h-[calc(35vw)]  flex-none  flex items-center justify-center overflow-hidden  ",
                 {
-                  "pl-1 md:pl-3 ": product.id === 0,
-                  "border border-black/5": product.id !== 0,
+                  "pl-1 md:pl-3 ": product._id === 0,
+                  "border border-black/5": product._id !== 0,
                 }
               )}>
-              {product.id === 0 ? (
+              {product._id === 0 ? (
                 <div className="w-[calc(90vw)] md:w-[calc(70vw)] h-full relative  overflow-hidden border border-black/5">
                   <motion.div
                     variants={ImgC}
@@ -163,8 +163,7 @@ const Slider = () => {
                       damping: 18,
                       mass: 0.7,
                     }}
-                    className="w-full h-full relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden"
-                  >
+                    className="w-full h-full relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden">
                     <Image
                       src={product.mainImage}
                       alt={product.title}
@@ -176,8 +175,7 @@ const Slider = () => {
                       <div className="w-full h-24 flex items-end justify-center pb-10 bg-gradient-to-b from-transparent to-black/20">
                         <motion.div
                           variants={textMovement}
-                          className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
-                        >
+                          className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center">
                           <motion.div
                             variants={textOverlay}
                             className="w-full h-full bg-black absolute text-overlay"
@@ -378,7 +376,7 @@ const Product = () => {
           <>
             {products?.map((product, index) => (
               <ProductCard
-                key={product.id}
+                key={product._id}
                 productData={product}
                 type="large"
                 cardRef={index === 0 ? cardRef : undefined}

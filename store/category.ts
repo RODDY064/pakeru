@@ -2,7 +2,7 @@ import { type StateCreator } from "zustand";
 import { Store } from "./store";
 
 export type CategoryType = {
-  id: string;
+  _id: string;
   name: string;
   description: string;
   parentCategory: string | null;
@@ -48,6 +48,7 @@ export const useCategory: StateCreator<
 
       const response = await fetch(`${baseUrl}/categories`, {
         method: "GET",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
            "ngrok-skip-browser-warning": "true",
@@ -94,19 +95,22 @@ export const useCategory: StateCreator<
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+      const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN
+      
       if (!baseUrl) {
         throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
       }
 
       const response = await fetch(`${baseUrl}/categories`, {
         method: "POST",
+        credentials: "include",
         headers: {
+          //  Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: categoryData.name,
           description: categoryData.description,
-          parentCategory: categoryData.parentCategory,
         }),
         signal: AbortSignal.timeout(10000),
       });
@@ -122,7 +126,7 @@ export const useCategory: StateCreator<
       console.log('Category created:', res);
 
       const newCategory: CategoryType = {
-        id: res.data._id,
+        _id: res.data._id,
         name: res.data.name,
         description: res.data.description,
         parentCategory: res.data.parentCategory,
@@ -155,13 +159,16 @@ export const useCategory: StateCreator<
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+        const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN
       if (!baseUrl) {
         throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
       }
 
       const response = await fetch(`${baseUrl}/categories/${categoryId}`, {
         method: "PUT",
+        credentials: "include",
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(updates),
@@ -179,7 +186,7 @@ export const useCategory: StateCreator<
       console.log('Category updated:', res);
 
       const updatedCategory: CategoryType = {
-        id: res.data._id,
+        _id: res.data._id,
         name: res.data.name,
         description: res.data.description,
         parentCategory: res.data.parentCategory,
@@ -188,7 +195,7 @@ export const useCategory: StateCreator<
       };
 
       set((state) => {
-        const index = state.categories.findIndex(cat => cat.id === categoryId);
+        const index = state.categories.findIndex(cat => cat._id === categoryId);
         if (index !== -1) {
           state.categories[index] = updatedCategory;
         }
@@ -215,6 +222,7 @@ export const useCategory: StateCreator<
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+      const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN
       if (!baseUrl) {
         throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
       }
@@ -227,8 +235,11 @@ export const useCategory: StateCreator<
 
       const response = await fetch(`${baseUrl}/categories/${categoryId}`, {
         method: "DELETE",
+        credentials: "include",
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          
         },
         signal: AbortSignal.timeout(10000),
       });
@@ -243,7 +254,7 @@ export const useCategory: StateCreator<
       console.log('Category deleted:', categoryId);
 
       set((state) => {
-        state.categories = state.categories.filter(cat => cat.id !== categoryId);
+        state.categories = state.categories.filter(cat => cat._id !== categoryId);
         state.isCategoriesLoading = false;
         state.error = null;
       });
@@ -268,12 +279,12 @@ export const useCategory: StateCreator<
   },
 
   getCategoryNameById: (categoryId: string) => {
-    const category = get().categories.find((c) => c.id === categoryId);
+    const category = get().categories.find((c) => c._id === categoryId);
     return category ? category.name : null;
   },
 
   getCategoryById: (categoryId: string) => {
-    return get().categories.find((c) => c.id === categoryId) || null;
+    return get().categories.find((c) => c._id === categoryId) || null;
   },
 
   getChildCategories: (parentId: string) => {

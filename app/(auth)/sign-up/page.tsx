@@ -24,7 +24,7 @@ type SignUpSchema = z.infer<typeof signUp>;
 
 export default function SigUp() {
   const [signUpState, setSignState] = useState<"loading" | "idle" | "submitted"| "error">("idle")
-  const { setUser } = useBoundStore()
+  const { setUser  } = useBoundStore()
   const {
     register,
     handleSubmit,
@@ -61,6 +61,7 @@ const onSubmit: SubmitHandler<SignUpSchema> = async (data) => {
 
     const req = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/register`, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -70,8 +71,15 @@ const onSubmit: SubmitHandler<SignUpSchema> = async (data) => {
     const res = await req.json();
     console.log("Server response:", res);
 
+    
+
     if (req.ok) {
-      setUser(newData)
+      setUser({
+        firstname:newData.firstName,
+        lastname:newData.lastName,
+        email:newData.email,
+        userType:"unverified"
+      })
       setSignState('submitted');
 
       await new Promise((resolve) => setTimeout(resolve, 3000));

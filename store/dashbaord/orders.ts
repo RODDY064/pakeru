@@ -1,8 +1,9 @@
 import { type StateCreator } from "zustand";
 import { Store } from "../store";
+import { ProductData } from "./products";
 
 export type OrdersData = {
-  id: string;
+  _id: string;
   IDTrim?:string,
   date: string;
   time: string;
@@ -20,7 +21,7 @@ export type OrdersData = {
     numOfItems: number;
     products: Array<{
       _id: string;
-      product: string;
+      product: ProductData;
       variantID: string;
       size: string;
       quantiy:number
@@ -92,8 +93,8 @@ export type OrdersStore = {
   // Async actions
   loadOrders: (options?: { force?: boolean }) => Promise<void>;
   loadOrder: (ID: string) => Promise<void>;
-  updateOrder: (order: Partial<OrdersData> & { id: string }) => Promise<void>;
-  deleteOrders: (orderIds: string[]) => Promise<void>;
+  updateOrder: (order: Partial<OrdersData> & { _id: string }) => Promise<void>;
+  deleteOrder: (orderId: string) => Promise<void>;
 
   // Computed getters
   getFilteredOrders: () => OrdersData[];
@@ -165,7 +166,7 @@ function filterOrders(
     filtered = filtered.filter((order) => {
       const customerName =
         `${order.user.firstname} ${order.user.lastname}`.toLowerCase();
-      const orderId = order.id.toLowerCase();
+      const orderId = order._id.toLowerCase();
 
       return (
         customerName.includes(searchLower) ||
@@ -195,7 +196,7 @@ function filterOrders(
 function getHeaders(): HeadersInit {
   const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
   const headers: HeadersInit = {
-    Authorization: `Bearer ${token}`,
+    // Authorization: `Bearer ${token}`,
   };
   headers["Content-Type"] = "application/json";
   // headers[ "ngrok-skip-browser-warning"] =  "true";
@@ -225,7 +226,7 @@ export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
   });
 
   return {
-    id: apiOrder._id,
+    _id: apiOrder._id,
     IDTrim: generateTrimmedId(apiOrder._id),
     date,
     time,
@@ -263,6 +264,7 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 
   const response = await fetch(`${baseUrl}${endpoint}`, {
     headers: getHeaders(),
+    credentials: "include",
     signal: AbortSignal.timeout(30000),
     ...options,
   });
@@ -283,6 +285,7 @@ const apiService = {
     try {
       const response = await apiCall("/orders", {
         method: "GET",
+        credentials: "include",
       });
 
       const orders = response.orders || response.data || response;
@@ -325,12 +328,16 @@ const apiService = {
     }
   },
 
-  async deleteOrders(orderIds: string[]): Promise<void> {
+  async deleteOrder(orderId: string): Promise<void> {
     try {
-      await apiCall("/orders", {
+     const res =  await apiCall(`/orders/${orderId}`, {
         method: "DELETE",
-        body: JSON.stringify({ orderIds }),
       });
+     
+      if(!res.ok){
+        throw new Error("Failed to delete orders")
+      }
+
     } catch (error) {
       console.error("Failed to delete orders:", error);
       throw error;
@@ -424,7 +431,7 @@ export const useOrdersStore: StateCreator<
   // status updates with API integration
   setOrderStatus: async (type, action, orderIds) => {
     const { selectedOrders, setBulkUpdateState, setOrderError } = get();
-    const idsToUpdate = orderIds || selectedOrders.map((o) => o.id);
+    const idsToUpdate = orderIds || selectedOrders.map((o) => o._id);
 
     if (!idsToUpdate.length) return;
 
@@ -437,7 +444,7 @@ export const useOrdersStore: StateCreator<
       set((state) => {
         // Update orders optimistically
         state.orders = state.orders.map((order) => {
-          if (idsToUpdate.includes(order.id)) {
+          if (idsToUpdate.includes(order._id)) {
             return { ...order, [type]: action };
           }
           return order;
@@ -500,11 +507,11 @@ export const useOrdersStore: StateCreator<
 
   toggleSelectOrder: (order) => {
     const { selectedOrders, filteredOrders } = get();
-    const exists = selectedOrders.some((o) => o.id === order.id);
+    const exists = selectedOrders.some((o) => o._id === order._id);
 
     set((state) => {
       state.selectedOrders = exists
-        ? selectedOrders.filter((o) => o.id !== order.id)
+        ? selectedOrders.filter((o) => o._id !== order._id)
         : [...selectedOrders, order];
 
       state.selectAllOrders =
@@ -600,7 +607,7 @@ export const useOrdersStore: StateCreator<
     const { setSingleOrderState, setOrderError, orders } = get();
 
     // Check if order exists in current orders first
-    const existingOrder = orders.find((o) => o.id === ID);
+    const existingOrder = orders.find((o) => o._id === ID);
     if (existingOrder) {
       set((state) => {
         state.orderInView = existingOrder;
@@ -634,12 +641,12 @@ export const useOrdersStore: StateCreator<
 
     try {
       // Simulate API call
-      await apiService.updateOrderStatus([orderUpdate.id], orderUpdate);
+      await apiService.updateOrderStatus([orderUpdate._id as string], orderUpdate);
 
       set((state) => {
         // Update in main orders array
         const orderIndex = state.orders.findIndex(
-          (o) => o.id === orderUpdate.id
+          (o) => o._id === orderUpdate._id
         );
         if (orderIndex !== -1) {
           state.orders[orderIndex] = {
@@ -649,7 +656,7 @@ export const useOrdersStore: StateCreator<
         }
 
         // Update in view if it's the same order
-        if (state.orderInView?.id === orderUpdate.id) {
+        if (state.orderInView?._id === orderUpdate._id) {
           state.orderInView = { ...state.orderInView, ...orderUpdate };
         }
 
@@ -672,20 +679,20 @@ export const useOrdersStore: StateCreator<
     }
   },
 
-  deleteOrders: async (orderIds) => {
+  deleteOrder: async (orderIds) => {
     const { setBulkUpdateState, setOrderError } = get();
 
     setBulkUpdateState("loading");
 
     try {
-      await apiService.deleteOrders(orderIds);
+      await apiService.deleteOrder(orderIds);
 
       set((state) => {
         state.orders = state.orders.filter(
-          (order) => !orderIds.includes(order.id)
+          (order) => !orderIds.includes(order._id)
         );
         state.selectedOrders = state.selectedOrders.filter(
-          (order) => !orderIds.includes(order.id)
+          (order) => !orderIds.includes(order._id)
         );
         state.ordersStats = computeStats(state.orders);
         state.filteredOrders = filterOrders(
@@ -714,7 +721,7 @@ export const useOrdersStore: StateCreator<
 
   getSelectedOrderIds: () => {
     const { selectedOrders } = get();
-    return selectedOrders.map((o) => o.id);
+    return selectedOrders.map((o) => o._id);
   },
 
   setOrderInView: (order) => {

@@ -20,7 +20,7 @@ export default function LookAt() {
   const handleLink = () => {
     // router.push(SlideInview?.link as string);
     // setTimeout(() => {
-    //   setLookAt(SlideInview?.id as any);
+    //   setLookAt(SlideInview?._id as any);
     // }, 500);
   };
 
@@ -50,7 +50,7 @@ const { isStart, isEnd } = useGsapSlider({
       )}
     >
       <motion.div
-        onClick={() => setLookAt(SlideInview?.id as any)}
+        onClick={() => setLookAt(SlideInview?._id as any)}
         animate={
           lookAt && SlideInview?.inView ? { opacity: 1 } : { opacity: 0 }
         }
@@ -68,7 +68,7 @@ const { isStart, isEnd } = useGsapSlider({
               {SlideInview?.title}
             </p>
             <Image
-              onClick={() => setLookAt(SlideInview?.id as any)}
+              onClick={() => setLookAt(SlideInview?._id as any)}
               src="/icons/cancel.svg"
               className="cursor-pointer"
               width={16}
@@ -135,7 +135,7 @@ const { isStart, isEnd } = useGsapSlider({
             ref={sliderRef}
             className="w-full my-4 grid grid-flow-col auto-cols-[98%] md:auto-cols-[50%] lg:auto-cols-[40%]  xl:auto-cols-[40%] gap-3 pr-10 nav-slider">
               {products?.map((product,index) => (
-                <ProductCard type="small" key={product.id} productData={product}   cardRef={index === 0 ? cardRef : undefined} />
+                <ProductCard type="small" key={product._id} productData={product}   cardRef={index === 0 ? cardRef : undefined} />
               ))}
             </div>
             </div>

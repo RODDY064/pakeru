@@ -12,7 +12,7 @@ export default function PaymentNav() {
   const router = useRouter();
 
   return (
-    <div className="w-full flex flex-row justify-between px-3 md:px-8 items-center bg-white border-b border-black/20">
+    <div className="w-full flex flex-row justify-between px-3 md:px-8 items-center fixed z-50 bg-white border-b border-black/20">
       <Link
         href="/"
         onClick={(e) => handleNavigation(e, "/", router, setRouteChange, 200)}

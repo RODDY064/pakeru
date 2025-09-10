@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Image schema
 const ProductImageSchema = z.object({
-  id: z.number(),
+  _id: z.number(),
   url: z.union([z.string(), z.instanceof(ArrayBuffer)]),
   name: z.string(),
   file:  z.custom<File | Blob>((val) => {
@@ -15,7 +15,7 @@ const ProductImageSchema = z.object({
 
 // Updated Color/Variant schema with stock and sizes per color
 const ProductColorSchema = z.object({
-  id: z.number(),
+  _id: z.number(),
   name: z.string().min(1, "Color name is required"),
   color: z.string().optional(),
   hex: z.string().regex(/^#[0-9A-F]{6}$/i, "Must be a valid hex value"),

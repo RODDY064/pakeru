@@ -15,7 +15,7 @@ export default function ColorStockAndSizes ({
   const [selectedSize, setSelectedSize] = useState("");
   const availableSizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 
-  const activeColor = colors.find((c) => c.id === activeColorId);
+  const activeColor = colors.find((c) => c._id === activeColorId);
 
   if (!activeColor) return null;
 
@@ -23,7 +23,7 @@ export default function ColorStockAndSizes ({
     const stockNumber = parseInt(stock) || 0;
     setColors((prev) =>
       prev.map((color) =>
-        color.id === activeColorId ? { ...color, stock: stockNumber } : color
+        color._id === activeColorId ? { ...color, stock: stockNumber } : color
       )
     );
   };
@@ -32,7 +32,7 @@ export default function ColorStockAndSizes ({
     if (selectedSize && !activeColor.sizes.includes(selectedSize)) {
       setColors((prev) =>
         prev.map((color) =>
-          color.id === activeColorId
+          color._id === activeColorId
             ? { ...color, sizes: [...color.sizes, selectedSize] }
             : color
         )
@@ -44,7 +44,7 @@ export default function ColorStockAndSizes ({
   const removeSizeFromColor = (sizeToRemove: string) => {
     setColors((prev) =>
       prev.map((color) =>
-        color.id === activeColorId
+        color._id === activeColorId
           ? {
               ...color,
               sizes: color.sizes.filter((size) => size !== sizeToRemove),

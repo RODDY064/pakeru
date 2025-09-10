@@ -46,7 +46,7 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
         if (parsed.state?.bookMarks && Array.isArray(parsed.state.bookMarks)) {
           parsed.state.bookMarks = parsed.state.bookMarks.filter((bookmark: any) => {
             return bookmark && 
-                   typeof bookmark.id === 'string' && 
+                   typeof bookmark._id === 'string' && 
                    typeof bookmark.bookmarkId === 'string' &&
                    typeof bookmark.bookmarkCreatedAt === 'string';
           });
@@ -67,7 +67,7 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
         if (value.state?.bookMarks && Array.isArray(value.state.bookMarks)) {
           value.state.bookMarks = value.state.bookMarks.filter((bookmark: any) => {
             const isValid = bookmark && 
-                           typeof bookmark.id === 'string' && 
+                           typeof bookmark._id === 'string' && 
                            typeof bookmark.bookmarkId === 'string' &&
                            typeof bookmark.bookmarkCreatedAt === 'string' &&
                            typeof bookmark.name === 'string' &&
@@ -123,7 +123,7 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
     const validBookmarks = Array.isArray(persisted?.bookMarks) 
       ? persisted.bookMarks.filter(bookmark => 
           bookmark && 
-          typeof bookmark.id === 'string' && 
+          typeof bookmark._id === 'string' && 
           typeof bookmark.bookmarkId === 'string'
         )
       : [];
@@ -144,7 +144,7 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
       if (state.cartItems && Array.isArray(state.cartItems)) {
         state.cartItems = state.cartItems.map((item: any) => ({
           ...item,
-          cartItemId: item.cartItemId || `${item.id}-${item.selectedColor || 'default'}-${item.selectedSize || 'default'}`,
+          cartItemId: item.cartItemId || `${item._id}-${item.selectedColor || 'default'}-${item.selectedSize || 'default'}`,
         }));
       }
     }
@@ -159,12 +159,12 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
       if (state.bookMarks && Array.isArray(state.bookMarks)) {
         state.bookMarks = state.bookMarks.map((bookmark: any) => ({
           ...bookmark,
-          id: bookmark.id || bookmark.productId || `bookmark-${Date.now()}-${Math.random()}`,
-          productId: bookmark.productId || bookmark.id,
+          id: bookmark._id || bookmark.productId || `bookmark-${Date.now()}-${Math.random()}`,
+          productId: bookmark.productId || bookmark._id,
           selectedColor: bookmark.selectedColor,
           selectedSize: bookmark.selectedSize,
           bookmarkCreatedAt: bookmark.bookmarkCreatedAt || bookmark.createdAt || new Date().toISOString(),
-          bookmarkId: bookmark.bookmarkId || `bookmark-${bookmark.productId || bookmark.id}-${bookmark.selectedColor || 'default'}-${bookmark.selectedSize || 'default'}`,
+          bookmarkId: bookmark.bookmarkId || `bookmark-${bookmark.productId || bookmark._id}-${bookmark.selectedColor || 'default'}-${bookmark.selectedSize || 'default'}`,
         }));
       }
     }
@@ -176,7 +176,7 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
           .filter((bookmark: any) => {
             // Remove invalid bookmarks
             return bookmark && 
-                   bookmark.id && 
+                   bookmark._id && 
                    bookmark.bookmarkId && 
                    bookmark.name &&
                    typeof bookmark.price === 'number';
@@ -217,7 +217,7 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
         // Validate and clean bookmarks after rehydration
         const validBookmarks = state.bookMarks.filter(bookmark => {
           const isValid = bookmark && 
-                         typeof bookmark.id === 'string' && 
+                         typeof bookmark._id === 'string' && 
                          typeof bookmark.bookmarkId === 'string' &&
                          typeof bookmark.name === 'string' &&
                          typeof bookmark.price === 'number';

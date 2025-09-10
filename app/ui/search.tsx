@@ -93,7 +93,7 @@ export default function Search() {
 
     return searchProduct.map((product) => (
       <ProductCard
-        key={product.id}
+        key={product._id}
         productData={product}
         type="large"
         cardStyle="mb-4 md:mb-4"

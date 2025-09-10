@@ -7,7 +7,7 @@ export class ProductAPIService {
   private static getHeaders(includeContentType = false): HeadersInit {
     const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
     const headers: HeadersInit = {
-      Authorization: `Bearer ${token}`,
+      // Authorization: `Bearer ${token}`,
     };
 
     if (includeContentType) {
@@ -64,6 +64,7 @@ export class ProductAPIService {
 
     const response = await fetch(`${baseUrl}/products/${productId}`, {
       method: "DELETE",
+      credentials: "include",
       headers: this.getHeaders(true),
     });
 
@@ -82,6 +83,7 @@ export class ProductAPIService {
     
     const response = await fetch(`${baseUrl}/products`, {
       method: "POST",
+      credentials: "include",
       headers: this.getHeaders(false),
       body: formData,
     });
@@ -99,6 +101,7 @@ export class ProductAPIService {
 
     const response = await fetch(`${baseUrl}/products/${productId}`, {
       method: "PATCH",
+      credentials: "include",
       headers: this.getHeaders(false),
       body: formData,
     });
@@ -267,7 +270,7 @@ export const mapVariantsToColors = (
       // Add images if they exist
       if (variant.images && variant.images.length > 0) {
         const mappedImages = variant.images.map((img, imgIndex) => ({
-          id: existingColor.images.length + imgIndex + 1,
+          _id: existingColor.images.length + imgIndex + 1,
           url: img.url,
           name: `image-${imgIndex}`,
           file: undefined,
@@ -278,14 +281,14 @@ export const mapVariantsToColors = (
       // Create new color entry
       const mappedImages: ProductImage[] =
         variant.images?.map((img, imgIndex) => ({
-          id: imgIndex + 1,
+          _id: imgIndex + 1,
           url: img.url,
           name: img.productId || `image-${imgIndex}`,
           file: undefined,
         })) || [];
 
       colorMap.set(colorKey, {
-        id: colorMap.size + 1,
+        _id: colorMap.size + 1,
         name: variant.color || `Color ${colorMap.size + 1}`,
         color: variant.color || colorKey,
         hex: variant.colorHex || "#000000",

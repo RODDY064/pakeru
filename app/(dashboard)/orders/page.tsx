@@ -2,12 +2,13 @@
 
 import Checkbox from "@/app/ui/dashboard/checkbox";
 import OrderModal from "@/app/ui/dashboard/order-modal";
+import Pagination from "@/app/ui/dashboard/pagination";
 import { cn } from "@/libs/cn";
 import { OrdersData, OrdersStore } from "@/store/dashbaord/orders";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export default function Orders() {
   return (
@@ -56,7 +57,7 @@ function StatsCard() {
           alt="calendar"
         />
         <p className="font-avenir font-[500] text-sm md:text-md mt-[3px] md:mt-[2px]">
-          Today <span className="md:hidden">,25 August</span>
+          Today <span className="md:hidden">, 25 August</span>
         </p>
       </div>
       {stats.map((item, index) => (
@@ -77,20 +78,33 @@ function StatsCard() {
   );
 }
 
+const filters = [
+  "All",
+  "Fulfilled", 
+  "Unfulfilled",
+  "Pending",
+  "Cancelled",
+  "Completed",
+] as const;
+
+const SEARCH_DEBOUNCE_MS = 300;
+const SCROLL_PERCENTAGE = 0.8;
+
+type FilterType = typeof filters[number];
+
 const Tables = () => {
-  const filters = [
-    "All",
-    "Fulfilled",
-    "Unfulfilled",
-    "Pending",
-    "Cancelled",
-    "Completed",
-  ];
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeFilter, setActiveFilter] = useState<FilterType>("All");
+  const [search, setSearch] = useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  const [currentPageOrders, setCurrentPageOrders] = useState<OrdersData[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Refs
   const headerScrollRef = useRef<HTMLDivElement | null>(null);
   const contentScrollRef = useRef<HTMLDivElement | null>(null);
-  const [search, setSearch] = useState<string>("");
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Store
   const {
     orders,
     selectAllOrders,
@@ -105,123 +119,188 @@ const Tables = () => {
     ordersState,
     setOrderInView,
     loadStoreProducts,
-    storeProducts
+    storeProducts,
+    setPaginationConfig,
+    updatePaginationFromAPI,
+    getPaginatedSlice,
+    pagination,
   } = useBoundStore();
 
-  useEffect(() => {
-    loadOrders();
-    loadStoreProducts()
+ // Memoized filter helper
+  const matchesFilter = useCallback((order: OrdersData, filter: FilterType): boolean => {
+    if (filter === "All") return true;
+    
+    const filterLower = filter.toLowerCase();
+    const statuses = [
+      order.paymentStatus?.toLowerCase(),
+      order.fulfilledStatus?.toLowerCase(),
+      order.deliveryStatus?.toLowerCase()
+    ].filter(Boolean);
+    
+    return statuses.some(status => status === filterLower);
+  }, []);
+
+  // Memoized search helper
+  const matchesSearch = useCallback((order: OrdersData, searchTerm: string): boolean => {
+    if (!searchTerm.trim()) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const searchableFields = [
+      order.date?.toLowerCase(),
+      `${order.user?.firstname || ''} ${order.user?.lastname || ''}`.trim().toLowerCase(),
+      order.total?.toString(),
+      order._id?.toLowerCase(),
+      order.IDTrim?.toLowerCase()
+    ].filter(Boolean);
+    
+    return searchableFields.some(field => field?.includes(searchLower));
   }, []);
 
 
-
+  // Optimized filtered orders with proper dependencies
   const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      // Filter logic
-      let passesFilter = false;
+    if (!orders?.length) return [];
+    
+    return orders.filter((order) => 
+      matchesFilter(order, activeFilter) && matchesSearch(order, debouncedSearch)
+    );
+  }, [orders, activeFilter, debouncedSearch, matchesFilter, matchesSearch]);
 
-      if (activeFilter === "All") {
-        passesFilter = true;
-      } else {
-        // Check payment status, delivery status, and fulfilled status
-        const paymentMatch =
-          order.paymentStatus.toLowerCase() === activeFilter.toLowerCase();
-        const fulfillmentMatch =
-          order.fulfilledStatus.toLowerCase() === activeFilter.toLowerCase();
-        const deliveredMatch =
-          order.deliveryStatus.toLowerCase() === activeFilter.toLowerCase();
+  // Debounced search effect
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, SEARCH_DEBOUNCE_MS);
 
-        passesFilter = paymentMatch || fulfillmentMatch || deliveredMatch;
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
+    };
+  }, [search]);
 
-      // Search logic - search by date, customer name, total, and order ID
-      let passesSearch = true;
-      if (search.trim() !== "") {
-        const searchLower = search.toLowerCase();
-        const customerName =
-          `${order.user.firstname} ${order.user.lastname}`.toLowerCase();
-        const dateMatch = order.date.toLowerCase().includes(searchLower);
-        const customerMatch = customerName.includes(searchLower);
-        const totalMatch = order.total.toString().includes(searchLower);
-        const orderIdMatch = order.id.toLowerCase().includes(searchLower);
-
-        passesSearch = dateMatch || customerMatch || totalMatch || orderIdMatch;
+  // Initialize data
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        await Promise.all([loadOrders(), loadStoreProducts()]);
+      } catch (error) {
+        console.log('Failed to initialize data:', error);
       }
+    };
+    
+    initializeData();
+  }, [loadOrders, loadStoreProducts]);
 
-      return passesFilter && passesSearch;
+  // Initialize pagination config
+  useEffect(() => {
+    setPaginationConfig({
+      dataKey: "orders",
+      loadFunction: "loadOrders",
+      itemsPerPage: 10,
+      backendItemsPerPage: 10,
     });
-  }, [orders, activeFilter, search]);
+  }, [setPaginationConfig]);
 
-  // Synchronize scroll between header and content
-  const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  // Update pagination when orders change
+  useEffect(() => {
+    updatePaginationFromAPI({
+      totalItems: filteredOrders.length,
+      currentBackendPage: 1,
+    });
+  }, [activeFilter, debouncedSearch, filteredOrders.length, updatePaginationFromAPI]);
+
+  // Update current page orders when pagination or filtered orders change
+  useEffect(() => {
+    const sliceData = getPaginatedSlice(filteredOrders);
+    setCurrentPageOrders(sliceData || []);
+  }, [pagination, filteredOrders, getPaginatedSlice]);
+
+  // Optimized scroll handlers with RAF for smoother performance
+  const handleHeaderScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     if (contentScrollRef.current) {
-      contentScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+      requestAnimationFrame(() => {
+        if (contentScrollRef.current) {
+          contentScrollRef.current.scrollLeft = e.currentTarget?.scrollLeft;
+        }
+      });
     }
-  };
+  }, []);
 
-  const handleContentScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  const handleContentScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     if (headerScrollRef.current) {
-      headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+      requestAnimationFrame(() => {
+        if (headerScrollRef.current) {
+          headerScrollRef.current.scrollLeft = e.currentTarget?.scrollLeft;
+        }
+      });
     }
-  };
+  }, []);
 
-  const scrollTable = (turn: "right" | "left") => {
+  // Optimized scroll function
+  const scrollTable = useCallback((direction: "right" | "left") => {
     const container = headerScrollRef.current || contentScrollRef.current;
-    if (container) {
-      const containerWidth = container.clientWidth;
-      const currentScroll = container.scrollLeft;
-      const totalWidth = container.scrollWidth;
+    if (!container) return;
 
-      if (turn === "right") {
-        const remainingWidth = totalWidth - currentScroll - containerWidth;
-        const scrollAmount = Math.min(containerWidth * 0.8, remainingWidth);
-
-        // Scroll both header and content
-        if (headerScrollRef.current) {
-          headerScrollRef.current.scrollBy({
-            left: scrollAmount,
-            behavior: "smooth",
-          });
-        }
-        if (contentScrollRef.current) {
-          contentScrollRef.current.scrollBy({
-            left: scrollAmount,
-            behavior: "smooth",
-          });
-        }
-      } else {
-        const scrollAmount = Math.min(containerWidth * 0.8, currentScroll);
-
-        // Scroll both header and content
-        if (headerScrollRef.current) {
-          headerScrollRef.current.scrollBy({
-            left: -scrollAmount,
-            behavior: "smooth",
-          });
-        }
-        if (contentScrollRef.current) {
-          contentScrollRef.current.scrollBy({
-            left: -scrollAmount,
-            behavior: "smooth",
-          });
-        }
-      }
+    const { clientWidth: containerWidth, scrollLeft: currentScroll, scrollWidth: totalWidth } = container;
+    
+    let scrollAmount: number;
+    
+    if (direction === "right") {
+      const remainingWidth = totalWidth - currentScroll - containerWidth;
+      scrollAmount = Math.min(containerWidth * SCROLL_PERCENTAGE, remainingWidth);
+    } else {
+      scrollAmount = -Math.min(containerWidth * SCROLL_PERCENTAGE, currentScroll);
     }
-  };
 
+    // Scroll both containers simultaneously
+    [headerScrollRef.current, contentScrollRef.current]
+      .filter(Boolean)
+      .forEach(ref => {
+        ref?.scrollBy({
+          left: scrollAmount,
+          behavior: "smooth",
+        });
+      });
+  }, []);
 
-  const handleSelect = ( order:OrdersData)=>{
-    setOrderInView(order)
-    setOrderModal(!showOrderModal)
-  }
+  // Optimized handlers
+  const handleSelect = useCallback((order: OrdersData) => {
+    setOrderInView(order);
+    setOrderModal(!showOrderModal);
+  }, [showOrderModal, setOrderInView, setOrderModal]);
 
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return; // Prevent double refresh
+    
+    setIsRefreshing(true);
+    try {
+      await Promise.all([loadOrders(), loadStoreProducts()]);
+    } catch (error) {
+      console.error("Failed to refresh data:", error);
+      // Consider adding user notification here
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [isRefreshing, loadOrders, loadStoreProducts]);
 
-  const handleRefresh = ()=>{
-    loadOrders()
-    loadStoreProducts()
-  }
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+ 
 
   return (
+
     <div className="mt-4 w-full h-[94%] bg-white border border-black/15 rounded-2xl overflow-hidden hidden md:block">
       <div className="flex items-center justify-between border-b border-black/15">
         <div className="pt-3 pb-4 px-4 flex items-center gap-4 ">
@@ -383,24 +462,36 @@ const Tables = () => {
                 </p>
                 <p
                   onClick={() => handleRefresh}
-                  className="px-10 py-2 cursor-pointer bg-black text-center text-xl mt-4 font-avenir text-white">
+                  className="px-10 py-2 cursor-pointer bg-black text-center text-xl mt-4 font-avenir text-white"
+                >
                   Refresh to load Orders
                 </p>
               </div>
             )}
+            {ordersState === "success" && filteredOrders.length === 0 && (
+              <div className="w-full h-[300px] flex items-center justify-center gap-2  flex-col">
+                <p className="font-avenir pt-[3px] text-lg text-black/50">
+                  No orders found
+                </p>
+                <p className="font-avenir text-sm text-black/40">
+                  Try adjusting your filters or search terms
+                </p>
+              </div>
+            )}
             {ordersState === "success" &&
-              filteredOrders?.map((order) => (
+              currentPageOrders?.map((order) => (
                 <div
                   onClick={() => handleSelect(order)}
-                  key={order.id}
+                  key={order._id}
                   className={cn(
                     "py-4 px-4 bg-white flex items-center border-black/15 border-b cursor-pointer"
-                  )}>
+                  )}
+                >
                   <div className="w-[150px]  flex  gap-2">
                     <Checkbox
                       action={() => toggleSelectOrder(order)}
                       active={
-                        !!selectedOrders.find((item) => item.id === order.id)
+                        !!selectedOrders.find((item) => item._id === order._id)
                       }
                     />
                     <p className="font-avenir font-[500] text-sm lg:text-md relative text-black/60 ">
@@ -484,109 +575,12 @@ const Tables = () => {
                       />
                     </div>
                   </div>
-                  {/* <div className="w-[60px] flex gap-2 relative ">
-                    <div className="relative group/delete">
-                      <Image
-                        typeof="delete"
-                        src="/icons/delete.svg"
-                        width={20}
-                        height={20}
-                        alt="delete"
-                        className="cursor-pointer"
-                      />
-                      <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover/delete:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                        Delete
-                      </span>
-                    </div>
-                    <div className="relative group/comment">
-                      <Image
-                        typeof="comment"
-                        src="/icons/comment.svg"
-                        width={24}
-                        height={24}
-                        alt="delete"
-                        className="cursor-pointer"
-                      />
-                      <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover/comment:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                        Comment
-                      </span>
-                    </div>
-                  </div> */}
                 </div>
               ))}
           </div>
         </div>
       </div>
-
-      <div className="w-full h-fit flex items-center justify-end py-5 px-10 gap-4 border-t border-black/15">
-        <div className="h-12 border border-black/15 items-center flex rounded-xl">
-          <p className="px-6 font-avenir font-[500] text-md text-black/50">
-            Show Items Per
-          </p>
-          <div className="px-3 pl-4 border-l border-black/15  h-full flex items-center justify-center ">
-            <div className="flex items-center gap-2 cursor-pointer ">
-              <select className="font-avenir font-[500] text-md appearance-none h-full focus:outline-none cursor-pointer">
-                <option>7</option>
-                <option>10</option>
-                <option>15</option>
-              </select>
-              <Image
-                src="/icons/arrow.svg"
-                width={13}
-                height={16}
-                alt="arrow"
-                className="opacity-50"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="h-12 border border-black/15 flex rounded-xl items-center justify-center cursor-pointer">
-          <div className="flex items-center justify-center px-4 gap-2 border-r h-full border-black/15  ">
-            <Image
-              src="/icons/arrow.svg"
-              width={13}
-              height={16}
-              alt="arrow"
-              className="opacity-50 rotate-90"
-            />
-            <p className="text-black/70 font-avenir font-[500] text-md">
-              Previous
-            </p>
-          </div>
-          <div className="px-4 py-4">
-            <div className="flex items-center gap-2">
-              <div className="size-7.5 rounded-md bg-black/5 border border-black/25 flex items-center justify-center ">
-                <p className="font-avenir text-sm font-[500] ">1</p>
-              </div>
-              <div className="size-7.5 rounded-md bg-black/30 border border-black/25 flex items-center justify-center ">
-                <p className="font-avenir text-sm font-[500] ">2</p>
-              </div>
-              <div className="size-7.5 rounded-md bg-black/5 border border-black/25 flex items-center justify-center ">
-                <p className="font-avenir text-sm font-[500] ">3</p>
-              </div>
-              <div className="h-7.5 rounded-md flex  items-center justify-center ">
-                <Image
-                  src="/icons/dots.svg"
-                  width={15}
-                  height={15}
-                  alt="dots"
-                  className="rotate-90"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex h-full items-center justify-center px-4 border-l border-black/15 gap-2">
-            <p>Next</p>
-            <Image
-              src="/icons/arrow.svg"
-              width={13}
-              height={16}
-              alt="arrow"
-              className="opacity-50 rotate-270"
-            />
-          </div>
-        </div>
-      </div>
+      <Pagination />
     </div>
   );
 };
@@ -604,24 +598,75 @@ const MobileTabs = () => {
       num: 5,
     },
     {
-      name: "Cancelled",
-      icon: "product-inac.svg",
-      num: 2,
-    },
-    {
       name: "Delivered",
       icon: "product-out.svg",
       num: 0,
     },
-    {
-      name: "Complete",
-      icon: "product-out.svg",
-      num: 0,
+     {
+      name: "Cancelled",
+      icon: "product-inac.svg",
+      num: 2,
     },
   ];
 
   return (
     <div className="mt-6 max-sm:px-3 md:hidden">
+        <p className="font-avenir text-lg md:text-2xl ">Notice</p>
+        <div className="mt-2 flex flex-col gap-2">
+          <Link
+            href={`/store-products/mobile-table/fulfills`}>
+            <div className="w-full bg-white border border-black/20 py-2 px-3 rounded-xl flex items-center justify-between">
+              <div className="flex  gap-1">
+                <Image
+                  src={`/icons/orders.svg`}
+                  width={16}
+                  height={16}
+                  alt="products"
+                />
+                <p className="text-sm font-avenir mt-[3px] ">Fulfilled Orders</p>
+              </div>
+              <div className="flex  gap-1">
+                <div className="size-5 rounded-full border border-red-500 flex items-center justify-center">
+                  <p className="text-xs font-avenir">{5}</p>
+                </div>
+                <Image
+                  src="/icons/arrow.svg"
+                  width={12}
+                  height={12}
+                  alt="arrow"
+                  className="rotate-[-90deg]"
+                />
+              </div>
+            </div>
+          </Link>
+           <Link
+            href={`/store-products/mobile-table/fulfills`}>
+            <div className="w-full bg-white border border-black/20 py-2 px-3 rounded-xl flex items-center justify-between">
+              <div className="flex  gap-1">
+                <Image
+                  src={`/icons/orders.svg`}
+                  width={16}
+                  height={16}
+                  alt="products"
+                />
+                <p className="text-sm font-avenir mt-[3px] ">unfulfilled Orders</p>
+              </div>
+              <div className="flex  gap-1">
+                <div className="size-5 rounded-full border border-red-500 flex items-center justify-center">
+                  <p className="text-xs font-avenir">{5}</p>
+                </div>
+                <Image
+                  src="/icons/arrow.svg"
+                  width={12}
+                  height={12}
+                  alt="arrow"
+                  className="rotate-[-90deg]"
+                />
+              </div>
+            </div>
+          </Link>
+        </div>
+        <p className="mb-10 mt-3 px-2 font-avenir text-black/40">Fulfilled orders are those already attended to, while unfulfilled orders are still pending.</p>
       <p className="font-avenir text-lg md:text-2xl ">Tables</p>
       <div className="mt-2 flex flex-col gap-2">
         {tabs.map((tab, index) => (

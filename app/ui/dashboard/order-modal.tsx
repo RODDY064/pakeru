@@ -3,22 +3,17 @@ import React, { use, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, cubicBezier } from "motion/react";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
-import { ProductData } from "@/store/dashbaord/products";
 import ProductOrderCard from "./productOrderCard";
 
 export default function OrderModal() {
-  const {
-    showOrderModal,
-    setOrderModal,
-    orderInView,
-    loadOrder,
-  } = useBoundStore();
+  const { showOrderModal, setOrderModal, orderInView, loadOrder, deleteOrder } =
+    useBoundStore();
 
   const [state, setState] = useState<"idle" | "loading" | "failed">("loading");
-
-
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
+    console.log(orderInView);
     if (orderInView) {
       setState("idle");
     }
@@ -29,8 +24,7 @@ export default function OrderModal() {
       variants={modalVariants}
       className={`fixed left-0 top-0 z-[99] w-full h-full hidden md:block ${
         showOrderModal ? "pointer-events-auto " : "pointer-events-none "
-      }`}
-    >
+      }`}>
       <AnimatePresence>
         {showOrderModal && (
           <>
@@ -121,6 +115,7 @@ export default function OrderModal() {
                           <div className="relative flex  items-center">
                             <select
                               value={orderInView?.paymentStatus}
+                              onChange={()=>{}}
                               className="appearance-none w-[150px] px-4 py-1 pr-8 text-sm border border-green-500/50 text-green-600 bg-green-50 rounded-lg focus:outline-none"
                             >
                               <option>Completed</option>
@@ -141,6 +136,7 @@ export default function OrderModal() {
                           <div className="relative flex  items-center ">
                             <select
                               value={orderInView?.deliveryStatus}
+                              onChange={()=>{}}
                               className="appearance-none w-[150px] px-4 py-1 pr-8 text-sm border border-yellow-500/50 text-yellow-600 bg-yellow-50 rounded-lg focus:outline-none"
                             >
                               <option>Pending</option>
@@ -169,9 +165,9 @@ export default function OrderModal() {
                         {orderInView?.items.products.map((prod) => (
                           <ProductOrderCard
                             key={prod._id}
-                            colorID={prod.variantID}
+                            product={prod.product}
+                            variantID={prod.variantID}
                             size={prod.size}
-                            productID={prod._id}
                             quantity={prod.quantiy}
                           />
                         ))}
@@ -181,7 +177,7 @@ export default function OrderModal() {
                           SUBTOTAL
                         </p>
                         <p className="text-black/50 text-xl  font-avenir ">
-                          GHS 500
+                          GHS {orderInView?.total.toFixed(2)}
                         </p>
                       </div>
                       <div className="">
@@ -189,7 +185,7 @@ export default function OrderModal() {
                           Discount
                         </p>
                         <p className="text-black/50 text-lg  font-avenir ">
-                          GHS 200
+                          GHS {orderInView?.discount.toFixed(2)}
                         </p>
                       </div>
                       <div className="mt-2">
@@ -197,7 +193,7 @@ export default function OrderModal() {
                           TOTAL
                         </p>
                         <p className="text-black/50 text-2xl  font-avenir ">
-                          GHS 500
+                          GHS {orderInView?.total.toFixed(2)}
                         </p>
                       </div>
                       <div className="mt-2">
@@ -222,7 +218,7 @@ export default function OrderModal() {
                               CANCEL
                             </p>
                           </div>
-                          <div className="w-full h-12 bg-red-100 hover:bg-red-50 border border-red-500 rounded-xl cursor-pointer flex items-center justify-center">
+                          <div onClick={() => setShowDeleteConfirm(true)} className="w-full h-12 bg-red-100 hover:bg-red-50 border border-red-500 rounded-xl cursor-pointer flex items-center justify-center">
                             <p className="text-md font-avenir text-red-500">
                               DELETE
                             </p>
@@ -237,6 +233,14 @@ export default function OrderModal() {
           </>
         )}
       </AnimatePresence>
+      {showDeleteConfirm && (
+        <DeleteModal
+          orderID={orderInView?._id || ""}
+          orderCode={orderInView?.IDTrim || ""}
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </motion.div>
   );
 }
@@ -296,4 +300,159 @@ const container = {
       staggerChildren: 0.01,
     },
   },
+};
+
+interface DeleteModalProps {
+  orderID: string;
+  orderCode: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onDeleteSuccess?: () => void;
+}
+
+const DeleteModal: React.FC<DeleteModalProps> = ({
+  orderID,
+  orderCode,
+  isOpen,
+  onClose,
+  onDeleteSuccess,
+}) => {
+  const { deleteOrder } = useBoundStore();
+  const [confirmationText, setConfirmationText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const isConfirmationValid = confirmationText.trim() === orderCode.trim();
+
+  const handleDelete = async () => {
+    if (!isConfirmationValid) {
+      setDeleteError("Product name does not match");
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+
+      if(!orderID){
+        setDeleteError("Order id is not provided.")
+        return
+      }
+
+     const res =  await deleteOrder(orderID);
+
+      // Call success callback if provided
+      onDeleteSuccess?.();
+
+      // Close modal and reset state
+      onClose();
+      setConfirmationText("");
+
+      // You might want to show a success toast here
+      console.log("Order deleted successfully");
+    } catch (error) {
+      console.error("Delete error:", error);
+      setDeleteError(
+        error instanceof Error
+          ? "Failed to delete order. Please try again."
+          : "Failed to delete order. Please try again."
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (isDeleting) return; // Prevent closing while deleting
+
+    onClose();
+    setConfirmationText("");
+    setDeleteError(null);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setConfirmationText(e.target.value);
+    if (deleteError) setDeleteError(null); // Clear error when user starts typing
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="w-full fixed top-0 left-0 h-full bg-black/90 flex items-center flex-col justify-center z-50">
+      <div className="lg:w-[55%] xl:w-[40%] w-[90%] min-h-[450px] bg-white rounded-[26px] p-6 lg:p-12">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <p className="font-avenir text-md font-[500] uppercase text-red-500">
+            Delete Order
+          </p>
+          <button
+            onClick={handleClose}
+            disabled={isDeleting}
+            className="flex gap-1 items-center cursor-pointer hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <div className="relative flex items-center justify-center">
+              <div className="w-[16px] h-[1px] bg-black/60 rotate-45"></div>
+              <div className="w-[16px] h-[1px] bg-black/60 rotate-[-45deg] absolute"></div>
+            </div>
+            <p className="font-avenir text-sm pt-1 text-black/60">CLOSE</p>
+          </button>
+        </div>
+
+        {/* Warning Message */}
+        <p className="font-avenir mt-6 text-lg lg:text-xl">
+          Are you sure you want to{" "}
+          <span className="text-red-500 font-semibold">delete</span> order{" "}
+          <span className="font-semibold"> "{orderCode}"</span>? This action
+          cannot be undone, and once deleted, the order will be permanently
+          removed from your order list.
+        </p>
+
+        {/* Confirmation Input */}
+        <div className="mt-8">
+          <p className="font-avenir text-lg lg:text-xl font-[500]">
+            Enter the order code 
+             <span className="font-semibold"> "{orderCode}"</span> to confirm
+            delete.
+          </p>
+          <input
+            type="text"
+            value={confirmationText}
+            onChange={handleInputChange}
+            disabled={isDeleting}
+            placeholder={`Type "${orderCode}" here`}
+            className="w-full h-12 font-avenir text-md border border-black/20 bg-black/5 mt-3 px-3 rounded-[10px] focus:outline-none focus:border-black/40 disabled:opacity-50 disabled:cursor-not-allowed"
+          />
+
+          {/* Error Message */}
+          {deleteError && (
+            <p className="text-red-500 text-sm mt-2 font-avenir">
+              {deleteError}
+            </p>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-8 lg:mt-10 flex items-center gap-4">
+          <button
+            onClick={handleClose}
+            disabled={isDeleting}
+            className="w-full h-12 cursor-pointer p-2 bg-black/10 flex items-center justify-center hover:bg-black/5 border border-black/20 rounded-[10px] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <p className="font-avenir text-lg lg:text-xl">Cancel</p>
+          </button>
+
+          <button
+            onClick={handleDelete}
+            disabled={!isConfirmationValid || isDeleting}
+            className="w-full h-12 cursor-pointer p-2 bg-red-200 flex items-center justify-center hover:bg-red-100 border border-red-500 rounded-[10px] transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-red-100"
+          >
+            <p className="font-avenir text-lg lg:text-xl text-red-500">
+              {isDeleting ? "Deleting..." : "Delete"}
+            </p>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };

@@ -4,7 +4,7 @@ import { ProductData } from "./dashbaord/products";
 
 
 export type ImgSlide = {
-  id: number;
+  _id: number;
   title: string;
   mainImage: string;
   images: string[];
@@ -18,7 +18,7 @@ export type ImgSlideStore = {
   slider: ImgSlide[];
   lookAt: boolean;
   SlideInview: ImgSlide | null;
-  setLookAt: (id: number) => void;
+  setLookAt: (_id: number) => void;
 };
 
 export const useSliderStore: StateCreator<
@@ -29,7 +29,7 @@ export const useSliderStore: StateCreator<
 > = (set) => ({
   slider: [
     {
-      id: 0,
+      _id: 0,
       title: "SHIRTS",
       description:
         "The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate. The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate.",
@@ -40,7 +40,7 @@ export const useSliderStore: StateCreator<
       products: [],
     },
      {
-      id: 1,
+      _id: 1,
       title: "SHORTS",
       description:
         "The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate. The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate.",
@@ -51,7 +51,7 @@ export const useSliderStore: StateCreator<
       products: [],
     },
     {
-      id: 2,
+      _id: 2,
       title: "PAIRS",
       description:
         "The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate. The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate.",
@@ -62,7 +62,7 @@ export const useSliderStore: StateCreator<
       products: [],
     },
     {
-      id: 3,
+      _id: 3,
       title: "BEST SELLING",
       description:
         "The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate. The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate.",
@@ -73,7 +73,7 @@ export const useSliderStore: StateCreator<
       products: [],
     },
     {
-      id: 4,
+      _id: 4,
       title: "MARSHING SETS",
       description:
         "The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate. The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate.",
@@ -89,7 +89,7 @@ export const useSliderStore: StateCreator<
   setLookAt: (id) =>
     set((state) => {
       state.lookAt = !state.lookAt;
-      const slide = state.slider.find((s) => s.id === id);
+      const slide = state.slider.find((s) => s._id === id);
       if (slide) {
         slide.inView = !slide.inView;
         state.SlideInview = slide.inView ? slide : null;

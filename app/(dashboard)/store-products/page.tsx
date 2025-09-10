@@ -7,7 +7,7 @@ import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 export default function Products() {
   return (
@@ -45,6 +45,10 @@ export default function Products() {
 }
 
 function StatsCard() {
+  const { getProductStats } = useBoundStore();
+
+  const productStats = useMemo(() => getProductStats(), [getProductStats]);
+
   const [stats, setStats] = useState([
     { label: "Product Sells Rate", value: 0 },
     { label: "Total Products", value: 0 },
@@ -53,18 +57,29 @@ function StatsCard() {
     { label: "Product Out of Stock", value: 0 },
   ]);
 
+  useEffect(() => {
+    if (!productStats) return;
+
+    setStats([
+      { label: "Product Sells Rate", value: 0 },
+      { label: "Total Products", value: productStats.total ?? 0 },
+      { label: "Active Products", value: productStats.active ?? 0 },
+      { label: "Inactive Products", value: productStats.inactive ?? 0 },
+      { label: "Product Out of Stock", value: productStats.outOfStock ?? 0 },
+    ]);
+  }, [productStats]);
+
   return (
     <div className="mt-4 w-full h-fit bg-white border border-black/15  sm:rounded-2xl grid grid-cols-2 md:flex md:px-4 ">
       {stats.map((item, index) => (
         <div
           key={index}
           className={cn(
-            "w-full flex items-start border-r max-sm:border-t border-black/10 py-2.5 px-3 lg:px-5 xl:px-10 flex-col last:border-r-0",
+            "w-full flex items-start border-r max-sm:border-t border-black/10 py-2.5 px-4 lg:px-5 xl:px-10 flex-col last:border-r-0",
             {
               "col-span-2 ": index === stats.length - 1,
             }
-          )}
-        >
+          )}>
           <p className="font-avenir font-[500] text-sm md:text-md md:mt-[2px] text-black/60">
             {`${item.label}`}
           </p>
@@ -149,7 +164,7 @@ const Tables = () => {
 
   const handleContentScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (headerScrollRef.current) {
-      headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+      headerScrollRef.current.scrollLeft = e.currentTarget?.scrollLeft;
     }
   };
 
@@ -202,7 +217,7 @@ const Tables = () => {
   const handleLink = (product: ProductData) => {
     setSelectedProduct(product);
     router.push(
-      `/store-products/product-actions?productID=${product.id}&productName=${product.name}`
+      `/store-products/product-actions?productID=${product._id}&productName=${product.name}`
     );
   };
 
@@ -235,7 +250,8 @@ const Tables = () => {
                     category: e.target.value,
                   })
                 }
-                className="appearance-none text-gray-600 focus:outline-none px-2 py-[0.8px] rounded-md font-avenir font-[500] text-sm bg-gray-200 border border-gray-500/10 pr-7">
+                className="appearance-none text-gray-600 focus:outline-none px-2 py-[0.8px] rounded-md font-avenir font-[500] text-sm bg-gray-200 border border-gray-500/10 pr-7"
+              >
                 <option value="Clothing">All</option>
                 {categoriesSelect.map((cat, index) => (
                   <option key={index}>{cat}</option>
@@ -333,8 +349,7 @@ const Tables = () => {
           <div
             ref={headerScrollRef}
             onScroll={handleHeaderScroll}
-            className="overflow-x-auto scrollbar-hide px-4 scroll-table"
-          >
+            className="overflow-x-auto scrollbar-hide px-4 scroll-table" >
             {/* Header content with minimum width */}
             <div className="flex min-w-fit">
               <div className="w-[70px] flex gap-2 cursor-pointer flex-shrink-0">
@@ -362,7 +377,7 @@ const Tables = () => {
               <div className="w-[150px] flex items-center flex-shrink-0">
                 <p className="font-avenir font-[500] text-md">Status</p>
               </div>
-               <div className="w-[100px] flex items-center flex-shrink-0">
+              <div className="w-[100px] flex items-center flex-shrink-0">
                 <p className="font-avenir font-[500] text-md">Price</p>
               </div>
               <div className="w-[150px] flex items-center flex-shrink-0">
@@ -417,8 +432,9 @@ const Tables = () => {
                       </p>
                       <p
                         onClick={() => loadStoreProducts()}
-                        className="px-10 py-2 cursor-pointer bg-black text-center text-lg mt-4 font-avenir text-white" >
-                        Refresh to load Products 
+                        className="px-10 py-2 cursor-pointer bg-black text-center text-lg mt-4 font-avenir text-white"
+                      >
+                        Refresh to load Products
                       </p>
                     </div>
                   </>
@@ -427,7 +443,7 @@ const Tables = () => {
                     {currentPageProducts?.map((product) => (
                       <div
                         onClick={() => handleLink(product)}
-                        key={product.id}
+                        key={product._id}
                         className="py-6 px-4 cursor-pointer flex items-center border-b border-black/15"
                       >
                         <div className="w-[70px] flex-shrink-0 gap-2">
@@ -435,35 +451,28 @@ const Tables = () => {
                         </div>
                         <div className="w-[400px] flex-shrink-0 flex gap-2 items-center">
                           <div className="flex items-center relative">
-                            {product?.images?.slice(0, 3).map((img) => (
-                              <div
-                                key={img._id}
-                                className="size-10 border border-black/15 rounded-md rotate-[-10deg] absolute z-30 bg-white overflow-hidden"
-                              >
-                                <Image
-                                  src={img.url}
-                                  fill
-                                  className="object-cover"
-                                  alt={product.name}
-                                />
-                              </div>
-                            ))}
-                            <div className="size-10 border border-black/15 rounded-md rotate-[-9deg] absolute left-3 z-20 bg-white overflow-hidden">
-                              <Image
-                                src="/images/product2.png"
-                                fill
-                                className="object-cover"
-                                alt="image"
-                              />
-                            </div>
-                            <div className="size-10 border border-black/15 rounded-md rotate-[-6deg] absolute left-6 bg-white overflow-hidden">
-                              <Image
-                                src="/images/product3.png"
-                                fill
-                                className="object-cover"
-                                alt="image"
-                              />
-                            </div>
+                            {product?.variants
+                              ?.slice(0, 3)
+                              .map((variant, index) => (
+                                <div
+                                  key={variant._id}
+                                  className={`size-10 border border-black/15 rounded-md  absolute  bg-white overflow-hidden ${
+                                    index === 0 && "z-30"
+                                  } `}
+                                  style={{
+                                    left: `${index * 10}px`,
+                                    rotate: `-${index + 10}deg`,
+                                  }}>
+                                  {variant.images?.[0]?.url && (
+                                    <Image
+                                      src={variant.images[0].url}
+                                      fill
+                                      className="object-cover"
+                                      alt={product.name}
+                                    />
+                                  )}
+                                </div>
+                              ))}
                           </div>
                           <p className="pl-20 font-avenir font-[500] text-md">
                             {product.name}
@@ -498,7 +507,7 @@ const Tables = () => {
                             {getCategoryNameById(product.category)}
                           </p>
                         </div>
-                         <div className="w-[180px] flex-shrink-0 flex items-center">
+                        <div className="w-[180px] flex-shrink-0 flex items-center">
                           <p className="font-avenir font-[500] text-md">
                             {product.totalNumber} in stocks
                           </p>
@@ -563,9 +572,7 @@ const MobileTabs = () => {
       <div className="mt-2 flex flex-col gap-2">
         {tabs.map((tab, index) => (
           <Link
-            href={`/store-products/mobile-table/${tab.name.toLowerCase()}`}
-            key={index}
-          >
+            href={`/store-products/mobile-table/${tab.name.toLowerCase()}`}>
             <div className="w-full bg-white border border-black/20 py-2 px-3 rounded-xl flex items-center justify-between">
               <div className="flex  gap-1">
                 <Image

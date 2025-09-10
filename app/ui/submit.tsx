@@ -7,11 +7,13 @@ import React from "react";
 export default function Submit({
   type,
   submitType,
-  subStyle
+  subStyle,
+  errorMessage
 }: {
-  type: "loading" | "idle" | "submitted" | "error";
+  type: "loading" | "idle" | "submitted" | "error" | "unverified";
   submitType?: "otp" | "sign-in" | "sign-up"| "in-touch";
-  subStyle?:String
+  subStyle?:String,
+  errorMessage?:string | null
 }) {
   const getButtonText = () => {
     switch (submitType) {
@@ -64,6 +66,8 @@ export default function Submit({
           "border-[#1A1A1A] bg-transparent cursor-not-allowed": type === "loading",
           "border-green-400 bg-green-400 cursor-not-allowed text-white": type === "submitted",
           "border-red-500 bg-red-500 cursor-not-allowed text-white": type === "error",
+          "border-yellow-500 bg-yellow-500 text-white": type === "unverified"
+          
         },subStyle
       )}>
       {type === "idle" && (
@@ -88,10 +92,10 @@ export default function Submit({
         </div>
       )}
 
-      {type === "error" && (
+      {(type === "error" || type === "unverified") && (
         <div className="flex gap-3 items-center justify-center">
           <Image src="/icons/cancel-w.svg" width={14} height={14} alt="cancel" />
-          <p className="text-sm font-avenir text-white">Something went wrong. Try again</p>
+          <p className="text-sm font-avenir text-white">{errorMessage?? "Something went wrong. Try again"}</p>
         </div>
       )}
     </div>

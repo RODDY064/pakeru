@@ -6,18 +6,18 @@ import { ProductAPIService } from "@/app/(dashboard)/store-products/product-acti
 
 //variant structure
 export type ProductVariant = {
-  id: string;
+  _id: string,
   color: string;
   colorHex?: string;
   description: string;
   sizes: string[];
-  images: Array<{ id: string; url: string; productId: string }>;
+  images: Array<{ _id: string; url: string; productId: string }>;
   stock: number;
 };
 
 // Product structure
 export type ProductData = {
-  id: string;
+  _id: string;
   name: string;
   description?: string;
   createdAt?: Date;
@@ -152,11 +152,13 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   }
 
   const response = await fetch(`${baseUrl}${endpoint}`, {
+    
     headers: {
       "Content-Type": "application/json",
       //  "ngrok-skip-browser-warning": "true",
       ...options.headers,
     },
+    credentials: "include",
     signal: AbortSignal.timeout(30000),
     ...options,
   });
@@ -177,7 +179,7 @@ const transformApiProduct = (apiProduct: any): ProductData => {
   const now = new Date();
 
   return {
-    id: apiProduct._id || apiProduct.id,
+    _id: apiProduct._id,
     name: apiProduct.name || "Untitled Product",
     description: apiProduct.description || "",
     createdAt: apiProduct.createdAt ? new Date(apiProduct.createdAt) : now,
@@ -255,7 +257,7 @@ export const useStoreProductStore: StateCreator<
     ),
 
   getProductById: (id) => {
-    return get().storeProducts.find((p) => p.id === id);
+    return get().storeProducts.find((p) => p._id === id);
   },
 
   getOrderProduct: async (
@@ -266,7 +268,7 @@ export const useStoreProductStore: StateCreator<
   ): Promise<ProductData | undefined> => {
   
 
-    const product = get().storeProducts.find((p) => p.id === id);
+    const product = get().storeProducts.find((p) => p._id === id);
 
     if (!product) {
       console.log(`Product with id ${id} not found`);
@@ -274,7 +276,7 @@ export const useStoreProductStore: StateCreator<
     }
 
     const selectedVariant = product.variants?.find(
-      (variant) => variant.id === colorID
+      (variant) => variant._id === colorID
     );
 
     if (!selectedVariant) {

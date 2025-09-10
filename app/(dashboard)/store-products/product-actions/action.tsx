@@ -22,14 +22,14 @@ import { mapVariantsToColors, ProductAPIService } from "./helpers";
 import DeleteModal from "./deleletModal";
 
 export type ProductImage = {
-  id: number;
+  _id: number;
   url: string | ArrayBuffer;
   name: string;
   file?: File | Blob;
 };
 
 export type ProductColor = {
-  id: number;
+  _id: number;
   name: string;
   color?: string;
   hex: string;
@@ -89,7 +89,7 @@ export default function ProductActions() {
 
   const populateFormWithProduct = useCallback(
     (product: ProductData) => {
-      console.log("🔧 Populating form with product:", product.id);
+      console.log("🔧 Populating form with product:", product._id);
 
       setValue("name", product.name);
       setValue("description", product.description as string);
@@ -110,7 +110,7 @@ export default function ProductActions() {
         const mappedColors = mapVariantsToColors(product.variants);
         setColors(mappedColors);
         if (mappedColors.length > 0) {
-          setActiveColorId(mappedColors[0].id);
+          setActiveColorId(mappedColors[0]._id);
         }
       }
 
@@ -134,11 +134,11 @@ export default function ProductActions() {
     const loadProduct = async () => {
       try {
         // If we don't have the product or it's the wrong one, load it
-        if (!selectedProduct?.id || selectedProduct.id !== productID) {
+        if (!selectedProduct?._id || selectedProduct._id !== productID) {
           console.log("📡 Loading product from store...");
           await loadStoreProduct(productID);
         } else {
-          console.log("✅ Product already available:", selectedProduct.id);
+          console.log("✅ Product already available:", selectedProduct._id);
           populateFormWithProduct(selectedProduct);
           setLoadingProduct(false);
         }
@@ -155,12 +155,12 @@ export default function ProductActions() {
   }, [productID, loadStoreProduct]);
 
   useEffect(() => {
-    if (!productID || !selectedProduct?.id || isInitialized) {
+    if (!productID || !selectedProduct?._id || isInitialized) {
       return;
     }
 
-    if (selectedProduct.id === productID) {
-      console.log("📦 Product loaded from store:", selectedProduct.id);
+    if (selectedProduct._id === productID) {
+      console.log("📦 Product loaded from store:", selectedProduct._id);
       populateFormWithProduct(selectedProduct);
       setLoadingProduct(false);
     }
@@ -295,7 +295,7 @@ export default function ProductActions() {
     <>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="px-4 xl:px-8  xl:ml-[15%]  pt-24 pb-32">
-          <div className="w-[98%] lg:w-[90%] flex items-center gap-1 md:gap-4">
+          <div className="w-full  flex items-center gap-1 md:gap-4">
             <div onClick={handelBack}>
               <Image
                 src="/icons/arrow.svg"
@@ -305,17 +305,12 @@ export default function ProductActions() {
                 className="rotate-90 cursor-pointer"
               />
             </div>
-            <div className="flex justify-between items-center w-full ">
+            <div className="flex justify-between items-center w-full  ">
               <p className="font-avenir text-xl sm:text-2xl font-bold mt-[5px] ">
                 {productID ? productName : " Add Product"}
               </p>
               {productID && (
-                <div className="flex gap-4 items-center">
-                  <div className="px-2 sm:px-3 py-1.5 sm:py-2 bg-black border flex items-center gap-2 cursor-pointer rounded-lg">
-                    <p className="font-avenir text-sm font-[500] text-white ">
-                      Update <span className="hidden sm:inline-flex">product</span>
-                    </p>
-                  </div>
+                <div className="flex gap-4 items-center sm:w-[40%] md:w-[30%] ">
                   <div
                     onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
                     className="px-3 sm:px-3 py-1.5 sm:py-2 bg-red-100 border border-red-500 flex items-center gap-2 cursor-pointer rounded-lg">
@@ -327,13 +322,6 @@ export default function ProductActions() {
               )}
             </div>
           </div>
-
-          {/* {submitError && (
-          <div className="w-full mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700 font-avenir">{submitError}</p>
-          </div>
-        )} */}
-
           {!loadingProduct ? (
             <div className="w-full flex gap-4 mt-4 h-full  sm:flex-row flex-col items-stretch">
               <div className="flex-1   sm:w-[60%] md:w-[70%] relative ">
@@ -470,11 +458,11 @@ export default function ProductActions() {
                   <div className="w-full pb-4 grid grid-cols-3 gap-2 ">
                     {colors.map((color) => (
                       <div
-                        key={color.id}
-                        onClick={() => setActiveColorId(color.id)}
+                        key={color._id}
+                        onClick={() => setActiveColorId(color._id)}
                         className={`flex  justify-between gap-2 px-1 sm:px-3  cursor-pointer py-0.5 sm:py-1 rounded-[24px]
                   ${
-                    activeColorId === color.id
+                    activeColorId === color._id
                       ? "bg-black/20 border border-black/20"
                       : "bg-black/2 border border-black/10"
                   }`}
@@ -494,7 +482,7 @@ export default function ProductActions() {
                   </div>
 
                   {activeColorId &&
-                  colors.find((c) => c.id === activeColorId) ? (
+                  colors.find((c) => c._id === activeColorId) ? (
                     <ColorStockAndSizes
                       colors={colors}
                       setColors={setColors}
@@ -516,13 +504,12 @@ export default function ProductActions() {
                   className="mt-2 w-full p-4 md:p-6  md:h-35 rounded-2xl md:rounded-[26px]  cursor-pointer flex items-center justify-center bg-black"
                 >
                   <p className="text-white font-avenir font-black text-xl md:text-4xl">
-                    {/* {productID
-                    ? "Save"
+                    {productID
+                    ? isSubmitting ? "Saving..." : "Save"
                     : isSubmitting
                     ? "Publishing..."
-                    : "Publish"} */}
+                    : "Publish"}
 
-                    {isSubmitting ? "Publishing..." : "Publish"}
                   </p>
                 </button>
               </div>
@@ -563,6 +550,7 @@ export default function ProductActions() {
             </>
           )}
         </div>
+     
       </form>
       {showDeleteConfirm && (
         <DeleteModal  

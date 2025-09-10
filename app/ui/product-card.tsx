@@ -23,12 +23,6 @@ export default function ProductCard({
   showDetails?: boolean;
 }) {
 
-  const colorMap: { [key: number]: string } = {
-    1: "bg-black",
-    2: "bg-amber-600",
-    4: "bg-stone-500",
-    5: "bg-green-500",
-  };
 
   const { setModal, updateColor, addToCart, closeModal, setRouteChange } =
     useBoundStore();
@@ -43,8 +37,7 @@ export default function ProductCard({
   return (
     <div
       ref={cardRef}
-      className={cn("", { "mb-8 md:mb-12": type === "large" }, cardStyle)}
-    >
+      className={cn("", { "mb-4 md:mb-12": type === "large" }, cardStyle)}>
       <motion.div
         variants={BoxAnimate}
         whileHover="show"
@@ -54,8 +47,7 @@ export default function ProductCard({
           {
             "xl:h-[300px]": type === "small",
           }
-        )}
-      >
+        )}>
         <div className="w-full h-full absolute">
           <Image
             src={productData?.mainImage?.url as string ??"/images/hero-2.png"} 
@@ -66,8 +58,8 @@ export default function ProductCard({
         </div>
         <div className="absolute w-full h-full flex flex-col justify-end z-20 ">
           <Link
-            onClick={(e) => handleLink(e, `/product/${productData?.id}`)}
-            href={`/product/${productData?.id}`}
+            onClick={(e) => handleLink(e, `/product/${productData?._id}`)}
+            href={`/product/${productData?._id}`}
             className={cn("w-full h-full top-0  absolute")}
           ></Link>
           <div className="absolute top-2 left-2 p-1 px-2 flex items-center gap-1 bg-black">
@@ -112,7 +104,7 @@ export default function ProductCard({
             <div className="flex gap-1">
               {productData?.variants?.map((item, index) => (
                 <div
-                  onClick={() => updateColor(productData?.id, item.color)}
+                  onClick={() => updateColor(productData?._id, item.color)}
                   key={item.color}
                   className={cn(
                     "size-[15px] md:size-[13px] hover:border border-black/70 rounded-full p-[1.5px] cursor-pointer flex items-center justify-center",

@@ -21,7 +21,7 @@ export default function ProductCon() {
       className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-[2px] transition-all duration-500 ease-in-out"
       layout >
       {products?.map((product) => (
-        <ProductCard key={product.id} type="large" productData={product}  />
+        <ProductCard key={product._id} type="large" productData={product}  />
       ))}
     </motion.div>
     </motion.div>

@@ -4,13 +4,13 @@ import { type StateCreator } from "zustand";
 import { Store } from "./store";
 
 export type User = {
-  id?: string;
+  _id?: string;
   email: string;
   username?: string;
   firstname?: string;
   lastname?: string;
   userType?: "unverified" | "verified";
-  role?: string;
+  role?: "user" |"admin";
 };
 
 export type UserStore = {

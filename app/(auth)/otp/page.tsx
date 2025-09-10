@@ -6,17 +6,23 @@ import { useRouter } from "next/navigation";
 import React, { useState, useRef, useEffect } from "react";
 
 export default function OTP() {
-  const { user, setUser } = useBoundStore();
+  const { user, storeUserToken} = useBoundStore();
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(""));
-  const [counter, setCounter] = useState<number>(300); // 5 minutes in seconds
+  const [counter, setCounter] = useState<number>(300); 
   const [isResendDisabled, setIsResendDisabled] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [errorMessage,setErrorMessage] = useState("")
   const [oState, setOState] = useState<
     "loading" | "idle" | "submitted" | "error"
   >("idle");
 
   const router = useRouter();
+
+  useEffect(()=>{
+    console.log(user)
+  },[user])
+
 
   // Timer effect for countdown
   useEffect(() => {
@@ -120,23 +126,30 @@ export default function OTP() {
           `${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify-email`,
           {
             method: "POST",
+            credentials: "include",
             body: JSON.stringify(newData),
             headers: { "Content-Type": "application/json" },
           }
         );
 
-        if (!res.ok) throw new Error("OTP verification failed");
+        if (!res.ok){
+           throw new Error("OTP verification failed");
+        }
 
         console.log("OTP submitted:", otpValue);
+
+        const response = await res.json()
+        // console.log(response)
+        storeUserToken(response.token)
         setOState("submitted");
 
-         
-
-        router.push('/sign-in');
-        // alert("OTP verified successfully!");
+        setTimeout(()=>{
+           router.push('/sign-in');
+        },3000)
       }
     } catch (error) {
       console.error("OTP verification failed:", error);
+      setErrorMessage("OTP verification failed.")
       setOState("error");
     }
   };
@@ -210,7 +223,7 @@ export default function OTP() {
           ))}
         </div>
 
-        <Submit type={oState} submitType="otp" />
+        <Submit type={oState} submitType="otp" errorMessage={errorMessage} />
 
         <div className="flex justify-between mt-4 w-full px-[3px]">
           <button
@@ -226,7 +239,7 @@ export default function OTP() {
               }
             `}
           >
-            {isResendDisabled ? "Resend code in" : "Resend Code"}
+            {isResendDisabled ? "Resend code in" : "Resend New Code"}
           </button>
 
           {isResendDisabled && (

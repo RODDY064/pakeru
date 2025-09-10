@@ -22,8 +22,9 @@ type SignInSchema = z.infer<typeof signIn>;
 
 export default function SignIn() {
   const [signInState, setSignState] = useState<
-    "loading" | "idle" | "submitted" | "error"
+    "loading" | "idle" | "submitted" | "error" | "unverified"
   >("idle");
+  const [errorMessage, setErrorMessage] = useState<string|null>(null)
   const {
     register,
     handleSubmit,
@@ -32,7 +33,8 @@ export default function SignIn() {
     resolver: zodResolver(signIn),
   });
 
-  const { user, setUser , completeUserProfile , loadUserToken , storeUserToken } = useBoundStore()
+  const { user, setUser, completeUserProfile, loadUserToken, storeUserToken } =
+    useBoundStore();
 
   const router = useRouter();
 
@@ -59,9 +61,11 @@ export default function SignIn() {
         `${process.env.NEXT_PUBLIC_BASE_URL}/auth/login`,
         {
           method: "POST",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            //  "ngrok-skip-browser-warning": "true",
+             "ngrok-skip-browser-warning": "true",
+          
           },
           body: JSON.stringify(newData),
         }
@@ -69,35 +73,40 @@ export default function SignIn() {
 
       const res = await req.json();
 
-       console.log(res);
+      // console.log(res);
 
-       if(res.msg === "Email not verified. Check your inbox for a verification code." && res.status === 400){
-           throw new Error("Email not verified. Check your inbox for a verification code.");
-        }
+      if(!req.ok) throw new Error("Failed to sign in")
+
+      if (res.msg ==="Email not verified. Check your inbox for a verification code.") {
+        setErrorMessage("Email not verified. Check your inbox.")
+        setSignState("unverified");
+        setUser({
+          email: newData.email,
+          userType: "unverified",
+        });
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        router.push("/otp");
+        return
+      }
 
       if (req.ok) {
         setSignState("submitted");
-
+        // storeUserToken(res.token);
+        setUser({
+          firstname:res.user.firstName,
+          lastname:res.user.lastName,
+          email:res.user.email,
+          userType:"verified",
+          role:res.user.role
+        });
         await new Promise((resolve) => setTimeout(resolve, 3000));
         router.push("/");
       } else {
         throw new Error(" Error fetching data");
       }
-
-      setUser(res)
-
-      
-
-      const res2 = await fetch("/api/product",{
-        method:"POST",
-        body: JSON.stringify(res)
-      })
-
       // Show feedback for 3 seconds
       await new Promise((resolve) => setTimeout(resolve, 3000));
       setSignState("idle");
-
-     
     } catch (error: any) {
       setSignState("error");
       console.error("Catch block error:", error);
@@ -154,7 +163,7 @@ export default function SignIn() {
           name="password"
           style="mt-3"
         />
-        <Submit type={signInState} submitType="sign-in" />
+        <Submit type={signInState} submitType="sign-in" errorMessage={errorMessage} />
         <div className="my-2">
           <Link
             href="/forgetten-password"
