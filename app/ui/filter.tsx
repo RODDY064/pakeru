@@ -58,8 +58,8 @@ export default function Filter() {
       {!isMobile ? (
         <>
           <div
-            className={`fixed w-full top-0 h-full flex flex-col  z-[99] ${
-              filter ? "pointer-events-auto" : "pointer-events-none "
+            className={`fixed w-full top-0 h-full flex flex-col   z-[99] ${
+              filter ? "pointer-events-auto bg-black/70" : "pointer-events-none "
             }`}
           >
           <AnimatePresence>
@@ -69,15 +69,13 @@ export default function Filter() {
               initial="hide"
               exit="hide"
               className={cn(
-                "font-avenir text-black md:flex flex-col  h-full  border-black overflow-hidden"
-              )}
-            >
+                "font-avenir text-black md:flex flex-col bg-black/70 h-full  border-black overflow-hidden"
+              )}>
               <motion.div className="w-full h-full z-50   bg-white border-r-[0.5px] relative">
                 <motion.div className="w-full h-full flex-none overflow-hidden   p-10">
                   <div
                     onClick={() => filterState(!filter)}
-                    className="flex items-center mb-10 gap-1 cursor-pointer"
-                  >
+                    className="flex items-center mb-10 gap-1 cursor-pointer">
                     <div className="relative flex">
                       <div className="w-[16px] h-[1px] bg-black rotate-45"></div>
                       <div className="w-[16px] h-[1px] bg-black rotate-[-45deg] absolute"></div>
@@ -161,7 +159,7 @@ export default function Filter() {
             animate={filter ? "show" : "hide"}
             initial="hide"
             exit="hide"
-            className={`fixed bottom-0  flex flex-col justify-end z-[999] `}
+            className={`fixed bottom-0 bg-black/70  flex flex-col justify-end z-[999] `}
           >
             <div
               className={cn(
@@ -172,7 +170,7 @@ export default function Filter() {
             {!modal && (
               <motion.div
                 variants={mfiltButton}
-                className="w-screen pb-2 flex items-center justify-center z-20 mobile-nav-filt"
+                className="w-screen pb-2 bg-black/70 flex items-center justify-center z-20 mobile-nav-filt"
               >
                 <motion.div
                   variants={mFiltTextB}
@@ -206,7 +204,7 @@ export default function Filter() {
                   </div>
                   <motion.div
                     variants={mobFiltItem}
-                    className="absolute top-10  opacity-0  border-t-[0.5px] w-full left-0 px-4 pt-4"
+                    className="absolute top-10   opacity-0  border-t-[0.5px] w-full left-0 px-4 pt-4"
                   >
                     <motion.div className="w-auto relative  border-black ">
                       {filteritems.map((filt) => (
@@ -320,7 +318,6 @@ const mobileParent = {
 const mfiltButton = {
   show: {
     height: "75%",
-    backgroundColor: "white",
     alignItems: "start",
     paddingTop: 16,
     transition: {
@@ -331,7 +328,6 @@ const mfiltButton = {
   },
   hide: {
     height: "auto",
-    backgroundColor: "transparent",
     paddingTop: 8,
     transition: {
       duration: 0.2,
