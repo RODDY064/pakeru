@@ -14,7 +14,7 @@ export type CategoryStore = {
   categories: CategoryType[];
   isCategoriesLoading: boolean;
   loadCategories: () => Promise<void>;
-  createCategory: (category: Omit<CategoryType, 'id'>) => Promise<CategoryType>;
+  createCategory: (category: Omit<CategoryType, '_id'>) => Promise<CategoryType>;
   updateCategory: (categoryId: string, updates: Partial<CategoryType>) => Promise<CategoryType>;
   deleteCategory: (categoryId: string) => Promise<void>;
   getProductsWithID: (categoryId: string) => void;
@@ -87,7 +87,7 @@ export const useCategory: StateCreator<
     }
   },
 
-  createCategory: async (categoryData: Omit<CategoryType, 'id'>) => {
+  createCategory: async (categoryData: Omit<CategoryType, '_id'>) => {
     set((state) => {
       state.isCategoriesLoading = true;
       state.error = null;
