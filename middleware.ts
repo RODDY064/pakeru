@@ -5,10 +5,10 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Enhanced debugging
-  console.log("=== MIDDLEWARE DEBUG ===");
-  console.log("Request URL:", request.url);
-  console.log("Pathname:", pathname);
-  console.log("Request headers:", Object.fromEntries(request.headers));
+  // console.log("=== MIDDLEWARE DEBUG ===");
+  // console.log("Request URL:", request.url);
+  // console.log("Pathname:", pathname);
+  // console.log("Request headers:", Object.fromEntries(request.headers));
   console.log("All cookies:", request.cookies.getAll());
   console.log("Token cookie:", token);
   console.log("Cookie header:", request.headers.get('cookie'));
