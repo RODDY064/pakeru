@@ -4,12 +4,11 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Forward request to backend
+    // Forward to backend (no need for credentials: "include" here)
     const backendResponse = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/auth/login`,
       {
         method: "POST",
-        credentials:"include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -19,17 +18,23 @@ export async function POST(request: Request) {
 
     const result = await backendResponse.json();
 
-    console.log(result,'response')
-
-    // Build response with same status
     const response = NextResponse.json(result, {
       status: backendResponse.status,
     });
 
-    // Forward the Set-Cookie header from backend
+    // Forward cookies properly
     const setCookieHeader = backendResponse.headers.get("set-cookie");
     if (setCookieHeader) {
-      response.headers.set("set-cookie", setCookieHeader);
+      // Handle multiple cookies if backend sets more than one
+      setCookieHeader.split(",").forEach((cookie) => {
+        const [cookieName, ...rest] = cookie.trim().split("=");
+        const cookieValue = rest.join("=").split(";")[0];
+        response.cookies.set(cookieName, cookieValue, {
+          httpOnly: true,
+          secure: true,
+          path: "/",
+        });
+      });
     }
 
     return response;
