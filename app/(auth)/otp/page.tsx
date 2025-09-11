@@ -126,7 +126,7 @@ export default function OTP() {
           `${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify-email`,
           {
             method: "POST",
-            // credentials: "include",
+            credentials: "include",
             body: JSON.stringify(newData),
             headers: { "Content-Type": "application/json" },
           }

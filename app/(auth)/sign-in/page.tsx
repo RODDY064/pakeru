@@ -61,7 +61,7 @@ export default function SignIn() {
         `${process.env.NEXT_PUBLIC_BASE_URL}/auth/login`,
         {
           method: "POST",
-          // credentials: "include",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
             //  "ngrok-skip-browser-warning": "true",

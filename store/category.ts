@@ -48,7 +48,7 @@ export const useCategory: StateCreator<
 
       const response = await fetch(`${baseUrl}/categories`, {
         method: "GET",
-        // credentials: "include",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
            "ngrok-skip-browser-warning": "true",
@@ -103,9 +103,9 @@ export const useCategory: StateCreator<
 
       const response = await fetch(`${baseUrl}/categories`, {
         method: "POST",
-        // credentials: "include",
+        credentials: "include",
         headers: {
-           Authorization: `Bearer ${token}`,
+           //Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -166,9 +166,9 @@ export const useCategory: StateCreator<
 
       const response = await fetch(`${baseUrl}/categories/${categoryId}`, {
         method: "PUT",
-        // credentials: "include",
+        credentials: "include",
         headers: {
-          Authorization: `Bearer ${token}`,
+          //Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(updates),
@@ -235,9 +235,9 @@ export const useCategory: StateCreator<
 
       const response = await fetch(`${baseUrl}/categories/${categoryId}`, {
         method: "DELETE",
-        // credentials: "include",
+        credentials: "include",
         headers: {
-          Authorization: `Bearer ${token}`,
+          //Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
           
         },

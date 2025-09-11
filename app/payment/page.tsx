@@ -106,11 +106,11 @@ export default function Payment() {
 
       const res = await fetch(`${baseURL}/orders`, {
         method: "POST",
-        // credentials: "include",
+        credentials: "include",
         headers: {
-          Authorization: `Bearer ${token}`,
+          //Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
+          // "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify(paymentPayload),
       });
