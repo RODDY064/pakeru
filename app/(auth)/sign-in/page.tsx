@@ -44,7 +44,6 @@ export default function SignIn() {
       if (!parseResult.success) {
         setSignState("error");
         console.log(parseResult.error);
-
         await new Promise((resolve) => setTimeout(resolve, 3000));
         setSignState("idle");
         return;
@@ -52,38 +51,38 @@ export default function SignIn() {
 
       setSignState("loading");
 
-      const newData = {
+      const credentials = {
         email: data.username,
         password: data.password,
       };
 
-      const req = await fetch(
+      const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/auth/login`,
         {
           method: "POST",
-          credentials: "include",
+          credentials: "include", // Critical: ensures cookies are sent/received
           headers: {
             "Content-Type": "application/json",
-            //  "ngrok-skip-browser-warning": "true",
           },
-          body: JSON.stringify(newData),
+          body: JSON.stringify(credentials),
         }
       );
 
-      const res = await req.json();
+      const result = await response.json();
 
-      // console.log(res);
+      if (!response.ok) {
+        throw new Error(result.message || "Authentication failed");
+      }
 
-      if (!req.ok) throw new Error("Failed to sign in");
-
+      // Handle unverified email case
       if (
-        res.msg ===
+        result.msg ===
         "Email not verified. Check your inbox for a verification code."
       ) {
         setErrorMessage("Email not verified. Check your inbox.");
         setSignState("unverified");
         setUser({
-          email: newData.email,
+          email: credentials.email,
           userType: "unverified",
         });
         await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -91,36 +90,25 @@ export default function SignIn() {
         return;
       }
 
-      if (req.ok) {
-       
+      // Success: cookie is already set by backend
+      setUser({
+        firstname: result.user.firstName,
+        lastname: result.user.lastName,
+        email: result.user.email,
+        userType: "verified",
+        role: result.user.role,
+      });
 
-        const res2 = await fetch("/api/product", {
-          method: "POST",
-          body: JSON.stringify(res),
-        });
+      setSignState("submitted");
 
-        setSignState("submitted");
-        // storeUserToken(res.token);
-        setUser({
-          firstname: res.user.firstName,
-          lastname: res.user.lastName,
-          email: res.user.email,
-          userType: "verified",
-          role: res.user.role,
-        });
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        router.replace("/");
-        window.location.reload()
-      } else {
-        throw new Error(" Error fetching data");
-      }
-      // Show feedback for 3 seconds
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      setSignState("idle");
+      // Small delay to ensure cookie is processed
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      router.push("/");
+      
     } catch (error: any) {
       setSignState("error");
-      console.error("Catch block error:", error);
-
+      console.error("Authentication error:", error);
+      setErrorMessage(error.message || "Sign in failed");
       await new Promise((resolve) => setTimeout(resolve, 3000));
       setSignState("idle");
     }
