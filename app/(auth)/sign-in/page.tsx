@@ -61,17 +61,14 @@ export default function SignIn() {
       console.log("Backend URL:", process.env.NEXT_PUBLIC_BASE_URL);
       console.log("Credentials being sent:", credentials);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/auth/login`,
-        {
-          method: "POST",
-          credentials: "include", // Critical for cross-origin cookies
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(credentials),
-        }
-      );
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        credentials: "include", 
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
 
       console.log("Response status:", response.status);
       console.log("Response headers:", Object.fromEntries(response.headers));
