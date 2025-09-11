@@ -351,7 +351,7 @@ const Tables = () => {
             onScroll={handleHeaderScroll}
             className="overflow-x-auto scrollbar-hide px-4 scroll-table" >
             {/* Header content with minimum width */}
-            <div className="flex min-w-fit">
+              <div className="flex min-w-fit">
               <div className="w-[70px] flex gap-2 cursor-pointer flex-shrink-0">
                 <Checkbox action={() => {}} active={false} />
               </div>
@@ -399,8 +399,7 @@ const Tables = () => {
         <div
           ref={contentScrollRef}
           onScroll={handleContentScroll}
-          className="flex-1 overflow-x-auto overflow-y-auto scrollbar-hide"
-        >
+          className="flex-1 overflow-x-auto overflow-y-auto scrollbar-hide">
           <div className="min-w-fit">
             {dashboardProductLoading.products || pagination.isPagLoading ? (
               <>

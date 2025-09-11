@@ -106,7 +106,7 @@ export default function Payment() {
 
       const res = await fetch(`${baseURL}/orders`, {
         method: "POST",
-        credentials: "include",
+        // credentials: "include",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

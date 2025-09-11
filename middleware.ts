@@ -20,9 +20,9 @@ export function middleware(request: NextRequest) {
   );
 
   // Redirect unauthenticated users from protected routes
-  if (isProtectedRoute && !token) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
-  }
+  // if (isProtectedRoute && !token) {
+  //   return NextResponse.redirect(new URL("/sign-in", request.url));
+  // }
 
   // Redirect authenticated users from auth pages
   if (token && pathname === "/sign-in") {

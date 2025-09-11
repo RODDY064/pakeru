@@ -7,7 +7,7 @@ export class ProductAPIService {
   private static getHeaders(includeContentType = false): HeadersInit {
     const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
     const headers: HeadersInit = {
-      // Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     };
 
     if (includeContentType) {
@@ -64,7 +64,7 @@ export class ProductAPIService {
 
     const response = await fetch(`${baseUrl}/products/${productId}`, {
       method: "DELETE",
-      credentials: "include",
+      // credentials: "include",
       headers: this.getHeaders(true),
     });
 
@@ -83,7 +83,7 @@ export class ProductAPIService {
     
     const response = await fetch(`${baseUrl}/products`, {
       method: "POST",
-      credentials: "include",
+      // credentials: "include",
       headers: this.getHeaders(false),
       body: formData,
     });
@@ -101,7 +101,7 @@ export class ProductAPIService {
 
     const response = await fetch(`${baseUrl}/products/${productId}`, {
       method: "PATCH",
-      credentials: "include",
+      // credentials: "include",
       headers: this.getHeaders(false),
       body: formData,
     });

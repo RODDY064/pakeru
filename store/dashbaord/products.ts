@@ -158,7 +158,7 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
       //  "ngrok-skip-browser-warning": "true",
       ...options.headers,
     },
-    credentials: "include",
+    // credentials: "include",
     signal: AbortSignal.timeout(30000),
     ...options,
   });

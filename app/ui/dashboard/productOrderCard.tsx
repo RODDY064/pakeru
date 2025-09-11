@@ -53,7 +53,7 @@ export default function ProductOrderCard({
       </div>
       <div className="w-full h-[40px] flex-shrink-0  border border-black/30 flex items-center justify-center rounded-[10px] bg-white">
         <p className="font-avenir text-sm text-black pt-[1.5px]">
-          <span className="text-black/50">QUANTITY:</span> {quantity}
+          <span className="text-black/50">QUANTITY:</span> {quantity??2}
         </p>
       </div>
     </div>

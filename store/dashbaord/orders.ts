@@ -196,7 +196,7 @@ function filterOrders(
 function getHeaders(): HeadersInit {
   const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
   const headers: HeadersInit = {
-    // Authorization: `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
   };
   headers["Content-Type"] = "application/json";
   // headers[ "ngrok-skip-browser-warning"] =  "true";
@@ -264,7 +264,7 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 
   const response = await fetch(`${baseUrl}${endpoint}`, {
     headers: getHeaders(),
-    credentials: "include",
+    // credentials: "include",
     signal: AbortSignal.timeout(30000),
     ...options,
   });
@@ -285,7 +285,7 @@ const apiService = {
     try {
       const response = await apiCall("/orders", {
         method: "GET",
-        credentials: "include",
+        // credentials: "include",
       });
 
       const orders = response.orders || response.data || response;

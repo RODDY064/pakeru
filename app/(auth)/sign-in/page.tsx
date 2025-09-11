@@ -24,7 +24,7 @@ export default function SignIn() {
   const [signInState, setSignState] = useState<
     "loading" | "idle" | "submitted" | "error" | "unverified"
   >("idle");
-  const [errorMessage, setErrorMessage] = useState<string|null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -61,11 +61,10 @@ export default function SignIn() {
         `${process.env.NEXT_PUBLIC_BASE_URL}/auth/login`,
         {
           method: "POST",
-          credentials: "include",
+          // credentials: "include",
           headers: {
             "Content-Type": "application/json",
-             "ngrok-skip-browser-warning": "true",
-          
+            //  "ngrok-skip-browser-warning": "true",
           },
           body: JSON.stringify(newData),
         }
@@ -75,10 +74,13 @@ export default function SignIn() {
 
       // console.log(res);
 
-      if(!req.ok) throw new Error("Failed to sign in")
+      if (!req.ok) throw new Error("Failed to sign in");
 
-      if (res.msg ==="Email not verified. Check your inbox for a verification code.") {
-        setErrorMessage("Email not verified. Check your inbox.")
+      if (
+        res.msg ===
+        "Email not verified. Check your inbox for a verification code."
+      ) {
+        setErrorMessage("Email not verified. Check your inbox.");
         setSignState("unverified");
         setUser({
           email: newData.email,
@@ -86,18 +88,25 @@ export default function SignIn() {
         });
         await new Promise((resolve) => setTimeout(resolve, 3000));
         router.push("/otp");
-        return
+        return;
       }
 
       if (req.ok) {
+       
+
+        const res2 = await fetch("/api/product", {
+          method: "POST",
+          body: JSON.stringify(res),
+        });
+
         setSignState("submitted");
         // storeUserToken(res.token);
         setUser({
-          firstname:res.user.firstName,
-          lastname:res.user.lastName,
-          email:res.user.email,
-          userType:"verified",
-          role:res.user.role
+          firstname: res.user.firstName,
+          lastname: res.user.lastName,
+          email: res.user.email,
+          userType: "verified",
+          role: res.user.role,
         });
         await new Promise((resolve) => setTimeout(resolve, 3000));
         router.push("/");
@@ -163,7 +172,11 @@ export default function SignIn() {
           name="password"
           style="mt-3"
         />
-        <Submit type={signInState} submitType="sign-in" errorMessage={errorMessage} />
+        <Submit
+          type={signInState}
+          submitType="sign-in"
+          errorMessage={errorMessage}
+        />
         <div className="my-2">
           <Link
             href="/forgetten-password"

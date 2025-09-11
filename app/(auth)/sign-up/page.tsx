@@ -61,7 +61,7 @@ const onSubmit: SubmitHandler<SignUpSchema> = async (data) => {
 
     const req = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/register`, {
       method: "POST",
-      credentials: "include",
+      // credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
