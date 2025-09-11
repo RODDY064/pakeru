@@ -183,9 +183,9 @@ const Header = () => {
           Filter by:
         </p>
         <div className="flex items-center justify-center gap-2 border border-black/20 pl-3 pr-1 py-[2px] rounded-lg">
-          <p className="font-avenir font-[500] text-md">Status: </p>
+          <p className="font-avenir font-[500] text-sm">Status: </p>
           <div className="relative flex items-center">
-            <select className="appearance-none cursor-pointer text-gray-600 focus:outline-none px-2 py-[2px] rounded-md font-avenir font-[500] text-md bg-gray-200 border border-gray-500/20 pr-7">
+            <select className="appearance-none cursor-pointer text-gray-600 focus:outline-none px-2 py-[2px] rounded-md font-avenir font-[500] text-sm bg-gray-200 border border-gray-500/20 pr-7">
               <option value="Clothing">All</option>
               <option className="font-avenir">Active</option>
             </select>
@@ -199,13 +199,13 @@ const Header = () => {
           </div>
         </div>
         <div className=" ml-2 flex items-center justify-center gap-2 border border-black/20 pl-3 pr-1 py-[2px] rounded-lg">
-          <p className="font-avenir font-[500] text-md">Last Joined: </p>
+          <p className="font-avenir font-[500] text-sm">Last Joined: </p>
           <div className="flex items-center border py-[2px]  border-gray-500/20  bg-gray-200 px-2 rounded-md">
-            <p className="font-avenir text-md text-black/50">From:</p>
+            <p className="font-avenir text-sm text-black/50">From:</p>
             <input
               type="date"
               placeholder="GHS 00.00"
-              className="w-24 focus:outline-none  px-2 text-md font-avenir cursor-pointer"
+              className="w-24 focus:outline-none  px-2 text-sm font-avenir cursor-pointer"
             />
           </div>
           <div className="flex items-center border py-[2px]  border-gray-500/20  bg-gray-200 px-2 rounded-md">
@@ -213,7 +213,7 @@ const Header = () => {
             <input
               type="date"
               placeholder="GHS 00.00"
-              className="w-24 focus:outline-none  px-2 text-md font-avenir cursor-pointer"
+              className="w-24 focus:outline-none  px-2 text-sm font-avenir cursor-pointer"
             />
           </div>
         </div>

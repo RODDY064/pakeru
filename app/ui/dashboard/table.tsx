@@ -135,7 +135,7 @@ export default function Table({
               {columns.map((col, idx) => (
                 <div
                   key={idx}
-                  className={`${col.width ?? "flex-1"} truncate ${
+                  className={`${col.width ?? "flex-1"} truncate font-avenir ${
                     col.style ?? ""
                   }`}>
                   {typeof col.label === "string" ? (
@@ -188,7 +188,7 @@ export default function Table({
                     onClick={columnClick}
                     key={row._id ?? idx}
                     className={cn(
-                      "py-6 px-4 cursor-pointer flex items-center border-b border-black/15",
+                      "py-6 px-4 cursor-pointer flex items-center border-b border-black/15 font-avenir",
                       columnStyle
                     )}
                   >

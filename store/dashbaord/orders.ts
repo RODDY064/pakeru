@@ -15,7 +15,7 @@ export type OrdersData = {
   };
   total: number;
   paymentStatus: "completed" | "pending" | "cancelled";
-  deliveryStatus: "completed" | "pending" | "cancelled" | "shipped";
+  deliveryStatus: "delivered" | "pending" | "cancelled" | "shipped";
   fulfilledStatus: "unfulfilled" | "fulfilled";
   items: {
     numOfItems: number;
@@ -123,7 +123,7 @@ function computeStats(orders: OrdersData[]): OrdersStats {
   const ordersStats = orders.reduce(
     (acc, order) => {
       // Count by delivery status
-      if (order.deliveryStatus === "completed") acc.ordersDelivered++;
+      if (order.deliveryStatus === "delivered") acc.ordersDelivered++;
       else if (order.deliveryStatus === "shipped") acc.orderShipped++;
       else if (order.deliveryStatus === "pending") acc.pendingOrders++;
       else if (order.deliveryStatus === "cancelled") acc.cancelledOrders++;

@@ -109,7 +109,8 @@ export default function SignIn() {
           role: res.user.role,
         });
         await new Promise((resolve) => setTimeout(resolve, 3000));
-        router.push("/");
+        router.replace("/");
+        window.location.reload()
       } else {
         throw new Error(" Error fetching data");
       }
