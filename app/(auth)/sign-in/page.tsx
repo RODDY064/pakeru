@@ -56,11 +56,16 @@ export default function SignIn() {
         password: data.password,
       };
 
+      console.log("=== FRONTEND LOGIN DEBUG ===");
+      console.log("Frontend URL:", window.location.origin);
+      console.log("Backend URL:", process.env.NEXT_PUBLIC_BASE_URL);
+      console.log("Credentials being sent:", credentials);
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/auth/login`,
         {
           method: "POST",
-          credentials: "include", // Critical: ensures cookies are sent/received
+          credentials: "include", // Critical for cross-origin cookies
           headers: {
             "Content-Type": "application/json",
           },
@@ -68,7 +73,11 @@ export default function SignIn() {
         }
       );
 
+      console.log("Response status:", response.status);
+      console.log("Response headers:", Object.fromEntries(response.headers));
+
       const result = await response.json();
+      console.log("Response body:", result);
 
       if (!response.ok) {
         throw new Error(result.message || "Authentication failed");
@@ -90,7 +99,11 @@ export default function SignIn() {
         return;
       }
 
-      // Success: cookie is already set by backend
+      // Success: check cookies
+      console.log("=== COOKIE CHECK ===");
+      console.log("Document cookies:", document.cookie);
+      console.log("==================");
+
       setUser({
         firstname: result.user.firstName,
         lastname: result.user.lastName,
@@ -101,10 +114,13 @@ export default function SignIn() {
 
       setSignState("submitted");
 
-      // Small delay to ensure cookie is processed
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      router.push("/");
-      
+      // Wait a bit for cookie to be set
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      console.log("Cookies after delay:", document.cookie);
+
+      // Navigate
+      router.replace("/");
     } catch (error: any) {
       setSignState("error");
       console.error("Authentication error:", error);
