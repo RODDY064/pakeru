@@ -80,7 +80,7 @@ export type CartStore = {
   removeMultipleBookmarks: (bookmarkIds: string[]) => void;
 
   // Product management
-  loadProducts: () => Promise<void>;
+  loadProducts: (force?:boolean) => Promise<void>;
   refreshProducts: () => Promise<void>;
   syncCartWithProducts: () => void;
   syncBookmarksWithProducts: () => void;
@@ -930,7 +930,10 @@ export const useCartStore: StateCreator<
     }),
 
   // Enhanced loadProducts to sync with cart and bookmarks after loading
-  loadProducts: async () => {
+  loadProducts: async (force) => {
+    const state = get();
+    if (state.storeProducts.length > 0 && !force) return;
+
     set((state) => {
       state.cartState = "loading";
       state.error = null;

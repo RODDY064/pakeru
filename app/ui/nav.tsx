@@ -105,7 +105,7 @@ export default function Nav() {
   },[products])
 
   useEffect(() => {
-    loadProducts();
+    loadProducts(true);
     assignCatID()
 
     const handleResize = () => {

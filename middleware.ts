@@ -11,25 +11,27 @@ export function middleware(request: NextRequest) {
   // console.log("Request headers:", Object.fromEntries(request.headers));
   console.log("All cookies:", request.cookies.getAll());
   console.log("Token cookie:", token);
-  console.log("Cookie header:", request.headers.get('cookie'));
+  console.log("Cookie header:", request.headers.get("cookie"));
   console.log("========================");
 
   // Define route categories
   const protectedRoutes = ["/payment", "/account"];
   const publicRoutes = ["/sign-in", "/sign-up", "/"];
-  
-  const isProtectedRoute = protectedRoutes.some(route => 
+
+  const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
-  
-  const isPublicRoute = publicRoutes.some(route => 
-    pathname === route || pathname.startsWith(`${route}/`)
+
+  const isPublicRoute = publicRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
   // Redirect unauthenticated users from protected routes
   if (isProtectedRoute && !token) {
     console.log("Redirecting to sign-in: no token for protected route");
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+    return NextResponse.redirect(
+      new URL(`/sign-in?from=${encodeURIComponent(pathname)}`, request.url)
+    );
   }
 
   // Redirect authenticated users from auth pages
@@ -37,7 +39,7 @@ export function middleware(request: NextRequest) {
     console.log("Redirecting to home: authenticated user on sign-in page");
     return NextResponse.redirect(new URL("/", request.url));
   }
-  
+
   return NextResponse.next();
 }
 

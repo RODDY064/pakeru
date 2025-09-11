@@ -8,8 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Submit from "@/app/ui/submit";
-import { useRouter } from "next/navigation";
 import { useBoundStore } from "@/store/store";
+import { useSearchParams, useRouter } from "next/navigation";
 
 const signIn = z.object({
   username: z.string().min(1, { message: "Username is required." }),
@@ -33,10 +33,10 @@ export default function SignIn() {
     resolver: zodResolver(signIn),
   });
 
-  const { user, setUser, completeUserProfile, loadUserToken, storeUserToken } =
-    useBoundStore();
+  const { setUser } = useBoundStore();
 
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const onSubmit: SubmitHandler<SignInSchema> = async (data) => {
     try {
@@ -63,7 +63,7 @@ export default function SignIn() {
 
       const response = await fetch("/api/auth/login", {
         method: "POST",
-        credentials: "include", 
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -117,7 +117,10 @@ export default function SignIn() {
       console.log("Cookies after delay:", document.cookie);
 
       // Navigate
-      router.replace("/");
+      const from = searchParams.get("from") || "/";
+      console.log(from);
+      router.push(from);
+
     } catch (error: any) {
       setSignState("error");
       console.error("Authentication error:", error);
