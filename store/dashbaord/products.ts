@@ -3,6 +3,7 @@ import { Store } from "../store";
 import { produce } from "immer";
 import { v4 as uuidv4 } from "uuid";
 import { ProductAPIService } from "@/app/(dashboard)/store-products/product-actions/helpers";
+import { apiCall } from "@/libs/functions";
 
 //variant structure
 export type ProductVariant = {
@@ -144,35 +145,7 @@ export type StoreProductStore = {
   };
 };
 
-const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-  if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
-  }
 
-  const response = await fetch(`${baseUrl}${endpoint}`, {
-    
-    headers: {
-      "Content-Type": "application/json",
-      //  "ngrok-skip-browser-warning": "true",
-      ...options.headers,
-    },
-    credentials: "include",
-    signal: AbortSignal.timeout(30000),
-    ...options,
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `API call failed: ${response.status} ${response.statusText}`
-    );
-  }
-
-  console.log(response);
-
-  return response.json();
-};
 
 // Transform API product to local format
 const transformApiProduct = (apiProduct: any): ProductData => {
@@ -330,9 +303,9 @@ export const useStoreProductStore: StateCreator<
       await get().loadCategories();
 
       // Fetch products from API
-      const result = await apiCall("/products");
+      const result = await apiCall("/products",{},true);
 
-      console.log(result, "respone from api");
+      // console.log(result, "respone from api");
 
       if (!result || !Array.isArray(result.data)) {
         throw new Error(
@@ -373,7 +346,7 @@ export const useStoreProductStore: StateCreator<
       }
 
       // Fetch single product from API
-      const result = await apiCall(`/products/${id}`);
+      const result = await apiCall(`/products/${id}`,{},true);
 
       const product = transformApiProduct(result.data || result);
 

@@ -104,7 +104,7 @@ export default function Payment() {
       const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
       const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
 
-      const res = await fetch(`${baseURL}/orders`, {
+      const res = await fetch(`${baseURL}/api/v1/orders`, {
         method: "POST",
         credentials: "include",
         headers: {

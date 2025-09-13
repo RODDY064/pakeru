@@ -3,9 +3,8 @@ import { Manrope } from "next/font/google";
 import "../styles/globals.css";
 import Nav from "./ui/nav";
 import { avenir, blackMango } from "./fonts/font";
-
-
-
+import { ToastProvider } from "./ui/toaster";
+import { OrdersWebhookProvider } from "./(dashboard)/orders/hooks/webhookProivider";
 
 export const metadata: Metadata = {
   title: "E-come",
@@ -17,12 +16,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
-  
   return (
     <html lang="en">
-      <body className={` ${avenir.variable} ${blackMango.style}  antialiased `}> 
-       {children}
+      <body className={` ${avenir.variable} ${blackMango.style}  antialiased `}>
+        <OrdersWebhookProvider>
+          <ToastProvider />
+          {children}
+        </OrdersWebhookProvider>
       </body>
     </html>
   );

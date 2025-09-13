@@ -18,14 +18,14 @@ export default function SortDateToggle() {
       <p className="font-avenir font-[500] text-md">Date</p>
       <div className="flex flex-col gap-[2px]">
         <Image
-          src="icons/arrow.svg"
+          src="/icons/arrow.svg"
           width={10}
           height={10}
           alt="arrow-up"
           className={`rotate-180 ${sortDate === "ascending" ? "opacity-100" : "opacity-30"}`}
         />
         <Image
-          src="icons/arrow.svg"
+          src="/icons/arrow.svg"
           width={10}
           height={10}
           alt="arrow-down"

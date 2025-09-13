@@ -43,64 +43,43 @@ export default function SignIn() {
       const parseResult = signIn.safeParse(data);
       if (!parseResult.success) {
         setSignState("error");
-        console.log(parseResult.error);
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        setErrorMessage("Please check your input");
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         setSignState("idle");
         return;
       }
 
       setSignState("loading");
 
-      const credentials = {
-        email: data.username,
-        password: data.password,
-      };
-
-      console.log("=== FRONTEND LOGIN DEBUG ===");
-      console.log("Frontend URL:", window.location.origin);
-      console.log("Backend URL:", process.env.NEXT_PUBLIC_BASE_URL);
-      console.log("Credentials being sent:", credentials);
-
       const response = await fetch("/api/auth/login", {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(credentials),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: data.username,
+          password: data.password,
+        }),
       });
 
-      console.log("Response status:", response.status);
-      console.log("Response headers:", Object.fromEntries(response.headers));
-
       const result = await response.json();
-      console.log("Response body:", result);
 
       if (!response.ok) {
         throw new Error(result.message || "Authentication failed");
       }
 
       // Handle unverified email case
-      if (
-        result.msg ===
-        "Email not verified. Check your inbox for a verification code."
-      ) {
+      if (result.msg?.includes("Email not verified")) {
         setErrorMessage("Email not verified. Check your inbox.");
         setSignState("unverified");
         setUser({
-          email: credentials.email,
+          email: data.username,
           userType: "unverified",
         });
-        await new Promise((resolve) => setTimeout(resolve, 3000));
         router.push("/otp");
         return;
       }
 
-      // Success: check cookies
-      console.log("=== COOKIE CHECK ===");
-      console.log("Document cookies:", document.cookie);
-      console.log("==================");
-
+      // Success - set user state
       setUser({
         firstname: result.user.firstName,
         lastname: result.user.lastName,
@@ -110,22 +89,13 @@ export default function SignIn() {
       });
 
       setSignState("submitted");
-
-      // Wait a bit for cookie to be set
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      console.log("Cookies after delay:", document.cookie);
-
-      // Navigate
+      
       const from = searchParams.get("from") || "/";
-      console.log(from);
-      router.push(from);
-
+      router.replace(from);
     } catch (error: any) {
       setSignState("error");
-      console.error("Authentication error:", error);
       setErrorMessage(error.message || "Sign in failed");
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       setSignState("idle");
     }
   };

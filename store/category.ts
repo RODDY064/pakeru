@@ -46,7 +46,7 @@ export const useCategory: StateCreator<
         throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
       }
 
-      const response = await fetch(`${baseUrl}/categories`, {
+      const response = await fetch(`${baseUrl}/api/v1/categories`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -101,7 +101,7 @@ export const useCategory: StateCreator<
         throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
       }
 
-      const response = await fetch(`${baseUrl}/categories`, {
+      const response = await fetch(`${baseUrl}/api/v1/categories`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -164,7 +164,7 @@ export const useCategory: StateCreator<
         throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
       }
 
-      const response = await fetch(`${baseUrl}/categories/${categoryId}`, {
+      const response = await fetch(`${baseUrl}/api/v1/categories/${categoryId}`, {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -233,7 +233,7 @@ export const useCategory: StateCreator<
         throw new Error("Cannot delete category with child categories. Please delete child categories first.");
       }
 
-      const response = await fetch(`${baseUrl}/categories/${categoryId}`, {
+      const response = await fetch(`${baseUrl}/api/v1/categories/${categoryId}`, {
         method: "DELETE",
         credentials: "include",
         headers: {

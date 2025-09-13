@@ -3,44 +3,46 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
-    // Forward to backend (no need for credentials: "include" here)
+    
     const backendResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/auth/login`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/auth/login`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       }
     );
 
     const result = await backendResponse.json();
-
     const response = NextResponse.json(result, {
       status: backendResponse.status,
     });
 
-    // Forward cookies properly
-    const setCookieHeader = backendResponse.headers.get("set-cookie");
-    if (setCookieHeader) {
-      // Handle multiple cookies if backend sets more than one
-      setCookieHeader.split(",").forEach((cookie) => {
-        const [cookieName, ...rest] = cookie.trim().split("=");
-        const cookieValue = rest.join("=").split(";")[0];
-        response.cookies.set(cookieName, cookieValue, {
-          httpOnly: true,
-          secure: true,
-          path: "/",
-        });
-      });
+    // cookie forwarding - handle Set-Cookie properly
+    const cookieHeader = backendResponse.headers.get("set-cookie");
+    if (cookieHeader) {
+      // Parse and set cookies with appropriate settings for localhost
+      const cookies = cookieHeader.split(/,(?=\s*\w+\s*=)/).map(c => c.trim());
+      
+      for (const cookie of cookies) {
+        const [nameValue, ...attributes] = cookie.split(";");
+        const [name, value] = nameValue.split("=");
+        
+        if (name && value) {
+          response.cookies.set(name.trim(), value.trim(), {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+          });
+        }
+      }
     }
 
     return response;
-  } catch (err: any) {
+  } catch (error: any) {
     return NextResponse.json(
-      { message: "Proxy error", error: err.message },
+      { message: "Authentication failed", error: error.message },
       { status: 500 }
     );
   }

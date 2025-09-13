@@ -62,7 +62,7 @@ export class ProductAPIService {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
     if (!baseUrl) throw new Error("Base URL not configured");
 
-    const response = await fetch(`${baseUrl}/products/${productId}`, {
+    const response = await fetch(`${baseUrl}/api/v1/products/${productId}`, {
       method: "DELETE",
       credentials: "include",
       headers: this.getHeaders(true),
@@ -81,7 +81,7 @@ export class ProductAPIService {
 
     const formData = await this.prepareFormData(data, colors);
     
-    const response = await fetch(`${baseUrl}/products`, {
+    const response = await fetch(`${baseUrl}/api/v1/products`, {
       method: "POST",
       credentials: "include",
       headers: this.getHeaders(false),

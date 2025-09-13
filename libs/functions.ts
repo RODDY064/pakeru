@@ -214,9 +214,8 @@ export function horizontalLoop(
     }
 
     function getCenter(el: HTMLElement) {
-  return container.clientWidth / 2 - secondItem.clientWidth / 1.4;
-}
-
+      return container.clientWidth / 2 - secondItem.clientWidth / 1.4;
+    }
 
     function toIndex(
       index: number,
@@ -287,12 +286,9 @@ export function horizontalLoop(
 
     const secondItem = elements[1];
     if (container && secondItem) {
-  const scrollLeft =
-    getCenter(secondItem) -
-    getCenter(container);
-  container.scrollLeft = scrollLeft;
-}
-
+      const scrollLeft = getCenter(secondItem) - getCenter(container);
+      container.scrollLeft = scrollLeft;
+    }
 
     window.addEventListener("resize", () => refresh(true));
 
@@ -368,16 +364,71 @@ export function horizontalLoop(
   return timeline!;
 }
 
-
-
-
 export const formatEmail = (email: string) => {
   const [name, domain] = email.split("@");
   if (!name || !domain) return email;
 
-  const maskedName = name.length > 2 
-    ? `${name.slice(0, 2)}${"*".repeat(name.length - 2)}`
-    : `${name[0]}*`;
+  const maskedName =
+    name.length > 2
+      ? `${name.slice(0, 2)}${"*".repeat(name.length - 2)}`
+      : `${name[0]}*`;
 
   return `${maskedName}@${domain}`;
+};
+
+export function formatJoinedDate(dateString: string): string {
+  const date = new Date(dateString);
+
+  const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
+  const day = date.getDate();
+  const suffix =
+    day % 10 === 1 && day !== 11
+      ? "st"
+      : day % 10 === 2 && day !== 12
+      ? "nd"
+      : day % 10 === 3 && day !== 13
+      ? "rd"
+      : "th";
+
+  return `${weekday} ${day}${suffix}`;
+}
+
+export function capitalize(str?: string) {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+export const apiCall = async (
+  endpoint: string,
+  options: RequestInit = {},
+  useBaseUrl = false
+) => {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  if (!baseUrl) {
+    throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
+  }
+  const url = useBaseUrl ? `${baseUrl}/api/v1${endpoint}` : `/api${endpoint}`;
+
+  console.log(url , "url")
+
+  const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers ?? {}), 
+    },
+    credentials: "include",
+    signal: AbortSignal.timeout(30000),
+    ...options,
+  });
+
+  console.log("API Response:", response);
+
+  if (!response.ok) {
+    throw new Error(
+      `API call failed: ${response.status} ${response.statusText}`
+    );
+  }
+
+  return await response.json();
 };

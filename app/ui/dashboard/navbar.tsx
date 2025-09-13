@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import Icon from "../Icon";
+import { WebhookConnectionStatus } from "@/app/(dashboard)/orders/hooks/webhookProivider";
+
 
 export default function Navbar() {
   return (
@@ -25,6 +27,7 @@ export default function Navbar() {
         />
       </div>
       <div className="flex items-center gap-2 ">
+          <WebhookConnectionStatus/>
         <div className="px-2 rounded-lg py-2  max-sm:mt-2 md:bg-white/15 relative cursor-pointer">
           <Image
             src="/icons/notification.svg"
@@ -40,8 +43,7 @@ export default function Navbar() {
         </div>
         <Link
           href="/"
-          className="px-4 py-2 bg-white/15 rounded-lg cursor-pointer hidden md:flex"
-        >
+          className="px-4 py-2 bg-white/15 rounded-lg cursor-pointer hidden md:flex">
           <p className="font-avenir font-[500] text-md">Pakeru Store</p>
         </Link>
         <div className="size-11 rounded-full  items-center justify-center bg-white/15 hidden md:flex cursor-pointer">

@@ -7,7 +7,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="bg-[#f2f2f2] min-h-screen">
+  return <div className="bg-[#f2f2f2] min-h-screen m-0 overflow-hidden">
     <Navbar/>
     <SideMenu/>
     {children}

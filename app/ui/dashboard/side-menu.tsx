@@ -31,8 +31,8 @@ const pages: Array<{
     icon: "orders.svg",
     icon_w: "orders-w.svg",
     subMenus: [
-      { name: "Fulfilled", path: "/orders/fulfilled" },
       { name: "Unfulfilled", path: "/orders/unfulfilled" },
+      { name: "Fulfilled", path: "/orders/fulfilled" },
     ],
     mobilePath: "/orders",
   },
@@ -94,8 +94,14 @@ export default function SideMenu() {
               ) : (
                 <div
                   className={cn(
-                    "cursor-pointer flex flex-col relative w-full gap-2 py-2 h-10  px-4 overflow-hidden hover:h-38  rounded-xl border border-black/0 hover:bg-white/30 hover:border-black/20 group/order"
-                  )}>
+                    "cursor-pointer flex flex-col relative w-full gap-2 py-2 h-10  px-4 overflow-hidden hover:h-38  rounded-xl border border-black/0 hover:bg-white/30 hover:border-black/20 group/order",
+                    {
+                      "bg-white/60 border-black/20 h-38": pathname.includes(
+                        item.name.toLowerCase()
+                      ),
+                    }
+                  )}
+                >
                   <div className="flex gap-2 justify-between w-full max-h-12 h-full items-center  ">
                     <Image
                       src={`/icons/${item.icon}`}
@@ -111,7 +117,10 @@ export default function SideMenu() {
                       width={12}
                       height={12}
                       alt="submenu"
-                      className="ml-auto rotate-[-90deg] group-hover/order:rotate-[0deg] opacity-70"
+                      className={`ml-auto rotate-[-90deg] group-hover/order:rotate-[0deg] opacity-70 ${
+                        pathname.includes(item.name.toLowerCase()) &&
+                        "rotate-[0deg] "
+                      }`}
                     />
                   </div>
                   <div className=" ml-4">
@@ -127,7 +136,8 @@ export default function SideMenu() {
                                 "bg-white/60 border-black/20":
                                   pathname.includes(sub.path),
                               }
-                            )}>
+                            )}
+                          >
                             {sub.name}
                           </Link>
                         ))}

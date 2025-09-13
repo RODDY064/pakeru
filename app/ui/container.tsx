@@ -11,6 +11,7 @@ import Modal from "./Modal";
 import Footer from "./footer";
 import Loader from "./loader";
 
+
 export default function Container({ children }: { children: React.ReactNode }) {
   const { setScrollAmount, setScrollRef } = useBoundStore();
 

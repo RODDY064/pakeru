@@ -10,7 +10,7 @@ import { ImgSlideStore, useSliderStore } from "./slider";
 import { UserStore, useUserStore } from "./user";
 import { GeneralStore, useGenralStore } from "./general";
 import { CategoryStore, useCategory } from "./category";
-import { OrdersStore, useOrdersStore } from "./dashbaord/orders";
+import { OrdersStore, useOrdersStore } from "./dashbaord/orders-store/orders";
 import { StoreProductStore, useStoreProductStore} from "./dashbaord/products";
 import { PaginationStore, usePaginationStore } from "./dashbaord/pagination";
 

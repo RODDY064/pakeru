@@ -1,7 +1,9 @@
 "use client";
 
 import StatCard from "@/app/ui/dashboard/statsCard";
+import StatusBadge from "@/app/ui/dashboard/statusBadge";
 import Table from "@/app/ui/dashboard/table";
+import { formatJoinedDate } from "@/libs/functions";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -42,16 +44,6 @@ export default function Customers() {
     },
   ];
 
-  function formatJoinedDate(dateString: string): string {
-  const date = new Date(dateString);
-  const options: Intl.DateTimeFormatOptions = {
-    month: "long",
-    day: "2-digit",
-    year: "2-digit",
-  };
-
-  return date.toLocaleDateString("en-US", options);
-}
 
 
   const tableColumns = [
@@ -84,11 +76,7 @@ export default function Customers() {
       label: "Status",
        width: "w-[150px]",
       render: (customer: any) => (
-        <div className=" relative flex  items-center">
-          <div className={`appearance-none w-20 flex items-center justify-center py-1  text-sm ${customer.status === "Active" ? "border-green-500/50 text-green-600 bg-green-50":"border-yellow-500/50 text-yellow-600 bg-yellow-50"} border  rounded-lg`}>
-            {customer.status}
-          </div>
-        </div>
+        <StatusBadge status={customer.status} statuses={["active","inactive"]}/>
       ),
     },
     {
@@ -156,6 +144,7 @@ export default function Customers() {
         tabelState="success"
         reload={() => {}}
         columnStyle="py-4"
+        dateKey="joined"
       />
     </div>
   );

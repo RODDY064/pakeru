@@ -5,7 +5,7 @@ import React, { useRef } from "react";
 import Pagination from "./pagination";
 import { cn } from "@/libs/cn";
 
-type Column = {
+export type Column = {
   label: string | React.ReactNode;
   width?: string;
   style?: string;
@@ -17,10 +17,11 @@ type tableProps = {
   columns: Column[];
   data: any[];
   tableName: string;
-  tabelState: "loading" | "success" | "failed";
+  tabelState: "idle" | "loading" | "success" | "failed";
   reload: () => void;
-  columnClick?: () => void;
+  columnClick?: (row: any) => void;
   columnStyle?: string;
+  dateKey: string;
 };
 
 export default function Table({
@@ -32,6 +33,7 @@ export default function Table({
   reload,
   columnClick,
   columnStyle,
+  dateKey,
 }: tableProps) {
   const headerScrollRef = useRef<HTMLDivElement | null>(null);
   const contentScrollRef = useRef<HTMLDivElement | null>(null);
@@ -92,6 +94,24 @@ export default function Table({
     }
   };
 
+  function getMonthYearLabel(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  }
+
+  function groupDataByMonth(data: any[]) {
+    return data.reduce((groups: Record<string, any[]>, item) => {
+      const rawDate = item[dateKey]; // ✅ dynamic key
+      if (!rawDate) return groups;
+
+      const label = getMonthYearLabel(rawDate);
+      if (!groups[label]) groups[label] = [];
+      groups[label].push(item);
+
+      return groups;
+    }, {});
+  }
+
   return (
     <div className="mt-4 w-full h-[94%] bg-white border border-black/15 rounded-2xl overflow-hidden hidden md:block">
       <div className="flex lg:flex-row flex-col gap-4 lg:gap-auto lg:items-center justify-between border-b border-black/15 px-4 py-4 font-avenir">
@@ -106,7 +126,7 @@ export default function Table({
             className="cursor-pointer pointer-events-auto"
           >
             <Image
-              src="icons/double-arrow.svg"
+              src="/icons/double-arrow.svg"
               width={24}
               height={24}
               alt="double-arrow-left"
@@ -118,26 +138,28 @@ export default function Table({
             className="cursor-pointer pointer-events-auto"
           >
             <Image
-              src="icons/double-arrow.svg"
+              src="/icons/double-arrow.svg"
               width={24}
               height={24}
               alt="double-arrow-right"
             />
           </div>
         </div>
-        <div className="w-full min-h-34 2xl:min-h-10 pb-6 xl:py-4 bg-[#f2f2f2] border-b border-black/10 flex flex-col justify-end">
+        <div className="w-full min-h-32 2xl:min-h-10 pb-6 xl:py-4 bg-[#f2f2f2] border-b border-black/10 flex flex-col justify-end">
           <div className="w-full h-[1px] bg-black/30 my-4 2xl:hidden" />
           <div
             ref={headerScrollRef}
             onScroll={handleHeaderScroll}
-            className="overflow-x-auto scrollbar-hide px-4 scroll-table">
+            className="overflow-x-auto scrollbar-hide px-4 scroll-table"
+          >
             <div className="flex min-w-fit">
               {columns.map((col, idx) => (
                 <div
                   key={idx}
                   className={`${col.width ?? "flex-1"} truncate font-avenir ${
                     col.style ?? ""
-                  }`}>
+                  }`}
+                >
                   {typeof col.label === "string" ? (
                     <p>{col.label}</p>
                   ) : (
@@ -155,6 +177,14 @@ export default function Table({
           className="flex-1 overflow-x-auto overflow-y-auto scrollbar-hide"
         >
           <div className="min-w-fit">
+            {tabelState === "idle" && (
+              <div className="w-full h-[300px] flex items-center justify-center">
+                <p className="text-black/40 font-avenir">
+                  Waiting to load {tableName}
+                </p>
+              </div>
+            )}
+
             {tabelState === "loading" && (
               <div className="w-full h-[300px] flex items-center justify-center gap-2">
                 <Image
@@ -183,25 +213,41 @@ export default function Table({
             )}
             {tabelState === "success" && (
               <>
-                {data?.map((row, idx) => (
-                  <div
-                    onClick={columnClick}
-                    key={row._id ?? idx}
-                    className={cn(
-                      "py-6 px-4 cursor-pointer flex items-center border-b border-black/15 font-avenir",
-                      columnStyle
-                    )}
-                  >
-                    {columns.map((col, cidx) => (
-                      <div
-                        key={cidx}
-                        className={`${col.width ?? "flex-1"} truncate`}
-                      >
-                        {col.render(row)}
-                      </div>
-                    ))}
+                {data.length === 0 ? (
+                  <div className="py-10 text-center text-black/50 font-avenir w-full h-[300px] flex items-center justify-center gap-2  flex-col">
+                    No {tableName} found
                   </div>
-                ))}
+                ) : (
+                  Object.entries(groupDataByMonth(data)).map(
+                    ([month, rows]) => (
+                      <React.Fragment key={month}>
+                        <div className="bg-[#f9f9f9] sticky top-0 z-50 py-3 text-center px-4 border-b border-black/10">
+                          <p className="font-avenir text-md font-[300] text-black/70">
+                            {month}
+                          </p>
+                        </div>
+
+                        {rows.map((row, idx) => (
+                          <div
+                            onClick={() => columnClick?.(row)}
+                            key={row._id ?? idx}
+                            className={cn(
+                              "py-6 px-4 cursor-pointer flex items-center border-b border-black/15 font-avenir",
+                              columnStyle
+                            )}>
+                            {columns.map((col, cidx) => (
+                              <div
+                                key={cidx}
+                                className={`${col.width ?? "flex-1"} `}>
+                                {col.render(row)}
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                      </React.Fragment>
+                    )
+                  )
+                )}
               </>
             )}
           </div>

@@ -18,6 +18,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return process.env.NODE_ENV === 'development' 
+      ? [
+          {
+            source: '/api/:path*',
+            destination: `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/:path*`
+          }
+        ]
+      : [];
+  },
   async headers() {
     return [
       {

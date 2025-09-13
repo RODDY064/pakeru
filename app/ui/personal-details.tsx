@@ -5,8 +5,11 @@ import Input from "./input";
 import { useForm } from "react-hook-form";
 import CardSvg from "./cardSvg";
 import Image from "next/image";
+import { useBoundStore } from "@/store/store";
+import { capitalize } from "@/libs/functions";
 
 export default function PersonalDetails() {
+  const { user } = useBoundStore()
   const { register } = useForm();
 
   return (
@@ -27,9 +30,9 @@ export default function PersonalDetails() {
           <div className="size-20 rounded-full border border-black/20 flex-none "></div>
           <div className="md:w-[50%] mb-2 flex justify-between ">
             <div>
-              <p className="font-avenir text-xl font-medium ">Roddy Brown</p>
+              <p className="font-avenir text-xl font-medium ">{capitalize(user?.firstname) + " " + capitalize(user?.lastname)}</p>
               <p className="font-avenir text-md font-[500] text-black/50">
-                brown@icloud.com
+                {user?.email}
               </p>
             </div>
             <div className="mt-1 xl:inline hidden">
