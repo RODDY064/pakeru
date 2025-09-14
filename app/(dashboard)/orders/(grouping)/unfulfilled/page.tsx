@@ -3,36 +3,30 @@ import OrderModal from "@/app/ui/dashboard/order-modal";
 import StatCard from "@/app/ui/dashboard/statsCard";
 import StatusBadge from "@/app/ui/dashboard/statusBadge";
 import Table from "@/app/ui/dashboard/table";
-import { toast } from "@/app/ui/toaster";
 import { formatJoinedDate } from "@/libs/functions";
-import { computeOrdersStats, OrdersData } from "@/store/dashbaord/orders-store/orders";
+import { OrdersData } from "@/store/dashbaord/orders-store/orders";
 import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useOrdersWebhook } from "../../hooks/orderWebhooks";
+import React, { useCallback, useEffect, useState, Suspense } from "react";
 
-export default function Unfulfilled() {
-  const [unfulfilledStats, setUnfulfilledStats] = useState([
-    { label: "Total Unfulfilled", value: 0 },
-    { label: "Pending", value: 0 },
-    { label: "Response per order", value: 0 },
+// Core component without search params
+function FulfilledContent() {
+  const [fulfilledStats, setFulfilledStats] = useState([
+    { label: "Delivered", value: 0 },
+    { label: "Shipped", value: 0 },
+    { label: "Processing (ready to ship)", value: 0 },
   ]);
 
-  const { isConnected, DebugPanel: DebugPanelComponent } = useOrdersWebhook();
-
   const {
-    unfulfilledOrders,
+    fulfilledOrders,
     sortDate,
     toggleDateSorting,
     setOrderModal,
     loadOrders,
     showOrderModal,
-    unfulfilledState,
-    orderInView,
-    setSingleOrderState,
-    loadOrder,
+    fulfilledState,
     setOrderInView,
     loadStoreProducts,
     storeProducts,
@@ -40,42 +34,32 @@ export default function Unfulfilled() {
     updatePaginationFromAPI,
     getPaginatedSlice,
     pagination,
-    updateOrder,
   } = useBoundStore();
 
-  const orderStats = useMemo(() => computeOrdersStats(unfulfilledOrders), [unfulfilledOrders]);
-
-  useEffect(() => {
-    if (!orderStats) return;
-
-    setUnfulfilledStats([
-      { label: "Total Unfulfilled", value: orderStats.totalOrders ?? 0 },
-      { label: "Pending", value: orderStats.pendingOrders ?? 0 },
-      { label: "Response per order", value: 0 },
-    ]);
-  }, [orderStats]);
-
-  const [renderCount, setRenderCount] = React.useState(0);
-  useEffect(() => {
-    setRenderCount((prev) => prev + 1);
-  }, [unfulfilledOrders]);
-
+  // Optional: Use search params if needed
+  const searchParams = useSearchParams();
+  
   useEffect(() => {
     const initializeData = async () => {
       try {
         await Promise.all([
-          loadOrders("unfulfilled",{ force: true}),
+          loadOrders("fulfilled", { force: true }),
           loadStoreProducts(),
         ]);
       } catch (error) {
         console.log("Failed to initialize data:", error);
       }
     };
-
     initializeData();
   }, [loadOrders, loadStoreProducts]);
 
-  
+  const handleSelect = useCallback(
+    (order: OrdersData) => {
+      setOrderInView(order);
+      setOrderModal(!showOrderModal);
+    },
+    [showOrderModal, setOrderInView, setOrderModal]
+  );
 
   const tableColumns = [
     {
@@ -83,7 +67,7 @@ export default function Unfulfilled() {
       width: "w-[150px] ml-4",
       render: (order: OrdersData) => (
         <div className="flex items-center gap-2">
-          <p className="font-avenir font-[500] text-sm lg:text-md ">
+          <p className="font-avenir font-[500] text-sm lg:text-md">
             {order.IDTrim}
           </p>
         </div>
@@ -94,7 +78,7 @@ export default function Unfulfilled() {
       width: "w-[150px] ml-4",
       render: (order: OrdersData) => (
         <div className="flex items-center gap-2">
-          <p className="font-avenir font-[500] text-sm lg:text-md ">
+          <p className="font-avenir font-[500] text-sm lg:text-md">
             {formatJoinedDate(order.date)}
           </p>
         </div>
@@ -102,21 +86,21 @@ export default function Unfulfilled() {
     },
     {
       label: "Time",
-      width: "w-[150px] ml-4",
+      width: "w-[90px] ml-4",
       render: (order: OrdersData) => (
         <div className="flex items-center gap-2">
-          <p className="font-avenir font-[500] text-sm lg:text-md ">
+          <p className="font-avenir font-[500] text-sm lg:text-md">
             {order.time}
           </p>
         </div>
       ),
     },
     {
-      label: "Customer ",
-      width: "w-[180px] ml-4",
+      label: "Customer",
+      width: "w-[150px] ml-4",
       render: (order: OrdersData) => (
         <div className="flex items-center gap-2">
-          <p className="font-avenir font-[500] text-sm lg:text-md text-blue-600  decoration-dotted underline underline-offset-2 decoration-doted">
+          <p className="font-avenir font-[500] text-sm lg:text-md text-blue-600 decoration-dotted underline underline-offset-2">
             {order.user.firstname + " " + order.user.lastname}
           </p>
         </div>
@@ -124,7 +108,7 @@ export default function Unfulfilled() {
     },
     {
       label: "Payment Status",
-      width: "w-[180px] ml-4",
+      width: "w-[150px] ml-4",
       render: (order: OrdersData) => (
         <StatusBadge
           status={order.paymentStatus}
@@ -133,11 +117,21 @@ export default function Unfulfilled() {
       ),
     },
     {
-      label: "Total",
+      label: "Delivery Status",
       width: "w-[150px] ml-4",
       render: (order: OrdersData) => (
+        <StatusBadge
+          status={order.deliveryStatus}
+          statuses={["delivered", "pending", "cancelled", "shipped"]}
+        />
+      ),
+    },
+    {
+      label: "Total",
+      width: "w-[120px] ml-4",
+      render: (order: OrdersData) => (
         <div className="flex items-center gap-2">
-          <p className="font-avenir font-[500] text-sm lg:text-md ">
+          <p className="font-avenir font-[500] text-sm lg:text-md">
             GHS {order.total.toFixed(2)}
           </p>
         </div>
@@ -145,72 +139,66 @@ export default function Unfulfilled() {
     },
     {
       label: "Item's",
+      width: "w-[70px] ml-4",
+      render: (order: OrdersData) => (
+        <div className="flex items-center gap-2">
+          <p className="font-avenir font-[500] text-sm lg:text-md">
+            {order.items.numOfItems}
+          </p>
+        </div>
+      ),
+    },
+    {
+      label: "Shipment Days",
       width: "w-[150px] ml-4",
       render: (order: OrdersData) => (
         <div className="flex items-center gap-2">
-          <p className="font-avenir font-[500] text-sm lg:text-md ">
-            {order.items.numOfItems}
+          <p className="font-avenir font-[500] text-sm lg:text-md">
+            {order.shipmentDays}
           </p>
         </div>
       ),
     },
   ];
 
-  const handleSelect = useCallback(
-    (order: OrdersData) => {
-      setOrderInView(order);
-      setOrderModal(!showOrderModal);
-    },
-    [showOrderModal, setOrderInView, setOrderModal]
-  );
-
   return (
-    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[15%] pb-36 pt-20   md:pt-24 md:pb-32 ">
-      {/* <div className="relative w-24 overflow-hidden">
-       <div  className="absolute left-0 bg-amber-500">
-         {process.env.NODE_ENV === 'development' && <DebugPanelComponent  />}
-       </div>
-       </div> */}
-      {/* <div
-        style={{
-          position: "fixed",
-          top: 120,
-          left: 10,
-          background: "black",
-          color: "white",
-          padding: 10,
-          borderRadius: 5,
-          fontSize: 12,
-          zIndex: 9999,
-        }}
-      >
-        <div>Renders: {renderCount}</div>
-        <div>Orders: {unfulfilledOrders.length}</div>
-      </div> */}
+    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8 xl:ml-[15%] pb-36 pt-20 md:pt-24 md:pb-32">
       <p className="font-avenir text-xl md:text-2xl font-bold max-sm:px-3">
-        Unfulfilled Orders
+        Fulfilled Orders
       </p>
       <div className="mt-4 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
-        {unfulfilledStats.map((stat, idx) => (
+        {fulfilledStats.map((stat, idx) => (
           <StatCard key={idx} {...stat} />
         ))}
       </div>
       <Table
         header={<Header />}
         columns={tableColumns}
-        data={unfulfilledOrders}
-        tableName="Unfulfuilled Orders"
-        tabelState={unfulfilledState}
-        reload={() => loadOrders("unfulfilled",{ force: true})}
+        data={fulfilledOrders}
+        tableName="Fulfilled Orders"
+        tabelState={fulfilledState}
+        reload={() => loadOrders("fulfilled", { force: true })}
         columnStyle="py-4"
         dateKey="date"
         columnClick={(order) => handleSelect(order)}
       />
-      <OrderModal type="unfulfilled" />
+      <OrderModal type="fulfilled" />
     </div>
   );
 }
 
+// Main component with Suspense boundary
+export default function Fulfilled() {
+  return (
+    <Suspense fallback={<div className="w-full h-full fixed top-0 left-0 flex flex-col items-center justify-center">
+          <Image src="/icons/loader.svg" width={34} height={34} alt="loader"/>
+        </div>}>
+      <FulfilledContent />
+    </Suspense>
+  );
+}
+
+// Table header component
 const Header = () => {
   return (
     <>
@@ -223,8 +211,8 @@ const Header = () => {
           className="mb-[5px]"
         />
         <input
-          placeholder="Search by order id, customer "
-          className="w-full h-full focus:outline-none px-2 text-md font-avenir "
+          placeholder="Search by order id, customer"
+          className="w-full h-full focus:outline-none px-2 text-md font-avenir"
         />
       </div>
       <div className="flex items-center gap-2">
@@ -232,12 +220,11 @@ const Header = () => {
           Filter by:
         </p>
         <div className="flex items-center justify-center gap-2 border border-black/20 pl-3 pr-1 py-[2px] rounded-lg">
-          <p className="font-avenir font-[500] text-sm">Payment Status: </p>
+          <p className="font-avenir font-[500] text-sm">Status:</p>
           <div className="relative flex items-center">
-            <select className="appearance-none text-sm cursor-pointer text-gray-600 focus:outline-none px-2 py-[2px] rounded-md font-avenir font-[500] text-md bg-gray-200 border border-gray-500/20 pr-7">
-              <option value="Clothing">Completed</option>
-              <option>Pending</option>
-              <option>Cancelled</option>
+            <select className="appearance-none cursor-pointer text-sm text-gray-600 focus:outline-none px-2 py-[2px] rounded-md font-avenir font-[500] text-md bg-gray-200 border border-gray-500/20 pr-7">
+              <option value="All">All</option>
+              <option className="font-avenir">Active</option>
             </select>
             <Image
               src="/icons/arrow.svg"
@@ -248,22 +235,20 @@ const Header = () => {
             />
           </div>
         </div>
-        <div className=" ml-2 flex items-center justify-center gap-2 border border-black/20 pl-3 pr-1 py-[2px] rounded-lg">
-          <p className="font-avenir font-[500] text-sm">Date: </p>
-          <div className="flex items-center border py-[2px]  border-gray-500/20  bg-gray-200 px-2 rounded-md">
+        <div className="ml-2 flex items-center justify-center gap-2 border border-black/20 pl-3 pr-1 py-[2px] rounded-lg">
+          <p className="font-avenir font-[500] text-sm">Date:</p>
+          <div className="flex items-center border py-[2px] border-gray-500/20 bg-gray-200 px-2 rounded-md">
             <p className="font-avenir text-sm text-black/50">From:</p>
             <input
               type="date"
-              placeholder="GHS 00.00"
-              className="w-24 focus:outline-none text-sm  px-2 text-md font-avenir cursor-pointer"
+              className="w-24 focus:outline-none px-2 text-sm font-avenir cursor-pointer"
             />
           </div>
-          <div className="flex items-center border py-[2px]  border-gray-500/20  bg-gray-200 px-2 rounded-md">
+          <div className="flex items-center border py-[2px] border-gray-500/20 bg-gray-200 px-2 rounded-md">
             <p className="font-avenir text-sm text-black/50">To:</p>
             <input
               type="date"
-              placeholder="GHS 00.00"
-              className="w-24 focus:outline-none  px-2 text-sm font-avenir cursor-pointer"
+              className="w-24 focus:outline-none px-2 text-sm font-avenir cursor-pointer"
             />
           </div>
         </div>
