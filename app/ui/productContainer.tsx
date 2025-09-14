@@ -22,7 +22,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     isMobile,
     products,
     addToCart,
-    setModal,
+    openModal,
     closeModal,
     updateColor,
     updateSize,
@@ -248,7 +248,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
 
     closeModal();
     addToCart(product);
-    setModal("cart");
+    openModal("cart");
   };
 
   const handleSize = (id: string, newSize: string) => {

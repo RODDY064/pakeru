@@ -19,7 +19,7 @@ export default function BagContainer() {
     cartItems,
     modalDisplay,
     modal,
-    setModal,
+    openModal,
     closeModal,
     setRouteChange,
     bookMarks,
@@ -86,7 +86,7 @@ export default function BagContainer() {
                 </div>
               </div>
               <div>
-                <Icon name="close" onToggle={() =>  modalDisplay === "cart" ? setModal("cart"): setModal("wardrope")} />
+                <Icon name="close" onToggle={() =>  modalDisplay === "cart" ? openModal("cart"): openModal("wardrope")} />
               </div>
             </div>
             {(modalDisplay === "cart" && cartItems.length > 0) ||
@@ -198,7 +198,7 @@ export default function BagContainer() {
                 </div>
               </div>
               <div>
-                <Icon name="close" onToggle={() => setModal("cart")} />
+                <Icon name="close" onToggle={() => openModal("cart")} />
               </div>
             </div>
             {(modalDisplay === "cart" && cartItems.length > 0) ||

@@ -28,10 +28,11 @@ export default function Menu() {
     products,
     menuItems,
     toggleMenuItem,
-    renderedSubBar,
-    setModal,
+    isSubBarRendered,
+    openModal,
     bookMarks,
     closeModal,
+    getCategoryById,
   } = useBoundStore();
   const [currentActiveItem, setCurrentActiveItem] = useState<string | null>(
     null
@@ -103,7 +104,7 @@ export default function Menu() {
   );
 
   useEffect(() => {
-    const newActiveTitle = activeMenuItem?.title || null;
+    const newActiveTitle = activeMenuItem?.category || null;
     handleItemTransition(newActiveTitle);
   }, [activeMenuItem, handleItemTransition]);
 
@@ -121,7 +122,7 @@ export default function Menu() {
         <div className="w-full flex">
           {data.images.map((image, index) => (
             <div
-              key={`${data.title}-img-${index}`} // More stable key
+              key={`${image._id}-img-${index}`} 
               className={cn("h-fit cursor-pointer", {
                 "w-[50%] border-r border-black/20": data.images.length === 2,
                 "w-[33.33%] border-r border-black/20": data.images.length === 3,
@@ -131,15 +132,15 @@ export default function Menu() {
             >
               <div className="w-full min-h-[300px] xl:min-h-[360px] relative overflow-hidden border-b border-black/20">
                 <Image
-                  src={image.src}
+                  src={image.url}
                   fill
-                  alt={image.title}
+                  alt={image._id}
                   className="object-cover"
                   priority
                 />
               </div>
               <p className="text-center font-avenir font-[400] my-3 text-sm">
-                {image.title.toLocaleUpperCase()}
+                {data.category.toLocaleUpperCase()}
               </p>
             </div>
           ))}
@@ -156,7 +157,7 @@ export default function Menu() {
                 ref={sliderRef}
                 className="w-full my-4 grid grid-flow-col auto-cols-[minmax(300,2fr)] md:auto-cols-[minmax(100,270px)]  pr-20 nav-slider ">
                 <motion.div
-                  key={`${data.title}-products-${contentKey}`}
+                  key={`${data.category}-products-${contentKey}`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -249,7 +250,7 @@ export default function Menu() {
   const RenderTAB = useCallback(
     (activeTitle: string) => {
       const activeMenuItem = menuItems.find(
-        (item) => item.title === activeTitle
+        (item) => item.category === activeTitle
       );
       return activeMenuItem ? <MenuRender data={activeMenuItem} /> : null;
     },
@@ -274,7 +275,7 @@ export default function Menu() {
         <div className="w-full flex">
           {data.images.map((image, index) => (
             <div
-              key={`mobile-${data.title}-img-${index}`}
+              key={`mobile-${data.category}-img-${index}`}
               className={cn("h-fit cursor-pointer", {
                 "w-1/2": data.images.length === 2,
                 "w-1/3": data.images.length === 3,
@@ -284,15 +285,15 @@ export default function Menu() {
             >
               <div className="w-full h-[200px] relative border border-black/20">
                 <Image
-                  src={image.src}
+                  src={image.url}
                   fill
                   className="object-cover"
-                  alt={image.title}
+                  alt={image._id}
                 />
               </div>
               <div className="w-full border-b border-x border-black/20 py-2">
                 <p className="text-center font-avenir font-[400] text-sm">
-                  {image.title.toUpperCase()}
+                  {data.category.toUpperCase()}
                 </p>
               </div>
             </div>
@@ -309,7 +310,7 @@ export default function Menu() {
           <div className="w-full flex gap-3 overflow-hidden nav-slider">
             <AnimatePresence mode="wait">
               <motion.div
-                key={`mobile-${data.title}-products`}
+                key={`mobile-${data.category}-products`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -389,7 +390,7 @@ export default function Menu() {
   const RenderMobileTAB = useCallback(
     (activeTitle: string) => {
       const activeMenuItem = menuItems.find(
-        (item) => item.title === activeTitle
+        (item) => item.category === activeTitle
       );
       return activeMenuItem ? <MobileMenuRender data={activeMenuItem} /> : null;
     },
@@ -397,10 +398,10 @@ export default function Menu() {
   );
 
   const handleClick = () => {
-    setModal("idle");
+    openModal("idle");
 
     setTimeout(() => {
-      setModal("wardrope");
+      openModal("wardrobe");
     }, 270);
   };
   return (
@@ -419,8 +420,8 @@ export default function Menu() {
             {menuItems.map((item, index) => (
               <motion.div
                 variants={list}
-                onClick={() => toggleMenuItem(item.title)}
-                key={`menu-${item.title}-${index}`}
+                onClick={() => toggleMenuItem(item.category)}
+                key={`menu-${item.category}-${index}`}
                 className={cn(
                   "font-avenir w-fit text-lg cursor-pointer relative z-20 transition-colors duration-200",
                   {
@@ -428,7 +429,7 @@ export default function Menu() {
                   }
                 )}
               >
-                <p>{item.title}</p>
+                <p>{item.category}</p>
                 <motion.div
                   className="w-full h-[1px]"
                   animate={{
@@ -444,7 +445,7 @@ export default function Menu() {
 
           <motion.div
             variants={menuCon}
-            animate={renderedSubBar ? "visible" : "hide"}
+            animate={isSubBarRendered ? "visible" : "hide"}
             initial="hide"
             exit="hide"
             className="mini-[160%] h-full relative top-0 bg-white flex flex-none border-l border-black/20 "
@@ -481,10 +482,10 @@ export default function Menu() {
           <motion.div
             variants={list}
             key={index}
-            onClick={() => handleMobileMenuClick(item.title)}
+            onClick={() => handleMobileMenuClick(item.category)}
             className="font-avenir w-fit text-lg cursor-pointer"
           >
-            {item.title}
+            {item.category}
             <p className="w-full h-[1px] bg-amber-600"></p>
           </motion.div>
         ))}

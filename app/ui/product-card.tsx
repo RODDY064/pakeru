@@ -24,7 +24,7 @@ export default function ProductCard({
 }) {
 
 
-  const { setModal, updateColor, addToCart, closeModal, setRouteChange } =
+  const { openModal, updateColor, addToCart, closeModal, setRouteChange } =
     useBoundStore();
   const router = useRouter();
 

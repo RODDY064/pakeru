@@ -4,7 +4,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
 
-  // console.log(token, "token")
+  console.log(token, "token")
 
   // Route definitions - clear and maintainable
   const protectedRoutes = ["/payment", "/account"];

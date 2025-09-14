@@ -1,67 +1,64 @@
-// app/api/orders/[id]/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 
-interface RouteParams {
+interface RouteContext {
   params: { id: string };
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
+function createHeaders(request: NextRequest) {
+  const cookieHeader = request.headers.get('cookie');
+  return {
+    'Content-Type': 'application/json',
+    ...(cookieHeader && { Cookie: cookieHeader }),
+  };
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: RouteContext
+) {
   try {
-    const cookieHeader = request.headers.get("cookie");
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/orders/${params.id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...(cookieHeader && { Cookie: cookieHeader }),
-      },
-    });
+    const response = await fetch(
+      `${BASE_URL}/api/v1/orders/${params.id}`,
+      {
+        method: 'GET',
+        headers: createHeaders(request),
+      }
+    );
 
     const data = await response.json();
-
-     console.log(data,'order')
     return NextResponse.json(data, { status: response.status });
-    
   } catch (error: any) {
     return NextResponse.json(
-      { error: "Order fetch failed", message: error.message },
+      { error: 'Order fetch failed', message: error.message },
       { status: 500 }
     );
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: RouteContext
+) {
   try {
-    const cookieHeader = request.headers.get("cookie");
     const body = await request.json();
-
-    console.log('hello it being hit')
-
     
-     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/orders/${params.id}`;
-
-    console.log(url, 'url'); 
-    
-    const response = await fetch(url, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        ...(cookieHeader && { Cookie: cookieHeader }),
-      },
-      body: JSON.stringify(body),
-    });
+    const response = await fetch(
+      `${BASE_URL}/api/v1/orders/${params.id}`,
+      {
+        method: 'PATCH',
+        headers: createHeaders(request),
+        body: JSON.stringify(body),
+      }
+    );
 
     const data = await response.json();
-    console.log(data, "patch data");
     return NextResponse.json(data, { status: response.status });
-    
   } catch (error: any) {
     return NextResponse.json(
-      { error: "Order status update failed", message: error.message },
+      { error: 'Order update failed', message: error.message },
       { status: 500 }
     );
   }
 }
-
-
-

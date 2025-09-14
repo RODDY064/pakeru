@@ -20,7 +20,6 @@ import Video from "../ui/bentos";
 import { useGsapSlider } from "@/libs/gsapScroll";
 import { handleNavigation } from "@/libs/navigate";
 
-
 const easing = cubicBezier(0.37, 0.24, 0.38, 0.99);
 
 export default function Home() {
@@ -36,7 +35,7 @@ export default function Home() {
   }, [scrollAmount]);
 
   return (
-    <div className="w-full min-h-dvh  flex flex-col items-center bg-black home-main overflow-hidden">
+    <div className="w-full min-h-dvh flex flex-col items-center bg-black home-main overflow-hidden">
       <Images
         action={(e: any) =>
           handleNavigation(e, "/product", router, setRouteChange, 200)
@@ -54,41 +53,51 @@ export default function Home() {
 
 const Images = ({ action }: { action: any }) => {
   return (
-    <div className="w-full h-[95vh] md:h-[90vh] lg:h-[100vh] slider-container font-avenir">
+    <div className="w-full h-dvh  slider-container font-avenir pb-4 bg-white">
       <div className="slider w-full  h-full">
-        <div className="w-full  h-full bg-white  relative overflow-hidden  ">
-          <div className="w-full max-sm:h-[70%] max-sm:mt-12  lg:mt-24  flex fle-col items-end  xl:mt-[2%] h-[70%]   xl:h-[75%] relative">
-            <Image
-              src="/images/12.png"
-              fill
-              className="object-cover xl:flex hidden"
-              alt="shop"
-              priority
-            />
-            <Image
-              src="/images/hero-pad.png"
-              fill
-              className="object-cover md:flex hidden xl:hidden"
-              alt="shop"
-              priority
-            />
-            <Image
-              src="/images/hero-m.png"
-              fill
-              className="object-cover md:hidden"
-              alt="shop"
-              priority
-            />
-          </div>
-          <div className="absolute w-full h-full flex  flex-col top-0 justify-end z-20 ">
-            <div className="w-full  md:h-[20%] mb-[20%] md:mb-0  flex flex-col gap-2 items-center ">
-              <h1 className="text-black font-avenir font-bold text-[20px] md:text-3xl main-hero-head">
-                GET THE LOOKS, ROCK IT
-              </h1>
-              <p className="capitalise text-black font-avenir font-medium tex-[15px] hero-desc md:text-sm text-center px-10 cursor-pointer ">
-                EVERY PRODUCT WE CRAFT IS DESIGNED TO FUEL YOUR LOOKS.
-              </p>
-              <Button ID="shop-button" action={action} word="SHOP NOW" />
+        <div className="w-full  h-full  relative overflow-hidden  ">
+          <div className="w-full  flex flex-col items-end justify-center  h-full relative">
+            <div className="w-full h-full  relative ">
+              <div className="w-full h-[18%] md:h-[15%] lg:h-[10%] flex-none "></div>
+              <div className="w-full h-[80%] md:h-[85%] lg:h-[90%] flex-none  relative flex items-center justify-center ">
+                <div className="w-full h-full  relative">
+                  <Image
+                    src="/images/hero/pakeru desktop hero.webp"
+                    fill
+                    className="object-cover mx-auto  object-center max-w-7xl xl:flex hidden"
+                    alt="hero"
+                    priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 1200px"
+                  />
+                  <Image
+                    src="/images/hero/pakeru tablet hero.webp"
+                    fill
+                    className="object-cover object-center mx-auto max-w-4xl md:flex hidden xl:hidden"
+                    alt="hero"
+                    priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 1200px"
+                  />
+                  <Image
+                    src="/images/hero/pakeru mobile hero.webp"
+                    fill
+                    className="object-cover object-center max-w-xl mx-auto  flex md:hidden"
+                    alt="hero"
+                    priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 1200px"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className=" w-full  flex-none flex  flex-col z-20 pb-12 md:pb-4 lg:pb-6 xl:pb-10">
+              <div className="w-full  flex flex-col gap-2 items-center ">
+                  <p className="capitalise text-black font-avenir font-medium text-[13px] md:text-[24px] hero-desc md:text-sm text-center px-10 cursor-pointer leading-10 ">
+                  Made for you to
+                </p>
+                <h1 className="text-black font-avenir  font-bold text-[20px] lg:text-[28px] xl:text-[32px] main-hero-head leading-5">
+                   DEFY THE NORM
+                </h1>
+                <Button ID="shop-button" action={action} word="GO TO SHOP" />
+              </div>
             </div>
           </div>
         </div>
@@ -139,7 +148,8 @@ const Slider = () => {
       <div>
         <div
           ref={sliderRef}
-          className="flex gap-1 md:gap-3 overflow-hidden text-white relative hero-slider-div">
+          className="flex gap-1 md:gap-3 overflow-hidden text-white relative hero-slider-div"
+        >
           {slider.map((product) => (
             <div
               key={product._id}
@@ -148,9 +158,10 @@ const Slider = () => {
                 "w-[calc(90vw)] slider-element md:w-[calc(70vw)] card h-[350px]  flex-shrink-0  relative lg:h-[calc(35vw)]  flex-none  flex items-center justify-center overflow-hidden  ",
                 {
                   "pl-1 md:pl-3 ": product._id === 0,
-                  "border border-black/5": product._id !== 0,
+                  "border border-black/5 ": product._id !== 0,
                 }
-              )}>
+              )}
+            >
               {product._id === 0 ? (
                 <div className="w-[calc(90vw)] md:w-[calc(70vw)] h-full relative  overflow-hidden border border-black/5">
                   <motion.div
@@ -163,7 +174,8 @@ const Slider = () => {
                       damping: 18,
                       mass: 0.7,
                     }}
-                    className="w-full h-full relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden">
+                    className="w-full h-full relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden"
+                  >
                     <Image
                       src={product.mainImage}
                       alt={product.title}
@@ -175,7 +187,8 @@ const Slider = () => {
                       <div className="w-full h-24 flex items-end justify-center pb-10 bg-gradient-to-b from-transparent to-black/20">
                         <motion.div
                           variants={textMovement}
-                          className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center">
+                          className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
+                        >
                           <motion.div
                             variants={textOverlay}
                             className="w-full h-full bg-black absolute text-overlay"
@@ -374,7 +387,7 @@ const Product = () => {
           </div>
         ) : (
           <>
-            {products?.map((product, index) => (
+            {products?.slice(0,10).map((product, index) => (
               <ProductCard
                 key={product._id}
                 productData={product}

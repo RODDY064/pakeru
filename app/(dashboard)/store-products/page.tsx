@@ -423,7 +423,7 @@ const MobileTabs = () => {
       <p className="font-avenir text-lg md:text-2xl ">Tables</p>
       <div className="mt-2 flex flex-col gap-2">
         {tabs.map((tab, index) => (
-          <Link href={`/store-products/mobile-table/${tab.name.toLowerCase()}`}>
+          <Link key={index} href={`/store-products/mobile-table/${tab.name.toLowerCase()}`}>
             <div className="w-full bg-white border border-black/20 py-2 px-3 rounded-xl flex items-center justify-between">
               <div className="flex  gap-1">
                 <Image

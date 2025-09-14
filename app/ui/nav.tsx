@@ -72,7 +72,7 @@ export default function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   const {
-    setModal,
+    openModal,
     cartItems,
     setIsMobile,
     routeChange,
@@ -83,7 +83,6 @@ export default function Nav() {
     modalDisplay,
     modal,
     bookMarks,
-    assignCatID,
     filter,
     filterState
   } = useBoundStore();
@@ -106,7 +105,7 @@ export default function Nav() {
 
   useEffect(() => {
     loadProducts(true);
-    assignCatID()
+
 
     const handleResize = () => {
       if (window.innerWidth < 1000) {
@@ -246,8 +245,8 @@ export default function Nav() {
                   <div
                     onClick={() =>
                       icon.name === "bag"
-                        ? setModal("cart")
-                        : setModal("wardrope")
+                        ? openModal("cart")
+                        : openModal("wardrobe")
                     }
                     className={cn("md:flex hidden cursor-pointer", {
                       flex: index === 0,
@@ -298,7 +297,7 @@ export default function Nav() {
             "z-[98]": modalDisplay === "menu",
           }
         )}>
-        <Icon style="pt-[3px]" name="menu" onToggle={() => setModal("menu")} />
+        <Icon style="pt-[3px]" name="menu" onToggle={() => openModal("menu")} />
           {pathname.includes("/product") && !modal &&  <div onClick={()=>filterState(!filter)} className="hidden sm:flex md:ml-30 lg:ml-36 py-[1px]  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1">
             <p>Filter</p>
             <Image src="/icons/filter-w.svg" width={16} height={16} alt="filter"/>
