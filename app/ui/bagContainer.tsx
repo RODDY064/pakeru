@@ -48,7 +48,7 @@ export default function BagContainer() {
 
     const cartChanged = !isEqual(prevCartItems, cartItems); 
 
-    if (prevModal === "wardrope" && modalDisplay === "cart" && cartChanged) {
+    if (prevModal === "wardrobe" && modalDisplay === "cart" && cartChanged) {
       setChangeState(true);
 
       setTimeout(() => {

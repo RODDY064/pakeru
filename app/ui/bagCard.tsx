@@ -78,7 +78,7 @@ export default function BagCard({
           <p className="font-avenir text-md font-[400] text-[16px] md:text-md text-black/50   mt-1">
             GHS {cartData.price} | {colorName}
           </p>
-          {modalDisplay === "wardrope" && (
+          {modalDisplay === "wardrobe" && (
             <div className="mt-6 hidden md:block ">
               <div className="px-2 h-10 border flex border-black/20 rounded-md cursor-pointer">
                 <div
@@ -125,7 +125,7 @@ export default function BagCard({
           )}
         </div>
       </div>
-        {modalDisplay === "wardrope" && (
+        {modalDisplay === "wardrobe" && (
             <div className="mt-4 md:hidden">
               <div className="px-2 h-10 border flex border-black/20 rounded-md cursor-pointer">
                 <div

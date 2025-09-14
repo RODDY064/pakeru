@@ -31,7 +31,7 @@ export default function Modal() {
           
           <AnimatePresence mode="wait">
             {modalDisplay === "menu"  && ( <Menu  /> )}
-            {(modalDisplay === "cart" || modalDisplay === "wardrope") && (
+            {(modalDisplay === "cart" || modalDisplay === "wardrobe") && (
               <CartContainer key="cart-component" />
             )}
           </AnimatePresence>
