@@ -2,6 +2,8 @@ import { ProductFormData } from "@/app/ui/dashboard/zodSchema";
 import { ProductColor, ProductImage } from "./action";
 import { compressImage } from "@/libs/imageCompression";
 import { ProductVariant } from "@/store/dashbaord/products";
+import { apiCall } from "@/libs/functions";
+import { toast } from "@/app/ui/toaster";
 
 export class ProductAPIService {
   private static getHeaders(includeContentType = false): HeadersInit {
@@ -19,20 +21,20 @@ export class ProductAPIService {
 
   private static async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      const errorData = await response.text();
       let errorMessage = `Request failed with status ${response.status}`;
-
+      
       try {
-        const parsedError = JSON.parse(errorData);
-        errorMessage = parsedError.message || parsedError.error || errorMessage;
-      } catch {
-        errorMessage = errorData || errorMessage;
+        const errorData = await response.json(); // FIXED: was response.j()
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch (parseError) {
+        // If JSON parsing fails, use status text
+        errorMessage = response.statusText || errorMessage;
       }
 
       throw new Error(errorMessage);
     }
 
-    return response.json();
+    return response.json(); // FIXED: ensure this is also correct
   }
 
   static async createProduct(
@@ -41,9 +43,21 @@ export class ProductAPIService {
   ): Promise<any> {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
     if (!baseUrl) throw new Error("Base URL not configured");
-    console.log("creating..");
 
-    return this.createProductWithFiles(data, colors);
+    const createPromise = this.createProductWithFiles(data, colors);
+    
+    return toast.promise(createPromise, {
+      loading: "Creating product...",
+      success: (result) => ({
+        title: `Product "${data.name}" created successfully`,
+        description: "Your product is now available in the catalog",
+      }),
+      error: (error) => ({
+        title: "Failed to create product",
+        description: error.message || "Please try again",
+      }),
+      position: "top-right",
+    });
   }
 
   static async updateProduct(
@@ -53,35 +67,55 @@ export class ProductAPIService {
   ): Promise<any> {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
     if (!baseUrl) throw new Error("Base URL not configured");
-    console.log("updating..");
 
-    return this.updateProductWithFiles(productId, data, colors);
+    const updatePromise = this.updateProductWithFiles(productId, data, colors);
+    
+    return toast.promise(updatePromise, {
+      loading: "Updating product...",
+      success: (result) => ({
+        title: `Product "${data.name}" updated successfully`,
+        description: "Changes have been saved",
+      }),
+      error: (error) => ({
+        title: "Failed to update product",
+        description: error.message || "Please try again",
+      }),
+      position: "top-right",
+    });
   }
 
   static async deleteProduct(productId: string): Promise<any> {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
     if (!baseUrl) throw new Error("Base URL not configured");
 
-    const response = await fetch(`${baseUrl}/api/v1/products/${productId}`, {
-      method: "DELETE",
-      credentials: "include",
-      headers: this.getHeaders(true),
+    const deletePromise = (async () => {
+      const response = await apiCall(`/products/${productId}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: this.getHeaders(true),
+      });
+
+      return this.handleResponse(response);
+    })();
+
+    return toast.promise(deletePromise, {
+      loading: "Deleting product...",
+      success: "Product deleted successfully",
+      error: (error) => ({
+        title: "Failed to delete product",
+        description: error.message || "Please try again",
+      }),
+      position: "top-right",
     });
-
-    console.log(response,"response")
-
-    return this.handleResponse(response);
   }
 
   private static async createProductWithFiles(
     data: ProductFormData,
     colors: ProductColor[]
   ): Promise<any> {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-
     const formData = await this.prepareFormData(data, colors);
     
-    const response = await fetch(`${baseUrl}/api/v1/products`, {
+    const response = await apiCall("/products", {
       method: "POST",
       credentials: "include",
       headers: this.getHeaders(false),
@@ -96,10 +130,9 @@ export class ProductAPIService {
     data: ProductFormData,
     colors: ProductColor[]
   ): Promise<any> {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
     const formData = await this.prepareFormData(data, colors);
 
-    const response = await fetch(`${baseUrl}/products/${productId}`, {
+    const response = await apiCall(`/products/${productId}`, {
       method: "PATCH",
       credentials: "include",
       headers: this.getHeaders(false),
@@ -139,7 +172,6 @@ export class ProductAPIService {
                   console.log(`Compressed ${img.file.name} from ${img.file.size} to ${fileToUpload.size} bytes`);
                 } catch (error) {
                   console.error(`Failed to compress ${img.file.name}:`, error);
-                  // Keep original file if compression fails
                   fileToUpload = img.file;
                 }
               }
@@ -201,7 +233,7 @@ export class ProductAPIService {
     }));
     formData.append("variants", JSON.stringify(variants));
 
-    // Add image files and metadata - FIX IS HERE
+    // Add image files and metadata
     let fileIndex = 0;
     console.log("Appending files to FormData...");
     
@@ -214,7 +246,7 @@ export class ProductAPIService {
       console.log(color.images, "color images");
       
       for (const img of color.images) {
-        // FIXED: Check for both File and Blob since compressed images return Blob
+        // Check for both File and Blob since compressed images return Blob
         if (img.file && (img.file instanceof File || img.file instanceof Blob)) {
           console.log(`Appending file ${fileIndex}: ${img.name} (${img.file.size} bytes) for color: ${color.name}`);
     
@@ -231,17 +263,6 @@ export class ProductAPIService {
     }
 
     console.log(`Total files appended: ${fileIndex}`);
-
-    // Debug: Log FormData contents
-    console.log("FormData contents:");
-    for (const [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
-      } else {
-        console.log(`${key}:`, value);
-      }
-    }
-
     return formData;
   }
 }

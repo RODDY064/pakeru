@@ -4,11 +4,12 @@ interface RouteParams {
   params: { id: string };
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> } ) {
   try {
     const cookieHeader = request.headers.get("cookie");
+        const { id } = await params;
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products/${params.id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -27,12 +28,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest,  { params }: { params: Promise<{ id: string }> }) {
   try {
     const cookieHeader = request.headers.get("cookie");
     const body = await request.json();
+    const { id } = await params;
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products/${params.id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

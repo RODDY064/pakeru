@@ -12,11 +12,12 @@ function createHeaders(request: NextRequest) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const response = await fetch(
-      `${BASE_URL}/api/v1/orders/${params.id}`,
+      `${BASE_URL}/api/v1/orders/${id}`,
       {
         method: 'GET',
         headers: createHeaders(request),
@@ -35,12 +36,13 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const response = await fetch(
-      `${BASE_URL}/api/v1/orders/${params.id}`,
+      `${BASE_URL}/api/v1/orders/${id}`,
       {
         method: 'PATCH',
         headers: createHeaders(request),
