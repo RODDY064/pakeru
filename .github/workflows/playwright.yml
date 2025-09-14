@@ -15,16 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      
-      # Install pnpm
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
           run_install: false
       
-      
-      # Install Node & enable pnpm caching
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -32,61 +28,30 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       
-      
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       
-      # Build the project
       - name: Build Project
         run: pnpm build
       
-      # Deploy to Vercel (Preview) using CLI directly
-        run: pnpm install --frozen-lockfile
-      
-      # Build the project
-      - name: Build Project
-        run: pnpm build
-      
-      # Deploy to Vercel (Preview) using CLI directly
-      - name: Vercel Preview Deploy
+      - name: Deploy to Vercel Preview
         id: vercel
         run: |
-          # Install Vercel CLI
           npm i -g vercel@latest
           
-          # Set up Vercel project configuration
           mkdir -p .vercel
           echo "{\"orgId\":\"${{ secrets.VERCEL_ORG_ID }}\",\"projectId\":\"${{ secrets.VERCEL_PROJECT_ID }}\"}" > .vercel/project.json
           
-          # Deploy and capture URL
           echo "Starting deployment..."
           DEPLOYMENT_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes)
           echo "preview-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
           echo "Deployment initiated: $DEPLOYMENT_URL"
           
-          # Wait for deployment to be ready at Vercel level
-          echo "Waiting for Vercel deployment to complete..."
-          vercel inspect $DEPLOYMENT_URL --token=${{ secrets.VERCEL_TOKEN }} --wait
-        run: |
-          # Install Vercel CLI
-          npm i -g vercel@latest
-          
-          # Set up Vercel project configuration
-          mkdir -p .vercel
-          echo "{\"orgId\":\"${{ secrets.VERCEL_ORG_ID }}\",\"projectId\":\"${{ secrets.VERCEL_PROJECT_ID }}\"}" > .vercel/project.json
-          
-          # Deploy and capture URL
-          echo "Starting deployment..."
-          DEPLOYMENT_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes)
-          echo "preview-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          echo "Deployment initiated: $DEPLOYMENT_URL"
-          
-          # Wait for deployment to be ready at Vercel level
           echo "Waiting for Vercel deployment to complete..."
           vercel inspect $DEPLOYMENT_URL --token=${{ secrets.VERCEL_TOKEN }} --wait
 
   playwright_test:
-    name: Run Playwright Tests (Preview)
+    name: Run Playwright Tests
     needs: deploy_preview
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -95,13 +60,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
           run_install: false
-      
       
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -110,66 +73,33 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       
-      
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       
-        run: pnpm install --frozen-lockfile
-      
-      # Cache Playwright browsers
       - name: Cache Playwright Browsers
-        uses: actions/cache@v4  # Updated to v4
-        uses: actions/cache@v4  # Updated to v4
+        uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
       
-      
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
       
-      
-      # Wait for Vercel Preview to be ready
-      - name: Wait for Preview to be Ready
+      - name: Wait for Preview Deployment
         run: |
           echo "Waiting for $PLAYWRIGHT_BASE_URL to respond..."
-          
-          # First, wait a bit for Vercel to start the deployment
-          echo "Initial wait for deployment to start..."
           sleep 30
           
-          # Then check with exponential backoff
           for i in {1..40}; do
             echo "Checking deployment status... ($i/40)"
             
-            # Check if the URL responds with any HTTP status (even errors mean it's live)
             if curl -fsS --connect-timeout 15 --max-time 45 "$PLAYWRIGHT_BASE_URL" >/dev/null 2>&1; then
               echo "✅ Preview is live and responding!"
               exit 0
             fi
             
-            # Check if it's just returning an error but is actually accessible
-            HTTP_CODE=$(curl -o /dev/null -s -w "%{http_code}" --connect-timeout 15 --max-time 45 "$PLAYWRIGHT_BASE_URL" || echo "000")
-            if [ "$HTTP_CODE" != "000" ] && [ "$HTTP_CODE" != "" ]; then
-              echo "✅ Preview is live! (HTTP $HTTP_CODE)"
-          
-          # First, wait a bit for Vercel to start the deployment
-          echo "Initial wait for deployment to start..."
-          sleep 30
-          
-          # Then check with exponential backoff
-          for i in {1..40}; do
-            echo "Checking deployment status... ($i/40)"
-            
-            # Check if the URL responds with any HTTP status (even errors mean it's live)
-            if curl -fsS --connect-timeout 15 --max-time 45 "$PLAYWRIGHT_BASE_URL" >/dev/null 2>&1; then
-              echo "✅ Preview is live and responding!"
-              exit 0
-            fi
-            
-            # Check if it's just returning an error but is actually accessible
             HTTP_CODE=$(curl -o /dev/null -s -w "%{http_code}" --connect-timeout 15 --max-time 45 "$PLAYWRIGHT_BASE_URL" || echo "000")
             if [ "$HTTP_CODE" != "000" ] && [ "$HTTP_CODE" != "" ]; then
               echo "✅ Preview is live! (HTTP $HTTP_CODE)"
@@ -178,7 +108,6 @@ jobs:
             
             echo "Not ready yet... (HTTP: $HTTP_CODE)"
             
-            # Progressive backoff: start with 15s, increase to 30s after attempt 10
             if [ $i -lt 10 ]; then
               sleep 15
             else
@@ -188,32 +117,12 @@ jobs:
           
           echo "❌ Preview never became ready after 20+ minutes."
           echo "URL: $PLAYWRIGHT_BASE_URL"
-          echo "This might be a Vercel deployment issue. Check the Vercel dashboard."
-            
-            echo "Not ready yet... (HTTP: $HTTP_CODE)"
-            
-            # Progressive backoff: start with 15s, increase to 30s after attempt 10
-            if [ $i -lt 10 ]; then
-              sleep 15
-            else
-              sleep 30
-            fi
-          done
-          
-          echo "❌ Preview never became ready after 20+ minutes."
-          echo "URL: $PLAYWRIGHT_BASE_URL"
-          echo "This might be a Vercel deployment issue. Check the Vercel dashboard."
           exit 1
       
-      
-      - name: Run Playwright tests
+      - name: Run Playwright Tests
         run: pnpm exec playwright test
       
-      - name: Upload Playwright Report
-        uses: actions/upload-artifact@v4
-        run: pnpm exec playwright test
-      
-      - name: Upload Playwright Report
+      - name: Upload Test Report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
@@ -222,7 +131,7 @@ jobs:
           retention-days: 30
 
   deploy_prod:
-    name: Deploy to Production (after passing tests)
+    name: Deploy to Production
     needs: [playwright_test]
     if: >
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
@@ -231,13 +140,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
           run_install: false
-      
       
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -246,24 +153,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       
-      
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
-      # Force link Vercel project
-      - name: Link Vercel Project
-        run: npx vercel link --token=${{ secrets.VERCEL_TOKEN }} --project ${{ secrets.VERCEL_PROJECT_ID }} --yes
-
-
-      # Deploy to Vercel Production
-      - name: Vercel Production Deploy
+      - name: Deploy to Production
         run: |
-          # Install Vercel CLI
           npm i -g vercel@latest
           
-          # Set up Vercel project configuration
           mkdir -p .vercel
           echo "{\"orgId\":\"${{ secrets.VERCEL_ORG_ID }}\",\"projectId\":\"${{ secrets.VERCEL_PROJECT_ID }}\"}" > .vercel/project.json
           
-          # Deploy to production
           vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
