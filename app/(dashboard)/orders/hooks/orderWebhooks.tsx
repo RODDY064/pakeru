@@ -30,7 +30,7 @@ export function useOrdersWebhook() {
   });
 
   // Get store methods
-  const orders = useBoundStore((state) => state.orders);
+  const orders = useBoundStore((state) => state.unfulfilledOrders);
   const setOrdersState = useBoundStore((state) => state.setOrdersState);
 
   useEffect(() => {
@@ -125,7 +125,8 @@ export function useOrdersWebhook() {
               state.filteredOrders = filterOrders(
                 state.orders,
                 state.search,
-                state.activeFilter
+                state.activeFilter,
+                state.dateFilter // <-- add the missing fourth argument
               );
             })
           );
@@ -135,7 +136,7 @@ export function useOrdersWebhook() {
 
         // Get current state before update
         const currentState = useBoundStore.getState();
-        console.log("Current orders count:", currentState.orders.length);
+        console.log("Current orders count:", currentState.unfulfilledOrders.length);
 
         // Verify update
         // setTimeout(() => {

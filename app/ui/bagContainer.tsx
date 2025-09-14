@@ -86,11 +86,11 @@ export default function BagContainer() {
                 </div>
               </div>
               <div>
-                <Icon name="close" onToggle={() =>  modalDisplay === "cart" ? openModal("cart"): openModal("wardrope")} />
+                <Icon name="close" onToggle={() =>  modalDisplay === "cart" ? openModal("cart"): openModal("wardrobe")} />
               </div>
             </div>
             {(modalDisplay === "cart" && cartItems.length > 0) ||
-            (modalDisplay === "wardrope" && bookMarks.length > 0) ? (
+            (modalDisplay === "wardrobe" && bookMarks.length > 0) ? (
               <div className="w-full h-full overflow-y-scroll pb-24">
                 <div className="w-full flex flex-col gap-2 pt-4 cart-con px-4 md:px-8 pb-12 ">
                   {modalDisplay === "cart"
@@ -123,7 +123,7 @@ export default function BagContainer() {
                       </div>
                     </div>
                   )}
-                  {modalDisplay === "wardrope" && (
+                  {modalDisplay === "wardrobe" && (
                     <div className="mt-4 w-full">
                       <div className="w-full text-white bg-black py-3 text-center mt-8 rounded ">
                         <div
@@ -152,7 +152,7 @@ export default function BagContainer() {
                 <p className="text-gray-500 font-avenir font-[400] text-md">
                   {modalDisplay === "cart"
                     ? "YOUR BAG IS EMPTY"
-                    : modalDisplay === "wardrope"
+                    : modalDisplay === "wardrobe"
                     ? "YOUR BOOKMARK IS EMPTY"
                     : ""}
                 </p>
@@ -202,7 +202,7 @@ export default function BagContainer() {
               </div>
             </div>
             {(modalDisplay === "cart" && cartItems.length > 0) ||
-            (modalDisplay === "wardrope" && bookMarks.length > 0) ? (
+            (modalDisplay === "wardrobe" && bookMarks.length > 0) ? (
               <div className="w-full h-full overflow-y-scroll pb-24">
                 <div className="w-full flex flex-col gap-2 pt-4 cart-con px-4 md:px-8 pb-12 ">
                   {modalDisplay === "cart"
@@ -235,7 +235,7 @@ export default function BagContainer() {
                       </div>
                     </div>
                   )}
-                  {modalDisplay === "wardrope" && (
+                  {modalDisplay === "wardrobe" && (
                     <div className="mt-4 w-full">
                       <div className="w-full text-white bg-black py-3 text-center mt-8 rounded ">
                         <div
@@ -264,7 +264,7 @@ export default function BagContainer() {
                 <p className="text-gray-500 font-avenir font-[400] text-md">
                   {modalDisplay === "cart"
                     ? "YOUR BAG IS EMPTY"
-                    : modalDisplay === "wardrope"
+                    : modalDisplay === "wardrobe"
                     ? "YOUR BOOKMARK IS EMPTY"
                     : ""}
                 </p>
