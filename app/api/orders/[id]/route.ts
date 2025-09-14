@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-interface RouteContext {
-  params: { id: string };
-}
-
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 function createHeaders(request: NextRequest) {
@@ -16,7 +12,7 @@ function createHeaders(request: NextRequest) {
 
 export async function GET(
   request: NextRequest,
-  { params }: RouteContext
+  { params }: { params: { id: string } }
 ) {
   try {
     const response = await fetch(
@@ -39,11 +35,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: RouteContext
+  { params }: { params: { id: string } }
 ) {
   try {
     const body = await request.json();
-    
     const response = await fetch(
       `${BASE_URL}/api/v1/orders/${params.id}`,
       {
