@@ -9,9 +9,9 @@ import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 
-export default function Fulfilled() {
+function UnfulfilledContent() {
   const [fulfilledStats, setFulfilledStats] = useState([
     { label: "Delivered", value: 0 },
     { label: "Shipped", value: 0 },
@@ -179,6 +179,19 @@ export default function Fulfilled() {
       />
       <OrderModal type="fulfilled" />
     </div>
+  );
+}
+
+
+
+
+export default function UnFulfilled() {
+  return (
+    <Suspense fallback={<div className="w-full h-full fixed top-0 left-0 flex flex-col items-center justify-center">
+          <Image src="/icons/loader.svg" width={34} height={34} alt="loader"/>
+        </div>}>
+      <UnfulfilledContent />
+    </Suspense>
   );
 }
 

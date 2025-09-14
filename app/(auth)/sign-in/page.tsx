@@ -2,7 +2,7 @@
 
 import Input from "@/app/ui/input";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
@@ -122,10 +122,16 @@ export default function SignIn() {
           <p className="text-md font-medium">Sign up</p>
         </Link>
       </div>
-      <form
+     <Suspense 
+     
+    fallback={
+    <div className="w-full h-[300px] top-0 left-0 flex flex-col items-center justify-center">
+               <Image src="/icons/loader.svg" width={34} height={34} alt="loader"/>
+               </div>
+        }>
+       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="mt-6 px-[2px] w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%]"
-      >
+        className="mt-6 px-[2px] w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%]">
         <Input
           register={register}
           error={errors}
@@ -170,6 +176,7 @@ export default function SignIn() {
           <p className="">Google</p>
         </div>
       </form>
+     </Suspense>
     </div>
   );
 }
