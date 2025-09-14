@@ -54,12 +54,13 @@ export async function DELETE(request: NextRequest,  { params }: { params: Promis
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const cookieHeader = request.headers.get("cookie");
     const body = await request.json();
+     const { id } = await params;
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products/${params.id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products/${id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
