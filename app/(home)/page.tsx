@@ -51,60 +51,106 @@ export default function Home() {
   );
 }
 
+
 const Images = ({ action }: { action: any }) => {
+  const [containerHeight, setContainerHeight] = useState('100vh');
+
+  useEffect(() => {
+    const calculateHeight = () => {
+      // Use actual viewport height for consistency across platforms
+      const actualVH = window.innerHeight;
+      setContainerHeight(`${actualVH}px`);
+      
+      // Set CSS custom property for dvh fallback
+      document.documentElement.style.setProperty('--actual-vh', `${actualVH * 0.01}px`);
+    };
+
+    calculateHeight();
+    window.addEventListener('resize', calculateHeight);
+    window.addEventListener('orientationchange', calculateHeight);
+    
+    return () => {
+      window.removeEventListener('resize', calculateHeight);
+      window.removeEventListener('orientationchange', calculateHeight);
+    };
+  }, []);
+
   return (
-    <div className="w-full h-dvh  slider-container font-avenir pb-4 bg-white">
-      <div className="slider w-full  h-full">
-        <div className="w-full  h-full  relative overflow-hidden  ">
-          <div className="w-full  flex flex-col items-end justify-center  h-full relative">
-            <div className="w-full h-full  relative ">
-              <div className="w-full h-[18%] md:h-[15%] lg:h-[10%] flex-none "></div>
-              <div className="w-full h-[80%] md:h-[85%] lg:h-[90%] flex-none  relative flex items-center justify-center ">
-                <div className="w-full h-full  relative">
-                  <Image
-                    src="/images/hero/pakeru desktop hero.webp"
-                    fill
-                    className="object-cover mx-auto  object-center max-w-7xl xl:flex hidden"
-                    alt="hero"
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 1200px"
-                  />
-                  <Image
-                    src="/images/hero/pakeru tablet hero.webp"
-                    fill
-                    className="object-cover object-center mx-auto max-w-4xl md:flex hidden xl:hidden"
-                    alt="hero"
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 1200px"
-                  />
-                  <Image
-                    src="/images/hero/pakeru mobile hero.webp"
-                    fill
-                    className="object-cover object-center max-w-xl mx-auto  flex md:hidden"
-                    alt="hero"
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 1200px"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className=" w-full  flex-none flex  flex-col z-20 pb-12 md:pb-4 lg:pb-6 xl:pb-10">
-              <div className="w-full  flex flex-col gap-2 items-center ">
-                <p className="capitalise text-black font-avenir font-medium text-[13px] md:text-[24px] hero-desc md:text-sm text-center px-10 cursor-pointer leading-10 ">
-                  Made for you to
-                </p>
-                <h1 className="text-black font-avenir  font-bold text-[20px] lg:text-[28px] xl:text-[32px] main-hero-head leading-5">
-                  DEFY THE NORM
-                </h1>
-                <Button ID="shop-button" action={action} word="GO TO SHOP" />
-              </div>
+    <div 
+      className="w-full slider-container font-avenir bg-white"
+      style={{ height: containerHeight }}
+    >
+      <div className="slider w-full h-full">
+        <div className="w-full h-full relative overflow-hidden flex flex-col">
+          
+          {/* Top Spacer - Responsive */}
+          <div className="w-full h-[10vh] md:h-[8vh] lg:h-[6vh] flex-shrink-0" />
+          
+          {/* Hero Image Container */}
+          <div className="flex-1 relative flex items-center justify-center min-h-0">
+            <div className="w-full h-full relative mt-8">
+              
+              {/* Desktop Hero */}
+              <Image
+                src="/images/hero/pakeru desktop hero.webp"
+                fill
+                className="object-contain object-center hidden xl:block"
+                alt="Pakeru Desktop Hero"
+                priority
+                sizes="100vw"
+                quality={95}
+              />
+              
+              {/* Tablet Hero */}
+              <Image
+                src="/images/hero/pakeru tablet hero.webp"
+                fill
+                className="object-contain object-center hidden md:block xl:hidden"
+                alt="Pakeru Tablet Hero"
+                priority
+                sizes="100vw"
+                quality={95}
+              />
+              
+              {/* Mobile Hero */}
+              <Image
+                src="/images/hero/pakeru mobile hero.webp"
+                fill
+                className="object-contain object-center block md:hidden"
+                alt="Pakeru Mobile Hero"
+                priority
+                sizes="100vw"
+                quality={95}
+              />
+              
             </div>
           </div>
+          
+          {/* Content Section - Fixed Height */}
+          <div className="w-full flex-shrink-0 flex flex-col items-center justify-center pb-10 relative ">
+            <div className="w-full flex flex-col gap-3 items-center px-4">
+              
+              <p className="text-black font-avenir font-medium text-[13px] md:text-[16px] lg:text-[18px] text-center leading-8">
+                Made for you to
+              </p>
+              
+              <h1 className="text-black font-avenir font-bold text-[20px] md:text-[24px] lg:text-[28px] xl:text-[32px] leading-4 text-center">
+                DEFY THE NORM
+              </h1>
+              
+              <div className="">
+                <Button ID="shop-button" action={action} word="GO TO SHOP" />
+              </div>
+              
+            </div>
+          </div>
+          
         </div>
       </div>
     </div>
   );
 };
+
 
 const Slider = () => {
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -175,7 +221,8 @@ const Slider = () => {
                       damping: 18,
                       mass: 0.7,
                     }}
-                    className="w-full h-full  group/slider bg-[#f2f2f2] mx-auto relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden">
+                    className="w-full h-full  group/slider bg-[#f2f2f2] mx-auto relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden"
+                  >
                     <Image
                       src={product.mainImage}
                       alt={product.title}
@@ -187,7 +234,8 @@ const Slider = () => {
                       <div className="w-full h-24 flex items-end justify-center pb-8 ">
                         <motion.div
                           variants={textMovement}
-                          className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center">
+                          className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
+                        >
                           <motion.div
                             variants={textOverlay}
                             className="w-full h-full bg-black absolute text-overlay"
@@ -218,7 +266,8 @@ const Slider = () => {
                     damping: 18,
                     mass: 0.7,
                   }}
-                  className="w-full h-full group/slider relative bg-[#f2f2f2] flex items-center justify-center will-change-transform preserve-3d backface-hidden">
+                  className="w-full h-full group/slider relative bg-[#f2f2f2] flex items-center justify-center will-change-transform preserve-3d backface-hidden"
+                >
                   <Image
                     src={product.mainImage}
                     alt={product.title}
@@ -366,7 +415,8 @@ const Product = () => {
             "auto-cols-[100%]  md:auto-cols-[100%] lg:auto-cols-[100%]  xl:auto-cols-[100%]":
               cartState === "loading" || cartState === "error",
           }
-        )}>
+        )}
+      >
         {cartState === "loading" ||
         cartState === "error" ||
         cartState === "idle" ? (
