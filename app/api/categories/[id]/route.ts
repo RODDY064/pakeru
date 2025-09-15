@@ -3,14 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+ { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieHeader = request.headers.get("cookie");
     const body = await request.json();
-    const categoryId = params.id;
+     const { id } = await params;
     
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/categories/${categoryId}`;
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/categories/${id}`;
     
     const response = await fetch(url, {
       method: "PUT",
@@ -34,12 +34,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ categoryId: string }> }
 ) {
   try {
     const cookieHeader = request.headers.get("cookie");
-    const categoryId = params.id;
-    
+      const { categoryId } = await params;
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/categories/${categoryId}`;
     
     const response = await fetch(url, {
