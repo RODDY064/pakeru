@@ -1,3 +1,4 @@
+// app/api/categories/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -5,14 +6,14 @@ export async function GET(request: NextRequest) {
     const cookieHeader = request.headers.get("cookie");
     const { searchParams } = new URL(request.url);
     
-    // Forward query parameters
     const queryString = searchParams.toString();
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products${queryString ? `?${queryString}` : ''}`;
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/categories${queryString ? `?${queryString}` : ''}`;
     
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
         ...(cookieHeader && { Cookie: cookieHeader }),
       },
     });
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     
   } catch (error: any) {
     return NextResponse.json(
-      { error: "Products fetch failed", message: error.message },
+      { error: "Categories fetch failed", message: error.message },
       { status: 500 }
     );
   }
@@ -31,14 +32,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const cookieHeader = request.headers.get("cookie");
-     const formData = await request.formData();
+    const body = await request.json();
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products`, {
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/categories`;
+    
+    const response = await fetch(url, {
       method: "POST",
+      credentials:"include",
       headers: {
+        "Content-Type": "application/json",
         ...(cookieHeader && { Cookie: cookieHeader }),
       },
-      body: formData,
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
@@ -46,7 +51,7 @@ export async function POST(request: NextRequest) {
     
   } catch (error: any) {
     return NextResponse.json(
-      { error: "Product creation failed", message: error.message },
+      { error: "Category creation failed", message: error.message },
       { status: 500 }
     );
   }

@@ -34,7 +34,6 @@ export function useGsapSlider({
   cardRef: React.RefObject<HTMLDivElement>;
   speed?: number;
 }) {
-  // State management
   const [state, setState] = useState<SliderState>({
     isStart: true,
     isEnd: false,
@@ -53,47 +52,52 @@ export function useGsapSlider({
 
   const [isReady, setIsReady] = useState(false);
 
-  // Refs for cleanup and animation control
   const animationRef = useRef<gsap.core.Tween | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const initRetryRef = useRef<number>(0);
   const maxRetries = 10;
 
-  // Memoized metric calculations
+  // Core metric calculation - the foundation of everything
   const calculateMetrics = useCallback((): SliderMetrics | null => {
     if (!sliderRef.current || !cardRef.current) return null;
 
     const slider = sliderRef.current;
     const card = cardRef.current;
 
-    // Get computed styles once
+    // Get actual rendered dimensions
     const cardStyles = getComputedStyle(card);
     const cardWidth = card.offsetWidth;
     const marginRight = parseInt(cardStyles.marginRight) || 0;
     
-    if (cardWidth === 0) return null; // Not ready yet
+    if (cardWidth === 0) return null;
 
     const itemWidth = cardWidth + marginRight;
     const sliderWidth = slider.clientWidth;
-    const scrollWidth = slider.scrollWidth;
+    
+    // Count actual items in the slider, not based on scrollWidth
+    const allItems = slider.children;
+    const totalItems = allItems.length;
+    
+    if (itemWidth === 0 || totalItems === 0) return null;
 
-    if (itemWidth === 0 || scrollWidth === 0) return null;
-
-    const totalItems = Math.round(scrollWidth / itemWidth);
+    // How many complete items can we see at once?
     const visibleItems = Math.max(1, Math.floor(sliderWidth / itemWidth));
+    
+    // Pages are based on how we group visible items
+    // If we have 10 items and show 3 at a time: pages = ceil(10/3) = 4 pages
     const totalPages = Math.max(1, Math.ceil(totalItems / visibleItems));
 
     return {
       itemWidth,
       sliderWidth,
-      scrollWidth,
+      scrollWidth: totalItems * itemWidth, // Calculated, not measured
       totalItems,
       visibleItems,
       totalPages,
     };
   }, [sliderRef, cardRef]);
 
-  // Memoized state calculations
+  // State calculation based on current scroll position
   const calculateState = useCallback((currentMetrics: SliderMetrics): SliderState => {
     if (!sliderRef.current) {
       return {
@@ -109,21 +113,20 @@ export function useGsapSlider({
     
     const tolerance = 2;
     const scrollLeft = slider.scrollLeft;
-    const clientWidth = slider.clientWidth;
-    const scrollWidth = slider.scrollWidth;
 
-    // Calculate visibility flags
+    // Boundary detection
+    const maxScroll = Math.max(0, (totalItems - visibleItems) * itemWidth);
     const isStart = scrollLeft <= tolerance;
-    const isEnd = Math.ceil(scrollLeft + clientWidth) >= (scrollWidth - tolerance);
+    const isEnd = scrollLeft >= maxScroll - tolerance;
 
-    // Calculate visible range
-    const firstVisibleIndex = Math.floor(scrollLeft / itemWidth);
+    // Which items are currently visible?
+    const firstVisibleIndex = Math.max(0, Math.floor(scrollLeft / itemWidth));
     const lastVisibleIndex = Math.min(
       firstVisibleIndex + visibleItems - 1,
       totalItems - 1
     );
 
-    // Calculate current page
+    // Current page calculation - which "group" of items are we showing?
     const currentPage = Math.max(0, Math.min(
       Math.floor(firstVisibleIndex / visibleItems),
       totalPages - 1
@@ -134,13 +137,12 @@ export function useGsapSlider({
       isEnd,
       currentPage,
       visibleRange: {
-        start: Math.max(0, firstVisibleIndex),
-        end: Math.max(0, lastVisibleIndex),
+        start: firstVisibleIndex,
+        end: lastVisibleIndex,
       },
     };
   }, [sliderRef]);
 
-  // Optimized scroll handler with debouncing
   const handleScroll = useCallback(() => {
     if (!isReady) return;
     
@@ -148,49 +150,48 @@ export function useGsapSlider({
     setState(newState);
   }, [isReady, metrics, calculateState]);
 
-  // Animation control with better performance
   const animateToPosition = useCallback((targetScroll: number) => {
     if (!sliderRef.current) return;
 
-    // Kill any existing animation
     if (animationRef.current) {
       animationRef.current.kill();
     }
 
     const slider = sliderRef.current;
-    const clampedTarget = Math.max(0, Math.min(
-      targetScroll,
-      slider.scrollWidth - slider.clientWidth
-    ));
+    const maxScroll = Math.max(0, (metrics.totalItems - metrics.visibleItems) * metrics.itemWidth);
+    const clampedTarget = Math.max(0, Math.min(targetScroll, maxScroll));
 
     animationRef.current = gsap.to(slider, {
       scrollTo: { x: clampedTarget },
       duration: speed,
-      ease: "cubic-bezier(0.4, 0.0, 0.2, 1)", // Apple's preferred easing
+      ease: "cubic-bezier(0.4, 0.0, 0.2, 1)",
       onUpdate: handleScroll,
       onComplete: handleScroll,
     });
-  }, [sliderRef, speed, handleScroll]);
+  }, [sliderRef, speed, handleScroll, metrics]);
 
-  // Navigation functions
+  // Navigation - move by visible page groups
   const scrollNext = useCallback(() => {
     if (!isReady || state.isEnd) return;
     
-    const targetScroll = sliderRef.current!.scrollLeft + (metrics.itemWidth * metrics.visibleItems);
+    const nextPageStartIndex = (state.currentPage + 1) * metrics.visibleItems;
+    const targetScroll = nextPageStartIndex * metrics.itemWidth;
     animateToPosition(targetScroll);
-  }, [isReady, state.isEnd, sliderRef, metrics, animateToPosition]);
+  }, [isReady, state.isEnd, state.currentPage, metrics, animateToPosition]);
 
   const scrollPrev = useCallback(() => {
     if (!isReady || state.isStart) return;
     
-    const targetScroll = sliderRef.current!.scrollLeft - (metrics.itemWidth * metrics.visibleItems);
+    const prevPageStartIndex = (state.currentPage - 1) * metrics.visibleItems;
+    const targetScroll = prevPageStartIndex * metrics.itemWidth;
     animateToPosition(targetScroll);
-  }, [isReady, state.isStart, sliderRef, metrics, animateToPosition]);
+  }, [isReady, state.isStart, state.currentPage, metrics, animateToPosition]);
 
   const goToPage = useCallback((pageIndex: number) => {
     if (!isReady || pageIndex < 0 || pageIndex >= metrics.totalPages) return;
     
-    const targetScroll = pageIndex * metrics.itemWidth * metrics.visibleItems;
+    const targetIndex = pageIndex * metrics.visibleItems;
+    const targetScroll = targetIndex * metrics.itemWidth;
     animateToPosition(targetScroll);
   }, [isReady, metrics, animateToPosition]);
 
@@ -201,12 +202,10 @@ export function useGsapSlider({
     animateToPosition(targetScroll);
   }, [isReady, metrics, animateToPosition]);
 
-  // Initialization with retry mechanism
   const initialize = useCallback(() => {
     const newMetrics = calculateMetrics();
     
     if (!newMetrics) {
-      // Retry with exponential backoff
       if (initRetryRef.current < maxRetries) {
         initRetryRef.current++;
         const delay = Math.min(50 * Math.pow(1.5, initRetryRef.current), 500);
@@ -224,7 +223,6 @@ export function useGsapSlider({
     return true;
   }, [calculateMetrics, calculateState]);
 
-  // ResizeObserver for responsive updates
   const setupResizeObserver = useCallback(() => {
     if (!sliderRef.current || !cardRef.current) return;
 
@@ -243,13 +241,11 @@ export function useGsapSlider({
     resizeObserverRef.current.observe(cardRef.current);
   }, [sliderRef, cardRef, isReady, calculateMetrics, calculateState]);
 
-  // Main GSAP effect
   useGSAP(() => {
     if (!sliderRef.current || !prevRef.current || !nextRef.current || !cardRef.current) {
       return;
     }
 
-    // Wait for next tick to ensure DOM is ready
     const timeoutId = setTimeout(() => {
       initialize();
       setupResizeObserver();
@@ -266,7 +262,6 @@ export function useGsapSlider({
     };
   }, [sliderRef, prevRef, nextRef, cardRef]);
 
-  // Event listeners setup - separate effect to ensure proper timing
   useEffect(() => {
     if (!isReady || !prevRef.current || !nextRef.current || !sliderRef.current) {
       return;
@@ -276,12 +271,10 @@ export function useGsapSlider({
     const nextBtn = nextRef.current;
     const slider = sliderRef.current;
 
-    // Add event listeners
     prevBtn.addEventListener("click", scrollPrev);
     nextBtn.addEventListener("click", scrollNext);
     slider.addEventListener("scroll", handleScroll, { passive: true });
 
-    // Expose functions on slider element for external access
     Object.assign(slider, { goToPage, goToIndex });
 
     return () => {
@@ -289,18 +282,15 @@ export function useGsapSlider({
       nextBtn.removeEventListener("click", scrollNext);
       slider.removeEventListener("scroll", handleScroll);
       
-      // Clean up exposed functions
       delete (slider as any).goToPage;
       delete (slider as any).goToIndex;
     };
   }, [isReady, prevRef, nextRef, sliderRef, scrollPrev, scrollNext, handleScroll, goToPage, goToIndex]);
 
-  // Manual reinitialize function
   const reinitialize = useCallback(() => {
     setIsReady(false);
     initRetryRef.current = 0;
     
-    // Clean up
     if (animationRef.current) {
       animationRef.current.kill();
     }
@@ -308,14 +298,12 @@ export function useGsapSlider({
       resizeObserverRef.current.disconnect();
     }
 
-    // Reset and reinitialize
     setTimeout(() => {
       initialize();
       setupResizeObserver();
     }, 100);
   }, [initialize, setupResizeObserver]);
 
-  // Derived values for convenience
   const itemsArray = Array.from({ length: metrics.totalItems }, (_, i) => i);
 
   return {

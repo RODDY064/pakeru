@@ -177,11 +177,11 @@ export default function Category({
             </div>
 
             {/* Error Display */}
-            {error && (
+            {/* {error && (
               <div className="mt-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg">
                 {error}
               </div>
-            )}
+            )} */}
 
             {/* Form Fields */}
             <div className="mt-6 space-y-4">

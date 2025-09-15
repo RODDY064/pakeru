@@ -22,6 +22,7 @@ interface SVGMorphProps {
   render: React.ReactNode[];
   split?: boolean;
   reverse?: boolean;
+  name?: string;
 }
 
 function getApplePath(x: number, y: number, w: number, h: number, r: number) {
@@ -52,6 +53,7 @@ export default function SVGMorph({
   render,
   split = false,
   reverse = false,
+  name,
 }: SVGMorphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -236,7 +238,7 @@ export default function SVGMorph({
           style={{ borderRadius: rounded }}>
           <div className="text-center absolute z-20 bottom-0  right-0 rounded-4xl w-full h-full flex ">
             <div className="relative top-10 left-10">
-              <p className="font-avenir text-lg">Hello</p>
+              <p className="font-avenir text-lg capitalize">{name}</p>
             </div>
             <div className="size-12 absolute z-9- bottom-6 right-8   flex items-center justify-center">
               {/* <Lottie
@@ -281,12 +283,18 @@ export default function SVGMorph({
                     <div
                       className={cn(
                         "w-full h-full flex flex-col items-center justify-center renderBox"
-                      )}
-                    >
+                      )}>
                       {render[i]}
                       <div className="text-center absolute z-20 bottom-1.5  w-full h-full  right-1.5 rounded-4xl  flex items-center justify-center">
-                        <div className="size-12 absolute z-9- bottom-3 right-3   flex items-center justify-center">
-                           <div className="size-10  bg-black/5 rounded-full cursor-pointer  flex items-center justify-center">
+                        <div className={`size-12 absolute   ${items !== 2 ? "left-10 top-10":"left-4 top-8 "}`}>
+                          <div className="relative top-0 left-0">
+                            <p className="font-avenir text-lg capitalize">
+                              {name} 
+                            </p>
+                          </div>
+                        </div>
+                        <div className="size-12 absolute z-90 bottom-3 right-3   flex items-center justify-center">
+                          <div className="size-10  bg-black/5 rounded-full cursor-pointer  flex items-center justify-center">
                             <Image
                               src="/icons/bag.svg"
                               width={24}
@@ -312,8 +320,7 @@ export default function SVGMorph({
         height="100%"
         className="px"
         viewBox={`0 0 ${size.width} ${size.height}`}
-        preserveAspectRatio="xMidYMid meet"
-      >
+        preserveAspectRatio="xMidYMid meet">
         <defs>
           <filter id="goo">
             <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
@@ -336,8 +343,7 @@ export default function SVGMorph({
             ref={(el) => {
               groupRefs.current[i] = el;
             }}
-            filter="url(#goo)"
-          >
+            filter="url(#goo)">
             <path
               ref={(el) => {
                 pathRefs.current[i] = el;

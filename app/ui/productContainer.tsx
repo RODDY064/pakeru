@@ -596,13 +596,12 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
             <div
               ref={imageDivSim}
               className={cn(
-                "grid grid-flow-col auto-cols-[90%] md:auto-cols-[30%] px-4 md:pl-8 xl:auto-cols-[25%] productSlider gap-4 overflow-x-scroll overflow-hidden nav-slider",
+                "grid grid-flow-col auto-cols-[90%] md:mini-auto-cols-[30%] px-4 md:pl-8 xl:auto-cols-[100%] productSlider gap-4 overflow-x-scroll overflow-hidden nav-slider",
                 {
                   "auto-cols-[100%]":
                     cartState === "loading" || cartState === "error",
                 }
-              )}
-            >
+              )} >
               {cartState === "loading" || cartState === "error" ? (
                 <div className="min-w-[300px] h-[400px] flex items-center justify-center">
                   <div className="flex items-center justify-center gap-1">
@@ -639,7 +638,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                   key={i}
                   onClick={() => goToPage(i)}
                   className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full ${
-                    i === currentPage ? "bg-black" : "bg-black/20"
+                    i === currentPage ? "bg-black w-8" : "bg-black/20"
                   }`}
                 />
               ))}

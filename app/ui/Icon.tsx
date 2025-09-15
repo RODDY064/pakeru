@@ -179,8 +179,7 @@ export default function Icon({ name, onToggle, stroke , style }: MenuIconProps) 
       <div className="relative h-[18px] overflow-hidden">
         <span
           ref={labelRef}
-          className="block font-avenir font-medium text-sm pt-[0.5px]"
-        >
+          className="block font-avenir font-medium text-sm pt-[0.5px]">
           {isActive ? "CLOSE" : name.toUpperCase()}
         </span>
       </div>

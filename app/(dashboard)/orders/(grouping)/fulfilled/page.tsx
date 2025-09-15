@@ -11,7 +11,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useCallback, useEffect, useState } from "react";
 
-function UnfulfilledContent() {
+function FulfilledContent() {
   const [fulfilledStats, setFulfilledStats] = useState([
     { label: "Delivered", value: 0 },
     { label: "Shipped", value: 0 },
@@ -185,12 +185,12 @@ function UnfulfilledContent() {
 
 
 
-export default function UnFulfilled() {
+export default function Fulfilled() {
   return (
     <Suspense fallback={<div className="w-full h-full fixed top-0 left-0 flex flex-col items-center justify-center">
           <Image src="/icons/loader.svg" width={34} height={34} alt="loader"/>
         </div>}>
-      <UnfulfilledContent />
+      <FulfilledContent />
     </Suspense>
   );
 }

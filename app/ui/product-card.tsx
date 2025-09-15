@@ -43,7 +43,7 @@ export default function ProductCard({
         whileHover="show"
         initial="hide"
         className={cn(
-          "flex  border-[1px] border-black/5 flex-shrink-0 rounded-[2px] relative cursor-pointer overflow-hidden transition-all duration-500 ease-in-out w-full h-[400px] md:h-[450px] lg:h-[460px] xl:h-[550px]",
+          "flex  border-[1px] border-black/5 flex-shrink-0 rounded-[2px] relative cursor-pointer overflow-hidden transition-all duration-500 ease-in-out w-full h-[400px] md:h-[450px] lg:h-[460px] xl:h-[550px] ",
           {
             "xl:h-[300px]": type === "small",
           }
@@ -53,7 +53,7 @@ export default function ProductCard({
             src={productData?.mainImage?.url as string ??"/images/hero-2.png"} 
             fill
             alt="shop"
-            className="object-cover"
+            className="object-cover "
           />
         </div>
         <div className="absolute w-full h-full flex flex-col justify-end z-20 ">

@@ -1,5 +1,7 @@
 import { type StateCreator } from "zustand";
 import { Store } from "./store";
+import { apiCall } from "@/libs/functions";
+import { toast } from "@/app/ui/toaster";
 
 export type CategoryType = {
   _id: string;
@@ -14,15 +16,13 @@ export type CategoryStore = {
   categories: CategoryType[];
   isCategoriesLoading: boolean;
   loadCategories: () => Promise<void>;
-  createCategory: (category: Omit<CategoryType, '_id'>) => Promise<CategoryType>;
-  updateCategory: (categoryId: string, updates: Partial<CategoryType>) => Promise<CategoryType>;
+  createCategory: (category: Omit<CategoryType, "_id">) => Promise<CategoryType>;
   deleteCategory: (categoryId: string) => Promise<void>;
   getProductsWithID: (categoryId: string) => void;
   findCategories: () => void;
   getCategoryNameById: (categoryId: string) => string | null;
   getCategoryById: (categoryId: string) => CategoryType | null;
   getChildCategories: (parentId: string) => CategoryType[];
-
 };
 
 export const useCategory: StateCreator<
@@ -41,27 +41,11 @@ export const useCategory: StateCreator<
     });
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-      if (!baseUrl) {
-        throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
-      }
+    
+      const res = await apiCall("/categories", {
+        method: "GET",});
 
-      const response = await fetch(`${baseUrl}/api/v1/categories`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-           "ngrok-skip-browser-warning": "true",
-        },
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const res = await response.json();
-      console.log('Categories loaded:', res);
+      console.log("Categories loaded:", res);
 
       const categories: CategoryType[] = res.data.map((item: any) => ({
         _id: item._id,
@@ -81,57 +65,36 @@ export const useCategory: StateCreator<
       console.error("Failed to load categories:", error);
       set((state) => {
         state.isCategoriesLoading = false;
-        state.error = error instanceof Error ? error.message : "Failed to load categories";
+        state.error =
+          error instanceof Error ? error.message : "Failed to load categories";
       });
-      throw error; // Re-throw to handle in component
+      throw error;
     }
   },
 
-  createCategory: async (categoryData: Omit<CategoryType, '_id'>) => {
+ // Updated createCategory with toast
+createCategory: async (categoryData: Omit<CategoryType, '_id'>) => {
+  const createPromise = (async () => {
     set((state) => {
       state.isCategoriesLoading = true;
       state.error = null;
     });
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-      const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN
-      
-      if (!baseUrl) {
-        throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
-      }
-
-      const response = await fetch(`${baseUrl}/api/v1/categories`, {
+      const response = await apiCall("/categories", {
         method: "POST",
-        credentials: "include",
-        headers: {
-           //Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: categoryData.name,
-          description: categoryData.description,
-        }),
+        body: JSON.stringify({ name: categoryData.name, description: categoryData.description }),
         signal: AbortSignal.timeout(10000),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(
-          errorData?.message || `Error ${response.status}: ${response.statusText}`
-        );
-      }
-
-      const res = await response.json();
-      console.log('Category created:', res);
 
       const newCategory: CategoryType = {
-        _id: res.data._id,
-        name: res.data.name,
-        description: res.data.description,
-        parentCategory: res.data.parentCategory,
-        createdAt: new Date(res.data.createdAt),
-        updatedAt: new Date(res.data.updatedAt),
+        _id: response.data._id,
+        name: response.data.name,
+        description: response.data.description,
+        parentCategory: response.data.parentCategory,
+        createdAt: new Date(response.data.createdAt),
+        updatedAt: new Date(response.data.updatedAt),
       };
 
       set((state) => {
@@ -149,107 +112,43 @@ export const useCategory: StateCreator<
       });
       throw error;
     }
-  },
+  })();
 
-  updateCategory: async (categoryId: string, updates: Partial<CategoryType>) => {
+  return toast.promise(createPromise, {
+    loading: "Creating category...",
+    success: (newCategory) => ({
+      title: `Category "${newCategory.name}" created successfully`,
+    }),
+    error: "Failed to create category. Please try again.",
+  });
+},
+
+// Updated deleteCategory with toast
+deleteCategory: async (categoryId: string) => {
+  const categoryToDelete = get().getCategoryById(categoryId);
+
+  const deletePromise = (async () => {
     set((state) => {
       state.isCategoriesLoading = true;
       state.error = null;
     });
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-        const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN
-      if (!baseUrl) {
-        throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
-      }
-
-      const response = await fetch(`${baseUrl}/api/v1/categories/${categoryId}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          //Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updates),
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(
-          errorData?.message || `Error ${response.status}: ${response.statusText}`
-        );
-      }
-
-      const res = await response.json();
-      console.log('Category updated:', res);
-
-      const updatedCategory: CategoryType = {
-        _id: res.data._id,
-        name: res.data.name,
-        description: res.data.description,
-        parentCategory: res.data.parentCategory,
-        createdAt: new Date(res.data.createdAt),
-        updatedAt: new Date(res.data.updatedAt),
-      };
-
-      set((state) => {
-        const index = state.categories.findIndex(cat => cat._id === categoryId);
-        if (index !== -1) {
-          state.categories[index] = updatedCategory;
-        }
-        state.isCategoriesLoading = false;
-        state.error = null;
-      });
-
-      return updatedCategory;
-    } catch (error) {
-      console.error("Failed to update category:", error);
-      set((state) => {
-        state.isCategoriesLoading = false;
-        state.error = error instanceof Error ? error.message : "Failed to update category";
-      });
-      throw error;
-    }
-  },
-
-  deleteCategory: async (categoryId: string) => {
-    set((state) => {
-      state.isCategoriesLoading = true;
-      state.error = null;
-    });
-
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-      const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN
-      if (!baseUrl) {
-        throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
-      }
-
       // Check if category has children
       const childCategories = get().getChildCategories(categoryId);
       if (childCategories.length > 0) {
         throw new Error("Cannot delete category with child categories. Please delete child categories first.");
       }
 
-      const response = await fetch(`${baseUrl}/api/v1/categories/${categoryId}`, {
+      const response = await apiCall(`/categories/${categoryId}`, {
         method: "DELETE",
         credentials: "include",
         headers: {
-          //Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-          
         },
         signal: AbortSignal.timeout(10000),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(
-          errorData?.message || `Error ${response.status}: ${response.statusText}`
-        );
-      }
 
       console.log('Category deleted:', categoryId);
 
@@ -258,6 +157,8 @@ export const useCategory: StateCreator<
         state.isCategoriesLoading = false;
         state.error = null;
       });
+
+      return;
     } catch (error) {
       console.error("Failed to delete category:", error);
       set((state) => {
@@ -266,7 +167,16 @@ export const useCategory: StateCreator<
       });
       throw error;
     }
-  },
+  })();
+
+  await toast.promise(deletePromise, {
+    loading: "Deleting category...",
+    success: () => ({
+      title: `Category "${categoryToDelete?.name || 'Unknown'}" deleted successfully`,
+    }),
+    error: "Failed to delete category. Please try again.",
+  });
+},
 
   getProductsWithID: (categoryId: string) => {
     console.log("getProductsWithID called for category:", categoryId);
@@ -290,12 +200,9 @@ export const useCategory: StateCreator<
   getChildCategories: (parentId: string) => {
     const parentCategory = get().getCategoryById(parentId);
     if (!parentCategory) return [];
-    
-    return get().categories.filter((c) => c.parentCategory === parentCategory.name);
+
+    return get().categories.filter(
+      (c) => c.parentCategory === parentCategory.name
+    );
   },
 });
-
-
-
-
-

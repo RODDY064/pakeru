@@ -19,7 +19,7 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full  relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src="/bentos/bento1.png"
+                    src="/bentos/bento 2.webp"
                     fill
                     alt="image"
                     className="object-cover "
@@ -37,7 +37,7 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src="/bentos/bento2.png"
+                    src="/bentos/bento 7.webp"
                     fill
                     alt="image"
                     className="object-cover"
@@ -45,7 +45,7 @@ export default function Bentos() {
                 </div>,
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src="/bentos/bento3.png"
+                    src="/bentos/bento 5.webp"
                     fill
                     alt="image"
                     className="object-cover"
@@ -65,7 +65,7 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src="/bentos/bento3.png"
+                    src="/bentos/bento 10.webp"
                     fill
                     alt="image"
                     className="object-cover"
@@ -76,6 +76,7 @@ export default function Bentos() {
               reverse={true}
               className="w-full h-full mt-3"
               gap={16}
+              name="Aegis"
             />
           </div>
         </div>
@@ -89,7 +90,7 @@ export default function Bentos() {
                 render={[
                   <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                     <Image
-                      src="/bentos/bento3.png"
+                      src="/bentos/bento 8.webp"
                       fill
                       alt="image"
                       className="object-cover"
@@ -97,7 +98,7 @@ export default function Bentos() {
                   </div>,
                   <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                     <Image
-                      src="/bentos/bento2.png"
+                      src="/bentos/bento 9.webp"
                       fill
                       alt="image"
                       className="object-cover"
@@ -115,7 +116,7 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src="/bentos/bentHero.png"
+                    src="/bentos/bento.webp"
                     fill
                     alt="image"
                     className="object-cover"
@@ -136,7 +137,7 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src="/bentos/bento6.png"
+                    src="/bentos/bento 4.webp"
                     fill
                     alt="image"
                     className="object-cover"
@@ -146,6 +147,7 @@ export default function Bentos() {
               rounded={64}
               items={1}
               className="px-2 "
+              name="Vierra Crop"
             />
           </div>
           <div className="w-full  h-[200px] xl:h-[270px]   items-center justify-center">
@@ -154,7 +156,7 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src="/bentos/bento7.png"
+                    src="/bentos/bento 8.webp"
                     fill
                     alt="image"
                     className="object-cover"
@@ -162,7 +164,7 @@ export default function Bentos() {
                 </div>,
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src="/bentos/bento9.png"
+                    src="/bentos/bento 11.webp"
                     fill
                     alt="image"
                     className="object-cover"
@@ -184,7 +186,7 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src="/bentos/bento3.png"
+                    src="/bentos/bento 12.webp"
                     fill
                     alt="image"
                     className="object-cover"

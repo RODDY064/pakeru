@@ -26,7 +26,7 @@ export default function Modal() {
           <motion.div
             variants={overlay}
             className="absolute w-full h-full bg-black/95"
-            onClick={closeModal}
+            onClick={()=>closeModal()}
           />
           
           <AnimatePresence mode="wait">

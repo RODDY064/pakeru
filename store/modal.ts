@@ -46,8 +46,14 @@ export const useModalStore: StateCreator<
   // Open modal with specific   modalDisplay type
   openModal: (modalDisplay) =>
     set((state) => {
-      state.modal = true;
+       const isOpening = !state.modal;
+      state.modal = isOpening;
       state.modalDisplay = modalDisplay;
+
+      if (!isOpening) {
+        state.menuItems.forEach((item) => (item.isActive = false));
+        state.isSubBarRendered = false;
+      }
     }),
 
   // Close modal and reset all related state

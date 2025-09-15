@@ -7,10 +7,7 @@ import { toast } from "@/app/ui/toaster";
 
 export class ProductAPIService {
   private static getHeaders(includeContentType = false): HeadersInit {
-    const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-    const headers: HeadersInit = {
-      //Authorization: `Bearer ${token}`,
-    };
+    const headers: HeadersInit = {};
 
     if (includeContentType) {
       headers["Content-Type"] = "application/json";
@@ -19,31 +16,13 @@ export class ProductAPIService {
     return headers;
   }
 
-  private static async handleResponse<T>(response: Response): Promise<T> {
-    if (!response.ok) {
-      let errorMessage = `Request failed with status ${response.status}`;
-      
-      try {
-        const errorData = await response.json(); // FIXED: was response.j()
-        errorMessage = errorData.message || errorData.error || errorMessage;
-      } catch (parseError) {
-        // If JSON parsing fails, use status text
-        errorMessage = response.statusText || errorMessage;
-      }
-
-      throw new Error(errorMessage);
-    }
-
-    return response.json(); // FIXED: ensure this is also correct
-  }
-
+ 
   static async createProduct(
     data: ProductFormData,
     colors: ProductColor[]
   ): Promise<any> {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    if (!baseUrl) throw new Error("Base URL not configured");
-
+ 
+    
     const createPromise = this.createProductWithFiles(data, colors);
     
     return toast.promise(createPromise, {
@@ -65,8 +44,6 @@ export class ProductAPIService {
     data: ProductFormData,
     colors: ProductColor[]
   ): Promise<any> {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    if (!baseUrl) throw new Error("Base URL not configured");
 
     const updatePromise = this.updateProductWithFiles(productId, data, colors);
     
@@ -85,8 +62,6 @@ export class ProductAPIService {
   }
 
   static async deleteProduct(productId: string): Promise<any> {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    if (!baseUrl) throw new Error("Base URL not configured");
 
     const deletePromise = (async () => {
       const response = await apiCall(`/products/${productId}`, {
@@ -95,7 +70,7 @@ export class ProductAPIService {
         headers: this.getHeaders(true),
       });
 
-      return this.handleResponse(response);
+      return response
     })();
 
     return toast.promise(deletePromise, {
@@ -122,7 +97,7 @@ export class ProductAPIService {
       body: formData,
     });
 
-    return this.handleResponse(response);
+    return response
   }
 
   private static async updateProductWithFiles(
@@ -139,7 +114,7 @@ export class ProductAPIService {
       body: formData,
     });
 
-    return this.handleResponse(response);
+    return response
   }
 
   private static async prepareFormData(

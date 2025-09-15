@@ -109,11 +109,11 @@ export function useOrdersWebhook() {
             produce((state: any) => {
               console.log("🔄 Updating state with produce...");
 
-              const exists = state.orders.some(
+              const exists = state.unfulfilledOrders.some(
                 (o: any) => o._id === newOrder._id
               );
               if (!exists) {
-                state.orders.unshift(newOrder);
+                state.unfulfilledOrders.unshift(newOrder);
               } else {
                 console.log(
                   "⚠️ Order already exists, skipping insert:",
@@ -121,9 +121,9 @@ export function useOrdersWebhook() {
                 );
               }
 
-              state.ordersStats = computeOrdersStats(state.orders);
+              state.ordersStats = computeOrdersStats(state.unfulfilledOrders);
               state.filteredOrders = filterOrders(
-                state.orders,
+                state.unfulfilledOrders,
                 state.search,
                 state.activeFilter,
                 state.dateFilter // <-- add the missing fourth argument

@@ -90,11 +90,11 @@ const Images = ({ action }: { action: any }) => {
             </div>
             <div className=" w-full  flex-none flex  flex-col z-20 pb-12 md:pb-4 lg:pb-6 xl:pb-10">
               <div className="w-full  flex flex-col gap-2 items-center ">
-                  <p className="capitalise text-black font-avenir font-medium text-[13px] md:text-[24px] hero-desc md:text-sm text-center px-10 cursor-pointer leading-10 ">
+                <p className="capitalise text-black font-avenir font-medium text-[13px] md:text-[24px] hero-desc md:text-sm text-center px-10 cursor-pointer leading-10 ">
                   Made for you to
                 </p>
                 <h1 className="text-black font-avenir  font-bold text-[20px] lg:text-[28px] xl:text-[32px] main-hero-head leading-5">
-                   DEFY THE NORM
+                  DEFY THE NORM
                 </h1>
                 <Button ID="shop-button" action={action} word="GO TO SHOP" />
               </div>
@@ -144,7 +144,8 @@ const Slider = () => {
       animate={{ opacity: 1 }}
       initial={{ opacity: 0 }}
       transition={{ duration: 0.6, ease: "easeInOut" }}
-      className="w-full h-full mt-10">
+      className="w-full h-full mt-10"
+    >
       <div>
         <div
           ref={sliderRef}
@@ -163,7 +164,7 @@ const Slider = () => {
               )}
             >
               {product._id === 0 ? (
-                <div className="w-[calc(90vw)] md:w-[calc(70vw)] h-full relative  overflow-hidden border border-black/5">
+                <div className="w-[calc(90vw)] md:w-[calc(70vw)] h-full relative  overflow-hidden border border-black/10 ">
                   <motion.div
                     variants={ImgC}
                     initial="hide"
@@ -174,30 +175,29 @@ const Slider = () => {
                       damping: 18,
                       mass: 0.7,
                     }}
-                    className="w-full h-full relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden"
-                  >
+                    className="w-full h-full  group/slider bg-[#f2f2f2] mx-auto relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden">
                     <Image
                       src={product.mainImage}
                       alt={product.title}
                       fill
-                      className="object-cover"
+                      className="object-cover object-center max-w-2xl mx-auto bg-[#f2f2f2]"
                       priority
                     />
                     <div className="w-full h-full flex items-end justify-center text-white relative z-10">
-                      <div className="w-full h-24 flex items-end justify-center pb-10 bg-gradient-to-b from-transparent to-black/20">
+                      <div className="w-full h-24 flex items-end justify-center pb-8 ">
                         <motion.div
                           variants={textMovement}
-                          className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
-                        >
+                          className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center">
                           <motion.div
                             variants={textOverlay}
                             className="w-full h-full bg-black absolute text-overlay"
                           />
                           <div className="flex gap-2 items-center relative z-20 flex-none">
-                            <div className="size-1.5 bg-white rounded-full" />
-                            <p className="font-avenir font-[400] text-white">
-                              T-SHIRT
+                            <div className="size-1.5 bg-black group-hover/slider:bg-white rounded-full" />
+                            <p className="font-avenir font-[400] text-black  group-hover/slider:text-white py-2">
+                              {product.title}
                             </p>
+
                             <motion.div variants={imgDiv}>
                               <p>-- TAKE A LOOK</p>
                             </motion.div>
@@ -218,17 +218,16 @@ const Slider = () => {
                     damping: 18,
                     mass: 0.7,
                   }}
-                  className="w-full h-full relative flex items-center justify-center will-change-transform preserve-3d backface-hidden"
-                >
+                  className="w-full h-full group/slider relative bg-[#f2f2f2] flex items-center justify-center will-change-transform preserve-3d backface-hidden">
                   <Image
                     src={product.mainImage}
                     alt={product.title}
                     fill
-                    className="object-cover"
+                    className="object-cover max-w-2xl mx-auto bg-[#f2f2f2]"
                     priority
                   />
                   <div className="w-full h-full flex items-end justify-center text-white relative z-10">
-                    <div className="w-full h-24 flex items-end justify-center pb-10 bg-gradient-to-b from-transparent to-black/20">
+                    <div className="w-full h-24  flex items-end justify-center pb-8">
                       <motion.div
                         variants={textMovement}
                         className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
@@ -238,8 +237,8 @@ const Slider = () => {
                           className="w-full h-full bg-black absolute text-overlay"
                         />
                         <div className="flex gap-2 items-center relative z-20 flex-none">
-                          <div className="size-1.5 bg-white rounded-full" />
-                          <p className="font-avenir font-[400] text-white">
+                          <div className="size-1.5 bg-black group-hover/slider:bg-white rounded-full" />
+                          <p className="font-avenir font-[400] text-black  group-hover/slider:text-white py-2">
                             {product.title}
                           </p>
                           <motion.div variants={imgDiv}>
@@ -362,13 +361,12 @@ const Product = () => {
       <div
         ref={sliderRef}
         className={cn(
-          "grid grid-flow-col auto-cols-[minmax(320,2fr)] md:auto-cols-[minmax(400,2fr)] gap-4 overflow-x-scroll overflow-hidden nav-slider",
+          "grid grid-flow-col auto-cols-[min(320,2fr)] md:auto-cols-[minmax(400,2fr)] gap-4  overflow-x-scroll overflow-hidden nav-slider",
           {
             "auto-cols-[100%]  md:auto-cols-[100%] lg:auto-cols-[100%]  xl:auto-cols-[100%]":
               cartState === "loading" || cartState === "error",
           }
-        )}
-      >
+        )}>
         {cartState === "loading" ||
         cartState === "error" ||
         cartState === "idle" ? (
@@ -387,7 +385,7 @@ const Product = () => {
           </div>
         ) : (
           <>
-            {products?.slice(0,10).map((product, index) => (
+            {products?.slice(0, 10).map((product, index) => (
               <ProductCard
                 key={product._id}
                 productData={product}
@@ -407,7 +405,7 @@ const Product = () => {
               key={i}
               onClick={() => goToPage(i)}
               className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full ${
-                i === currentPage ? "bg-black" : "bg-black/20"
+                i === currentPage ? "bg-black w-8" : "bg-black/20"
               }`}
             />
           ))}

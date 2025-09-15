@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-interface RouteParams {
-  params: { id: string };
-}
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> } ) {
   try {
@@ -57,7 +54,7 @@ export async function DELETE(request: NextRequest,  { params }: { params: Promis
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const cookieHeader = request.headers.get("cookie");
-    const body = await request.json();
+     const formData = await request.formData();
      const { id } = await params;
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products/${id}`, {
@@ -66,7 +63,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         "Content-Type": "application/json",
         ...(cookieHeader && { Cookie: cookieHeader }),
       },
-      body: JSON.stringify(body),
+      body: formData
     });
 
     const data = await response.json();

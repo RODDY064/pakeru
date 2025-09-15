@@ -33,6 +33,8 @@ export default function Menu() {
     bookMarks,
     closeModal,
     getCategoryById,
+    loadCategories,
+    initializeMenuItems
   } = useBoundStore();
   const [currentActiveItem, setCurrentActiveItem] = useState<string | null>(
     null
@@ -65,6 +67,17 @@ export default function Menu() {
     () => menuItems.find((item) => item.isActive),
     [menuItems]
   );
+
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      await initializeMenuItems();
+    };
+    fetchMenuItems();
+  }, []);
+
+  useEffect(()=>{
+   console.log(menuItems)
+  },[menuItems])
 
   // Stable transition handler
   const handleItemTransition = useCallback(
@@ -122,7 +135,7 @@ export default function Menu() {
         <div className="w-full flex">
           {data.images.map((image, index) => (
             <div
-              key={`${image._id}-img-${index}`} 
+              key={`${image._id}-img-${index}`}
               className={cn("h-fit cursor-pointer", {
                 "w-[50%] border-r border-black/20": data.images.length === 2,
                 "w-[33.33%] border-r border-black/20": data.images.length === 3,
@@ -155,20 +168,23 @@ export default function Menu() {
             <AnimatePresence mode="wait">
               <div
                 ref={sliderRef}
-                className="w-full my-4 grid grid-flow-col auto-cols-[minmax(300,2fr)] md:auto-cols-[minmax(100,270px)]  pr-20 nav-slider ">
+                className="w-full my-4 grid grid-flow-col auto-cols-[minmax(300,2fr)] md:auto-cols-[minmax(100,270px)]  pr-20 nav-slider "
+              >
                 <motion.div
                   key={`${data.category}-products-${contentKey}`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex gap-3 w-full relative ">
+                  className="flex gap-3 w-full relative "
+                >
                   {memoizedProducts.map((product, index) => (
                     <motion.div
-                    className="w-full"
+                      className="w-full"
                       key={`${product._id}-${
                         product.selectedColor || "default"
-                      }-${index}`} >
+                      }-${index}`}
+                    >
                       <ProductCard
                         type="small"
                         productData={product}
@@ -505,7 +521,7 @@ export default function Menu() {
             <p className="font-avenir font-[400] text-sm mt-[4px]">BOOKMARK</p>
           </div>
           <Link
-            onClick={closeModal}
+            onClick={() => closeModal()}
             href="/account"
             className="flex items-center gap-1.5 mt-3"
           >
