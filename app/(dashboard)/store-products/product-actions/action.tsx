@@ -1,6 +1,5 @@
 "use client";
-
-import React, { use, useCallback, useEffect, useRef, useState } from "react";
+import React, { use, useCallback, useEffect, useRef, useState, Suspense } from "react";
 import Image from "next/image";
 import Editor from "@/app/ui/dashboard/editor";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -39,7 +38,8 @@ export type ProductColor = {
   sizes: string[];
 };
 
-export default function ProductActions() {
+// Core component with search params usage
+function ProductActionsContent() {
   const router = useRouter();
   const {
     register,
@@ -68,6 +68,7 @@ export default function ProductActions() {
     loadStoreProduct,
     getCategoryNameById,
   } = useBoundStore();
+
   const [colors, setColors] = useState<ProductColor[]>([]);
   const [submitError, setSubmitError] = useState<string>("");
   const [stocksError, setStocksError] = useState<string>("");
@@ -90,7 +91,6 @@ export default function ProductActions() {
   const populateFormWithProduct = useCallback(
     (product: ProductData) => {
       console.log("🔧 Populating form with product:", product._id);
-
       setValue("name", product.name);
       setValue("description", product.description as string);
       setValue("price", product.price.toString());
@@ -101,7 +101,6 @@ export default function ProductActions() {
       );
       setValue("category", product.category);
       setValue("tags", product.tags as string[]);
-
       setEditorValue(product?.description as string);
       setTags(product.tags ?? ([] as string[]));
       setSelectedCategory(product.category);
@@ -113,7 +112,6 @@ export default function ProductActions() {
           setActiveColorId(mappedColors[0]._id);
         }
       }
-
       setIsInitialized(true);
     },
     [setValue]
@@ -204,7 +202,6 @@ export default function ProductActions() {
     setValue("category", selectedCategory);
   }, [selectedCategory, setValue]);
 
-
   const validateForm = (data: ProductFormData): string | null => {
     if (colors.length === 0) {
       return "Please add at least one color variant";
@@ -227,7 +224,6 @@ export default function ProductActions() {
   const onSubmit = async (data: ProductFormData) => {
     setSubmitError("");
     setStocksError("");
-
     console.log(data, "data");
 
     // Validate form
@@ -238,7 +234,6 @@ export default function ProductActions() {
     }
 
     setIsSubmitting(true);
-
     try {
       if (isEditMode && productID) {
         // Update existing product
@@ -258,7 +253,6 @@ export default function ProductActions() {
       router.push("/store-products");
     } catch (error) {
       console.error("Submission error:", error);
-
       if (error instanceof Error) {
         setSubmitError(
           `Failed to ${isEditMode ? "update" : "create"} product: ${
@@ -285,17 +279,16 @@ export default function ProductActions() {
   useEffect(() => {
     console.log(errors);
   }, [errors]);
+
   useEffect(() => {
     console.log(colors, "colors");
   }, [colors]);
 
-  
-
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="px-4 xl:px-8  xl:ml-[15%]  pt-24 pb-32">
-          <div className="w-full  flex items-center gap-1 md:gap-4">
+        <div className="px-4 xl:px-8 xl:ml-[15%] pt-24 pb-32">
+          <div className="w-full flex items-center gap-1 md:gap-4">
             <div onClick={handelBack}>
               <Image
                 src="/icons/arrow.svg"
@@ -305,16 +298,17 @@ export default function ProductActions() {
                 className="rotate-90 cursor-pointer"
               />
             </div>
-            <div className="flex justify-between items-center w-full  ">
-              <p className="font-avenir text-xl sm:text-2xl font-bold mt-[5px] ">
+            <div className="flex justify-between items-center w-full">
+              <p className="font-avenir text-xl sm:text-2xl font-bold mt-[5px]">
                 {productID ? productName : " Add Product"}
               </p>
               {productID && (
-                <div className="flex gap-4 items-center sm:w-[40%] md:w-[30%] ">
+                <div className="flex gap-4 items-center sm:w-[40%] md:w-[30%]">
                   <div
                     onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
-                    className="px-3 sm:px-3 py-1.5 sm:py-2 bg-red-100 border border-red-500 flex items-center gap-2 cursor-pointer rounded-lg">
-                    <p className="font-avenir text-sm font-[500] text-red-500 ">
+                    className="px-3 sm:px-3 py-1.5 sm:py-2 bg-red-100 border border-red-500 flex items-center gap-2 cursor-pointer rounded-lg"
+                  >
+                    <p className="font-avenir text-sm font-[500] text-red-500">
                       Delete <span className="hidden sm:inline-flex">product</span>
                     </p>
                   </div>
@@ -322,13 +316,14 @@ export default function ProductActions() {
               )}
             </div>
           </div>
+          
           {!loadingProduct ? (
-            <div className="w-full flex gap-4 mt-4 h-full  sm:flex-row flex-col items-stretch">
-              <div className="flex-1   sm:w-[60%] md:w-[70%] relative ">
-                <div className="flex items-stretch flex-col h-full ">
+            <div className="w-full flex gap-4 mt-4 h-full sm:flex-row flex-col items-stretch">
+              <div className="flex-1 sm:w-[60%] md:w-[70%] relative">
+                <div className="flex items-stretch flex-col h-full">
                   <div className="w-full min-h-[300px] bg-white border border-black/20 rounded-[35px] inline-block self-start p-4 sm:p-6 pb-10">
                     <div>
-                      <p className="font-avenir font-[500] text-lg md:text-xl ">
+                      <p className="font-avenir font-[500] text-lg md:text-xl">
                         Name
                       </p>
                       <input
@@ -345,8 +340,8 @@ export default function ProductActions() {
                       )}
                     </div>
                     <div className="mt-4">
-                      <p className="font-avenir font-[500] text-lg ">
-                        Descritpion
+                      <p className="font-avenir font-[500] text-lg">
+                        Description
                       </p>
                       <div className="mt-2">
                         <Editor
@@ -363,16 +358,18 @@ export default function ProductActions() {
                       </div>
                     </div>
                   </div>
+                  
                   <Media
                     setColors={setColors}
                     colors={colors}
                     activeColorId={activeColorId}
                     setActiveColorId={setActiveColorId}
                   />
-                  <div className="flex-1  min-h-30  mt-4 bg-white border border-black/20 rounded-[32px] ">
+                  
+                  <div className="flex-1 min-h-30 mt-4 bg-white border border-black/20 rounded-[32px]">
                     <div className="h-auto flex-1 flex p-4 md:p-6 pb-10 gap-4 md:gap-10 flex-col md:flex-row">
                       <div className="px-2 flex-1">
-                        <p className="font-avenir font-[500] text-lg ">
+                        <p className="font-avenir font-[500] text-lg">
                           Product Price
                         </p>
                         <input
@@ -387,7 +384,7 @@ export default function ProductActions() {
                         )}
                       </div>
                       <div className="px-2 flex-1">
-                        <p className="font-avenir font-[500] text-lg ">
+                        <p className="font-avenir font-[500] text-lg">
                           Product Total Number
                         </p>
                         <input
@@ -405,10 +402,11 @@ export default function ProductActions() {
                   </div>
                 </div>
               </div>
+              
               <div className="w-full h-full sm:w-[40%] md:w-[30%] flex flex-col gap-4">
-                <div className="w-full min-h-[140px] bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-6  ">
+                <div className="w-full min-h-[140px] bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-6">
                   <div>
-                    <p className="font-avenir font-[500] text-lg ">Status</p>
+                    <p className="font-avenir font-[500] text-lg">Status</p>
                     <div className="relative mt-2 flex items-center">
                       <select
                         {...register("status")}
@@ -434,7 +432,8 @@ export default function ProductActions() {
                     </div>
                   </div>
                 </div>
-                <div className="w-full min-h-[300px] bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-6 ">
+                
+                <div className="w-full min-h-[300px] bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-6">
                   <Category
                     selectedCategory={selectedCategory}
                     setSelectedCategory={setSelectedCategory}
@@ -451,26 +450,27 @@ export default function ProductActions() {
                     </p>
                   )}
                 </div>
+                
                 <div className="w-full min-h-[350px] bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-4 relative overflow-hidden">
-                  <p className="text-sm pb-2  text-black/50 font-avenir">
+                  <p className="text-sm pb-2 text-black/50 font-avenir">
                     Stock and sizes for selected color
                   </p>
-                  <div className="w-full pb-4 grid grid-cols-3 gap-2 ">
+                  <div className="w-full pb-4 grid grid-cols-3 gap-2">
                     {colors.map((color) => (
                       <div
                         key={color._id}
                         onClick={() => setActiveColorId(color._id)}
-                        className={`flex  justify-between gap-2 px-1 sm:px-3  cursor-pointer py-0.5 sm:py-1 rounded-[24px]
-                  ${
-                    activeColorId === color._id
-                      ? "bg-black/20 border border-black/20"
-                      : "bg-black/2 border border-black/10"
-                  }`}
+                        className={`flex justify-between gap-2 px-1 sm:px-3 cursor-pointer py-0.5 sm:py-1 rounded-[24px]
+                        ${
+                          activeColorId === color._id
+                            ? "bg-black/20 border border-black/20"
+                            : "bg-black/2 border border-black/10"
+                        }`}
                       >
                         <div className="flex items-center gap-1">
                           <div
                             style={{ backgroundColor: color.hex }}
-                            className="size-4.5 border border-black/30  rounded-full "
+                            className="size-4.5 border border-black/30 rounded-full"
                           ></div>
                           <p className="font-avenir uppercase pt-1 sm:pt-[0.4px] text-[11px] sm:text-sm">
                             {color.name}
@@ -480,9 +480,8 @@ export default function ProductActions() {
                       </div>
                     ))}
                   </div>
-
-                  {activeColorId &&
-                  colors.find((c) => c._id === activeColorId) ? (
+                  
+                  {activeColorId && colors.find((c) => c._id === activeColorId) ? (
                     <ColorStockAndSizes
                       colors={colors}
                       setColors={setColors}
@@ -498,18 +497,18 @@ export default function ProductActions() {
                     </div>
                   )}
                 </div>
+                
                 <button
-                  typeof="submit"
+                  type="submit"
                   disabled={isSubmitting}
-                  className="mt-2 w-full p-4 md:p-6  md:h-35 rounded-2xl md:rounded-[26px]  cursor-pointer flex items-center justify-center bg-black"
+                  className="mt-2 w-full p-4 md:p-6 md:h-35 rounded-2xl md:rounded-[26px] cursor-pointer flex items-center justify-center bg-black"
                 >
                   <p className="text-white font-avenir font-black text-xl md:text-4xl">
                     {productID
-                    ? isSubmitting ? "Saving..." : "Save"
-                    : isSubmitting
-                    ? "Publishing..."
-                    : "Publish"}
-
+                      ? isSubmitting ? "Saving..." : "Save"
+                      : isSubmitting
+                      ? "Publishing..."
+                      : "Publish"}
                   </p>
                 </button>
               </div>
@@ -550,17 +549,42 @@ export default function ProductActions() {
             </>
           )}
         </div>
-     
       </form>
+      
       {showDeleteConfirm && (
-        <DeleteModal  
-        productID={productID || ''}
-        productName={productName || ''}
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
+        <DeleteModal
+          productID={productID || ''}
+          productName={productName || ''}
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
         />
       )}
     </>
   );
 }
 
+// Main component with Suspense boundary
+export default function ProductActions() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="px-4 xl:px-8 xl:ml-[15%] pt-24 pb-32">
+          <div className="flex flex-col items-center mt-36">
+            <div className="flex gap-2 items-center">
+              <Image
+                src="/icons/loader.svg"
+                width={30}
+                height={30}
+                alt="loader"
+              />
+              <p className="text-nowrap font-avenir text-xl text-black/50">
+                Loading...
+              </p>
+            </div>
+          </div>
+        </div>
+      }>
+      <ProductActionsContent />
+    </Suspense>
+  );
+}

@@ -20,11 +20,13 @@ const signIn = z.object({
 
 type SignInSchema = z.infer<typeof signIn>;
 
-export default function SignIn() {
+// Form component that uses search params
+function SignInForm() {
   const [signInState, setSignState] = useState<
     "loading" | "idle" | "submitted" | "error" | "unverified"
   >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
   const {
     register,
     handleSubmit,
@@ -34,7 +36,6 @@ export default function SignIn() {
   });
 
   const { setUser } = useBoundStore();
-
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -101,6 +102,60 @@ export default function SignIn() {
   };
 
   return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="mt-6 px-[2px] w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%]"
+    >
+      <Input
+        register={register}
+        error={errors}
+        image="/icons/email.svg"
+        placeH="name@gmail.com"
+        type="text"
+        label="Username"
+        name="username"
+      />
+      <Input
+        register={register}
+        error={errors}
+        image="/icons/password.svg"
+        imageW={18}
+        imageH={18}
+        placeH="*******"
+        type="password"
+        label="Password"
+        name="password"
+        style="mt-3"
+      />
+      <Submit
+        type={signInState}
+        submitType="sign-in"
+        errorMessage={errorMessage}
+      />
+      <div className="my-2">
+        <Link
+          href="/forgetten-password"
+          className="cursor-pointer text-blue-500 hover:text-black"
+        >
+          Forgotten password?
+        </Link>
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="w-full h-[1px] bg-black/20"></div>
+        <p className="text-sm text-black/30 font-avenir">or</p>
+        <div className="w-full h-[1px] bg-black/20"></div>
+      </div>
+      <div className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
+        <Image src="/icons/google.svg" width={16} height={16} alt="google" />
+        <p>Google</p>
+      </div>
+    </form>
+  );
+}
+
+// Main component with proper Suspense boundary
+export default function SignIn() {
+  return (
     <div className="flex flex-col items-center pt-16 md:pt-24 font-avenir">
       <h1 className="text-3xl md:text-4xl font-avenir font-bold">
         Welcome Back
@@ -108,7 +163,7 @@ export default function SignIn() {
       <p className="font-avenir text-md md:text-lg font-medium my-3">
         Please sign-in with your credentials
       </p>
-      <div className="w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%] bg-black/10 h-11 mt-6  flex items-center justify-center rounded">
+      <div className="w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%] bg-black/10 h-11 mt-6 flex items-center justify-center rounded">
         <Link
           href="/sign-in"
           className="w-1/2 h-full font-avenir bg-black cursor-pointer flex items-center justify-center text-white rounded-l"
@@ -117,66 +172,20 @@ export default function SignIn() {
         </Link>
         <Link
           href="/sign-up"
-          className="w-1/2 h-full  cursor-pointer flex items-center justify-center text-black"
+          className="w-1/2 h-full cursor-pointer flex items-center justify-center text-black"
         >
           <p className="text-md font-medium">Sign up</p>
         </Link>
       </div>
-     <Suspense 
-     
-    fallback={
-    <div className="w-full h-[300px] top-0 left-0 flex flex-col items-center justify-center">
-               <Image src="/icons/loader.svg" width={34} height={34} alt="loader"/>
-               </div>
+      
+      <Suspense 
+        fallback={
+          <div className="mt-6 w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%] flex justify-center py-8">
+            <Image src="/icons/loader.svg" width={34} height={34} alt="Loading form" />
+          </div>
         }>
-       <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="mt-6 px-[2px] w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%]">
-        <Input
-          register={register}
-          error={errors}
-          image="/icons/email.svg"
-          placeH="name@gmail.com"
-          type="text"
-          label="Username"
-          name="username"
-        />
-        <Input
-          register={register}
-          error={errors}
-          image="/icons/password.svg"
-          imageW={18}
-          imageH={18}
-          placeH="*******"
-          type="password"
-          label="Password"
-          name="password"
-          style="mt-3"
-        />
-        <Submit
-          type={signInState}
-          submitType="sign-in"
-          errorMessage={errorMessage}
-        />
-        <div className="my-2">
-          <Link
-            href="/forgetten-password"
-            className="cursor-pointer text-blue-500 hover:text-black"
-          >
-            Forgotten password?
-          </Link>
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <div className="w-full h-[1px] bg-black/20"></div>
-          <p className="text-sm text-black/30 font-avenir">or</p>
-          <div className="w-full h-[1px] bg-black/20"></div>
-        </div>
-        <div className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black  text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
-          <Image src="/icons/google.svg" width={16} height={16} alt="google" />
-          <p className="">Google</p>
-        </div>
-      </form>
-     </Suspense>
+        <SignInForm />
+      </Suspense>
     </div>
   );
 }
