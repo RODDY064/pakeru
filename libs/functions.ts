@@ -408,7 +408,7 @@ export const apiCall = async (
   if (!baseUrl) {
     throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
   }
-  const url = useBaseUrl ? `${baseUrl}/api/v1${endpoint}` : `/api${endpoint}`;
+  const url = useBaseUrl ? `${baseUrl}/v1${endpoint}` : `/api${endpoint}`;
 
   console.log(url , "url")
 

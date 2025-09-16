@@ -6,7 +6,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const cookieHeader = request.headers.get("cookie");
         const { id } = await params;
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -31,7 +31,7 @@ export async function DELETE(request: NextRequest,  { params }: { params: Promis
     const body = await request.json();
     const { id } = await params;
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -57,7 +57,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
      const formData = await request.formData();
      const { id } = await params;
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

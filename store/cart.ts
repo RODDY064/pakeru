@@ -945,7 +945,7 @@ export const useCartStore: StateCreator<
         throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
       }
 
-      const response = await fetch(`${baseUrl}/api/v1/products`, {
+      const response = await fetch(`${baseUrl}/v1/products`, {
         method: "GET",
         credentials: "include",
         headers: {

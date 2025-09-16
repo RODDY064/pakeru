@@ -58,8 +58,8 @@ const ProductCard = ({
         className={cn(
           "relative flex border border-black/5 rounded-sm ocursor-pointer transition-shadow duration-300 hover:border hover:z-20 hover:border-black/20 overflow-hidden",
           {
-            "w-full h-[400px] md:h-[450px] lg:h-[460px] xl:h-[550px]": type === "large",
-            "w-[250px] md:w-[300px] h-[350px] md:h-[400px]": type === "medium",
+            "w-full h-[300px] md:h-[450px] lg:h-[460px] xl:h-[550px]": type === "large",
+            "w-[250px] md:w-[300px] h-[300px] md:h-[400px]": type === "medium",
             "w-[200px] md:w-[250px] h-[300px]": type === "small",
           }
         )}>

@@ -10,7 +10,7 @@ export async function PUT(
     const body = await request.json();
      const { id } = await params;
     
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/categories/${id}`;
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories/${id}`;
     
     const response = await fetch(url, {
       method: "PUT",
@@ -39,7 +39,7 @@ export async function DELETE(
   try {
     const cookieHeader = request.headers.get("cookie");
       const { categoryId } = await params;
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/categories/${categoryId}`;
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories/${categoryId}`;
     
     const response = await fetch(url, {
       method: "DELETE",

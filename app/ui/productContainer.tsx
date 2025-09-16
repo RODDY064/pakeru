@@ -596,7 +596,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
             <div
               ref={imageDivSim}
               className={cn(
-                "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] md:auto-cols-[minmax(30rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none",
+                "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] py-4 md:px-4 md:auto-cols-[minmax(30rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none",
                 {
                   "auto-cols-[minmax(100%,1fr)]":
                     cartState === "loading" || cartState === "error",

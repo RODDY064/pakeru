@@ -17,7 +17,7 @@ export async function GET(
   try {
     const { id } = await params;
     const response = await fetch(
-      `${BASE_URL}/api/v1/orders/${id}`,
+      `${BASE_URL}/v1/orders/${id}`,
       {
         method: 'GET',
         headers: createHeaders(request),
@@ -42,7 +42,7 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
     const response = await fetch(
-      `${BASE_URL}/api/v1/orders/${id}`,
+      `${BASE_URL}/v1/orders/${id}`,
       {
         method: 'PATCH',
         headers: createHeaders(request),

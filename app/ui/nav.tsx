@@ -310,7 +310,7 @@ export default function Nav() {
         <Icon style="pt-[3px]" name="menu" onToggle={() => openModal("menu")} />
           {pathname.includes("/product") && !modal &&  
           <div
-           onClick={()=>filterState(!filter)} className="hidden sm:flex md:ml-30 lg:ml-36 py-[1px]  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1">
+           onClick={()=>filterState(!filter)} className="hidden md:flex md:ml-30 lg:ml-36 py-[1px]  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1">
             <p>Filter</p>
             <Image src="/icons/filter-w.svg" width={16} height={16} alt="filter"/>
           </div> }

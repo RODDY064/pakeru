@@ -1,6 +1,6 @@
 📦 API Endpoints Documentation
 
-Base URL: https://e-come-backend.onrender.com/api/v1
+Base URL: https://e-come-backend.onrender.com/v1
 
 🔐 Authentication
 

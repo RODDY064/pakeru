@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     
     const queryString = searchParams.toString();
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/categories${queryString ? `?${queryString}` : ''}`;
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories${queryString ? `?${queryString}` : ''}`;
     
     const response = await fetch(url, {
       method: "GET",
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const cookieHeader = request.headers.get("cookie");
     const body = await request.json();
     
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/categories`;
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories`;
     
     const response = await fetch(url, {
       method: "POST",

@@ -123,7 +123,7 @@ export default function OTP() {
         };
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/auth/verify-email`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/v1/auth/verify-email`,
           {
             method: "POST",
             credentials: "include",

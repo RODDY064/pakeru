@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const queryString = searchParams.toString();
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/orders${
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/orders${
       queryString ? `?${queryString}` : ""
     }`;
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products`,
       {
         method: "POST",
         credentials: "include",

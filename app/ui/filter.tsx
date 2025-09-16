@@ -159,7 +159,7 @@ export default function Filter() {
             animate={filter ? "show" : "hide"}
             initial="hide"
             exit="hide"
-            className={`fixed bottom-0 bg-black/70  flex flex-col justify-end z-[999] `}
+            className={`fixed bottom-0   flex flex-col justify-end z-[999] `}
           >
             <div
               className={cn(
@@ -170,7 +170,7 @@ export default function Filter() {
             {!modal && (
               <motion.div
                 variants={mfiltButton}
-                className="w-screen pb-2 bg-black/70 flex items-center justify-center z-20 mobile-nav-filt"
+                className="w-screen pb-2 bg-white flex items-center justify-center z-20 mobile-nav-filt"
               >
                 <motion.div
                   variants={mFiltTextB}
@@ -182,7 +182,7 @@ export default function Filter() {
                   >
                     <div
                       onClick={() => filterState(!filter)}
-                      className="fixed bottom-4 flex  py-2  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1"
+                      className="fixed bottom-6 flex  py-2  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1"
                     >
                       <p>Filter</p>
                       <Image

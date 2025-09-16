@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     
     // Forward query parameters
     const queryString = searchParams.toString();
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products${queryString ? `?${queryString}` : ''}`;
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products${queryString ? `?${queryString}` : ''}`;
     
     const response = await fetch(url, {
       method: "GET",
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const cookieHeader = request.headers.get("cookie");
      const formData = await request.formData();
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/products`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products`, {
       method: "POST",
       headers: {
         ...(cookieHeader && { Cookie: cookieHeader }),
