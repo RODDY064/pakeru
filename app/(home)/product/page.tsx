@@ -28,7 +28,7 @@ export default function Product() {
   return (
    <>
     <div className="w-full min-h-screen  flex flex-col items-center text-black bg-black home-main  transition-all">
-      <div className="w-full h-full  bg-white flex overflow-hidden gap-4 pt-24">
+      <div className="w-full h-full  bg-white flex overflow-hidden gap-4 pt-30">
         {cartState === "loading" ||
         cartState === "error" ||
         cartState === "idle" ? (

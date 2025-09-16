@@ -40,7 +40,8 @@ export default function Bentos() {
                     src="/bentos/bento 7.webp"
                     fill
                     alt="image"
-                    className="object-cover"
+                   className="object-cover"
+                    sizes="100vw"
                   />
                 </div>,
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
@@ -48,7 +49,8 @@ export default function Bentos() {
                     src="/bentos/bento 5.webp"
                     fill
                     alt="image"
-                    className="object-cover"
+                   className="object-cover"
+                    sizes="100vw"
                   />
                 </div>,
               ]}
@@ -68,7 +70,8 @@ export default function Bentos() {
                     src="/bentos/bento 10.webp"
                     fill
                     alt="image"
-                    className="object-cover"
+                   className="object-cover"
+                    sizes="100vw"
                   />
                 </div>,
               ]}
@@ -93,7 +96,8 @@ export default function Bentos() {
                       src="/bentos/bento 8.webp"
                       fill
                       alt="image"
-                      className="object-cover"
+                     className="object-cover"
+                    sizes="100vw"
                     />
                   </div>,
                   <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
@@ -101,7 +105,8 @@ export default function Bentos() {
                       src="/bentos/bento 9.webp"
                       fill
                       alt="image"
-                      className="object-cover"
+                     className="object-cover"
+                    sizes="100vw"
                     />
                   </div>,
                 ]}
@@ -119,7 +124,8 @@ export default function Bentos() {
                     src="/bentos/bento.webp"
                     fill
                     alt="image"
-                    className="object-cover"
+                   className="object-cover"
+                    sizes="100vw"
                   />
                 </div>
               ]}
@@ -140,7 +146,8 @@ export default function Bentos() {
                     src="/bentos/bento 4.webp"
                     fill
                     alt="image"
-                    className="object-cover"
+                   className="object-cover"
+                    sizes="100vw"
                   />
                 </div>,
               ]}
@@ -159,7 +166,8 @@ export default function Bentos() {
                     src="/bentos/bento 8.webp"
                     fill
                     alt="image"
-                    className="object-cover"
+                   className="object-cover"
+                    sizes="100vw"
                   />
                 </div>,
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
@@ -167,7 +175,8 @@ export default function Bentos() {
                     src="/bentos/bento 11.webp"
                     fill
                     alt="image"
-                    className="object-cover"
+                   className="object-cover"
+                    sizes="100vw"
                   />
                 </div>,
               ]}
@@ -189,7 +198,8 @@ export default function Bentos() {
                     src="/bentos/bento 12.webp"
                     fill
                     alt="image"
-                    className="object-cover"
+                   className="object-cover"
+                    sizes="100vw"
                   />
                 </div>,
               ]}

@@ -1,9 +1,10 @@
 import { type StateCreator } from "zustand";
 import { Store } from "../store";
 import { produce } from "immer";
-import { v4 as uuidv4 } from "uuid";
-import { ProductAPIService } from "@/app/(dashboard)/store-products/product-actions/helpers";
 import { apiCall } from "@/libs/functions";
+import { ProductAPIService } from "@/app/(dashboard)/admin/store-products/product-actions/helpers";
+
+
 
 //variant structure
 export type ProductVariant = {
@@ -115,6 +116,7 @@ export type StoreProductStore = {
   ) => Promise<ProductData | undefined>;
 
   // Data management
+  setProducts: (products: ProductData[]) => void;
   clearProducts: () => void;
   loadStoreProducts: (force?: boolean, pagination?: number) => Promise<void>;
   loadStoreProduct: (id: string) => Promise<void>;
@@ -274,6 +276,18 @@ export const useStoreProductStore: StateCreator<
       mainImage: updatedMainImage,
     };
   },
+
+   setProducts: (products: ProductData[]) => {
+    set((state) => {
+      state.products = products;
+      state.storeProducts = products; // If you use both
+      state.cartState = products.length > 0 ? 'success' : 'idle';
+      state.error = null;
+    });
+    
+    console.log(`Set ${products.length} products from server data`);
+  },
+
 
   // Data management
   clearProducts: () =>

@@ -84,7 +84,10 @@ export default function Nav() {
     modal,
     bookMarks,
     filter,
-    filterState
+    filterState,
+    initializeMenuItems,
+    isServerInitialized,
+    categories
   } = useBoundStore();
 
   useStoreInitialization();
@@ -99,13 +102,19 @@ export default function Nav() {
     return () => clearInterval(interval);
   }, [paused, ads.length]);
 
-  useEffect(()=>{
-    // console.log(products.slice(0,4))
-  },[products])
+
+
+   useEffect(() => {
+    // Only load if server initialization failed and we don't have data
+    if (!isServerInitialized && (!products?.length || !categories?.length)) {
+      console.log('Server initialization failed, loading data client-side...');
+      useBoundStore.getState().loadProducts?.(true);
+      useBoundStore.getState().loadCategories?.();
+    }
+  }, [isServerInitialized, products?.length, categories?.length]);
+
 
   useEffect(() => {
-    loadProducts(true);
-
 
     const handleResize = () => {
       if (window.innerWidth < 1000) {
@@ -120,6 +129,7 @@ export default function Nav() {
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
 
   useGSAP(() => {
     // Clean up any existing ScrollTriggers first
@@ -298,7 +308,9 @@ export default function Nav() {
           }
         )}>
         <Icon style="pt-[3px]" name="menu" onToggle={() => openModal("menu")} />
-          {pathname.includes("/product") && !modal &&  <div onClick={()=>filterState(!filter)} className="hidden sm:flex md:ml-30 lg:ml-36 py-[1px]  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1">
+          {pathname.includes("/product") && !modal &&  
+          <div
+           onClick={()=>filterState(!filter)} className="hidden sm:flex md:ml-30 lg:ml-36 py-[1px]  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1">
             <p>Filter</p>
             <Image src="/icons/filter-w.svg" width={16} height={16} alt="filter"/>
           </div> }

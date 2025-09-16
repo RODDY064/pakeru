@@ -143,8 +143,8 @@ export default function Category({
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl">
             <option value="">Select category</option>
-            {categories?.map((cat) => (
-              <option key={cat._id} value={cat._id}>
+            {categories?.map((cat,index) => (
+              <option key={index} value={cat._id}>
                 {cat.name}
               </option>
             ))}
@@ -244,7 +244,7 @@ export default function Category({
                 ) : (
                   categories?.map((cat, index) => (
                     <div
-                      key={cat._id}
+                      key={index}
                       className={`w-full h-12 flex items-center justify-between ${
                         index % 2 === 0 ? "bg-black/10" : "bg-transparent"
                       }`}>

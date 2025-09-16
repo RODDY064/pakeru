@@ -250,7 +250,7 @@ function ProductActionsContent() {
       }
 
       // Success - redirect
-      router.push("/store-products");
+      router.push("/admin/admin/store-products");
     } catch (error) {
       console.error("Submission error:", error);
       if (error instanceof Error) {
@@ -273,7 +273,7 @@ function ProductActionsContent() {
 
   const handelBack = () => {
     setSelectedProduct(null);
-    router.push("/store-products");
+    router.push("/admin/admin/store-products");
   };
 
   useEffect(() => {

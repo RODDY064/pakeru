@@ -12,6 +12,8 @@ import Input from "../ui/input";
 import { CartItemType } from "@/store/cart";
 import { z } from "zod";
 import router from "next/router";
+import { apiCall } from "@/libs/functions";
+import { toast } from "../ui/toaster";
 
 const userDetailsSchema = z.object({
   useremail: z.string().email("Please enter a valid email address"),
@@ -69,65 +71,119 @@ export default function Payment() {
     setValue("lastname", user?.lastname ?? "admin");
   }, [setValue, user]);
 
+  //  payment submission handler
   const onSubmit = async (data: UserDetailsForm) => {
+    // Early validation
     if (cartItems.length === 0) {
       setPayError("Your cart is empty!");
       return;
     }
-    console.log("Form submitted:", data);
 
-    const productsArray = cartItems?.map((cart) => ({
-      productId: cart._id,
-      quantity: cart.quantity,
-      variantID: cart.variants?.find((v) => v._id === cart.selectedColor)?._id,
-      size: cart.selectedSize,
-    }));
+    // Clear previous errors
+    setPayError("");
 
-    const paymentPayload = {
-      shippingAddress: {
-        address: data.address,
-        town: data.town,
-        region: data.region,
-        landmark: data.landmark,
-      },
-      items: {
-        numOfItems: cartItems.length,
-        products: productsArray,
-      },
-      totalPrice: cartStat?.totalPrice,
-      discountCode: "",
-    };
+    const validationErrors = validateOrderData(data, cartItems);
+    if (validationErrors.length > 0) {
+      const errorMsg = validationErrors.join(", ");
+      setPayError(errorMsg as string);
+      toast.message.error(errorMsg);
+      return;
+    }
 
-    console.log(paymentPayload, "payload");
+    const processPayment = async () => {
+      // Build payload with validation
+      const productsArray = cartItems.map((cart) => {
+        const selectedVariant = cart.variants?.find(
+          (v) => v._id === cart.selectedColor
+        );
 
-    try {
-      const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
-      const token = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+        return {
+          productId: cart._id,
+          quantity: cart.quantity,
+          variantID: selectedVariant?._id || null,
+          size: cart.selectedSize,
+        };
+      });
 
-      const res = await fetch(`${baseURL}/api/v1/orders`, {
+      const paymentPayload = {
+        shippingAddress: {
+          address: data.address.trim(),
+          town: data.town.trim(),
+          region: data.region.trim(),
+          landmark: data.landmark?.trim() || "",
+        },
+        items: {
+          numOfItems: cartItems.length,
+          products: productsArray,
+        },
+        totalPrice: cartStat?.totalPrice || 0,
+        discountCode: "", // Consider making this dynamic
+      };
+
+      console.log("Payment payload:", paymentPayload);
+
+      const res = await apiCall("/orders", {
         method: "POST",
         credentials: "include",
         headers: {
-          //Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-          // "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify(paymentPayload),
       });
 
-      if (res.ok) {
-        const response = await res.json();
-        const { paymentUrl }  = response
-
-        console.log(response)
-
-        router.push(paymentUrl.data.authorization_url)
+      if (!res?.paymentUrl?.data?.authorization_url) {
+        throw new Error("Invalid payment response from server");
       }
 
-      // router.push("/payment/notifications")
-    } catch (error) {
-      console.log(error);
-    }
+      // Redirect to payment gateway
+      window.location.href = res.paymentUrl.data.authorization_url;
+
+      return res;
+    };
+
+    // Use toast.promise for better UX
+    toast.promise(processPayment(), {
+      loading: "Processing your order...",
+      success: "Redirecting to payment...",
+      error: (err) => {
+        console.error("Payment error:", err);
+        setPayError(
+          err.message || "Payment processing failed. Please try again."
+        );
+        return {
+          title: "Payment failed",
+          description:
+            err.message || "Payment processing failed. Please try again.",
+        };
+      },
+      position: "top-right",
+    });
+  };
+
+
+  // Enhanced form validation
+  const validateOrderData = (
+    data: UserDetailsForm,
+    cartItems: CartItemType[]
+  ) => {
+    const errors: string[] = [];
+
+    if (!data.address?.trim()) errors.push("Address is required");
+    if (!data.town?.trim()) errors.push("Town is required");
+    if (!data.region?.trim()) errors.push("Region is required");
+    if (cartItems.length === 0) errors.push("Cart cannot be empty");
+
+    // Validate cart items have required selections
+    cartItems.forEach((item, index) => {
+      if (!item.selectedSize) {
+        errors.push(`Please select size for item ${index + 1}`);
+      }
+      if (item.variants && item.variants.length > 0 && !item.selectedColor) {
+        errors.push(`Please select color for item ${index + 1}`);
+      }
+    });
+
+    return errors;
   };
 
   return (

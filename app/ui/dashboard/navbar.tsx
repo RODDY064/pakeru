@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import Icon from "../Icon";
-import { WebhookConnectionStatus } from "@/app/(dashboard)/orders/hooks/webhookProivider";
+import { WebhookConnectionStatus } from "@/app/(dashboard)/admin/orders/hooks/webhookProivider";
 
 
 export default function Navbar() {

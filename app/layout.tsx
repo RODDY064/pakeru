@@ -4,7 +4,9 @@ import "../styles/globals.css";
 import Nav from "./ui/nav";
 import { avenir, blackMango } from "./fonts/font";
 import { ToastProvider } from "./ui/toaster";
-import { OrdersWebhookProvider } from "./(dashboard)/orders/hooks/webhookProivider";
+import { OrdersWebhookProvider } from "./(dashboard)/admin/orders/hooks/webhookProivider";
+import { StoreProvider } from "./ui/storeProvider";
+import { fetchInitialData } from "@/libs/data-fetcher";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://thepakeru.com"),
@@ -79,7 +81,6 @@ export const metadata: Metadata = {
       },
     ],
     locale: "en_US",
-   
   },
 
   twitter: {
@@ -129,18 +130,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { products, categories } = await fetchInitialData();
+
   return (
     <html lang="en">
       <body className={` ${avenir.variable} ${blackMango.style}  antialiased `}>
-        <OrdersWebhookProvider>
-          <ToastProvider />
-          {children}
-        </OrdersWebhookProvider>
+        <StoreProvider
+          initialProducts={products}
+          initialCategories={categories}>
+          <OrdersWebhookProvider>
+            <ToastProvider />
+            {children}
+          </OrdersWebhookProvider>
+        </StoreProvider>
       </body>
     </html>
   );

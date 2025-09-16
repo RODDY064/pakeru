@@ -52,7 +52,7 @@ const MobileTabs = () => {
         <p className="font-avenir text-lg md:text-2xl ">Notice</p>
         <div className="mt-2 flex flex-col gap-2">
           <Link
-            href={`/store-products/mobile-table/fulfills`}>
+            href={`/admin/store-products/mobile-table/fulfills`}>
             <div className="w-full bg-white border border-black/20 py-2 px-3 rounded-xl flex items-center justify-between">
               <div className="flex  gap-1">
                 <Image
@@ -78,7 +78,7 @@ const MobileTabs = () => {
             </div>
           </Link>
            <Link
-            href={`/store-products/mobile-table/fulfills`}>
+            href={`/admin/store-products/mobile-table/fulfills`}>
             <div className="w-full bg-white border border-black/20 py-2 px-3 rounded-xl flex items-center justify-between">
               <div className="flex  gap-1">
                 <Image

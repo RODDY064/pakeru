@@ -64,7 +64,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
 
       if (activeVariant) {
         setColorActive({
-           _id: activeVariant._id,
+          _id: activeVariant._id,
           name: activeVariant.color,
         });
       }
@@ -312,8 +312,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
             style={{
               scrollSnapType: isMobile ? "x mandatory" : "none",
               scrollBehavior: "smooth",
-            }}
-          >
+            }}>
             {currentImages.map((img, index) => (
               <div
                 key={index}
@@ -470,7 +469,8 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                       className={cn(
                         "size-16 md:w-18 lg:size-20 border border-black/30 rounded-xl cursor-pointer relative overflow-hidden p-[3px]",
                         {
-                          "border-2": variant._id === productData?.selectedColor,
+                          "border-2":
+                            variant._id === productData?.selectedColor,
                         }
                       )}
                     >
@@ -587,21 +587,22 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
       </div>
 
       {/* Similar Products Section */}
-      <div className="w-full mt-[10%] md:my-24">
+      <div className="w-full mt-[60px] md:my-24 relative">
         <p className="font-avenir font-[400] text-md px-4 md:px-8">
           SIMILAR PRODUCTS
         </p>
-        <div className="mt-4">
+        <div className="mt-4 px-10">
           <div className="w-full flex items-center justify-center">
             <div
               ref={imageDivSim}
               className={cn(
-                "grid grid-flow-col auto-cols-[90%] md:mini-auto-cols-[30%] px-4 md:pl-8 xl:auto-cols-[100%] productSlider gap-4 overflow-x-scroll overflow-hidden nav-slider",
+                "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] md:auto-cols-[minmax(30rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none",
                 {
-                  "auto-cols-[100%]":
+                  "auto-cols-[minmax(100%,1fr)]":
                     cartState === "loading" || cartState === "error",
                 }
-              )} >
+              )}
+              style={{ scrollBehavior: "smooth" }}>
               {cartState === "loading" || cartState === "error" ? (
                 <div className="min-w-[300px] h-[400px] flex items-center justify-center">
                   <div className="flex items-center justify-center gap-1">
@@ -633,7 +634,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           </div>
           <div className="flex flex-col items-center mb-4">
             <div className="w-[80%] md:w-full mb-4 flex flex-wrap items-center justify-center gap-1 md:gap-3">
-              {Array.from({ length: totalPages - 1 }, (_, i) => (
+              {Array.from({ length: totalPages }, (_, i) => (
                 <button
                   key={i}
                   onClick={() => goToPage(i)}

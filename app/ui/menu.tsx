@@ -25,16 +25,13 @@ import Link from "next/link";
 export default function Menu() {
   const {
     modal,
-    products,
     menuItems,
     toggleMenuItem,
     isSubBarRendered,
     openModal,
     bookMarks,
     closeModal,
-    getCategoryById,
-    loadCategories,
-    initializeMenuItems
+    initializeMenuItems,
   } = useBoundStore();
   const [currentActiveItem, setCurrentActiveItem] = useState<string | null>(
     null
@@ -428,35 +425,45 @@ export default function Menu() {
         animate={modal ? "open" : "close"}
         initial="close"
         exit="close"
-        key="desktop"
+        key="desktop-menu"
         className="md:w-[35%] xl:w-[30%] h-full bg-white flex-col gap-4 relative z-20 menu-desktop hidden md:flex flex-none"
       >
         <div className="w-full h-full flex flex-none">
           <div className="w-full flex flex-none flex-col gap-6 pt-[120px] px-9">
-            {menuItems.map((item, index) => (
-              <motion.div
-                variants={list}
-                onClick={() => toggleMenuItem(item.category)}
-                key={`menu-${item.category}-${index}`}
-                className={cn(
-                  "font-avenir w-fit text-lg cursor-pointer relative z-20 transition-colors duration-200",
-                  {
-                    "text-black/30": item.isActive,
-                  }
-                )}
-              >
-                <p>{item.category}</p>
-                <motion.div
-                  className="w-full h-[1px]"
-                  animate={{
-                    backgroundColor: item.isActive
-                      ? "#d97706"
-                      : "rgba(0,0,0,0.2)",
-                  }}
-                  transition={{ duration: 0.2 }}
-                />
-              </motion.div>
-            ))}
+            {menuItems?.length === 0 ? (
+              <div className="w-full min-h-[300px] flex items-center justify-center">
+                  <div className="flex items-center gap-0">
+                     <Image src="/icons/loader.svg" width={36} height={36} alt="loader"/>
+                  </div>
+              </div>
+            ) : (
+              <>
+                {menuItems.map((item, index) => (
+                  <motion.div
+                    variants={list}
+                    onClick={() => toggleMenuItem(item.category)}
+                    key={`menu-${item.category}-${index}`}
+                    className={cn(
+                      "font-avenir w-fit text-lg cursor-pointer relative z-20 transition-colors duration-200",
+                      {
+                        "text-black/30": item.isActive,
+                      }
+                    )}
+                  >
+                    <p>{item.category}</p>
+                    <motion.div
+                      className="w-full h-[1px]"
+                      animate={{
+                        backgroundColor: item.isActive
+                          ? "#d97706"
+                          : "rgba(0,0,0,0.2)",
+                      }}
+                      transition={{ duration: 0.2 }}
+                    />
+                  </motion.div>
+                ))}
+              </>
+            )}
           </div>
 
           <motion.div
@@ -492,6 +499,7 @@ export default function Menu() {
         animate={modal ? "open" : "close"}
         initial="close"
         exit="close"
+        key="mobile-menu"
         className="w-[100%] h-0 relative bg-white flex-col gap-4 pt-[120px] px-12 flex md:hidden menu-mobile"
       >
         {menuItems.map((item, index) => (

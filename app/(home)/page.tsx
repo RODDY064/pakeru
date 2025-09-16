@@ -6,7 +6,7 @@ import gsap from "gsap";
 import Image from "next/image";
 import Button from "../ui/button";
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { Draggable } from "gsap/Draggable";
 import { InertiaPlugin } from "gsap/InertiaPlugin";
@@ -51,45 +51,45 @@ export default function Home() {
   );
 }
 
-
 const Images = ({ action }: { action: any }) => {
-  const [containerHeight, setContainerHeight] = useState('100vh');
+  const [containerHeight, setContainerHeight] = useState("100vh");
 
   useEffect(() => {
     const calculateHeight = () => {
       // Use actual viewport height for consistency across platforms
       const actualVH = window.innerHeight;
       setContainerHeight(`${actualVH}px`);
-      
+
       // Set CSS custom property for dvh fallback
-      document.documentElement.style.setProperty('--actual-vh', `${actualVH * 0.01}px`);
+      document.documentElement.style.setProperty(
+        "--actual-vh",
+        `${actualVH * 0.01}px`
+      );
     };
 
     calculateHeight();
-    window.addEventListener('resize', calculateHeight);
-    window.addEventListener('orientationchange', calculateHeight);
-    
+    window.addEventListener("resize", calculateHeight);
+    window.addEventListener("orientationchange", calculateHeight);
+
     return () => {
-      window.removeEventListener('resize', calculateHeight);
-      window.removeEventListener('orientationchange', calculateHeight);
+      window.removeEventListener("resize", calculateHeight);
+      window.removeEventListener("orientationchange", calculateHeight);
     };
   }, []);
 
   return (
-    <div 
+    <div
       className="w-full slider-container font-avenir bg-white"
       style={{ height: containerHeight }}
     >
       <div className="slider w-full h-full">
         <div className="w-full h-full relative overflow-hidden flex flex-col">
-          
           {/* Top Spacer - Responsive */}
           <div className="w-full h-[10vh] md:h-[8vh] lg:h-[6vh] flex-shrink-0" />
-          
+
           {/* Hero Image Container */}
           <div className="flex-1 relative flex items-center justify-center min-h-0">
             <div className="w-full h-full relative mt-8">
-              
               {/* Desktop Hero */}
               <Image
                 src="/images/hero/pakeru desktop hero.webp"
@@ -100,7 +100,7 @@ const Images = ({ action }: { action: any }) => {
                 sizes="100vw"
                 quality={95}
               />
-              
+
               {/* Tablet Hero */}
               <Image
                 src="/images/hero/pakeru tablet hero.webp"
@@ -111,7 +111,7 @@ const Images = ({ action }: { action: any }) => {
                 sizes="100vw"
                 quality={95}
               />
-              
+
               {/* Mobile Hero */}
               <Image
                 src="/images/hero/pakeru mobile hero.webp"
@@ -122,35 +122,30 @@ const Images = ({ action }: { action: any }) => {
                 sizes="100vw"
                 quality={95}
               />
-              
             </div>
           </div>
-          
+
           {/* Content Section - Fixed Height */}
           <div className="w-full flex-shrink-0 flex flex-col items-center justify-center pb-10 relative ">
             <div className="w-full flex flex-col gap-3 items-center px-4">
-              
               <p className="text-black font-avenir font-medium text-[13px] md:text-[16px] lg:text-[18px] text-center leading-8">
                 Made for you to
               </p>
-              
+
               <h1 className="text-black font-avenir font-bold text-[20px] md:text-[24px] lg:text-[28px] xl:text-[32px] leading-4 text-center">
                 DEFY THE NORM
               </h1>
-              
+
               <div className="">
                 <Button ID="shop-button" action={action} word="GO TO SHOP" />
               </div>
-              
             </div>
           </div>
-          
         </div>
       </div>
     </div>
   );
 };
-
 
 const Slider = () => {
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -205,7 +200,7 @@ const Slider = () => {
                 "w-[calc(90vw)] slider-element md:w-[calc(70vw)] card h-[350px]  flex-shrink-0  relative lg:h-[calc(35vw)]  flex-none  flex items-center justify-center overflow-hidden  ",
                 {
                   "pl-1 md:pl-3 ": product._id === 0,
-                  "border border-black/5 ": product._id !== 0,
+                  "border border-black/20 ": product._id !== 0,
                 }
               )}
             >
@@ -221,7 +216,7 @@ const Slider = () => {
                       damping: 18,
                       mass: 0.7,
                     }}
-                    className="w-full h-full  group/slider bg-[#f2f2f2] mx-auto relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden"
+                    className="w-full h-full border-black/10 border  group/slider bg-[#f2f2f2] mx-auto relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden"
                   >
                     <Image
                       src={product.mainImage}
@@ -230,19 +225,19 @@ const Slider = () => {
                       className="object-cover object-center max-w-2xl mx-auto bg-[#f2f2f2]"
                       priority
                     />
-                    <div className="w-full h-full flex items-end justify-center text-white relative z-10">
-                      <div className="w-full h-24 flex items-end justify-center pb-8 ">
+                    <div className="w-full h-full flex text-white relative z-10 top-2">
+                      <div className="w-full h-24 flex px-4 pb-8 ">
                         <motion.div
                           variants={textMovement}
                           className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
                         >
                           <motion.div
                             variants={textOverlay}
-                            className="w-full h-full bg-black absolute text-overlay"
+                            className="w-full h-full bg-black absolute  text-overlay"
                           />
                           <div className="flex gap-2 items-center relative z-20 flex-none">
                             <div className="size-1.5 bg-black group-hover/slider:bg-white rounded-full" />
-                            <p className="font-avenir font-[400] text-black  group-hover/slider:text-white py-2">
+                            <p className="font-avenir font-bold  text-black  group-hover/slider:text-white py-2">
                               {product.title}
                             </p>
 
@@ -266,7 +261,7 @@ const Slider = () => {
                     damping: 18,
                     mass: 0.7,
                   }}
-                  className="w-full h-full group/slider relative bg-[#f2f2f2] flex items-center justify-center will-change-transform preserve-3d backface-hidden"
+                  className="w-full h-full group/slider relative bg-[#f2f2f2] border border-black/10 flex items-center justify-center will-change-transform preserve-3d backface-hidden overflow-hidden "
                 >
                   <Image
                     src={product.mainImage}
@@ -275,8 +270,8 @@ const Slider = () => {
                     className="object-cover max-w-2xl mx-auto bg-[#f2f2f2]"
                     priority
                   />
-                  <div className="w-full h-full flex items-end justify-center text-white relative z-10">
-                    <div className="w-full h-24  flex items-end justify-center pb-8">
+                  <div className="w-full h-full flex top-2 items-start text-white relative z-10">
+                    <div className="w-full h-24  flex px-4 pb-8">
                       <motion.div
                         variants={textMovement}
                         className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
@@ -287,11 +282,11 @@ const Slider = () => {
                         />
                         <div className="flex gap-2 items-center relative z-20 flex-none">
                           <div className="size-1.5 bg-black group-hover/slider:bg-white rounded-full" />
-                          <p className="font-avenir font-[400] text-black  group-hover/slider:text-white py-2">
+                          <p className="font-avenir font-bold text-black  group-hover/slider:text-white py-1.5">
                             {product.title}
                           </p>
                           <motion.div variants={imgDiv}>
-                            <p>-- TAKE A LOOK</p>
+                            <p>-- VIEW</p>
                           </motion.div>
                         </div>
                       </motion.div>
@@ -326,7 +321,7 @@ const imgDiv = {
 
 const textMovement = {
   show: {
-    x: -8,
+    x: 15,
     transition: { type: "spring", stiffness: 150, damping: 16, mass: 0.6 },
   },
   hide: {
@@ -341,31 +336,6 @@ const ImgC = {
   },
   hide: {
     scale: 1,
-  },
-};
-
-const viewB = {
-  show: {
-    y: -60,
-    transition: {
-      delay: 0.02,
-      ease: easing,
-    },
-  },
-  hide: {
-    y: 40,
-  },
-};
-
-const veiwT = {
-  show: {
-    y: -45,
-    opacity: 0,
-    ease: easing,
-  },
-  hide: {
-    y: 0,
-    opacity: 1,
   },
 };
 
@@ -388,7 +358,7 @@ const Product = () => {
     goToPage,
     reinitialize,
   } = useGsapSlider({
-    sliderRef,
+    sliderRef:sliderRef,
     prevRef: prevBtnRef,
     nextRef: nextBtnRef,
     cardRef,
@@ -410,13 +380,13 @@ const Product = () => {
       <div
         ref={sliderRef}
         className={cn(
-          "grid grid-flow-col auto-cols-[min(320,2fr)] md:auto-cols-[minmax(400,2fr)] gap-4  overflow-x-scroll overflow-hidden nav-slider",
+          "grid grid-flow-col auto-cols-[minmax(20rem,1fr)] py-2 md:auto-cols-[minmax(30rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none",
           {
-            "auto-cols-[100%]  md:auto-cols-[100%] lg:auto-cols-[100%]  xl:auto-cols-[100%]":
+            "auto-cols-[minmax(100%,1fr)]":
               cartState === "loading" || cartState === "error",
           }
         )}
-      >
+        style={{ scrollBehavior: "smooth" }}>
         {cartState === "loading" ||
         cartState === "error" ||
         cartState === "idle" ? (
@@ -450,12 +420,12 @@ const Product = () => {
       </div>
       <div className="flex flex-col items-center">
         <div className="w-[80%] md:w-full mb-4 flex flex-wrap items-center justify-center gap-1 md:gap-3">
-          {Array.from({ length: totalPages - 1 }, (_, i) => (
+          {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i}
               onClick={() => goToPage(i)}
               className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full ${
-                i === currentPage ? "bg-black w-8" : "bg-black/20"
+                i === currentPage ? "bg-black " : "bg-black/20"
               }`}
             />
           ))}

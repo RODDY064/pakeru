@@ -46,7 +46,7 @@ export const useModalStore: StateCreator<
   // Open modal with specific   modalDisplay type
   openModal: (modalDisplay) =>
     set((state) => {
-       const isOpening = !state.modal;
+      const isOpening = !state.modal;
       state.modal = isOpening;
       state.modalDisplay = modalDisplay;
 
@@ -93,7 +93,9 @@ export const useModalStore: StateCreator<
     const state = get();
 
     try {
-      await state.loadCategories();
+      if (state.categories.length === 0) {
+        await state.loadCategories();
+      }
 
       if (!state.categories?.length) {
         console.warn("No categories available for menu initialization");
@@ -104,7 +106,9 @@ export const useModalStore: StateCreator<
         draft.menuItems = state.categories.map((category) => ({
           category: category.name,
           isActive: false,
-          images: [{ _id: "1", url: "/images/women-2.png" }, { _id: "2", url: "/images/women-2.png" }
+          images: [
+            { _id: "1", url: "/images/women-2.png" },
+            { _id: "2", url: "/images/women-2.png" },
           ],
           catID: category._id,
           menuProducts: [],

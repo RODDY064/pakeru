@@ -422,7 +422,7 @@ export const apiCall = async (
     ...options,
   });
 
-  console.log("API Response:", response);
+  // console.log("API Response:", response);
 
   if (!response.ok) {
     throw new Error(`API call failed: ${response?.status} ${response?.statusText}`);

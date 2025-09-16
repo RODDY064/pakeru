@@ -63,7 +63,7 @@ export default function YourCart() {
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center text-black ">
-      <div className="w-full h-full flex-col md:flex-row  bg-white flex overflow-hidden gap-4 pt-24">
+      <div className="w-full h-full flex-col md:flex-row  bg-white flex overflow-hidden gap-4 pt-30">
         <div
           ref={cartDiv}
           className="md:w-[65%] lg:w-[70%] md:min-h-[100vh] bg-[#f2f2f2] flex flex-col items-center flex-none cartDiv max-sm:px-3"

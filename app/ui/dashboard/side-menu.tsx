@@ -24,15 +24,15 @@ const pages: Array<{
     name: "Home",
     icon: "home.svg",
     icon_w: "home-w.svg",
-    path: "/dashboard",
+    path: "/admin",
   },
   {
     name: "Orders",
     icon: "orders.svg",
     icon_w: "orders-w.svg",
     subMenus: [
-      { name: "Unfulfilled", path: "/orders/unfulfilled" },
-      { name: "Fulfilled", path: "/orders/fulfilled" },
+      { name: "Unfulfilled", path: "/admin/orders/unfulfilled" },
+      { name: "Fulfilled", path: "/admin/orders/fulfilled" },
     ],
     mobilePath: "/orders",
   },
@@ -40,21 +40,21 @@ const pages: Array<{
     name: "Products",
     icon: "product.svg",
     icon_w: "product-w.svg",
-    path: "/store-products",
+    path: "/admin/admin/store-products",
     imgW: 18,
   },
   {
     name: "Customers",
     icon: "customers.svg",
     icon_w: "customers-w.svg",
-    path: "/customers",
+    path: "/admin/customers",
     imgW: 18,
   },
   {
     name: "Discount",
     icon: "discount.svg",
     icon_w: "discount-w.svg",
-    path: "/discount",
+    path: "/admin/discount",
     imgW: 18,
   },
 ];
@@ -158,11 +158,11 @@ export default function SideMenu() {
               "cursor-pointer px-4 py-2 rounded-xl border border-black/0 hover:bg-white/30 hover:border-[#888888]/20 mt-2",
               {
                 "bg-white/60  hover:bg-bg-white/60 border-black/20  hover:border-black/20 ":
-                  pathname === "/contents",
+                  pathname === "/admin/contents",
               }
             )}
           >
-            <Link href={"/contents"} className=" flex items-center gap-2  ">
+            <Link href={"/admin/contents"} className=" flex items-center gap-2  ">
               <Image
                 src={`/icons/content.svg`}
                 width={19}

@@ -49,9 +49,9 @@ export default function Filter() {
     setHeights(newHeights);
   }, [filteritems]);
 
-  // useEffect(() => {
-  //   console.log(filteritems, "item");
-  // }, [filteritems]);
+  useEffect(() => {
+    console.log(filter, "filter");
+  }, [filter]);
 
   return (
     <>

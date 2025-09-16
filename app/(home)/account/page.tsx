@@ -57,7 +57,7 @@ export default function Account() {
   }
 
   return (
-    <div className="w-full min-h-dvh flex flex-col items-center text-black  pt-24 md:pt-24 ">
+    <div className="w-full min-h-dvh flex flex-col items-center text-black  pt-30 md:pt-30 ">
       <div className="w-full h-12 md:h-20 px-2 md:px-8 fixed bg-white border-t border-b border-black/10 flex justify-between account-nav z-20  ">
         <div
         onClick={()=>handlePage('profile')}

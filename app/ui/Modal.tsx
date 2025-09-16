@@ -9,7 +9,7 @@ import Menu from "./menu";
 
 export default function Modal() {
   const { modal, closeModal, modalDisplay, cartItems } = useBoundStore();
-  
+
   return (
     <AnimatePresence>
       {modal && modalDisplay !== "idle" && (
@@ -22,15 +22,15 @@ export default function Modal() {
           className={cn(
             "fixed top-0 right-0 w-full h-full z-50",
             "pointer-events-auto"
-          )}>
+          )}
+        >
           <motion.div
             variants={overlay}
             className="absolute w-full h-full bg-black/95"
-            onClick={()=>closeModal()}
+            onClick={() => closeModal()}
           />
-          
           <AnimatePresence mode="wait">
-            {modalDisplay === "menu"  && ( <Menu  /> )}
+            {modalDisplay === "menu" && <Menu key="menu-component" />}
             {(modalDisplay === "cart" || modalDisplay === "wardrobe") && (
               <CartContainer key="cart-component" />
             )}
@@ -45,18 +45,18 @@ export default function Modal() {
 export const modalVariants = {
   visible: {
     opacity: 1,
-    transition: { 
-      duration: 0.3, 
+    transition: {
+      duration: 0.3,
       ease: "easeInOut",
-      staggerChildren: 0
+      staggerChildren: 0,
     },
   },
   hidden: {
     opacity: 0,
-    transition: { 
-      duration: 0.3, 
-      ease: "easeInOut", 
-      when: "afterChildren"
+    transition: {
+      duration: 0.3,
+      ease: "easeInOut",
+      when: "afterChildren",
     },
   },
 };
@@ -65,13 +65,13 @@ export const overlay = {
   visible: {
     opacity: 1,
     transition: {
-      duration: 0.15
-    }
+      duration: 0.15,
+    },
   },
   hidden: {
     opacity: 0,
     transition: {
-      duration: 0.1
-    }
-  }
+      duration: 0.1,
+    },
+  },
 };

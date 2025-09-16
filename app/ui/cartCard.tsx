@@ -8,16 +8,25 @@ import React, { useEffect, useState } from "react";
 export default function CartCard({ cartData }: { cartData: CartItemType }) {
   const { increaseQuantity, decreaseQuantity, removeFromCart } =
     useBoundStore();
-  const [colorName, setColorName] = useState("");
+  const [colorName, setColorName] = useState<{ color: string; colorHex: string }>({
+    color: "",
+    colorHex: "",
+  });
+  const [variantImage, setVariantImage] = useState(cartData?.mainImage.url);
 
   useEffect(() => {
     if (cartData) {
       const activeVariant = cartData.variants?.find(
         (variant) => variant._id === cartData.selectedColor
       );
-
       if (activeVariant) {
-        setColorName(activeVariant.color);
+        setColorName({
+          color: activeVariant.color || "",
+          colorHex: activeVariant.colorHex || "",
+        });
+        setVariantImage(
+          activeVariant.images?.[0]?.url || cartData?.mainImage.url
+        );
       }
     }
   }, [cartData]);
@@ -73,19 +82,14 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
                   <div className="w-full md:w-auto h-full flex md:flex-col items-start max-sm:justify-between ">
                     <p className="text-sm font-avenir font-[400]">COLOR</p>
                     <p className="text-sm font-avenir font-[400] text-black/50">
-                      {colorName}
+                      {colorName.color}
                     </p>
                   </div>
                   <div className="w-12 h-[1px] bg-black/20 hidden md:flex" />
-                  <div className="size-10 lg:size-14 flex-none hidden md:flex  border border-black/30 rounded-[10px] cursor-pointer relative overflow-hidden p-[2px]">
-                    <div className="w-full h-full relative overflow-hidden">
-                      <Image
-                        src="/images/hero-2.png"
-                        fill
-                        className="object-cover"
-                        alt="hero"
-                      />
-                    </div>
+                  <div className="size-10 lg:size-14 flex-none hidden md:flex  border border-black/30 rounded-[10px] cursor-pointer relative overflow-hidden p-0.5">
+                    <div
+                     style={{ backgroundColor: colorName.colorHex}}
+                     className="w-full h-full relative overflow-hidden rounded-[8px] "/>
                   </div>
                 </div>
                 <div className="w-full md:w-fit  items-center  justify-between flex gap-5">

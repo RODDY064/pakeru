@@ -54,6 +54,7 @@ export function useGsapSlider({
 
   const animationRef = useRef<gsap.core.Tween | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const mutationObserverRef = useRef<MutationObserver | null>(null);
   const initRetryRef = useRef<number>(0);
   const maxRetries = 10;
 
@@ -97,6 +98,23 @@ export function useGsapSlider({
     };
   }, [sliderRef, cardRef]);
 
+  // Helper to compute page start scroll positions (clamped for last page)
+  const getPageScrollPositions = useCallback((currentMetrics: SliderMetrics): number[] => {
+    const { itemWidth, totalItems, visibleItems, totalPages } = currentMetrics;
+    const maxStartIndex = Math.max(0, totalItems - visibleItems);
+    const pageStarts: number[] = [];
+
+    for (let p = 0; p < totalPages; p++) {
+      let startIndex = p * visibleItems;
+      if (startIndex > maxStartIndex) {
+        startIndex = maxStartIndex;
+      }
+      pageStarts.push(startIndex * itemWidth);
+    }
+
+    return pageStarts;
+  }, []);
+
   // State calculation based on current scroll position
   const calculateState = useCallback((currentMetrics: SliderMetrics): SliderState => {
     if (!sliderRef.current) {
@@ -126,11 +144,19 @@ export function useGsapSlider({
       totalItems - 1
     );
 
-    // Current page calculation - which "group" of items are we showing?
-    const currentPage = Math.max(0, Math.min(
-      Math.floor(firstVisibleIndex / visibleItems),
-      totalPages - 1
-    ));
+    // Current page: find closest page start position
+    const pageScrollPositions = getPageScrollPositions(currentMetrics);
+    let minDist = Infinity;
+    let closestPage = 0;
+    for (let p = 0; p < totalPages; p++) {
+      const dist = Math.abs(scrollLeft - pageScrollPositions[p]);
+      if (dist < minDist) {
+        minDist = dist;
+        closestPage = p;
+      }
+    }
+
+    const currentPage = Math.max(0, Math.min(closestPage, totalPages - 1));
 
     return {
       isStart,
@@ -141,7 +167,7 @@ export function useGsapSlider({
         end: lastVisibleIndex,
       },
     };
-  }, [sliderRef]);
+  }, [sliderRef, getPageScrollPositions]);
 
   const handleScroll = useCallback(() => {
     if (!isReady) return;
@@ -174,15 +200,23 @@ export function useGsapSlider({
   const scrollNext = useCallback(() => {
     if (!isReady || state.isEnd) return;
     
-    const nextPageStartIndex = (state.currentPage + 1) * metrics.visibleItems;
-    const targetScroll = nextPageStartIndex * metrics.itemWidth;
+    const nextPage = state.currentPage + 1;
+    if (nextPage >= metrics.totalPages) return;
+    
+    let nextPageStartIndex = nextPage * metrics.visibleItems;
+    const maxStartIndex = Math.max(0, metrics.totalItems - metrics.visibleItems);
+    const clampedStartIndex = Math.min(nextPageStartIndex, maxStartIndex);
+    const targetScroll = clampedStartIndex * metrics.itemWidth;
     animateToPosition(targetScroll);
   }, [isReady, state.isEnd, state.currentPage, metrics, animateToPosition]);
 
   const scrollPrev = useCallback(() => {
     if (!isReady || state.isStart) return;
     
-    const prevPageStartIndex = (state.currentPage - 1) * metrics.visibleItems;
+    const prevPage = state.currentPage - 1;
+    if (prevPage < 0) return;
+    
+    const prevPageStartIndex = prevPage * metrics.visibleItems;
     const targetScroll = prevPageStartIndex * metrics.itemWidth;
     animateToPosition(targetScroll);
   }, [isReady, state.isStart, state.currentPage, metrics, animateToPosition]);
@@ -190,8 +224,10 @@ export function useGsapSlider({
   const goToPage = useCallback((pageIndex: number) => {
     if (!isReady || pageIndex < 0 || pageIndex >= metrics.totalPages) return;
     
-    const targetIndex = pageIndex * metrics.visibleItems;
-    const targetScroll = targetIndex * metrics.itemWidth;
+    let targetIndex = pageIndex * metrics.visibleItems;
+    const maxStartIndex = Math.max(0, metrics.totalItems - metrics.visibleItems);
+    const clampedTargetIndex = Math.min(targetIndex, maxStartIndex);
+    const targetScroll = clampedTargetIndex * metrics.itemWidth;
     animateToPosition(targetScroll);
   }, [isReady, metrics, animateToPosition]);
 
@@ -241,6 +277,27 @@ export function useGsapSlider({
     resizeObserverRef.current.observe(cardRef.current);
   }, [sliderRef, cardRef, isReady, calculateMetrics, calculateState]);
 
+  const setupMutationObserver = useCallback(() => {
+    if (!sliderRef.current) return;
+
+    mutationObserverRef.current = new MutationObserver((mutations) => {
+      let shouldReinit = false;
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList' && (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0)) {
+          shouldReinit = true;
+        }
+      });
+      if (shouldReinit && isReady) {
+        reinitialize();
+      }
+    });
+
+    mutationObserverRef.current.observe(sliderRef.current, {
+      childList: true,
+      subtree: false,
+    });
+  }, [sliderRef, isReady]);
+
   useGSAP(() => {
     if (!sliderRef.current || !prevRef.current || !nextRef.current || !cardRef.current) {
       return;
@@ -249,6 +306,7 @@ export function useGsapSlider({
     const timeoutId = setTimeout(() => {
       initialize();
       setupResizeObserver();
+      setupMutationObserver();
     }, 0);
 
     return () => {
@@ -259,8 +317,11 @@ export function useGsapSlider({
       if (resizeObserverRef.current) {
         resizeObserverRef.current.disconnect();
       }
+      if (mutationObserverRef.current) {
+        mutationObserverRef.current.disconnect();
+      }
     };
-  }, [sliderRef, prevRef, nextRef, cardRef]);
+  }, [sliderRef, prevRef, nextRef, cardRef, initialize, setupResizeObserver, setupMutationObserver]);
 
   useEffect(() => {
     if (!isReady || !prevRef.current || !nextRef.current || !sliderRef.current) {
@@ -297,12 +358,16 @@ export function useGsapSlider({
     if (resizeObserverRef.current) {
       resizeObserverRef.current.disconnect();
     }
+    if (mutationObserverRef.current) {
+      mutationObserverRef.current.disconnect();
+    }
 
     setTimeout(() => {
       initialize();
       setupResizeObserver();
+      setupMutationObserver();
     }, 100);
-  }, [initialize, setupResizeObserver]);
+  }, [initialize, setupResizeObserver, setupMutationObserver]);
 
   const itemsArray = Array.from({ length: metrics.totalItems }, (_, i) => i);
 

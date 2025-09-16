@@ -7,151 +7,174 @@ import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { memo } from "react";
 
-export default function ProductCard({
-  type,
-  cardRef,
-  cardStyle,
-  productData,
-  showDetails,
-}: {
+interface ProductCardProps {
   type: "small" | "medium" | "large";
-  cardRef?: any;
+  cardRef?: React.RefObject<HTMLDivElement>;
   cardStyle?: string;
   productData: ProductData;
   showDetails?: boolean;
-}) {
+}
 
-
+const ProductCard = ({
+  type = "medium",
+  cardRef,
+  cardStyle,
+  productData,
+  showDetails = false,
+}: ProductCardProps) => {
   const { openModal, updateColor, addToCart, closeModal, setRouteChange } =
     useBoundStore();
   const router = useRouter();
 
-  const handleLink = (e: any, link: string) => {
+  const handleLink = (e: React.MouseEvent<HTMLAnchorElement>, link: string) => {
+    e.preventDefault();
     closeModal();
-    console.log(link);
     handleNavigation(e, link, router, setRouteChange, 300);
   };
+
+  // Default image fallback
+  const imageSrc = productData?.mainImage?.url ?? "/images/hero-2.png";
+  const productName = productData?.name?.toUpperCase() ?? "Unnamed Product";
 
   return (
     <div
       ref={cardRef}
-      className={cn("", { "mb-4 md:mb-12": type === "large" }, cardStyle)}>
+      className={cn(
+        "flex-shrink-0",
+        {
+          "mb-4 md:mb-12": type === "large",
+          "mb-2 md:mb-8": type === "medium" || type === "small",
+        },
+        cardStyle
+      )}
+    >
       <motion.div
         variants={BoxAnimate}
         whileHover="show"
+        whileTap="show"
         initial="hide"
         className={cn(
-          "flex  border-[1px] border-black/5 flex-shrink-0 rounded-[2px] relative cursor-pointer overflow-hidden transition-all duration-500 ease-in-out w-full h-[400px] md:h-[450px] lg:h-[460px] xl:h-[550px] ",
+          "relative flex border border-black/5 rounded-sm ocursor-pointer transition-shadow duration-300 hover:border hover:z-20 hover:border-black/20 overflow-hidden",
           {
-            "xl:h-[300px]": type === "small",
+            "w-full h-[400px] md:h-[450px] lg:h-[460px] xl:h-[550px]": type === "large",
+            "w-[250px] md:w-[300px] h-[350px] md:h-[400px]": type === "medium",
+            "w-[200px] md:w-[250px] h-[300px]": type === "small",
           }
         )}>
-        <div className="w-full h-full absolute">
+        {/* Image Container */}
+        <div className="absolute inset-0">
           <Image
-            src={productData?.mainImage?.url as string ??"/images/hero-2.png"} 
+            src={imageSrc}
             fill
-            alt="shop"
-            className="object-cover "
+            alt={productName}
+            className="object-cover"
+            sizes={cn({
+              "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw": type === "large",
+              "(max-width: 768px) 250px, 300px": type === "medium",
+              "(max-width: 768px) 200px, 250px": type === "small",
+            })}
+            priority={type === "large"}
+            quality={75}
           />
         </div>
-        <div className="absolute w-full h-full flex flex-col justify-end z-20 ">
+
+        {/* Overlay and Link */}
+        <div className="absolute inset-0 flex flex-col justify-end z-10">
           <Link
-            onClick={(e) => handleLink(e, `/product/${productData?._id}`)}
             href={`/product/${productData?._id}`}
-            className={cn("w-full h-full top-0  absolute")}
-          ></Link>
-          <div className="absolute top-2 left-2 p-1 px-2 flex items-center gap-1 bg-black">
-            <div className="size-[6px] rounded-full bg-white" />
-            <p className="text-white text-[11px]">NEW</p>
+            onClick={(e) => handleLink(e, `/product/${productData?._id}`)}
+            className="absolute inset-0"
+            aria-label={`View details for ${productName}`}
+          />
+          <div className="absolute top-2 left-2 p-1 px-2 flex items-center gap-1 bg-black rounded-sm">
+            <div className="size-1.5 rounded-full bg-white" />
+            <p className="text-white text-[10px] font-avenir">NEW</p>
           </div>
         </div>
       </motion.div>
-      {showDetails && (
-        <div
-          className={cn("pb-4 pt-3 w-full   px-3 ", {
-            "w-[200px] md:w-[250px]  lg:w-[270px] ": type === "small",
-          })}
-        >
-          <div className="w-full flex items-start justify-between">
-            <div className={cn(
-                "w-[60%] text-[16px] md:text-md font-[400]  text-black/70",
-                {"text-[14px]": type === "small" })}>
-              {productData?.name.toLocaleUpperCase()}
-            </div>
+
+      {/* Product Details */}
+      <div
+        className={cn(
+          "pt-2 pb-4 px-3",
+          {
+            "w-full": type === "large",
+            "w-[250px] md:w-[300px]": type === "medium",
+            "w-[200px] md:w-[250px]": type === "small",
+          }
+        )}>
+        <div className="flex items-start justify-between">
+          <div
+            className={cn(
+              "w-[60%] text-[14px] md:text-base font-avenir font-normal text-black/70",
+              { "text-[13px]": type === "small" }
+            )}
+          >
+            {productName}
           </div>
-        </div>
-      )}
-      {!showDetails && (
-        <div className={cn("pb-4 pt-3 w-full   px-3 ", {
-            "w-[200px] md:w-[250px]  lg:w-[270px] ": type === "small",
-          })}>
-          <div className="w-full flex items-start justify-between">
-            <div  className={cn(
-                "w-[60%] text-[16px] md:text-md font-[400]  text-black/70",
-                {  "text-[14px]": type === "small",})}>
-              {productData?.name.toLocaleUpperCase()}
-            </div>
-            <div className="w-[30%] flex items-start  justify-end ">
+          {!showDetails && (
+            <div className="w-[30%] text-right">
               <p
-                className={`font-avenir font-[400] text-[16px] md:text-md text-black/50 `}>
-                GHS {productData?.price}
+                className={cn(
+                  "font-avenir font-normal text-[14px] md:text-base text-black/50",
+                  { "text-[13px]": type === "small" }
+                )}
+              >
+                GHS {productData?.price?.toFixed(2) ?? "N/A"}
               </p>
             </div>
-          </div>
+          )}
+        </div>
+
+        {!showDetails && (
           <div className="mt-2 flex justify-between items-center">
-            <div className="flex gap-1">
-              {productData?.variants?.map((item, index) => (
-                <div
-                  onClick={() => updateColor(productData?._id, item.color)}
+            <div className="flex gap-1.5">
+              {productData?.variants?.map((item) => (
+                <button
                   key={item.color}
+                  onClick={() => updateColor(productData?._id, item.color)}
                   className={cn(
-                    "size-[15px] md:size-[13px] hover:border border-black/70 rounded-full p-[1.5px] cursor-pointer flex items-center justify-center",
+                    "size-4 md:size-3.5 rounded-full p-0.5 hover:border border-black/50 transition-all duration-200",
                     {
-                      "border-2 md:border-1 border-black":
-                        item.color === productData?.selectedColor,
+                      "border-2 md:border-[1.5px] border-black":
+                        item._id === productData?.selectedColor,
                     }
-                  )}>
+                  )}
+                  aria-label={`Select color ${item.color}`}
+                >
                   <div
                     className="w-full h-full rounded-full"
                     style={{ backgroundColor: item.colorHex }}
-                  ></div>
-                </div>
+                  />
+                </button>
               ))}
             </div>
             <div className="flex items-center gap-1">
-              <p className="font-avenir text-sm font-[300] mt-1">
-                {productData?.numReviews}
+              <p className="font-avenir text-xs font-light">
+                {productData?.numReviews ?? 0}
               </p>
-              <Image src="/icons/star.svg" width={11} height={11} alt="star" />
+              <Image
+                src="/icons/star.svg"
+                width={10}
+                height={10}
+                alt="Rating star"
+                className="mt-0.5"
+              />
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
-}
+};
 
+// Animation Variants
 const BoxAnimate = {
-  show: {},
-  hide: {},
+  show: { scale: 1.02, transition: { duration: 0.3 } },
+  hide: { scale: 1, transition: { duration: 0.3 } },
 };
 
-const OverlayAnimate = {
-  show: {
-    opacity: 0,
-  },
-  hide: {
-    opacit: 1,
-  },
-};
-
-const CartAnimate = {
-  show: {
-    height: 50,
-  },
-  hide: {
-    height: 0,
-  },
-};
+// Memoize to prevent unnecessary re-renders
+export default memo(ProductCard);
