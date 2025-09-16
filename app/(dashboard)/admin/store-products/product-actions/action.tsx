@@ -9,10 +9,8 @@ import {
   ProductFormSchema,
   type ProductFormData,
 } from "@/app/ui/dashboard/zodSchema";
-import { compressImage } from "@/libs/imageCompression";
-import { ProductVariant, ProductData } from "@/store/dashbaord/products";
+import {  ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
-import { CategoryType } from "@/store/category";
 import Media from "@/app/ui/dashboard/media";
 import Category from "@/app/ui/dashboard/categories";
 import ColorStockAndSizes from "@/app/ui/dashboard/colorStockAndSize";
