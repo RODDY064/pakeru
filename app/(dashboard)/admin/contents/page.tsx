@@ -1,6 +1,5 @@
 import Image from "next/image";
 import React from "react";
-import Hero from "../../../public/images/12.png";
 
 export default function Contents() {
   return (
@@ -11,7 +10,7 @@ export default function Contents() {
             <p className="font-avenir font-medium text-md ">HERO IMAGE</p>
             <div className="w-full h-[400px] sm:h-[500px] md:h-[700px] bg-black/5 mt-4 border border-dashed border-black/30 flex items-center justify-center rounded-[36px] cursor-pointer relative overflow-hidden">
               <Image
-                src={Hero}
+                src="/images/hero/pakeru desktop hero.webp"
                 fill
                 className="object-cover"
                 alt="hero image"
