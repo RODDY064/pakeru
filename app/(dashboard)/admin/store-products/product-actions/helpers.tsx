@@ -66,7 +66,7 @@ export class ProductAPIService {
     const deletePromise = (async () => {
       const response = await apiCall(`/products/${productId}`, {
         method: "DELETE",
-        credentials: "include",
+         
         headers: this.getHeaders(true),
       });
 
@@ -92,7 +92,7 @@ export class ProductAPIService {
     
     const response = await apiCall("/products", {
       method: "POST",
-      credentials: "include",
+       
       headers: this.getHeaders(false),
       body: formData,
     });
@@ -109,7 +109,7 @@ export class ProductAPIService {
 
     const response = await apiCall(`/products/${productId}`, {
       method: "PATCH",
-      credentials: "include",
+       
       headers: this.getHeaders(false),
       body: formData,
     });

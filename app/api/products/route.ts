@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieHeader = request.headers.get("cookie");
     const { searchParams } = new URL(request.url);
     
     // Forward query parameters
@@ -13,7 +12,6 @@ export async function GET(request: NextRequest) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        ...(cookieHeader && { Cookie: cookieHeader }),
       },
     });
 
@@ -30,13 +28,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieHeader = request.headers.get("cookie");
      const formData = await request.formData();
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products`, {
       method: "POST",
       headers: {
-        ...(cookieHeader && { Cookie: cookieHeader }),
       },
       body: formData,
     });

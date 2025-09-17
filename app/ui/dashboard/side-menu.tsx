@@ -40,7 +40,7 @@ const pages: Array<{
     name: "Products",
     icon: "product.svg",
     icon_w: "product-w.svg",
-    path: "/admin/admin/store-products",
+    path: "/admin/store-products",
     imgW: 18,
   },
   {

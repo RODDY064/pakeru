@@ -233,7 +233,7 @@ export default function Products() {
   const handleLink = (product: ProductData) => {
     setSelectedProduct(product);
     router.push(
-      `/admin/admin/store-products/product-actions?productID=${product._id}&productName=${product.name}`
+      `/admin/store-products/product-actions?productID=${product._id}&productName=${product.name}`
     );
   };
 
@@ -242,7 +242,7 @@ export default function Products() {
       <div className="flex items-center justify-between max-sm:px-3">
         <p className="font-avenir text-xl md:text-2xl font-bold">Products</p>
         <Link
-          href="/admin/admin/store-products/product-actions"
+          href="/admin/store-products/product-actions"
           className="p-1.5 sm:px-3  md:py-2  bg-black flex items-center gap-2 cursor-pointer rounded-full md:rounded-lg"
         >
           <p className="font-avenir text-sm font-[500] text-white mt-[3px] sm:flex hidden">
@@ -423,7 +423,7 @@ const MobileTabs = () => {
       <p className="font-avenir text-lg md:text-2xl ">Tables</p>
       <div className="mt-2 flex flex-col gap-2">
         {tabs.map((tab, index) => (
-          <Link key={index} href={`/admin/admin/store-products/mobile-table/${tab.name.toLowerCase()}`}>
+          <Link key={index} href={`/admin/store-products/mobile-table/${tab.name.toLowerCase()}`}>
             <div className="w-full bg-white border border-black/20 py-2 px-3 rounded-xl flex items-center justify-between">
               <div className="flex  gap-1">
                 <Image

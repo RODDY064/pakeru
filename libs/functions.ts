@@ -417,7 +417,7 @@ export const apiCall = async (
       "Content-Type": "application/json",
       ...(options.headers ?? {}), 
     },
-    credentials: "include",
+     
     signal: AbortSignal.timeout(30000),
     ...options,
   });

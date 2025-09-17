@@ -3,14 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> } ) {
   try {
-    const cookieHeader = request.headers.get("cookie");
         const { id } = await params;
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        ...(cookieHeader && { Cookie: cookieHeader }),
       },
     });
 
@@ -27,7 +25,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(request: NextRequest,  { params }: { params: Promise<{ id: string }> }) {
   try {
-    const cookieHeader = request.headers.get("cookie");
     const body = await request.json();
     const { id } = await params;
     
@@ -35,7 +32,6 @@ export async function DELETE(request: NextRequest,  { params }: { params: Promis
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        ...(cookieHeader && { Cookie: cookieHeader }),
       },
       body: JSON.stringify(body),
     });
@@ -53,7 +49,6 @@ export async function DELETE(request: NextRequest,  { params }: { params: Promis
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const cookieHeader = request.headers.get("cookie");
      const formData = await request.formData();
      const { id } = await params;
     
@@ -61,7 +56,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        ...(cookieHeader && { Cookie: cookieHeader }),
       },
       body: formData
     });

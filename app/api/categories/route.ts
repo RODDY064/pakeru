@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieHeader = request.headers.get("cookie");
     const { searchParams } = new URL(request.url);
     
     const queryString = searchParams.toString();
@@ -13,7 +12,6 @@ export async function GET(request: NextRequest) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        ...(cookieHeader && { Cookie: cookieHeader }),
       },
     });
 
@@ -30,7 +28,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieHeader = request.headers.get("cookie");
+    
     const body = await request.json();
     
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories`;
@@ -40,7 +38,6 @@ export async function POST(request: NextRequest) {
       credentials:"include",
       headers: {
         "Content-Type": "application/json",
-        ...(cookieHeader && { Cookie: cookieHeader }),
       },
       body: JSON.stringify(body),
     });

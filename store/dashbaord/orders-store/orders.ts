@@ -303,7 +303,7 @@ const apiService = {
 
       const response = await apiCall(`/orders?${query.toString()}`, {
         method: "GET",
-        credentials: "include",
+         
         headers: {
           "Content-Type": "application/json",
           "Cache-Control": "no-cache",

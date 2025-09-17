@@ -360,7 +360,7 @@ export const toast = Object.assign(createToast, {
 // Provider component with both animation styles
 export function ToastProvider({
   position = "top-right",
-  duration = 10000,
+  duration = 4000,
   expand = true,
   visibleToasts = 4,
   offset = "30px",

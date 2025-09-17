@@ -947,7 +947,7 @@ export const useCartStore: StateCreator<
 
       const response = await fetch(`${baseUrl}/v1/products`, {
         method: "GET",
-        credentials: "include",
+         
         headers: {
           "Content-Type": "application/json",
         },

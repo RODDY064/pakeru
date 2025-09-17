@@ -182,7 +182,7 @@ export const useCategory: StateCreator<
 
         const response = await apiCall(`/categories/${categoryId}`, {
           method: "DELETE",
-          credentials: "include",
+           
           headers: {
             "Content-Type": "application/json",
           },

@@ -6,7 +6,7 @@ export async function PUT(
  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const cookieHeader = request.headers.get("cookie");
+  
     const body = await request.json();
      const { id } = await params;
     
@@ -16,7 +16,6 @@ export async function PUT(
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        ...(cookieHeader && { Cookie: cookieHeader }),
       },
       body: JSON.stringify(body),
     });
@@ -37,7 +36,7 @@ export async function DELETE(
   { params }: { params: Promise<{ categoryId: string }> }
 ) {
   try {
-    const cookieHeader = request.headers.get("cookie");
+
       const { categoryId } = await params;
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories/${categoryId}`;
     
@@ -45,7 +44,6 @@ export async function DELETE(
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-        ...(cookieHeader && { Cookie: cookieHeader }),
       },
     });
 

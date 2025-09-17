@@ -124,7 +124,7 @@ export default function Payment() {
 
       const res = await apiCall("/orders", {
         method: "POST",
-        credentials: "include",
+         
         headers: {
           "Content-Type": "application/json",
         },
