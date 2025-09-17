@@ -1,6 +1,26 @@
 "use client";
+import Image from "next/image";
 import React from "react";
 import { toast as sonnerToast, Toaster } from "sonner";
+import { usePathname } from "next/navigation";
+
+// Route filtering - clean utility to check if toasts should be blocked
+let blockedRoutes: string[] = [];
+
+function shouldBlockToast(customBlockedRoutes?: string[]): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  const currentPath = window.location.pathname;
+  const routesToCheck = customBlockedRoutes || blockedRoutes;
+  
+  return routesToCheck.some(route => {
+    // Support exact match and wildcard patterns
+    if (route.endsWith('*')) {
+      return currentPath.startsWith(route.slice(0, -1));
+    }
+    return currentPath === route;
+  });
+}
 
 // Helper function to determine animation class based on position
 function getAnimationClass(position: string): string {
@@ -51,22 +71,30 @@ function Toast(props: ToastProps & { position?: string }) {
   return (
     <div
       className={`
-        ${animationClass} flex font-avenir rounded-[12px] shadow-lg 
-        ${variantStyles[variant]} w-full md:max-w-[364px] border-[0.5px]
-        items-center py-1.5 px-2.5 transition-all duration-300
+        ${animationClass}  font-avenir inline-block self-start rounded-[26px] shadow-lg 
+        ${variantStyles[variant]} w-full md:max-w-[370px] border-[0.5px]
+        items-center px-3 transition-all duration-300 ${description ? "py-3 " : "py-2"}
+        toast-item
       `}
       onClick={() => sonnerToast.dismiss(id)}
     >
       <div
-        className="flex flex-1 items-center"
+        className={`flex flex-1  ${
+          description ? "items-start" : " items-center"
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {variant === "loading" && (
-          <div className="mr-3">
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          <div className="mr-1.5">
+            <Image
+              src="/icons/loader-w.svg"
+              width={30}
+              height={30}
+              alt="loader"
+            />
           </div>
         )}
-        <div className="w-full">
+        <div className={`w-full ${description ? "mt-[2px]" : ""}`}>
           {typeof title === "string" ? (
             <p
               className={`text-sm font-medium ${
@@ -120,14 +148,19 @@ function Toast(props: ToastProps & { position?: string }) {
 type BaseToastProps = Omit<ToastProps, "id"> & {
   duration?: number;
   position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  blockRoutes?: string[];
 };
 
 // Main toast function with call signature
 function createToast(props: BaseToastProps) {
+  // Block toast if on restricted route
+  if (shouldBlockToast(props.blockRoutes)) return;
+  
   const {
     variant = "default",
     duration,
     position = "top-right",
+    blockRoutes,
     ...rest
   } = props;
   const animationClass = getAnimationClass(position);
@@ -167,7 +200,7 @@ export const toast = Object.assign(createToast, {
 
   info: (props: BaseToastProps) => createToast({ ...props, variant: "info" }),
 
-  // Enhanced Promise toast with position-aware animations
+  // Enhanced Promise toast with position-aware animations and no default spinner
   promise: async <T,>(
     promise: Promise<T>,
     options: {
@@ -196,14 +229,22 @@ export const toast = Object.assign(createToast, {
           });
       duration?: number;
       position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+      blockRoutes?: string[];
     }
   ): Promise<T> => {
+    // Block promise toasts if on restricted route
+    if (shouldBlockToast(options.blockRoutes)) {
+      // Still execute the promise but without UI feedback
+      return promise;
+    }
+    
     const {
       loading,
       success,
       error,
       duration,
       position = "top-right",
+      blockRoutes,
     } = options;
     const animationClass = getAnimationClass(position);
 
@@ -223,25 +264,10 @@ export const toast = Object.assign(createToast, {
       );
     };
 
-    // Show loading toast
+    // Show loading toast using fully custom render (no Sonner default spinner)
     const loadingProps =
       typeof loading === "string" ? { title: loading } : loading;
-    let loadingId: string | number = "";
-    loadingId = sonnerToast.loading(
-      () => (
-        <Toast
-          {...loadingProps}
-          id={loadingId}
-          variant="loading"
-          position={position}
-        />
-      ),
-      {
-        unstyled: true,
-        position,
-        classNames: { toast: animationClass },
-      }
-    );
+    const loadingId = renderCustom(loadingProps, "loading");
 
     try {
       const result = await promise;
@@ -308,12 +334,33 @@ export const toast = Object.assign(createToast, {
   // Utility methods
   dismiss: (id?: string | number) => sonnerToast.dismiss(id),
   dismissAll: () => sonnerToast.dismiss(),
+  
+  // Route management - clean API for controlling toast visibility
+  setBlockedRoutes: (routes: string[]) => {
+    blockedRoutes = routes;
+  },
+  
+  addBlockedRoute: (route: string) => {
+    if (!blockedRoutes.includes(route)) {
+      blockedRoutes.push(route);
+    }
+  },
+  
+  removeBlockedRoute: (route: string) => {
+    blockedRoutes = blockedRoutes.filter(r => r !== route);
+  },
+  
+  clearBlockedRoutes: () => {
+    blockedRoutes = [];
+  },
+  
+  getBlockedRoutes: () => [...blockedRoutes],
 });
 
 // Provider component with both animation styles
 export function ToastProvider({
   position = "top-right",
-  duration = 4000,
+  duration = 10000,
   expand = true,
   visibleToasts = 4,
   offset = "30px",
@@ -408,13 +455,24 @@ export function ToastProvider({
 
         .toast-container {
           margin-top: 60px !important;
+          isolation: isolate !important;
         }
 
-        /* Hover effects for both directions */
-        .toast-slide-left:hover,
-        .toast-slide-right:hover {
-          transform: scale(1.02) !important;
-          transition: transform 0.2s ease !important;
+        /* Fixed hover effects - isolated per toast */
+        .toast-item {
+          will-change: transform !important;
+          backface-visibility: hidden !important;
+          transform: translateZ(0) !important;
+        }
+
+        .toast-item:hover {
+          transform: translateZ(0) scale(1.02) !important;
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* Prevent animation interference during hover */
+        .toast-item:hover.toast-slide-left,
+        .toast-item:hover.toast-slide-right {
           animation-play-state: paused !important;
         }
 

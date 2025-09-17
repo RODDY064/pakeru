@@ -117,7 +117,7 @@ export default function Payment() {
           products: productsArray,
         },
         totalPrice: cartStat?.totalPrice || 0,
-        discountCode: "", // Consider making this dynamic
+        discountCode: "", 
       };
 
       console.log("Payment payload:", paymentPayload);
@@ -148,12 +148,11 @@ export default function Payment() {
       error: (err) => {
         console.error("Payment error:", err);
         setPayError(
-          err.message || "Payment processing failed. Please try again."
+          "Payment processing failed. Please try again."
         );
         return {
           title: "Payment failed",
-          description:
-            err.message || "Payment processing failed. Please try again.",
+          description: "Payment processing failed. Please try again.",
         };
       },
       position: "top-right",
@@ -189,8 +188,7 @@ export default function Payment() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex h-fit w-[95%] md:w-[94%] lg:w-[80%]  flex-col md:flex-row items-stretch justify-center  gap-4 mt-20"
-    >
+      className="flex h-fit w-[95%] md:w-[94%] lg:w-[80%]  flex-col md:flex-row items-stretch justify-center  gap-4 mt-20">
       <div className="flex w-full    md:w-[60%]  lg:w-[45%] flex-none flex-col  ">
         <div
           onClick={() => router.back()}

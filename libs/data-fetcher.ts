@@ -2,14 +2,10 @@ import { CategoryType } from "@/store/category";
 import { ProductData } from "@/store/dashbaord/products";
 import { apiCall } from "./functions";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export async function fetchProductsServer(): Promise<ProductData[]> {
   try {
-    if (!BASE_URL) {
-      throw new Error("BASE_URL environment variable is not set");
-    }
-
+   
     const response = await apiCall("/products", {
       method: "GET",
       headers: { "Content-Type": "application/json"},

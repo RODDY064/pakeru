@@ -374,6 +374,10 @@ const Product = () => {
     }
   }, [products]);
 
+  useEffect(()=>{
+   console.log(products)
+  },[products])
+
   return (
     <div className="w-full mt-24 px-4 md:px-8 lg:mx-2">
       <p className="text-xl font-bold font-avenir mb-6">SHOP ALL</p>

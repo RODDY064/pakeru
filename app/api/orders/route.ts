@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/orders`,
       {
         method: "POST",
         credentials: "include",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { toast } from "@/app/ui/toaster";
 import { useBoundStore } from "@/store/store";
@@ -13,240 +13,223 @@ import {
 import { produce } from "immer";
 import Image from "next/image";
 
-type OrderWebhookEvents = {
+interface OrderEvents {
   new_order: any;
   order_updated: { orderId: string; updates: Partial<OrdersData> };
   order_cancelled: { orderId: string };
   order_refunded: { orderId: string };
-};
+}
+
+interface ConnectionState {
+  isConnected: boolean;
+  hasJoinedRoom: boolean;
+}
 
 export function useOrdersWebhook() {
   const socketRef = useRef<Socket | null>(null);
-  const [debugInfo, setDebugInfo] = useState({
-    connected: false,
-    lastEvent: null as string | null,
-    eventCount: 0,
-    errors: [] as string[],
+  const connectionState = useRef<ConnectionState>({
+    isConnected: false,
+    hasJoinedRoom: false,
   });
 
-  // Get store methods
-  const orders = useBoundStore((state) => state.unfulfilledOrders);
-  const setOrdersState = useBoundStore((state) => state.setOrdersState);
-
-  useEffect(() => {
-    console.log("🔧 Initializing WebSocket connection...");
-
-    const socket = io(
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
-      {
-        withCredentials: true,
-        transports: ["websocket", "polling"],
-        forceNew: true, // Force new connection
-      }
+  // Store methods
+  const updateOrdersState = useCallback(() => {
+    const state = useBoundStore.getState();
+    useBoundStore.setState(
+      produce((draft: any) => {
+        draft.ordersStats = computeOrdersStats(draft.unfulfilledOrders);
+        draft.filteredOrders = filterOrders(
+          draft.unfulfilledOrders,
+          draft.search,
+          draft.activeFilter,
+          draft.dateFilter
+        );
+      })
     );
+  }, []);
+
+  // Event handlers
+  const handleConnection = useCallback(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    connectionState.current.isConnected = true;
+    socket.emit("join_admin_room");
+  }, []);
+
+  const handleDisconnection = useCallback((reason: string) => {
+    connectionState.current = { isConnected: false, hasJoinedRoom: false };
+    
+    // Auto-reconnect only for server-initiated disconnections
+    if (reason === "io server disconnect") {
+      socketRef.current?.connect();
+    }
+  }, []);
+
+  const handleAdminRoomJoined = useCallback(() => {
+    connectionState.current.hasJoinedRoom = true;
+    
+    toast({
+      title: "Connected",
+      description: "Real-time order updates enabled",
+      variant: "default",
+    });
+  }, []);
+
+  const handleNewOrder = useCallback((apiOrder: any) => {
+    try {
+      const newOrder = transformApiOrderToOrdersData(apiOrder);
+      
+      // Update store atomically
+      useBoundStore.setState(
+        produce((draft: any) => {
+          // Prevent duplicates
+          const exists = draft.unfulfilledOrders.some(
+            (order: OrdersData) => order._id === newOrder._id
+          );
+          
+          if (!exists) {
+            draft.unfulfilledOrders.unshift(newOrder);
+          }
+        })
+      );
+
+      // Update computed state
+      updateOrdersState();
+
+      // Show user notification
+      toast({
+        title: (
+          <div className="flex items-center gap-2 px-2">
+            <Image
+              src="/icons/orders-w.svg"
+              width={20}
+              height={20}
+              alt="New order"
+            />
+            <span className="text-white pt-[2px]">New order placed</span>
+          </div>
+        ),
+        description: `Order ${newOrder.IDTrim} from ${newOrder.user.firstname} ${newOrder.user.lastname}`,
+        variant: "success",
+      });
+
+    } catch (error) {
+      console.error("Failed to process new order:", error);
+      
+      toast({
+        title: "Order Update Failed",
+        description: "Unable to display new order. Please refresh.",
+        variant: "error",
+      });
+    }
+  }, [updateOrdersState]);
+
+  const handleOrderUpdate = useCallback(({ orderId, updates }: OrderEvents['order_updated']) => {
+    useBoundStore.setState(
+      produce((draft: any) => {
+        const orderIndex = draft.unfulfilledOrders.findIndex(
+          (order: OrdersData) => order._id === orderId
+        );
+        
+        if (orderIndex !== -1) {
+          Object.assign(draft.unfulfilledOrders[orderIndex], updates);
+        }
+      })
+    );
+    
+    updateOrdersState();
+  }, [updateOrdersState]);
+
+  const handleOrderCancellation = useCallback(({ orderId }: OrderEvents['order_cancelled']) => {
+    useBoundStore.setState(
+      produce((draft: any) => {
+        draft.unfulfilledOrders = draft.unfulfilledOrders.filter(
+          (order: OrdersData) => order._id !== orderId
+        );
+      })
+    );
+    
+    updateOrdersState();
+    
+    toast({
+      title: "Order Cancelled",
+      description: "An order has been cancelled",
+      variant: "default",
+    });
+  }, [updateOrdersState]);
+
+  const handleOrderRefund = useCallback(({ orderId }: OrderEvents['order_refunded']) => {
+    useBoundStore.setState(
+      produce((draft: any) => {
+        const order = draft.unfulfilledOrders.find(
+          (order: OrdersData) => order._id === orderId
+        );
+        
+        if (order) {
+          order.status = 'refunded';
+        }
+      })
+    );
+    
+    updateOrdersState();
+    
+    toast({
+      title: "Order Refunded",
+      description: "A refund has been processed",
+      variant: "default",
+    });
+  }, [updateOrdersState]);
+
+  // Initialize WebSocket connection
+  useEffect(() => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    
+    const socket = io(baseUrl, {
+      withCredentials: true,
+      transports: ["websocket", "polling"],
+      forceNew: true,
+    });
 
     socketRef.current = socket;
 
-    // Connection event handlers
-    socket.on("connect", () => {
-      console.log("✅ WebSocket connected, ID:", socket.id);
-      setDebugInfo((prev) => ({ ...prev, connected: true }));
-
-      // Join admin room
-      socket.emit("join_admin_room");
-      console.log("📨 Emitted join_admin_room");
-    });
-
-    socket.on("disconnect", (reason) => {
-      console.log("❌ WebSocket disconnected:", reason);
-      setDebugInfo((prev) => ({ ...prev, connected: false }));
-
-      if (reason === "io server disconnect") {
-        socket.connect();
-      }
-    });
-
+    // Connection lifecycle
+    socket.on("connect", handleConnection);
+    socket.on("disconnect", handleDisconnection);
     socket.on("connect_error", (error) => {
-      console.error("🔴 Connection error:", error);
-      setDebugInfo((prev) => ({
-        ...prev,
-        errors: [...prev.errors, `Connection error: ${error.message}`],
-      }));
+      console.error("WebSocket connection failed:", error.message);
     });
 
-    // Admin room confirmation
-    socket.on("admin_room_joined", () => {
-      console.log("✅ Successfully joined admin room");
-      toast({
-        title: "Connected",
-        description: "Real-time order updates enabled",
-        variant: "default",
-      });
-    });
+    // Admin room
+    socket.on("admin_room_joined", handleAdminRoomJoined);
 
-    // Debug: Listen for ANY event
-    socket.onAny((eventName, ...args) => {
-      console.log(`🔍 Received event: ${eventName}`, args);
-      setDebugInfo((prev) => ({
-        ...prev,
-        lastEvent: eventName,
-        eventCount: prev.eventCount + 1,
-      }));
-    });
+    // Order events
+    socket.on("new_order", handleNewOrder);
+    socket.on("order_updated", handleOrderUpdate);
+    socket.on("order_cancelled", handleOrderCancellation);
+    socket.on("order_refunded", handleOrderRefund);
 
-    // Handle new orders with extensive debugging
-    socket.on("new_order", (apiOrder: any) => {
-      console.log("🆕 NEW ORDER EVENT RECEIVED!");
-      console.log("Raw API Order:", JSON.stringify(apiOrder, null, 2));
-
-      try {
-        // Transform the order
-        const newOrder = transformApiOrderToOrdersData(apiOrder);
-        console.log("Transformed Order:", JSON.stringify(newOrder, null, 2));
-
-        setTimeout(() => {
-          useBoundStore.setState(
-            produce((state: any) => {
-              console.log("🔄 Updating state with produce...");
-
-              const exists = state.unfulfilledOrders.some(
-                (o: any) => o._id === newOrder._id
-              );
-              if (!exists) {
-                state.unfulfilledOrders.unshift(newOrder);
-              } else {
-                console.log(
-                  "⚠️ Order already exists, skipping insert:",
-                  newOrder._id
-                );
-              }
-
-              state.ordersStats = computeOrdersStats(state.unfulfilledOrders);
-              state.filteredOrders = filterOrders(
-                state.unfulfilledOrders,
-                state.search,
-                state.activeFilter,
-                state.dateFilter // <-- add the missing fourth argument
-              );
-            })
-          );
-        });
-
-        useBoundStore.persist.rehydrate();
-
-        // Get current state before update
-        const currentState = useBoundStore.getState();
-        console.log("Current orders count:", currentState.unfulfilledOrders.length);
-
-        // Verify update
-        // setTimeout(() => {
-        //   const afterState = useBoundStore.getState();
-        //   console.log("📊 Post-update verification:");
-        //   console.log("- Orders count:", afterState.orders.length);
-        //   console.log("- Filtered count:", afterState.filteredOrders.length);
-        //   console.log("- First order ID:", afterState.orders[0]?._id);
-        // }, 100);
-
-        // Show toast
-        toast({
-          title: (
-            <div className="flex items-center gap-2 px-2">
-              <Image
-                src="/icons/orders-w.svg"
-                width={20}
-                height={20}
-                alt="order"
-              />
-              <p className="text-white pt-[2px]">New Order been placed</p>
-            </div>
-          ),
-          description: `Order ${newOrder.IDTrim} from ${newOrder.user.firstname} ${newOrder.user.lastname}`,
-          variant: "success",
-        });
-
-        console.log("✅ New order processed successfully:", newOrder.IDTrim);
-      } catch (error) {
-        console.error("❌ Failed to process new order:", error);
-        console.error(
-          "Error stack:",
-          error instanceof Error ? error.stack : "No stack"
-        );
-
-        toast({
-          title: "Order Processing Error",
-          description: `Failed to process order: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`,
-        });
-      }
-    });
-
-    // Handle other events (simplified for debugging)
-    socket.on("order_updated", ({ orderId, updates }) => {
-      console.log("📝 Order updated:", orderId, updates);
-      // ... existing update logic
-    });
-
-    socket.on("order_cancelled", ({ orderId }) => {
-      console.log("❌ Order cancelled:", orderId);
-      // ... existing cancel logic
-    });
-
-    socket.on("order_refunded", ({ orderId }) => {
-      console.log("💰 Order refunded:", orderId);
-      // ... existing refund logic
-    });
-
-    // Test connection after setup
-    setTimeout(() => {
-      if (socket.connected) {
-        console.log("🧪 Testing connection - emitting test event");
-        socket.emit("test_connection", { timestamp: Date.now() });
-      } else {
-        console.warn("⚠️ Socket not connected after setup");
-      }
-    }, 1000);
-
+    // Cleanup
     return () => {
-      console.log("🧹 Cleaning up WebSocket connection");
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
+      socket.disconnect();
+      socketRef.current = null;
+      connectionState.current = { isConnected: false, hasJoinedRoom: false };
     };
-  }, []);
+  }, [
+    handleConnection,
+    handleDisconnection,
+    handleAdminRoomJoined,
+    handleNewOrder,
+    handleOrderUpdate,
+    handleOrderCancellation,
+    handleOrderRefund,
+  ]);
 
-  // Debug component (you can render this temporarily)
-  const DebugPanel = () => (
-    <div
-      style={{
-        position: "fixed",
-        top: 10,
-        right: 10,
-        background: "black",
-        color: "white",
-        padding: 10,
-        borderRadius: 5,
-        fontSize: 12,
-        zIndex: 9999,
-        maxWidth: 300,
-      }}
-    >
-      <div>Connected: {debugInfo.connected ? "✅" : "❌"}</div>
-      <div>Events: {debugInfo.eventCount}</div>
-      <div>Last: {debugInfo.lastEvent || "None"}</div>
-      <div>Orders: {orders.length}</div>
-      {debugInfo.errors.length > 0 && (
-        <div>Errors: {debugInfo.errors.slice(-2).join(", ")}</div>
-      )}
-    </div>
-  );
-
+  // Public API
   return {
-    isConnected: socketRef.current?.connected || false,
+    isConnected: connectionState.current.isConnected,
+    hasJoinedRoom: connectionState.current.hasJoinedRoom,
     disconnect: () => socketRef.current?.disconnect(),
     reconnect: () => socketRef.current?.connect(),
-    debugInfo,
-    DebugPanel, // Temporary debug component
   };
 }

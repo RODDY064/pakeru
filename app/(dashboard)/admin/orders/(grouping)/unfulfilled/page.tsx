@@ -20,7 +20,7 @@ export default function Unfulfilled() {
     { label: "Response per order", value: 0 },
   ]);
 
-  const { isConnected, DebugPanel: DebugPanelComponent } = useOrdersWebhook();
+  const { isConnected, } = useOrdersWebhook();
 
   const {
     unfulfilledOrders,
