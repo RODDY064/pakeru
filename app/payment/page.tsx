@@ -16,6 +16,7 @@ import { apiCall } from "@/libs/functions";
 import { toast } from "../ui/toaster";
 import { usePaymentProcessing } from "@/libs/paymentFunc";
 import { useAuth } from "@/libs/useAuth";
+import { useSession } from "next-auth/react";
 
 const userDetailsSchema = z.object({
   useremail: z.string().email("Please enter a valid email address"),
@@ -39,8 +40,9 @@ const userDetailsSchema = z.object({
 type UserDetailsForm = z.infer<typeof userDetailsSchema>;
 
 export default function Payment() {
-  const { cartItems, getCartStats, user } = useBoundStore();
+  const { cartItems, getCartStats, userData } = useBoundStore();
   const { accessToken } = useAuth();
+  const { data: session } = useSession()
 
   const { processPayment,isProcessing } = usePaymentProcessing();
   const [error, setError] = useState<string>("");
@@ -69,10 +71,10 @@ export default function Payment() {
   }, [getCartStats, cartItems]);
 
   useEffect(() => {
-    setValue("firstname", user?.firstname ?? "admin(updated)");
-    setValue("useremail", user?.email ?? "admin@gmail.com");
-    setValue("lastname", user?.lastname ?? "admin");
-  }, [setValue, user]);
+    setValue("firstname", session?.user?.firstname as string);
+    setValue("useremail", session?.user?.username as string);
+    setValue("lastname", session?.user?.lastname as string);
+  }, [setValue, session?.user]);
 
   const onSubmit = async (data: UserDetailsForm) => {
     // Reset previous errors

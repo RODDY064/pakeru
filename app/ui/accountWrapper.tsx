@@ -4,9 +4,10 @@ import gsap from "gsap";
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
-import { AccountContext } from "../(home)/account/account-context";
+import { AccountContext, useAccount } from "../(home)/account/account-context";
 import { usePathname, useRouter } from "next/navigation";
 import { useBoundStore } from "@/store/store";
+import { signOut } from "next-auth/react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,6 +16,8 @@ export default function AccountWrapper({
 }: {
   children: React.ReactNode;
 }) {
+
+    
   const [pages, setPages] = useState([
     {
       name: "profile",
@@ -128,7 +131,7 @@ export default function AccountWrapper({
               )}
             </div>
             <div className="h-full flex px-10 items-center relative border-r border-black/10">
-              <div className="py-2 px-8 bg-black text-white rounded cursor-pointer">
+              <div onClick={()=>signOut()} className="py-2 px-8 bg-black text-white rounded cursor-pointer">
                 Sign out
               </div>
             </div>

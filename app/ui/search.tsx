@@ -105,13 +105,13 @@ export default function Search() {
     <AnimatePresence>
       <motion.div
         variants={overlayVariants}
+        transition={{ ease:"easeInOut" }}
         animate={isSearching ? "visible" : "hide"}
         initial={{ height: "0%", opacity: 0 }}
         exit="hide"
         className={`fixed top-0 z-[99] w-full bg-white flex flex-col searchModal invisible items-center opacity-0 h-0 left-0 font-avenir overflow-hidden ${
           isSearching ? "pointer-events-auto" : "pointer-events-none"
-        }`}
-      >
+        }`}>
         <div className="w-full flex items-center flex-none justify-between px-4 md:px-24">
           <div className="hidden md:flex" />
           <motion.div variants={logoVariants}>
@@ -210,12 +210,12 @@ const overlayVariants = {
     transition: {
       height: {
         duration: 0.5,
-        ease: "easeOut",
+
         times: [0, 0.15, 1],
       },
       opacity: {
         duration: 0.3,
-        ease: "easeOut",
+
         times: [0, 1, 1],
       },
       staggerChildren: 0.08,
@@ -228,11 +228,11 @@ const overlayVariants = {
     transition: {
       height: {
         duration: 0.5,
-        ease: "easeIn",
+        
       },
       opacity: {
         duration: 0.2,
-        ease: "easeIn",
+        
       },
       staggerChildren: 0.045,
       staggerDirection: -1,
@@ -247,7 +247,6 @@ const logoVariants = {
     scale: 1,
     transition: {
       duration: 0.15,
-      ease: "easeOut",
     },
   },
   hide: {
@@ -256,7 +255,7 @@ const logoVariants = {
     scale: 0.9,
     transition: {
       duration: 0.1,
-      ease: "easeIn",
+      
     },
   },
 };
@@ -267,7 +266,6 @@ const searchContainerVariants = {
     y: 0,
     transition: {
       duration: 0.2,
-      ease: "easeOut",
       staggerChildren: 0.06,
     },
   },
@@ -276,7 +274,7 @@ const searchContainerVariants = {
     y: 20,
     transition: {
       duration: 0.2,
-      ease: "easeIn",
+      
     },
   },
 };
@@ -288,7 +286,6 @@ const searchBoxVariants = {
     y: 0,
     transition: {
       duration: 0.3,
-      ease: "easeOut",
       staggerChildren: 0.08,
     },
   },
@@ -298,7 +295,7 @@ const searchBoxVariants = {
     y: 10,
     transition: {
       duration: 0.2,
-      ease: "easeIn",
+      
     },
   },
 };
@@ -310,7 +307,6 @@ const searchIconVariants = {
     rotate: 0,
     transition: {
       duration: 0.25,
-      ease: "easeOut",
     },
   },
   hide: {
@@ -319,7 +315,7 @@ const searchIconVariants = {
     rotate: -90,
     transition: {
       duration: 0.15,
-      ease: "easeIn",
+      
     },
   },
 };
@@ -330,7 +326,6 @@ const inputVariants = {
     x: 0,
     transition: {
       duration: 0.25,
-      ease: "easeOut",
       delay: 0.2,
     },
   },
@@ -339,7 +334,7 @@ const inputVariants = {
     x: 10,
     transition: {
       duration: 0.15,
-      ease: "easeIn",
+      
     },
   },
 };
@@ -349,14 +344,13 @@ const closeVariants = {
     opacity: 1,
     transition: {
       duration: 0.25,
-      ease: "easeOut",
     },
   },
   hide: {
     opacity: 0,
     transition: {
       duration: 0.15,
-      ease: "easeIn",
+      
     },
   },
 };
@@ -367,7 +361,6 @@ const searchParentVariants = {
     y: 0,
     transition: {
       duration: 0.3,
-      ease: "easeOut",
       delay: 0.5,
     },
   },
@@ -376,7 +369,7 @@ const searchParentVariants = {
     y: 20,
     transition: {
       duration: 0.2,
-      ease: "easeIn",
+      
     },
   },
 };

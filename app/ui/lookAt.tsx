@@ -54,7 +54,7 @@ const { isStart, isEnd } = useGsapSlider({
         animate={
           lookAt && SlideInview?.inView ? { opacity: 1 } : { opacity: 0 }
         }
-        transition={{ easings: easingShow }}
+        transition={{ ease: easingShow }}
         className="w-full h-full absolute top-0 bg-black/60 backdrop-blur-sm"
       />
       <motion.div

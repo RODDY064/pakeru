@@ -52,7 +52,7 @@ export class ProductAPIService {
 
   static async deleteProduct(
     productId: string,
-    del: ReturnType<typeof useApiClient>["delete"]
+    del: ReturnType<typeof useApiClient>["del"]
   ): Promise<any> {
     const deletePromise = (async () => {
       const response = await del(`/products/${productId}`, {

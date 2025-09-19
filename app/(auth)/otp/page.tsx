@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useRef, useEffect } from "react";
 
 export default function OTP() {
-  const { user, storeUserToken} = useBoundStore();
+  const { userData } = useBoundStore();
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(""));
   const [counter, setCounter] = useState<number>(300); 
   const [isResendDisabled, setIsResendDisabled] = useState<boolean>(true);
@@ -20,8 +20,8 @@ export default function OTP() {
   const router = useRouter();
 
   useEffect(()=>{
-    console.log(user)
-  },[user])
+    console.log(userData)
+  },[userData])
 
 
   // Timer effect for countdown
@@ -111,14 +111,14 @@ export default function OTP() {
       return;
     }
 
-    console.log(user?.email, user?.userType);
+    console.log(userData?.email, userData?.userType);
 
     setOState("loading");
 
     try {
-      if (user?.email && user.userType === "unverified") {
+      if (userData?.email && userData.userType === "unverified") {
         const newData = {
-          email: user.email,
+          email: userData.email,
           code: otpValue,
         };
 
@@ -138,8 +138,6 @@ export default function OTP() {
         console.log("OTP submitted:", otpValue);
 
         const response = await res.json()
-        // console.log(response)
-        storeUserToken(response.token)
         setOState("submitted");
 
         setTimeout(()=>{
@@ -182,8 +180,8 @@ export default function OTP() {
       <p className="font-avenir text-md md:text-lg font-medium my-4 text-center">
         Verify your email with the 6-digit code <br /> sent to
         <span>
-          {user?.userType === "unverified" && (
-            <span className="font-semibold px-2">{formatEmail(user.email)}</span>
+          {userData?.userType === "unverified" && (
+            <span className="font-semibold px-2">{formatEmail(userData.email)}</span>
           )}
         </span>
       </p>

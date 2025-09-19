@@ -24,7 +24,7 @@ export type Store = ScrollStore &
   CartStore &
   ModalStore &
   ImgSlideStore &
-  UserStore &
+  UserStore & 
   GeneralStore &
   CategoryStore &
   OrdersStore &
@@ -48,13 +48,9 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
     cartItems: state.cartItems,
     cartInView: state.cartInView,
     bookMarks: state.bookMarks,
-    // Add other states you want to persist:
-    // user: state.user,
-    // searchHistory: state.searchHistory,
-    // preferences: state.preferences,
   }),
 
-  // Enhanced storage configuration with robust error handling
+
   storage: {
     getItem: (name: string) => {
       try {
@@ -303,7 +299,6 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
 export const useBoundStore = create<Store>()(
   persist(
    immer((set, get, store) => ({
-      // merge all slices correctly (with 3 args)
       ...useScrollStore(set, get, store),
       ...useSearch(set, get, store),
       ...useFilterStore(set, get, store),
@@ -316,7 +311,6 @@ export const useBoundStore = create<Store>()(
       ...useOrdersStore(set, get, store),
       ...useStoreProductStore(set, get, store),
       ...usePaginationStore(set, get, store),
-
       // custom state
       isServerInitialized: false,
 

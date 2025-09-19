@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ProductAPIService } from './helpers'; 
+import { useApiClient } from '@/libs/useApiClient';
 
 interface DeleteModalProps {
   productID: string;
@@ -19,6 +20,7 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
   const [confirmationText, setConfirmationText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const {  get , del} = useApiClient()
 
   const isConfirmationValid = confirmationText.trim() === productName.trim();
 
@@ -32,7 +34,7 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
     setDeleteError(null);
 
     try {
-      await ProductAPIService.deleteProduct(productID);
+      await ProductAPIService.deleteProduct(productID,del);
       
       // Call success callback if provided
       onDeleteSuccess?.();

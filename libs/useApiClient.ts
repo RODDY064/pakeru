@@ -84,7 +84,7 @@ export const useApiClient = (options: UseApiClientOptions = {}) => {
     get,
     post,
     patch,
-    delete: del,
+    del: del,
     isAuthLoading,
     isAuthenticated,
     client: apiClient

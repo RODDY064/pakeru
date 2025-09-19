@@ -2,7 +2,6 @@
 
 import { useBoundStore } from "@/store/store";
 import {
-  useAnimation,
   motion,
   AnimatePresence,
   cubicBezier,

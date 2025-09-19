@@ -59,96 +59,102 @@ export default function Filter() {
         <>
           <div
             className={`fixed w-full top-0 h-full flex flex-col   z-[99] ${
-              filter ? "pointer-events-auto bg-black/70" : "pointer-events-none "
+              filter
+                ? "pointer-events-auto bg-black/70"
+                : "pointer-events-none "
             }`}
           >
-          <AnimatePresence>
+            <AnimatePresence>
               <motion.div
-              variants={Parent}
-              animate={filter ? "show" : "hide"}
-              initial="hide"
-              exit="hide"
-              className={cn(
-                "font-avenir text-black md:flex flex-col bg-black/70 h-full  border-black overflow-hidden"
-              )}>
-              <motion.div className="w-full h-full z-50   bg-white border-r-[0.5px] relative">
-                <motion.div className="w-full h-full flex-none overflow-hidden   p-10">
-                  <div
-                    onClick={() => filterState(!filter)}
-                    className="flex items-center mb-10 gap-1 cursor-pointer">
-                    <div className="relative flex">
-                      <div className="w-[16px] h-[1px] bg-black rotate-45"></div>
-                      <div className="w-[16px] h-[1px] bg-black rotate-[-45deg] absolute"></div>
-                    </div>
-                    <p className="tex-sm font-avenir font-medium pt-0.5">
-                      CLOSE
-                    </p>
-                  </div>
-                  {filteritems.map((filt) => (
-                    <motion.div
-                      layout
-                      animate={
-                        filt.view
-                          ? { height: heights[filt.name] }
-                          : { height: 40 }
-                      }
-                      key={filt.name}
-                      className="mr-6 pb-4  overflow-hidden border-b border-dashed mt-4"
+                variants={Parent}
+                animate={filter ? "show" : "hide"}
+                initial="hide"
+                exit="hide"
+                transition={{ ease: "easeInOut" }}
+                className={cn(
+                  "font-avenir text-black md:flex flex-col bg-black/70 h-full  border-black overflow-hidden"
+                )}
+              >
+                <motion.div className="w-full h-full z-50   bg-white border-r-[0.5px] relative">
+                  <motion.div className="w-full h-full flex-none overflow-hidden   p-10">
+                    <div
+                      onClick={() => filterState(!filter)}
+                      className="flex items-center mb-10 gap-1 cursor-pointer"
                     >
-                      <div className="w-full flex justify-between">
-                        <p className="text-md  font-avenir">
-                          {filt.name.toLocaleUpperCase()}
-                        </p>
-                        <div
-                          onClick={() => setFilterView(filt.name)}
-                          className="cursor-pointer"
-                        >
-                          <Image
-                            src="/icons/arrow.svg"
-                            width={16}
-                            height={16}
-                            alt="arrow"
-                            className={cn("", {
-                              "rotate-[-180deg]": filt.view,
-                            })}
-                          />
-                        </div>
+                      <div className="relative flex">
+                        <div className="w-[16px] h-[1px] bg-black rotate-45"></div>
+                        <div className="w-[16px] h-[1px] bg-black rotate-[-45deg] absolute"></div>
                       </div>
-                      <div
-                        className={cn("mt-4 grid gap-1.5 grid-cols-2 ", {
-                          "grid-cols-1 max-h-[100px] ": filt.name === "sort by",
-                        })}
+                      <p className="tex-sm font-avenir font-medium pt-0.5">
+                        CLOSE
+                      </p>
+                    </div>
+                    {filteritems.map((filt) => (
+                      <motion.div
+                        layout
+                        animate={
+                          filt.view
+                            ? { height: heights[filt.name] }
+                            : { height: 40 }
+                        }
+                        key={filt.name}
+                        className="mr-6 pb-4  overflow-hidden border-b border-dashed mt-4"
                       >
-                        {filt.content.map((item, index) => (
+                        <div className="w-full flex justify-between">
+                          <p className="text-md  font-avenir">
+                            {filt.name.toLocaleUpperCase()}
+                          </p>
                           <div
-                            onClick={() => toggleSelection(filt.name, item)}
-                            key={index}
-                            className={cn(
-                              "flex gap-2 items-center cursor-pointer "
-                            )}
+                            onClick={() => setFilterView(filt.name)}
+                            className="cursor-pointer"
                           >
-                            <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
-                              <motion.div
-                                animate={
-                                  filt.selected.includes(item)
-                                    ? { opacity: 1 }
-                                    : { opacity: 0 }
-                                }
-                                className="w-full h-full bg-black rounded-full"
-                              ></motion.div>
-                            </div>
-                            <p className=" font-avenir text-black/70 text-sm">
-                              {item.toLocaleUpperCase()}
-                            </p>
+                            <Image
+                              src="/icons/arrow.svg"
+                              width={16}
+                              height={16}
+                              alt="arrow"
+                              className={cn("", {
+                                "rotate-[-180deg]": filt.view,
+                              })}
+                            />
                           </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  ))}
+                        </div>
+                        <div
+                          className={cn("mt-4 grid gap-1.5 grid-cols-2 ", {
+                            "grid-cols-1 max-h-[100px] ":
+                              filt.name === "sort by",
+                          })}
+                        >
+                          {filt.content.map((item, index) => (
+                            <div
+                              onClick={() => toggleSelection(filt.name, item)}
+                              key={index}
+                              className={cn(
+                                "flex gap-2 items-center cursor-pointer "
+                              )}
+                            >
+                              <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
+                                <motion.div
+                                  animate={
+                                    filt.selected.includes(item)
+                                      ? { opacity: 1 }
+                                      : { opacity: 0 }
+                                  }
+                                  className="w-full h-full bg-black rounded-full"
+                                ></motion.div>
+                              </div>
+                              <p className=" font-avenir text-black/70 text-sm">
+                                {item.toLocaleUpperCase()}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 </motion.div>
               </motion.div>
-            </motion.div>
-          </AnimatePresence>
+            </AnimatePresence>
           </div>
           {/* { filter && <div className="bg-black/70 w-full h-full absolute top-0"/>} */}
         </>
@@ -156,6 +162,7 @@ export default function Filter() {
         <AnimatePresence>
           <motion.div
             variants={mobileParent}
+            transition={{ ease: "easeInOut" }}
             animate={filter ? "show" : "hide"}
             initial="hide"
             exit="hide"
@@ -170,10 +177,12 @@ export default function Filter() {
             {!modal && (
               <motion.div
                 variants={mfiltButton}
+                transition={{ ease: "easeInOut" }}
                 className="w-screen pb-2 bg-white flex items-center justify-center z-20 mobile-nav-filt"
               >
                 <motion.div
                   variants={mFiltTextB}
+                  transition={{ ease: "easeInOut" }}
                   className="flex w-fit items-center justify-between px-4 py-1 rounded-[2px] relative  cursor-pointer"
                 >
                   <div
@@ -204,6 +213,7 @@ export default function Filter() {
                   </div>
                   <motion.div
                     variants={mobFiltItem}
+                    transition={{ ease: "easeInOut" }}
                     className="absolute top-10   opacity-0  border-t-[0.5px] w-full left-0 px-4 pt-4"
                   >
                     <motion.div className="w-auto relative  border-black ">
@@ -285,11 +295,11 @@ export default function Filter() {
 const Parent = {
   show: {
     width: "400px",
-    transition: { duration: 0.3, ease: "easeInOut" },
+    transition: { duration: 0.3 },
   },
   hide: {
     width: "0px",
-    transition: { duration: 0.3, ease: "easeInOut" },
+    transition: { duration: 0.3 },
   },
 };
 
@@ -299,7 +309,6 @@ const mobileParent = {
     paddingBottom: 0,
     transition: {
       duration: 0.4,
-      ease: "easeInOut",
       staggerChildren: 0.02,
     },
   },
@@ -307,7 +316,6 @@ const mobileParent = {
     height: "auto",
     transition: {
       duration: 0.3,
-      ease: "easeInOut",
       when: "afterChildren",
       staggerChildren: 0.05,
       staggerDirection: -1,
@@ -322,7 +330,6 @@ const mfiltButton = {
     paddingTop: 16,
     transition: {
       duration: 0.3,
-      ease: "easeInOut",
       delay: 0.1,
     },
   },
@@ -331,7 +338,6 @@ const mfiltButton = {
     paddingTop: 8,
     transition: {
       duration: 0.2,
-      ease: "easeInOut",
     },
   },
 };
@@ -343,7 +349,6 @@ const mFiltTextB = {
     color: "black",
     transition: {
       duration: 0.3,
-      ease: "easeInOut",
     },
   },
   hide: {
@@ -352,7 +357,6 @@ const mFiltTextB = {
     color: "white",
     transition: {
       duration: 0.25,
-      ease: "easeInOut",
     },
   },
 };

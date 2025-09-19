@@ -88,7 +88,6 @@ export default function Nav() {
     initializeMenuItems,
     isServerInitialized,
     categories,
-    loadUserToken
   } = useBoundStore();
 
   useStoreInitialization();
@@ -116,8 +115,6 @@ export default function Nav() {
 
 
   useEffect(() => {
-
-    loadUserToken()
 
     const handleResize = () => {
       if (window.innerWidth < 1000) {

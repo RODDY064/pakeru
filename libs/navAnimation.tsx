@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { AnimationControls } from "motion/react";
 import { useBoundStore } from "@/store/store";
+import { animationControls } from "motion/react";
 
 type Timeout = ReturnType<typeof setTimeout> | null;
 
 export const useSearchAndHoverControls = (
-  searchControls: AnimationControls,
-  hoverControls: AnimationControls
+  searchControls: typeof animationControls,
+  hoverControls: typeof animationControls
 ) => {
   const [isHover, setIsHover] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -47,7 +47,7 @@ export const useSearchAndHoverControls = (
       setIsSearching(false);
       setIsSearchFocused(false);
       setIsTyping(false);
-      searchControls.start("hide");
+      searchControls().start("hide");
     }
 
     // Clear hover timers
@@ -56,7 +56,7 @@ export const useSearchAndHoverControls = (
 
     hoverTimeout.current = setTimeout(() => {
       setIsHover(true);
-      hoverControls.start("show");
+      hoverControls().start("show");
     }, 150);
   };
 
@@ -65,7 +65,7 @@ export const useSearchAndHoverControls = (
 
     hoverOutTimeout.current = setTimeout(() => {
       setIsHover(false);
-      hoverControls.start("hide");
+      hoverControls().start("hide");
     }, 200);
   };
 
@@ -76,7 +76,7 @@ export const useSearchAndHoverControls = (
       if (hoverOutTimeout.current) clearTimeout(hoverOutTimeout.current);
 
       setIsHover(false);
-      hoverControls.start("hide");
+      hoverControls().start("hide");
     }
 
     setIsSearchFocused(true);
@@ -85,45 +85,44 @@ export const useSearchAndHoverControls = (
 
     searchTimeout.current = setTimeout(() => {
       setIsSearching(true);
-      searchControls.start("show");
+      searchControls().start("show");
     }, 150);
   };
 
-  const handleSearchBlur = (e: { relatedTarget: any; }) => {
-  const nextFocus = e.relatedTarget;
+  const handleSearchBlur = (e: { relatedTarget: any }) => {
+    const nextFocus = e.relatedTarget;
 
-  // If focus moves to a related element, don't close the curtain
-  if (nextFocus) {
-    const isInsideCurtain = nextFocus.closest(".nav-curtain");
-    if (isInsideCurtain) {
-      return;
+    // If focus moves to a related element, don't close the curtain
+    if (nextFocus) {
+      const isInsideCurtain = nextFocus.closest(".nav-curtain");
+      if (isInsideCurtain) {
+        return;
+      }
     }
-  }
 
-  setIsSearchFocused(false);
-  setNavSearch("");
+    setIsSearchFocused(false);
+    setNavSearch("");
 
-  // Only hide search animation if not typing
-  if (!isTyping) {
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchOutTimeout.current = setTimeout(() => {
-      setIsSearching(false);
-      searchControls.start("hide");
-    }, 200);
-  }
-};
-
+    // Only hide search animation if not typing
+    if (!isTyping) {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+      searchOutTimeout.current = setTimeout(() => {
+        setIsSearching(false);
+        searchControls().start("hide");
+      }, 200);
+    }
+  };
 
   const handleSearchInputChange = (value: string) => {
     setIsTyping(true);
-    setNavSearch(value); 
+    setNavSearch(value);
 
     if (isHover) {
       if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
       if (hoverOutTimeout.current) clearTimeout(hoverOutTimeout.current);
 
       setIsHover(false);
-      hoverControls.start("hide");
+      hoverControls().start("hide");
     }
 
     // Reset typing timeout
@@ -135,7 +134,7 @@ export const useSearchAndHoverControls = (
       if (!isSearchFocused) {
         searchOutTimeout.current = setTimeout(() => {
           setIsSearching(false);
-          searchControls.start("hide");
+          searchControls().start("hide");
         }, 200);
       }
     }, 1000);

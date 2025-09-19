@@ -36,7 +36,6 @@ function SignInForm() {
     resolver: zodResolver(SignInType),
   });
 
-  const { setUser } = useBoundStore();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -62,27 +61,6 @@ function SignInForm() {
       if (!response || response.error) {
         throw new Error(response?.error || "Authentication failed");
       }
-
-      // Handle unverified email case
-      // if (response.msg?.includes("Email not verified")) {
-      //   setErrorMessage("Email not verified. Check your inbox.");
-      //   setSignState("unverified");
-      //   setUser({
-      //     email: data.username,
-      //     userType: "unverified",
-      //   });
-      //   router.push("/otp");
-      //   return;
-      // }
-
-      // // Success - set user state
-      // setUser({
-      //   firstname: response.firstName,
-      //   lastname: result.user.lastName,
-      //   email: result.user.email,
-      //   userType: "verified",
-      //   role: result.user.role,
-      // });
 
       setSignState("submitted");
 

@@ -12,8 +12,6 @@ const SignInType = z.object({
 
 class AuthService {
   private static baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  private static refreshTokenName =
-    process.env.REFRESH_TOKEN_NAME || "refreshToken";
 
   // Helper method to decode JWT using Buffer and get expiration
   private static getTokenExpiration(token: string): number {
@@ -70,7 +68,7 @@ class AuthService {
 
     return {
       _id: data.user._id,
-      email: data.user.username,
+      email: data.user.email,
       firstname: data.user.firstName,
       lastname: data.user.lastName,
       accessToken: data.accessToken,
@@ -78,7 +76,10 @@ class AuthService {
     };
   }
 
-  static async refresh(): Promise<{
+  static async refresh(
+    maxRetries = 3,
+    retryDelay = 1000
+  ): Promise<{
     accessToken: string;
     expiresAt: number;
     user?: {
@@ -92,35 +93,50 @@ class AuthService {
       lastname?: string;
     };
   } | null> {
-    try {
-      const response = await fetch(`${this.baseUrl}/v1/auth/refresh`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(`${this.baseUrl}/v1/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-      if (!response.ok) {
-        console.log("Refresh failed with status:", response.status);
-        return null;
+        if (!response.ok) {
+          console.log(
+            `Refresh attempt ${attempt} failed with status: ${response.status}`
+          );
+          if (attempt === maxRetries) {
+            return null;
+          }
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
+          continue;
+        }
+
+        const data = await response.json();
+        console.log("Refresh response:", data);
+
+        // Decode the new access token to get expiration
+        const expiresAt = this.getTokenExpiration(data.accessToken);
+
+        return {
+          accessToken: data.accessToken,
+          expiresAt,
+          user: data.user,
+        };
+      } catch (error) {
+        console.error(
+          `Refresh token request failed on attempt ${attempt}:`,
+          error
+        );
+        if (attempt === maxRetries) {
+          return null;
+        }
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
       }
-
-      const data = await response.json();
-      console.log("Refresh response:", data);
-
-      // Decode the new access token to get expiration
-      const expiresAt = this.getTokenExpiration(data.accessToken);
-
-      return {
-        accessToken: data.accessToken,
-        expiresAt,
-        user: data.user,
-      };
-    } catch (error) {
-      console.error("Refresh token request failed:", error);
-      return null;
     }
+    return null;
   }
 }
 

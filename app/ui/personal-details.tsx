@@ -7,9 +7,10 @@ import CardSvg from "./cardSvg";
 import Image from "next/image";
 import { useBoundStore } from "@/store/store";
 import { capitalize } from "@/libs/functions";
+import { useSession } from "next-auth/react";
 
 export default function PersonalDetails() {
-  const { user } = useBoundStore()
+  const { data: session } = useSession();
   const { register } = useForm();
 
   return (
@@ -30,9 +31,11 @@ export default function PersonalDetails() {
           <div className="size-20 rounded-full border border-black/20 flex-none "></div>
           <div className="md:w-[50%] mb-2 flex justify-between ">
             <div>
-              <p className="font-avenir text-xl font-medium ">{capitalize(user?.firstname) + " " + capitalize(user?.lastname)}</p>
+              <p className="font-avenir text-xl font-medium ">
+                {capitalize(session?.user?.firstname) + " " + capitalize(session?.user?.lastname)}
+              </p>
               <p className="font-avenir text-md font-[500] text-black/50">
-                {user?.email}
+                {session?.user?.username}
               </p>
             </div>
             <div className="mt-1 xl:inline hidden">

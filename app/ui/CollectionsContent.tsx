@@ -102,7 +102,8 @@ export default function CollectionsContent() {
       <div className="mt-36 md:mt-12 w-full  flex flex-col items-center text-black  home-main  transition-all">
         <div className="w-full grid  md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out">
           {[1, 2, 3, 5].map((item) => (
-            <ProductCard key={item} type="large" />
+            <div key={item}></div>
+            // <ProductCard key={item} type="large" />
           ))}
         </div>
       </div>
