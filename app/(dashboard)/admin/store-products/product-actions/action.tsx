@@ -17,6 +17,7 @@ import ColorStockAndSizes from "@/app/ui/dashboard/colorStockAndSize";
 import ProductTags from "@/app/ui/dashboard/productTags";
 import { mapVariantsToColors, ProductAPIService } from "./helpers";
 import DeleteModal from "./deleletModal";
+import { useApiClient } from "@/libs/useApiClient";
 
 export type ProductImage = {
   _id: number;
@@ -66,6 +67,8 @@ function ProductActionsContent() {
     loadStoreProduct,
     getCategoryNameById,
   } = useBoundStore();
+
+  const { patch, post  } = useApiClient()
 
   const [colors, setColors] = useState<ProductColor[]>([]);
   const [submitError, setSubmitError] = useState<string>("");
@@ -238,12 +241,13 @@ function ProductActionsContent() {
         const result = await ProductAPIService.updateProduct(
           productID,
           data,
-          colors
+          colors,
+          patch
         );
         console.log("Product updated successfully:", result);
       } else {
         // Create new product
-        const result = await ProductAPIService.createProduct(data, colors);
+        const result = await ProductAPIService.createProduct(data, colors, post);
         console.log("Product created successfully:", result);
       }
 
