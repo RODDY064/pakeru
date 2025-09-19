@@ -48,7 +48,7 @@ Response: 201 Created
 "message": "User registered successfully. Check your email for verification.",
 }
 
-➡️ POST /auth/login
+➡️ POST /auth/sign-in
 
 Description: Log in with credentials
 
@@ -63,7 +63,7 @@ Response: 200 OK
 
 {
 "status":"success",
-"message": "Login successful",
+"message": "sign-in successful",
 "user": { \_id, firstName,firstName, email, role, isEmailVerified},
 "token": "JWT_TOKEN"
 }

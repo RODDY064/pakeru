@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { toast } from "@/app/ui/toaster";
 import { useBoundStore } from "@/store/store";
@@ -27,7 +27,7 @@ interface ConnectionState {
 
 export function useOrdersWebhook() {
   const socketRef = useRef<Socket | null>(null);
-  const connectionState = useRef<ConnectionState>({
+  const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
     hasJoinedRoom: false,
   });
@@ -50,16 +50,18 @@ export function useOrdersWebhook() {
 
   // Event handlers
   const handleConnection = useCallback(() => {
+    console.log("WebSocket connected");
     const socket = socketRef.current;
     if (!socket) return;
 
-    connectionState.current.isConnected = true;
+    setConnectionState(prev => ({ ...prev, isConnected: true }));
     socket.emit("join_admin_room");
   }, []);
 
   const handleDisconnection = useCallback((reason: string) => {
-    connectionState.current = { isConnected: false, hasJoinedRoom: false };
-    
+    console.log("WebSocket disconnected, reason:", reason);
+    setConnectionState({ isConnected: false, hasJoinedRoom: false });
+
     // Auto-reconnect only for server-initiated disconnections
     if (reason === "io server disconnect") {
       socketRef.current?.connect();
@@ -67,8 +69,8 @@ export function useOrdersWebhook() {
   }, []);
 
   const handleAdminRoomJoined = useCallback(() => {
-    connectionState.current.hasJoinedRoom = true;
-    
+    setConnectionState(prev => ({ ...prev, hasJoinedRoom: true }));
+
     toast({
       title: "Connected",
       description: "Real-time order updates enabled",
@@ -76,115 +78,126 @@ export function useOrdersWebhook() {
     });
   }, []);
 
-  const handleNewOrder = useCallback((apiOrder: any) => {
-    try {
-      const newOrder = transformApiOrderToOrdersData(apiOrder);
-      
-      // Update store atomically
+  const handleNewOrder = useCallback(
+    (apiOrder: any) => {
+      try {
+        const newOrder = transformApiOrderToOrdersData(apiOrder);
+
+        // Update store atomically
+        useBoundStore.setState(
+          produce((draft: any) => {
+            // Prevent duplicates
+            const exists = draft.unfulfilledOrders.some(
+              (order: OrdersData) => order._id === newOrder._id
+            );
+
+            if (!exists) {
+              draft.unfulfilledOrders.unshift(newOrder);
+            }
+          })
+        );
+
+        // Update computed state
+        updateOrdersState();
+
+        // Show user notification
+        toast({
+          title: (
+            <div className="flex items-center gap-2 px-2">
+              <Image
+                src="/icons/orders-w.svg"
+                width={20}
+                height={20}
+                alt="New order"
+              />
+              <span className="text-white pt-[2px]">New order placed</span>
+            </div>
+          ),
+          description: `Order ${newOrder.IDTrim} from ${newOrder.user.firstname} ${newOrder.user.lastname}`,
+          variant: "success",
+        });
+      } catch (error) {
+        console.error("Failed to process new order:", error);
+
+        toast({
+          title: "Order Update Failed",
+          description: "Unable to display new order. Please refresh.",
+          variant: "error",
+        });
+      }
+    },
+    [updateOrdersState]
+  );
+
+  const handleOrderUpdate = useCallback(
+    ({ orderId, updates }: OrderEvents["order_updated"]) => {
       useBoundStore.setState(
         produce((draft: any) => {
-          // Prevent duplicates
-          const exists = draft.unfulfilledOrders.some(
-            (order: OrdersData) => order._id === newOrder._id
+          const orderIndex = draft.unfulfilledOrders.findIndex(
+            (order: OrdersData) => order._id === orderId
           );
-          
-          if (!exists) {
-            draft.unfulfilledOrders.unshift(newOrder);
+
+          if (orderIndex !== -1) {
+            Object.assign(draft.unfulfilledOrders[orderIndex], updates);
           }
         })
       );
 
-      // Update computed state
+      updateOrdersState();
+    },
+    [updateOrdersState]
+  );
+
+  const handleOrderCancellation = useCallback(
+    ({ orderId }: OrderEvents["order_cancelled"]) => {
+      useBoundStore.setState(
+        produce((draft: any) => {
+          draft.unfulfilledOrders = draft.unfulfilledOrders.filter(
+            (order: OrdersData) => order._id !== orderId
+          );
+        })
+      );
+
       updateOrdersState();
 
-      // Show user notification
       toast({
-        title: (
-          <div className="flex items-center gap-2 px-2">
-            <Image
-              src="/icons/orders-w.svg"
-              width={20}
-              height={20}
-              alt="New order"
-            />
-            <span className="text-white pt-[2px]">New order placed</span>
-          </div>
-        ),
-        description: `Order ${newOrder.IDTrim} from ${newOrder.user.firstname} ${newOrder.user.lastname}`,
-        variant: "success",
+        title: "Order Cancelled",
+        description: "An order has been cancelled",
+        variant: "default",
       });
+    },
+    [updateOrdersState]
+  );
 
-    } catch (error) {
-      console.error("Failed to process new order:", error);
-      
+  const handleOrderRefund = useCallback(
+    ({ orderId }: OrderEvents["order_refunded"]) => {
+      useBoundStore.setState(
+        produce((draft: any) => {
+          const order = draft.unfulfilledOrders.find(
+            (order: OrdersData) => order._id === orderId
+          );
+
+          if (order) {
+            order.status = "refunded";
+          }
+        })
+      );
+
+      updateOrdersState();
+
       toast({
-        title: "Order Update Failed",
-        description: "Unable to display new order. Please refresh.",
-        variant: "error",
+        title: "Order Refunded",
+        description: "A refund has been processed",
+        variant: "default",
       });
-    }
-  }, [updateOrdersState]);
-
-  const handleOrderUpdate = useCallback(({ orderId, updates }: OrderEvents['order_updated']) => {
-    useBoundStore.setState(
-      produce((draft: any) => {
-        const orderIndex = draft.unfulfilledOrders.findIndex(
-          (order: OrdersData) => order._id === orderId
-        );
-        
-        if (orderIndex !== -1) {
-          Object.assign(draft.unfulfilledOrders[orderIndex], updates);
-        }
-      })
-    );
-    
-    updateOrdersState();
-  }, [updateOrdersState]);
-
-  const handleOrderCancellation = useCallback(({ orderId }: OrderEvents['order_cancelled']) => {
-    useBoundStore.setState(
-      produce((draft: any) => {
-        draft.unfulfilledOrders = draft.unfulfilledOrders.filter(
-          (order: OrdersData) => order._id !== orderId
-        );
-      })
-    );
-    
-    updateOrdersState();
-    
-    toast({
-      title: "Order Cancelled",
-      description: "An order has been cancelled",
-      variant: "default",
-    });
-  }, [updateOrdersState]);
-
-  const handleOrderRefund = useCallback(({ orderId }: OrderEvents['order_refunded']) => {
-    useBoundStore.setState(
-      produce((draft: any) => {
-        const order = draft.unfulfilledOrders.find(
-          (order: OrdersData) => order._id === orderId
-        );
-        
-        if (order) {
-          order.status = 'refunded';
-        }
-      })
-    );
-    
-    updateOrdersState();
-    
-    toast({
-      title: "Order Refunded",
-      description: "A refund has been processed",
-      variant: "default",
-    });
-  }, [updateOrdersState]);
+    },
+    [updateOrdersState]
+  );
 
   // Initialize WebSocket connection
   useEffect(() => {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    
+
     const socket = io(baseUrl, {
       withCredentials: true,
       transports: ["websocket", "polling"],
@@ -213,7 +226,7 @@ export function useOrdersWebhook() {
     return () => {
       socket.disconnect();
       socketRef.current = null;
-      connectionState.current = { isConnected: false, hasJoinedRoom: false };
+      setConnectionState({ isConnected: false, hasJoinedRoom: false });
     };
   }, [
     handleConnection,
@@ -227,8 +240,8 @@ export function useOrdersWebhook() {
 
   // Public API
   return {
-    isConnected: connectionState.current.isConnected,
-    hasJoinedRoom: connectionState.current.hasJoinedRoom,
+    isConnected: connectionState.isConnected,
+    hasJoinedRoom: connectionState.hasJoinedRoom,
     disconnect: () => socketRef.current?.disconnect(),
     reconnect: () => socketRef.current?.connect(),
   };

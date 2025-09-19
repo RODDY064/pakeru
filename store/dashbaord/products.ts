@@ -103,8 +103,6 @@ export type StoreProductStore = {
   totalItems: number;
   totalPages: number;
 
-  bulkDeleteProducts: (ids: string[]) => Promise<void>;
-
   // Selection and navigation
   setSelectedProduct: (product: ProductData | null) => void;
   getProductById: (id: string) => ProductData | undefined;
@@ -210,19 +208,6 @@ export const useStoreProductStore: StateCreator<
   totalItems: 0,
   totalPages: 0,
 
-  bulkDeleteProducts: async (ids) => {
-    try {
-      await Promise.all(ids.map((id) => ProductAPIService.deleteProduct(id)));
-    } catch (error) {
-      set(
-        produce((state: Store) => {
-          state.dashboardProductErrors.general =
-            "Failed to delete some products";
-        })
-      );
-    }
-  },
-
   // Selection and navigation
   setSelectedProduct: (product) =>
     set(
@@ -280,7 +265,7 @@ export const useStoreProductStore: StateCreator<
    setProducts: (products: ProductData[]) => {
     set((state) => {
       state.products = products;
-      state.storeProducts = products; // If you use both
+      state.storeProducts = products; 
       state.cartState = products.length > 0 ? 'success' : 'idle';
       state.error = null;
     });

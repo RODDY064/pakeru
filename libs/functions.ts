@@ -417,12 +417,10 @@ export const apiCall = async (
       "Content-Type": "application/json",
       ...(options.headers ?? {}), 
     },
-     
+    credentials: "include",
     signal: AbortSignal.timeout(30000),
     ...options,
   });
-
-  // console.log("API Response:", response);
 
   if (!response.ok) {
     throw new Error(`API call failed: ${response?.status} ${response?.statusText}`);

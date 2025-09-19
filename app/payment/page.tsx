@@ -14,6 +14,8 @@ import { z } from "zod";
 import router from "next/router";
 import { apiCall } from "@/libs/functions";
 import { toast } from "../ui/toaster";
+import { usePaymentProcessing } from "@/libs/paymentFunc";
+import { useAuth } from "@/libs/useAuth";
 
 const userDetailsSchema = z.object({
   useremail: z.string().email("Please enter a valid email address"),
@@ -37,11 +39,12 @@ const userDetailsSchema = z.object({
 type UserDetailsForm = z.infer<typeof userDetailsSchema>;
 
 export default function Payment() {
-  const { setRouteChange, cartItems, getCartStats, user } = useBoundStore();
-  const [payError, setPayError] = useState<string>("");
-  const [payState, setPayState] = useState<"success" | "idle" | "error">(
-    "idle"
-  );
+  const { cartItems, getCartStats, user } = useBoundStore();
+  const { accessToken } = useAuth();
+
+  const { processPayment,isProcessing } = usePaymentProcessing();
+  const [error, setError] = useState<string>("");
+
   const router = useRouter();
   const {
     register,
@@ -71,96 +74,58 @@ export default function Payment() {
     setValue("lastname", user?.lastname ?? "admin");
   }, [setValue, user]);
 
-  //  payment submission handler
   const onSubmit = async (data: UserDetailsForm) => {
+    // Reset previous errors
+    setError("");
+
     // Early validation
     if (cartItems.length === 0) {
-      setPayError("Your cart is empty!");
+      const errorMsg = "Your cart is empty!";
+      setError(errorMsg);
+      toast.error({
+        title: errorMsg,
+        position: "top-right",
+      });
       return;
     }
 
-    // Clear previous errors
-    setPayError("");
-
+    // Validate form data
     const validationErrors = validateOrderData(data, cartItems);
     if (validationErrors.length > 0) {
       const errorMsg = validationErrors.join(", ");
-      setPayError(errorMsg as string);
-      toast.message.error(errorMsg);
+      setError(errorMsg);
+      toast.error({
+        title: "Validation Error",
+        description: errorMsg,
+        position: "top-right",
+      });
       return;
     }
 
-    const processPayment = async () => {
-      // Build payload with validation
-      const productsArray = cartItems.map((cart) => {
-        const selectedVariant = cart.variants?.find(
-          (v) => v._id === cart.selectedColor
-        );
-
-        return {
-          productId: cart._id,
-          quantity: cart.quantity,
-          variantID: selectedVariant?._id || null,
-          size: cart.selectedSize,
-        };
-      });
-
-      const paymentPayload = {
-        shippingAddress: {
-          address: data.address.trim(),
-          town: data.town.trim(),
-          region: data.region.trim(),
-          landmark: data.landmark?.trim() || "",
-        },
-        items: {
-          numOfItems: cartItems.length,
-          products: productsArray,
-        },
-        totalPrice: cartStat?.totalPrice || 0,
-        discountCode: "", 
-      };
-
-      console.log("Payment payload:", paymentPayload);
-
-      const res = await apiCall("/orders", {
-        method: "POST",
-         
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(paymentPayload),
-      });
-
-      if (!res?.paymentUrl?.data?.authorization_url) {
-        throw new Error("Invalid payment response from server");
-      }
-
-      // Redirect to payment gateway
-      window.location.href = res.paymentUrl.data.authorization_url;
-
-      return res;
-    };
-
-    // Use toast.promise for better UX
-    toast.promise(processPayment(), {
-      loading: "Processing your order...",
-      success: "Redirecting to payment...",
-      error: (err) => {
-        console.error("Payment error:", err);
-        setPayError(
-          "Payment processing failed. Please try again."
-        );
-        return {
-          title: "Payment failed",
-          description: "Payment processing failed. Please try again.",
-        };
-      },
-      position: "top-right",
-    });
+    // Process payment with toast feedback
+    try {
+      await toast.promise(
+        processPayment(data, cartItems, cartStat, { accessToken }),
+        {
+          loading: "Processing your order...",
+          success: {
+            title: "Order Created!",
+            description: "Redirecting to secure payment...",
+          },
+          error: (err: any) => ({
+            title: "Payment Failed",
+            description:  err.message + "Please check your details and try again.",
+          }),
+          position: "top-right",
+        }
+      );
+    } catch (error: any) {
+      console.error("Payment submission failed:", error);
+      setError(error.message || "Payment processing failed. Please try again.");
+    }
   };
 
-
-  // Enhanced form validation
+  // form validation
   const validateOrderData = (
     data: UserDetailsForm,
     cartItems: CartItemType[]
@@ -188,7 +153,8 @@ export default function Payment() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex h-fit w-[95%] md:w-[94%] lg:w-[80%]  flex-col md:flex-row items-stretch justify-center  gap-4 mt-20">
+      className="flex h-fit w-[95%] md:w-[94%] lg:w-[80%]  flex-col md:flex-row items-stretch justify-center  gap-4 mt-20"
+    >
       <div className="flex w-full    md:w-[60%]  lg:w-[45%] flex-none flex-col  ">
         <div
           onClick={() => router.back()}
@@ -433,9 +399,7 @@ export default function Payment() {
           )}
         </button>
         <div className="text-center">
-          {payError && (
-            <p className="font-avenir text-md text-red-500">{payError}</p>
-          )}
+          {error && <p className="font-avenir text-md text-red-500">{error}</p>}
         </div>
       </div>
     </form>

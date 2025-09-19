@@ -10,49 +10,48 @@ import { useBoundStore } from "@/store/store";
 import { useRouter } from "next/navigation";
 import { handleNavigation } from "@/libs/navigate";
 
+const socailMedia = [
+  {
+    name: "tiktok",
+    icon: "tiktok.svg",
+    size: 30,
+    href: "https://www.tiktok.com/@pakeru_",
+  },
+  {
+    name: "instagram",
+    icon: "instagram.svg",
+    size: 30,
+    href: "https://www.instagram.com/pakeru_",
+  },
+  {
+    name: "snapchat",
+    icon: "snapchat.svg",
+    size: 34,
+    href: "https://snapchat.com/t/2roHlINV",
+  },
+];
+
 export default function Footer() {
   const { register } = useForm();
   const { setRouteChange } = useBoundStore();
   const router = useRouter();
 
   return (
-    <div className="w-full h-fit px-4 md:px-8 text-black bg-b ">
-      <div className="w-full h-full border-t-2 border-t-black/5 pb-24 pt-10 flex flex-col xl:flex-row">
-        <div className="xl:w-[60%] flex gap-2 ">
-          <Link
-            href="/"
-            onClick={(e) =>
-              handleNavigation(e, "/", router, setRouteChange, 200)
-            }
-            className="w-fit hidden md:flex " >
-            <div className=" w-fit h-12 overflow-hidden flex my-2 items-center gap-1 cursor-pointer pr-4">
-              <Image src="/icons/logo.svg" width={22} height={24} alt="logo" />
-              <Image
-                src="/icons/logoText.svg"
-                width={72}
-                height={24}
-                alt="logo"
-              />
-            </div>
-          </Link>
-          <div className="ml-4 font-avenir grid items-stretch justify-between grid-cols-2 gap-10 md:grid-cols-3 w-full mt-6">
+    <div className="w-full h-fit px-2 sm:px-4 md:px-8 text-black bg-b py-12 relative">
+      <div className="w-full h-full border-t-2 border-t-black/5 pt-10 flex flex-col xl:flex-row xl:justify-between">
+        <div className="flex xl:w-[40%]">
+          <div className="ml-4 font-avenir grid items-stretch justify-between grid-cols-1 sm:grid-cols-2 gap-10 xl:gap-12 md:grid-cols-3 w-full mt-6">
             {/* Shopping Links */}
             <div className="text-black/70">
-              <p className="text-md font-[400] font-avenir">SHOP</p>
+              <p className="text-sm md:text-md font-[400] font-avenir">SHOP</p>
               <ul className="mt-3 list-disc ml-4 flex flex-col gap-3">
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   New Arrivals
                 </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Best Sellers
                 </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Sale
-                </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Gift Cards
-                </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   All Products
                 </li>
               </ul>
@@ -60,21 +59,18 @@ export default function Footer() {
 
             {/* Customer Service */}
             <div className="text-black/70 ">
-              <p className="text-md font-[400] font-avenir">CUSTOMER SERVICE</p>
+              <p className="text-sm md:text-md font-[400] font-avenir">CUSTOMER SERVICE</p>
               <ul className="mt-3 list-disc ml-4 flex flex-col gap-2">
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Help Center
-                </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Shipping & Returns
                 </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Order Tracking
                 </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Size Guide
                 </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   FAQs
                 </li>
               </ul>
@@ -82,52 +78,29 @@ export default function Footer() {
 
             {/* Company Info */}
             <div className="text-black/70">
-              <p className="text-md font-[400] font-avenir">COMPANY</p>
+              <p className="text-sm md:text-md font-[400] font-avenir">COMPANY</p>
               <ul className="mt-3 list-disc ml-4 flex flex-col gap-2">
-                <li className="w-fit text-md font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                <li className="w-fit text-sm md:text-md font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   About Us
                 </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Careers
-                </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Press
-                </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Sustainability
-                </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Affiliate Program
-                </li>
-              </ul>
-            </div>
-
-            {/* Legal */}
-            {/* <div className="text-black/70">
-              <p className="text-md font-[400] font-avenir">LEGAL</p>
-              <ul className="mt-3 list-disc ml-4 flex flex-col gap-2">
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Terms of Service
-                </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Privacy Policy
                 </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Cookie Policy
                 </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Accessibility
-                </li>
-                <li className="text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Returns Policy
                 </li>
               </ul>
-            </div> */}
+            </div>
           </div>
         </div>
-        <div className="w-full md:w-[40%] flex flex-col px-4 xl:mt-6 mt-12 xl:ml-0  h">
+        <div className="w-full lg:w-[40%] flex flex-col px-4 xl:mt-6 mt-12 xl:ml-0  h">
           <div className="w-full">
-            <p className="text-sm font-[400] text-black/70 font-avenir">GET IN TOUCH</p>
+            <p className="text-sm font-[400] text-black/70 font-avenir">
+              GET IN TOUCH
+            </p>
             <div className="my-4 mt-2 w-full flex items-center justify-center gap-2">
               <div className="w-[70%]">
                 <Input
@@ -140,6 +113,7 @@ export default function Footer() {
                   image="/icons/contact.svg"
                   imageW={24}
                   imageH={24}
+                  style="md:text-md text-sm"
                 />
               </div>
               <div className="w-[30%]">
@@ -147,17 +121,52 @@ export default function Footer() {
               </div>
             </div>
           </div>
-          <p className="text-xs text-black/50">
-            © 2025 PAKERU. All rights reserved.
-          </p>
+          <div className="flex flex-col md:flex-row justify-between md:items-center">
+            <div className="flex items-center gap-1 my-3">
+              {socailMedia.map((item, index) => (
+                <Link target="_blank" key={index} href={item.href}>
+                  <div className="size-10  rounded-lg cursor-pointer flex items-center justify-center">
+                    <Image
+                      src={`/social/${item.icon}`}
+                      width={item.size}
+                      height={item.size}
+                      alt={item.name}
+                    />
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <p className="text-xs text-black/50 hidden md:flex">
+              &copy; {new Date().getFullYear()} PAKERU. All rights reserved.
+            </p>
+          </div>
         </div>
+      </div>
+      <div className="w-full flex items-center justify-center mt-6 md:mt-12">
+        <Link
+          href="/"
+          onClick={(e) => handleNavigation(e, "/", router, setRouteChange, 200)}
+          className="w-fit " >
+          <div className=" w-fit h-12 overflow-hidden flex my-2 items-center gap-1 cursor-pointer ">
+            <Image src="/icons/logo.svg" width={38} height={24} alt="logo" className="hidden md:flex" />
+            <Image src="/icons/logo.svg" width={24} height={24} alt="logo"  className="md:hidden"/>
+            <Image
+              src="/icons/logoText.svg"
+              width={150}
+              height={24}
+              alt="logo"
+              className="hidden md:flex"
+            />
+            <Image
+              src="/icons/logoText.svg"
+              width={70}
+              height={24}
+              alt="logo"
+              className="md:hidden"
+            />
+          </div>
+        </Link>
       </div>
     </div>
   );
 }
-
-/*  {
-
-
-
-} */

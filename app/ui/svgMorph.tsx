@@ -1,14 +1,7 @@
 "use client";
-import React, { useRef, useLayoutEffect, useState, useEffect } from "react";
-import gsap from "gsap";
-import { MorphSVGPlugin } from "gsap/MorphSVGPlugin";
-import { useGSAP } from "@gsap/react";
+import React, { useRef, useLayoutEffect, useState } from "react";
 import { cn } from "@/libs/cn";
-import Lottie from "lottie-react";
-import loaderAnimation from "../../public/lottie/pakeru.json";
 import Image from "next/image";
-
-gsap.registerPlugin(MorphSVGPlugin);
 
 interface SVGMorphProps {
   rounded?: number;
@@ -57,23 +50,17 @@ export default function SVGMorph({
 }: SVGMorphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [ready, setReady] = useState(false);
-
   const pathRefs = useRef<(SVGPathElement | null)[]>([]);
-  const groupRefs = useRef<(SVGGElement | null)[]>([]);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const splitOccuringtime = useRef<NodeJS.Timeout | null>(null);
-  const [showLoader, setShowLoader] = useState<boolean>(false);
-  const contentWrapperRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const activeItems = items;
+  const activeItems = Math.min(items, render.length);
 
+  // Observe SVG size
   useLayoutEffect(() => {
     const observer = new ResizeObserver(() => {
       if (svgRef.current) {
         const { width, height } = svgRef.current.getBoundingClientRect();
         setSize({ width, height });
-        setReady(true);
       }
     });
 
@@ -81,12 +68,14 @@ export default function SVGMorph({
     return () => observer.disconnect();
   }, []);
 
-  const totalGap = (items - 1) * gap;
+  // Calculate dimensions
+  const totalGap = (activeItems - 1) * gap;
   const boxWidth =
-    direction === "row" ? (size.width - totalGap) / items : size.width;
+    direction === "row" ? (size.width - totalGap) / activeItems : size.width;
   const boxHeight =
-    direction === "column" ? (size.height - totalGap) / items : size.height;
+    direction === "column" ? (size.height - totalGap) / activeItems : size.height;
 
+  // Define paths
   const oneBlobPath = getApplePath(
     strokeWidth / 2,
     strokeWidth / 2,
@@ -95,7 +84,7 @@ export default function SVGMorph({
     rounded
   );
 
-  const multiBlobPaths = [...Array(items)].map((_, i) => {
+  const multiBlobPaths = [...Array(activeItems)].map((_, i) => {
     const x =
       direction === "row"
         ? i * (boxWidth + gap) + strokeWidth / 2
@@ -113,140 +102,29 @@ export default function SVGMorph({
     );
   });
 
-  const timelineRef = useRef<gsap.core.Timeline | null>(null);
-
-  useGSAP(() => {
-    if (!ready || !svgRef.current) return;
-
-    const tl = gsap.timeline({ paused: true });
-    timelineRef.current = tl;
-
-    // Move groups (optional motion)
-    groupRefs.current.forEach((g, i) => {
-      if (g) {
-        tl.to(
-          g,
-          {
-            x: direction === "row" ? (i === 0 ? -2 : 2) : 0,
-            y: direction === "column" ? (i === 0 ? -2 : 2) : 0,
-            ease: "cubic-bezier(0.33, 0.01, 0, 1)",
-          },
-          0
-        );
-      }
-    });
-
-    // Animate all paths
-    pathRefs.current.forEach((p, i) => {
-      if (!p) return;
-
-      tl.to(
-        p,
-        {
-          strokeOpacity: 0,
-          duration: 0.2,
-          ease: "power2.inOut",
-        },
-        0 // start of timeline
-      );
-
-      tl.to(
-        p,
-        {
-          morphSVG: multiBlobPaths[i],
-          ease: "cubic-bezier(0.33, 0.01, 0, 1)",
-          duration: 1.2,
-        },
-        0 // overlap with fade
-      );
-
-      tl.to(
-        p,
-        {
-          strokeOpacity: 1,
-          duration: 0.3,
-          ease: "power2.out",
-        },
-        1.2 // end of morph
-      );
-    });
-
-    return () => tl.kill();
-  }, [ready, oneBlobPath, multiBlobPaths.join("|")]);
-
-  useEffect(() => {
-    if (!timelineRef.current || !ready) return;
-
-    if (splitOccuringtime.current) clearTimeout(splitOccuringtime.current);
-
-    // Clear any previous timeout
-    if (splitOccuringtime.current) {
-      clearTimeout(splitOccuringtime.current);
-    }
-
-    const tl = timelineRef.current;
-    const directionProgress = split ? (reverse ? 0 : 1) : reverse ? 1 : 0;
-
-    let hasShownContent = false;
-
-    requestAnimationFrame(() => {
-      gsap.to(tl, {
-        progress: directionProgress,
-        duration: 1.2,
-        ease: "cubic-bezier(0.33, 0.01, 0, 1)",
-        onStart: () => {},
-        onUpdate: () => {
-          if (!tl) return;
-          const p = tl.progress();
-          if (!hasShownContent && p > 0.4) {
-            hasShownContent = true;
-          }
-        },
-      });
-    });
-
-    setShowLoader(true);
-    splitOccuringtime.current = setTimeout(() => {
-      setShowLoader(false);
-    }, 1200);
-
-    return () => {
-      if (splitOccuringtime.current) clearTimeout(splitOccuringtime.current);
-    };
-  }, [split, reverse, ready]);
-
-  useEffect(() => {
-    contentWrapperRefs.current.forEach((el, i) => {
-      if (el) {
-        gsap.to(el, {
-          opacity: showLoader ? 0 : 1,
-          duration: 0.4,
-          ease: "power2.out",
-        });
-      }
-    });
-  }, [showLoader]);
+  // Determine which path to use based on split and reverse props
+  const pathToUse = split && !reverse ? multiBlobPaths : [oneBlobPath];
 
   return (
-    <div className={`relative  w-full h-full ${className}  overflow-hidden `}>
-      {!split && !reverse ? (
+    <div
+      style={{ minHeight: "100px", minWidth: "100px" }}
+      className={`relative w-full h-full ${className} overflow-hidden`}
+    >
+      {/* Content Layer */}
+      {!split || reverse ? (
         <div
           ref={(el) => {
             contentRefs.current[0] = el;
           }}
-          className="absolute  inset-0 flex items-center justify-center  overflow-hidden p-2"
-          style={{ borderRadius: rounded }}>
-          <div className="text-center absolute z-20 bottom-0  right-0 rounded-4xl w-full h-full flex ">
+          className="absolute inset-0 flex items-center justify-center overflow-hidden p-2"
+          style={{ borderRadius: rounded }}
+        >
+          <div className="text-center absolute z-20 bottom-0 right-0 rounded-4xl w-full h-full flex">
             <div className="relative top-10 left-10">
               <p className="font-avenir text-lg capitalize">{name}</p>
             </div>
-            <div className="size-12 absolute z-9- bottom-6 right-8   flex items-center justify-center">
-              {/* <Lottie
-                animationData={loaderAnimation}
-                loop={true}
-                style={{ width: "100%", height: "100%" }}
-              /> */}
-              <div className="size-10  bg-black/5 rounded-full cursor-pointer  flex items-center justify-center">
+            <div className="size-12 absolute z-9 bottom-6 right-8 flex items-center justify-center">
+              <div className="size-10 bg-black/5 rounded-full cursor-pointer flex items-center justify-center">
                 <Image
                   src="/icons/bag.svg"
                   width={24}
@@ -269,44 +147,38 @@ export default function SVGMorph({
                 ref={(el) => {
                   contentRefs.current[i] = el;
                 }}
-                className="absolute flex items-center justify-center p-2 overflow-hidden "
+                className="absolute flex items-center justify-center p-2 overflow-hidden"
                 style={{
                   left: x,
                   top: y,
                   width: boxWidth,
                   height: boxHeight,
-                  willChange: "opacity",
                 }}
               >
-                {
-                  <>
+                <div className={cn("w-full h-full flex flex-col items-center justify-center")}>
+                  {render[i]}
+                  <div className="text-center absolute z-20 bottom-1.5 w-full h-full right-1.5 rounded-4xl flex items-center justify-center">
                     <div
-                      className={cn(
-                        "w-full h-full flex flex-col items-center justify-center renderBox"
-                      )}>
-                      {render[i]}
-                      <div className="text-center absolute z-20 bottom-1.5  w-full h-full  right-1.5 rounded-4xl  flex items-center justify-center">
-                        <div className={`size-12 absolute   ${items !== 2 ? "left-10 top-10":"left-4 top-8 "}`}>
-                          <div className="relative top-0 left-0">
-                            <p className="font-avenir text-lg capitalize">
-                              {name} 
-                            </p>
-                          </div>
-                        </div>
-                        <div className="size-12 absolute z-90 bottom-3 right-3   flex items-center justify-center">
-                          <div className="size-10  bg-black/5 rounded-full cursor-pointer  flex items-center justify-center">
-                            <Image
-                              src="/icons/bag.svg"
-                              width={24}
-                              height={24}
-                              alt="shopping bag"
-                            />
-                          </div>
-                        </div>
+                      className={`size-12 absolute ${
+                        activeItems !== 2 ? "left-10 top-10" : "left-4 top-8"
+                      }`}
+                    >
+                      <div className="relative top-0 left-0">
+                        <p className="font-avenir text-lg capitalize">{name}</p>
                       </div>
                     </div>
-                  </>
-                }
+                    <div className="size-12 absolute z-90 bottom-3 right-3 flex items-center justify-center">
+                      <div className="size-10 bg-black/5 rounded-full cursor-pointer flex items-center justify-center">
+                        <Image
+                          src="/icons/bag.svg"
+                          width={24}
+                          height={24}
+                          alt="shopping bag"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -320,7 +192,8 @@ export default function SVGMorph({
         height="100%"
         className="px"
         viewBox={`0 0 ${size.width} ${size.height}`}
-        preserveAspectRatio="xMidYMid meet">
+        preserveAspectRatio="xMidYMid meet"
+      >
         <defs>
           <filter id="goo">
             <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
@@ -337,18 +210,16 @@ export default function SVGMorph({
           </filter>
         </defs>
 
-        {[...Array(items)].map((_, i) => (
+        {[...Array(split && !reverse ? activeItems : 1)].map((_, i) => (
           <g
             key={i}
-            ref={(el) => {
-              groupRefs.current[i] = el;
-            }}
-            filter="url(#goo)">
+            filter="url(#goo)"
+          >
             <path
               ref={(el) => {
                 pathRefs.current[i] = el;
               }}
-              d={oneBlobPath}
+              d={pathToUse[i] || oneBlobPath}
               fill={fill}
               stroke={stroke}
               strokeWidth={strokeWidth}

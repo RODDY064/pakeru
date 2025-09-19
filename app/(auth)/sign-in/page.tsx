@@ -10,15 +10,16 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import Submit from "@/app/ui/submit";
 import { useBoundStore } from "@/store/store";
 import { useSearchParams, useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
-const signIn = z.object({
+const SignInType = z.object({
   username: z.string().min(1, { message: "Username is required." }),
   password: z
     .string()
     .min(6, { message: "Password must be at least 6 characters." }),
 });
 
-type SignInSchema = z.infer<typeof signIn>;
+type SignInSchema = z.infer<typeof SignInType>;
 
 // Form component that uses search params
 function SignInForm() {
@@ -26,13 +27,13 @@ function SignInForm() {
     "loading" | "idle" | "submitted" | "error" | "unverified"
   >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<SignInSchema>({
-    resolver: zodResolver(signIn),
+    resolver: zodResolver(SignInType),
   });
 
   const { setUser } = useBoundStore();
@@ -41,7 +42,7 @@ function SignInForm() {
 
   const onSubmit: SubmitHandler<SignInSchema> = async (data) => {
     try {
-      const parseResult = signIn.safeParse(data);
+      const parseResult = SignInType.safeParse(data);
       if (!parseResult.success) {
         setSignState("error");
         setErrorMessage("Please check your input");
@@ -52,44 +53,39 @@ function SignInForm() {
 
       setSignState("loading");
 
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: data.username,
-          password: data.password,
-        }),
+      const response = await signIn("credentials", {
+        redirect: false,
+        username: data.username,
+        password: data.password,
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Authentication failed");
+      if (!response || response.error) {
+        throw new Error(response?.error || "Authentication failed");
       }
 
       // Handle unverified email case
-      if (result.msg?.includes("Email not verified")) {
-        setErrorMessage("Email not verified. Check your inbox.");
-        setSignState("unverified");
-        setUser({
-          email: data.username,
-          userType: "unverified",
-        });
-        router.push("/otp");
-        return;
-      }
+      // if (response.msg?.includes("Email not verified")) {
+      //   setErrorMessage("Email not verified. Check your inbox.");
+      //   setSignState("unverified");
+      //   setUser({
+      //     email: data.username,
+      //     userType: "unverified",
+      //   });
+      //   router.push("/otp");
+      //   return;
+      // }
 
-      // Success - set user state
-      setUser({
-        firstname: result.user.firstName,
-        lastname: result.user.lastName,
-        email: result.user.email,
-        userType: "verified",
-        role: result.user.role,
-      });
+      // // Success - set user state
+      // setUser({
+      //   firstname: response.firstName,
+      //   lastname: result.user.lastName,
+      //   email: result.user.email,
+      //   userType: "verified",
+      //   role: result.user.role,
+      // });
 
       setSignState("submitted");
-      
+
       const from = searchParams.get("from") || "/";
       router.replace(from);
     } catch (error: any) {
@@ -152,7 +148,6 @@ function SignInForm() {
   );
 }
 
-// Main component with proper Suspense boundary
 export default function SignIn() {
   return (
     <div className="flex flex-col items-center pt-16 md:pt-24 font-avenir">
@@ -176,13 +171,19 @@ export default function SignIn() {
           <p className="text-md font-medium">Sign up</p>
         </Link>
       </div>
-      
-      <Suspense 
+
+      <Suspense
         fallback={
           <div className="mt-6 w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%] flex justify-center py-8">
-            <Image src="/icons/loader.svg" width={34} height={34} alt="Loading form" />
+            <Image
+              src="/icons/loader.svg"
+              width={34}
+              height={34}
+              alt="Loading form"
+            />
           </div>
-        }>
+        }
+      >
         <SignInForm />
       </Suspense>
     </div>

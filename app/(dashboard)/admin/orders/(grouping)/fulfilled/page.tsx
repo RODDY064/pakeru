@@ -4,6 +4,7 @@ import StatCard from "@/app/ui/dashboard/statsCard";
 import StatusBadge from "@/app/ui/dashboard/statusBadge";
 import Table from "@/app/ui/dashboard/table";
 import { formatJoinedDate } from "@/libs/functions";
+import { useApiClient } from "@/libs/useApiClient";
 import { OrdersData } from "@/store/dashbaord/orders-store/orders";
 import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
@@ -12,6 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useCallback, useEffect, useState } from "react";
 
 function FulfilledContent() {
+  const { get, patch }  = useApiClient()
   const [fulfilledStats, setFulfilledStats] = useState([
     { label: "Delivered", value: 0 },
     { label: "Shipped", value: 0 },
@@ -39,7 +41,7 @@ function FulfilledContent() {
     const initializeData = async () => {
       try {
         await Promise.all([
-          loadOrders("fulfilled",{ force: true }),
+          loadOrders("fulfilled",{ force: true, get }),
           loadStoreProducts(),
         ]);
       } catch (error) {
@@ -172,7 +174,7 @@ function FulfilledContent() {
         data={fulfilledOrders}
         tableName="Fulfuilled Orders"
         tabelState={fulfilledState}
-        reload={() => loadOrders("fulfilled",{ force: true })}
+        reload={() => loadOrders("fulfilled",{ force: true, get })}
         columnStyle="py-4"
         dateKey="date"
         columnClick={(order) => handleSelect(order)}

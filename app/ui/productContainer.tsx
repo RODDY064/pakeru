@@ -11,8 +11,11 @@ import ProductCard from "@/app/ui/product-card";
 import { useGsapSlider } from "@/libs/gsapScroll";
 import { ProductData } from "@/store/dashbaord/products";
 import SizeGuild from "./size-guild";
+import ProductCare from "./productCare";
 
-gsap.registerPlugin(ScrollTrigger);
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function ProductContainer({ nameID }: { nameID: string }) {
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -193,32 +196,42 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     };
   }, [isMobile]);
 
+  
+
   useGSAP(() => {
     if (isMobile) return;
-
     if (!stickyRef.current || !imageDiv.current) return;
 
     const sticky = stickyRef.current;
     const image = imageDiv.current;
 
-    // Clear any existing ScrollTriggers for this element
+    // Clean up all ScrollTriggers for this component
     ScrollTrigger.getAll().forEach((trigger) => {
       if (trigger.trigger === image || trigger.vars.pin === sticky) {
         trigger.kill();
       }
     });
 
-    ScrollTrigger.create({
-      trigger: image,
-      start: "top top",
-      end: "bottom bottom",
-      pin: sticky,
-      pinSpacing: false,
-      anticipatePin: 1,
-      refreshPriority: -1,
-    });
+    // Ensure images are loaded before creating ScrollTrigger
+    const images = image.querySelectorAll("img");
+    Promise.all(
+      Array.from(images).map((img) =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise((resolve) => img.addEventListener("load", resolve))
+      )
+    ).then(() => {
+      ScrollTrigger.create({
+        trigger: image,
+        start: "top top",
+        end: "bottom bottom",
+        pin: sticky,
+        anticipatePin: 1,
+        refreshPriority: -1,
+      });
 
-    ScrollTrigger.refresh();
+      ScrollTrigger.refresh();
+    });
   }, [colorActive, productData, isMobile]);
 
   // buttons ref
@@ -301,10 +314,13 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     productData?.variants.find((variant) => variant._id === colorActive._id)
       ?.images || [];
 
+
+      
+
   return (
     <div className="w-full min-h-dvh flex flex-col items-center text-black bg-white home-main">
       <div className="pt-18 opacity-0">hell</div>
-      <div className="w-full flex flex-col md:flex-row">
+      <div className="w-full flex flex-col md:flex-row pb-24 md:min-h-[150vh]">
         <div className="w-full md:w-[50%] relative">
           <div
             ref={imageDiv}
@@ -312,6 +328,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
             style={{
               scrollSnapType: isMobile ? "x mandatory" : "none",
               scrollBehavior: "smooth",
+    
             }}>
             {currentImages.map((img, index) => (
               <div
@@ -325,7 +342,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                 onTouchMove={(e) => handleImageTouchMove(e, index)}
                 onTouchEnd={handleImageTouchEnd}
               >
-                <div className="w-[120%] h-[120%] absolute overflow-hidden">
+                <div className="w-[110%] h-[110%] absolute overflow-hidden">
                   <Image
                     src={img.url}
                     fill
@@ -409,7 +426,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
         {/* Product details section */}
         <div
           ref={stickyRef}
-          className="md:w-[50%] flex flex-col items-center pt-10 md:pt-4 lg:pt-20"
+          className="md:w-[50%] flex flex-col items-center pt-10  lg:pt-20"
         >
           <div className="w-full px-6 md:px-8 md:w-[90%] lg:w-[80%] xl:w-[60%]">
             <div className="flex justify-between items-center">
@@ -495,12 +512,12 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                   >
                     SIZE
                   </p>
-                  <p
+                    <p
                     onClick={setSizeGuild}
                     className="underline text-sm font-avenir font-[400] underline-offset-4 underline-black/40 text-black/30 cursor-pointer"
-                  >
-                    SIZE GUILD
-                  </p>
+                    >
+                    SIZE GUIDE
+                    </p>
                 </div>
                 <div className="w-full flex items-center gap-2 md:gap-3 my-4">
                   {productData?.sizes?.map((item) => (
@@ -514,8 +531,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                             item === productData.selectedSize,
                           "border-red-500 bg-red-100": sizeSelected.shown,
                         }
-                      )}
-                    >
+                      )}>
                       <p className="font-avenir text-xs">
                         {item.toUpperCase()}
                       </p>
@@ -525,8 +541,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
               </div>
               <div
                 onClick={() => handleAdd(productData as ProductData)}
-                className="mt-10 rounded py-2.5 flex items-center justify-center gap-3 w-full bg-black hover:bg-green-500 hover:border-green-500 border border-black/20 group/add cursor-pointer transition-all"
-              >
+                className="mt-10 rounded py-2.5 flex items-center justify-center gap-3 w-full bg-black hover:bg-green-500 hover:border-green-500 border border-black/20 group/add cursor-pointer transition-all" >
                 <p className="font-avenir font-[400] text-sm pt-[4px] text-white">
                   ADD TO CART
                 </p>
@@ -539,47 +554,8 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                   className=""
                 />
               </div>
-              <div className="mt-8 border-t border-black/30 w-full pt-10">
-                <div className="flex gap-10 items-center justify-center">
-                  <div className="flex flex-col items-center">
-                    <Image
-                      src="/icons/washing.svg"
-                      width={44}
-                      height={20}
-                      alt="washing machine"
-                      className="hidden lg:flex"
-                    />
-                    <Image
-                      src="/icons/washing.svg"
-                      width={32}
-                      height={20}
-                      alt="washing machine"
-                      className="lg:hidden"
-                    />
-                    <p className="my-2 font-avenir text-[13px] font-[400] text-black/50">
-                      MACHINE WASH 30
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Image
-                      src="/icons/fabric.svg"
-                      width={44}
-                      height={20}
-                      alt="washing machine"
-                      className="hidden lg:flex"
-                    />
-                    <Image
-                      src="/icons/fabric.svg"
-                      width={32}
-                      height={20}
-                      alt="washing machine"
-                      className="lg:hidden"
-                    />
-                    <p className="my-2 font-avenir text-[13px] font-[400] text-black/50">
-                      100% CUTTON
-                    </p>
-                  </div>
-                </div>
+              <div className="mt-8 w-full pt-10">
+                <ProductCare/>
               </div>
             </div>
           </div>
@@ -587,7 +563,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
       </div>
 
       {/* Similar Products Section */}
-      <div className="w-full mt-[60px] md:my-24 relative">
+      <div className="w-full mt-[60px] md:my-24 relative clear-both">
         <p className="font-avenir font-[400] text-md px-4 md:px-8">
           SIMILAR PRODUCTS
         </p>
@@ -596,13 +572,14 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
             <div
               ref={imageDivSim}
               className={cn(
-                "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] py-4 md:px-4 md:auto-cols-[minmax(30rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none",
+                "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] py-4 md:px-4 md:auto-cols-[minmax(26rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none",
                 {
                   "auto-cols-[minmax(100%,1fr)]":
                     cartState === "loading" || cartState === "error",
                 }
               )}
-              style={{ scrollBehavior: "smooth" }}>
+              style={{ scrollBehavior: "smooth" }}
+            >
               {cartState === "loading" || cartState === "error" ? (
                 <div className="min-w-[300px] h-[400px] flex items-center justify-center">
                   <div className="flex items-center justify-center gap-1">
@@ -702,7 +679,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           )}
         </div>
       </div>
-      <SizeGuild />
+      <SizeGuild gender="women" type="skirts" />
 
       {/* Pinch Zoom Modal */}
       {pinchZoom.show && (

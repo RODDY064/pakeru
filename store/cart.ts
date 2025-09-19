@@ -21,7 +21,7 @@ export type BookmarkType = ProductData & {
 export type CartStats = {
   totalItems: number;
   totalPrice: number;
-  uniqueProducts: number;
+  uniqueProducts?: number;
 };
 
 // Bookmark Statistics

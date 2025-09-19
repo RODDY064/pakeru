@@ -15,8 +15,16 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
+      },
+       {
+        protocol: 'http',
+        hostname: 'res.cloudinary.com', 
+        port: '',
+        pathname: '/**',
       }
     ],
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   async headers() {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://api.thepakeru.com';
@@ -55,18 +63,7 @@ const nextConfig: NextConfig = {
           {
             key: "Access-Control-Allow-Credentials",
             value: "true",
-          },
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              `connect-src 'self' ${baseUrl} wss://api.thepakeru.com`,
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https://res.cloudinary.com https://api.thepakeru.com",
-              "font-src 'self'"
-            ].join('; '),
-          },
+          }
         ],
       },
     ];

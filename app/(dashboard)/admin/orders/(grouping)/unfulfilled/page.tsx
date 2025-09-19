@@ -12,8 +12,10 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useOrdersWebhook } from "../../hooks/orderWebhooks";
+import { useApiClient } from "@/libs/useApiClient";
 
 export default function Unfulfilled() {
+   const { get, patch }  = useApiClient()
   const [unfulfilledStats, setUnfulfilledStats] = useState([
     { label: "Total Unfulfilled", value: 0 },
     { label: "Pending", value: 0 },
@@ -64,7 +66,7 @@ export default function Unfulfilled() {
     const initializeData = async () => {
       try {
         await Promise.all([
-          loadOrders("unfulfilled",{ force: true}),
+          loadOrders("unfulfilled",{ force: true, get }),
           loadStoreProducts(),
         ]);
       } catch (error) {
@@ -201,7 +203,7 @@ export default function Unfulfilled() {
         data={unfulfilledOrders}
         tableName="Unfulfuilled Orders"
         tabelState={unfulfilledState}
-        reload={() => loadOrders("unfulfilled",{ force: true})}
+        reload={() => loadOrders("unfulfilled",{ force: true, get })}
         columnStyle="py-4"
         dateKey="date"
         columnClick={(order) => handleSelect(order)}

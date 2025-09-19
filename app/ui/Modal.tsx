@@ -15,6 +15,7 @@ export default function Modal() {
       {modal && modalDisplay !== "idle" && (
         <motion.div
           key="modal"
+          transition={{ type:"tween"}}
           variants={modalVariants}
           initial="hidden"
           animate="visible"
@@ -47,7 +48,6 @@ export const modalVariants = {
     opacity: 1,
     transition: {
       duration: 0.3,
-      ease: "easeInOut",
       staggerChildren: 0,
     },
   },
@@ -55,7 +55,6 @@ export const modalVariants = {
     opacity: 0,
     transition: {
       duration: 0.3,
-      ease: "easeInOut",
       when: "afterChildren",
     },
   },

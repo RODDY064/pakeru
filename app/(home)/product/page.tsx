@@ -13,12 +13,36 @@ export default function Product() {
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const [containerHeight, setContainerHeight] = useState("100vh");
+
+  useEffect(() => {
+    const calculateHeight = () => {
+      // Use actual viewport height for consistency across platforms
+      const actualVH = window.innerHeight;
+      setContainerHeight(`${actualVH}px`);
+
+      // Set CSS custom property for dvh fallback
+      document.documentElement.style.setProperty(
+        "--actual-vh",
+        `${actualVH * 0.01}px`
+      );
+    };
+
+    calculateHeight();
+    window.addEventListener("resize", calculateHeight);
+    window.addEventListener("orientationchange", calculateHeight);
+
+    return () => {
+      window.removeEventListener("resize", calculateHeight);
+      window.removeEventListener("orientationchange", calculateHeight);
+    };
+  }, []);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      
       await loadProducts();
-       await new Promise((res) => setTimeout(res, 500))
+      await new Promise((res) => setTimeout(res, 500));
       router.refresh();
     } finally {
       setIsRefreshing(false);
@@ -26,54 +50,62 @@ export default function Product() {
   };
 
   return (
-   <>
-    <div className="w-full min-h-screen  flex flex-col items-center text-black bg-black home-main  transition-all">
-      <div className="w-full h-full  bg-white flex overflow-hidden gap-4 pt-30">
-        {cartState === "loading" ||
-        cartState === "error" ||
-        cartState === "idle" ? (
-          <div className="w-full h-dvh flex items-center flex-col pt-12 md:pt-24">
-            <Image
-              src="/icons/cloth.svg"
-              width={400}
-              height={64}
-              alt="cart"
-              className="opacity-70 hidden md:flex"
-            />
-            <Image
-              src="/icons/cloth.svg"
-              width={320}
-              height={64}
-              alt="cart"
-              className="opacity-70 md:hidden"
-            />
-            <div className="mt-10">
-              {isRefreshing ? (
-                <div className="flex items-center justify-center gap-2">
-                <Image src="/icons/loader.svg" width={26} height={26} alt="loader"/>
-                  <p className="text-black/70 font-avenir font-[400] text-sm">
-                    REFRESHING....
-                  </p>
-                </div>
-              ) : (
-                <div
-                  onClick={handleRefresh}
-                  className="py-3 px-4 rounded bg-black cursor-pointer">
-                  <p className="text-white font-avenir font-[400] text-sm">
-                    REFRESH TO LOAD PRODUCTS
-                  </p>
-                </div>
-              )}
+    <>
+      <div 
+       style={{ minHeight: containerHeight }}
+      className="w-full min-h-screen  flex flex-col items-center text-black  home-main  transition-all">
+        <div className="w-full h-full  bg-white flex overflow-hidden gap-4 pt-30">
+          {cartState === "loading" ||
+          cartState === "error" ||
+          cartState === "idle" ? (
+            <div className="w-full h-dvh flex items-center flex-col pt-12 md:pt-24">
+              <Image
+                src="/icons/cloth.svg"
+                width={400}
+                height={64}
+                alt="cart"
+                className="opacity-70 hidden md:flex"
+              />
+              <Image
+                src="/icons/cloth.svg"
+                width={320}
+                height={64}
+                alt="cart"
+                className="opacity-70 md:hidden"
+              />
+              <div className="mt-10">
+                {isRefreshing ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Image
+                      src="/icons/loader.svg"
+                      width={26}
+                      height={26}
+                      alt="loader"
+                    />
+                    <p className="text-black/70 font-avenir font-[400] text-sm">
+                      REFRESHING....
+                    </p>
+                  </div>
+                ) : (
+                  <div
+                    onClick={handleRefresh}
+                    className="py-3 px-4 rounded bg-black cursor-pointer"
+                  >
+                    <p className="text-white font-avenir font-[400] text-sm">
+                      REFRESH TO LOAD PRODUCTS
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ) : (
-          <>
-            <ProductCon />
-          </>
-        )}
+          ) : (
+            <>
+              <ProductCon />
+            </>
+          )}
+        </div>
       </div>
-    </div>
-    <Filter/>
-   </>
+      <Filter />
+    </>
   );
 }

@@ -24,6 +24,8 @@ const easing = cubicBezier(0.37, 0.24, 0.38, 0.99);
 
 export default function Home() {
   const { scrollAmount, setRouteChange } = useBoundStore();
+     const [containerHeight, setContainerHeight] = useState("100vh");
+
   const router = useRouter();
   useGSAP(() => {
     //  console.log(scrollAmount)
@@ -34,25 +36,6 @@ export default function Home() {
     }
   }, [scrollAmount]);
 
-  return (
-    <div className="w-full min-h-dvh flex flex-col items-center bg-black home-main overflow-hidden">
-      <Images
-        action={(e: any) =>
-          handleNavigation(e, "/product", router, setRouteChange, 200)
-        }
-      />
-      <div className="w-full mt-[1px]  pt-4 bg-white  ">
-        <Slider />
-        <LookAt />
-        <Product />
-        <Video />
-      </div>
-    </div>
-  );
-}
-
-const Images = ({ action }: { action: any }) => {
-  const [containerHeight, setContainerHeight] = useState("100vh");
 
   useEffect(() => {
     const calculateHeight = () => {
@@ -76,6 +59,27 @@ const Images = ({ action }: { action: any }) => {
       window.removeEventListener("orientationchange", calculateHeight);
     };
   }, []);
+
+  return (
+    <div className="w-full min-h-dvh flex flex-col items-center bg-black home-main overflow-hidden">
+      <Images
+        containerHeight={containerHeight}
+        action={(e: any) =>
+          handleNavigation(e, "/product", router, setRouteChange, 200)
+        }
+      />
+      <div className="w-full mt-[1px]  pt-4 bg-white  ">
+        <Slider   containerHeight={containerHeight} />
+        <LookAt />
+        <Product />
+        <Video />
+      </div>
+    </div>
+  );
+}
+
+const Images = ({ action, containerHeight }: { action: any, containerHeight:any }) => {
+
 
   return (
     <div
@@ -147,7 +151,7 @@ const Images = ({ action }: { action: any }) => {
   );
 };
 
-const Slider = () => {
+const Slider = ({ containerHeight }: { containerHeight:any }) => {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const { slider, setLookAt, scrollAmount } = useBoundStore();
@@ -185,13 +189,13 @@ const Slider = () => {
       animate={{ opacity: 1 }}
       initial={{ opacity: 0 }}
       transition={{ duration: 0.6, ease: "easeInOut" }}
+      style={{ maxHeight:containerHeight}}
       className="w-full h-full mt-10"
     >
       <div>
         <div
           ref={sliderRef}
-          className="flex gap-1 md:gap-3 overflow-hidden text-white relative hero-slider-div"
-        >
+          className="flex gap-1 md:gap-3 overflow-hidden text-white relative hero-slider-div">
           {slider.map((product) => (
             <div
               key={product._id}
@@ -202,8 +206,7 @@ const Slider = () => {
                   "pl-1 md:pl-3 ": product._id === 0,
                   "border border-black/20 ": product._id !== 0,
                 }
-              )}
-            >
+              )}>
               {product._id === 0 ? (
                 <div className="w-[calc(90vw)] md:w-[calc(70vw)] h-full relative  overflow-hidden border border-black/10 ">
                   <motion.div
@@ -216,13 +219,12 @@ const Slider = () => {
                       damping: 18,
                       mass: 0.7,
                     }}
-                    className="w-full h-full border-black/10 border  group/slider bg-[#f2f2f2] mx-auto relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden"
-                  >
+                    className="w-full h-full border-black/10 border  group/slider bg-[#f2f2f2] mx-auto relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden">
                     <Image
                       src={product.mainImage}
                       alt={product.title}
                       fill
-                      className="object-cover object-center max-w-2xl mx-auto bg-[#f2f2f2]"
+                      className="object-cover object-center max-w-xl mx-auto bg-[#f2f2f2]"
                       priority
                     />
                     <div className="w-full h-full flex text-white relative z-10 top-2">
@@ -267,13 +269,14 @@ const Slider = () => {
                     src={product.mainImage}
                     alt={product.title}
                     fill
-                    className="object-cover max-w-2xl mx-auto bg-[#f2f2f2]"
+                    className="object-cover max-w-xl mx-auto bg-[#f2f2f2]"
                     priority
                   />
                   <div className="w-full h-full flex top-2 items-start text-white relative z-10">
                     <div className="w-full h-24  flex px-4 pb-8">
                       <motion.div
                         variants={textMovement}
+                        transition={{ type:"spring" }}
                         className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
                       >
                         <motion.div
@@ -322,11 +325,11 @@ const imgDiv = {
 const textMovement = {
   show: {
     x: 15,
-    transition: { type: "spring", stiffness: 150, damping: 16, mass: 0.6 },
+    transition: {  stiffness: 150, damping: 16, mass: 0.6 },
   },
   hide: {
     x: 35,
-    transition: { type: "spring", stiffness: 150, damping: 16, mass: 0.6 },
+    transition: {stiffness: 150, damping: 16, mass: 0.6 },
   },
 };
 
@@ -379,12 +382,12 @@ const Product = () => {
   },[products])
 
   return (
-    <div className="w-full mt-24 px-4 md:px-8 lg:mx-2">
+    <div className="w-full mt-10 px-4 md:px-8 lg:mx-2">
       <p className="text-xl font-bold font-avenir mb-6">SHOP ALL</p>
       <div
         ref={sliderRef}
         className={cn(
-          "grid grid-flow-col auto-cols-[minmax(20rem,1fr)] py-2 md:auto-cols-[minmax(30rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none",
+          "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] py-2 md:auto-cols-[minmax(26rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none px-2",
           {
             "auto-cols-[minmax(100%,1fr)]":
               cartState === "loading" || cartState === "error",

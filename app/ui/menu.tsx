@@ -149,7 +149,7 @@ export default function Menu() {
                   priority
                 />
               </div>
-              <p className="text-center font-avenir font-[400] my-3 text-sm">
+              <p className="text-center font-avenir font-[400] my-3 text-sm uppercase">
                 {data.category.toLocaleUpperCase()}
               </p>
             </div>
@@ -180,8 +180,7 @@ export default function Menu() {
                       className="w-full"
                       key={`${product._id}-${
                         product.selectedColor || "default"
-                      }-${index}`}
-                    >
+                      }-${index}`}>
                       <ProductCard
                         type="small"
                         productData={product}
@@ -468,6 +467,7 @@ export default function Menu() {
 
           <motion.div
             variants={menuCon}
+            transition={{ type:"tween" }}
             animate={isSubBarRendered ? "visible" : "hide"}
             initial="hide"
             exit="hide"
@@ -642,7 +642,6 @@ const menuChild = {
     transition: {
       duration: 0.15,
       delay: 0.25,
-      ease: "easeOut",
     },
   },
   hide: {
@@ -650,7 +649,6 @@ const menuChild = {
     y: 10,
     transition: {
       duration: 0.2,
-      ease: "easeIn",
     },
   },
 };

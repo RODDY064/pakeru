@@ -1,20 +1,25 @@
+import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> } ) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-        const { id } = await params;
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const { id } = await params;
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
-    
   } catch (error: any) {
     return NextResponse.json(
       { error: "Product fetch failed", message: error.message },
@@ -23,22 +28,30 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-export async function DELETE(request: NextRequest,  { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const body = await request.json();
     const { id } = await params;
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
+
+    const incomingHeaders: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      incomingHeaders[key] = value;
     });
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`,
+      {
+        method: "DELETE",
+        headers:incomingHeaders,
+        body: JSON.stringify(body),
+      }
+    );
 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
-    
   } catch (error: any) {
     return NextResponse.json(
       { error: "Product update failed", message: error.message },
@@ -47,22 +60,30 @@ export async function DELETE(request: NextRequest,  { params }: { params: Promis
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-     const formData = await request.formData();
-     const { id } = await params;
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: formData
+    const formData = await request.formData();
+    const { id } = await params;
+
+    const incomingHeaders: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      incomingHeaders[key] = value;
     });
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`,
+      {
+        method: "PATCH",
+        headers: incomingHeaders,
+        body: formData,
+      }
+    );
 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
-    
   } catch (error: any) {
     return NextResponse.json(
       { error: "Product partial update failed", message: error.message },
@@ -70,4 +91,3 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     );
   }
 }
-

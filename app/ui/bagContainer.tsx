@@ -13,6 +13,7 @@ import Button from "./button";
 import Lottie from "lottie-react";
 import loaderAnimation from "../../public/lottie/pakeru.json";
 import isEqual from "lodash.isequal";
+import BagCard from "./bagCard";
 
 export default function BagContainer() {
   const {
@@ -95,10 +96,10 @@ export default function BagContainer() {
                 <div className="w-full flex flex-col gap-2 pt-4 cart-con px-4 md:px-8 pb-12 ">
                   {modalDisplay === "cart"
                     ? cartItems.map((item) => (
-                        <CartCard key={item.cartItemId} cartData={item} />
+                        <BagCard key={item.cartItemId} cartData={item} />
                       ))
                     : bookMarks.map((item) => (
-                        <CartCard key={item.bookmarkId} cartData={item} />
+                        <BagCard key={item.bookmarkId} cartData={item} />
                       ))}
 
                   {modalDisplay === "cart" && (
@@ -207,10 +208,10 @@ export default function BagContainer() {
                 <div className="w-full flex flex-col gap-2 pt-4 cart-con px-4 md:px-8 pb-12 ">
                   {modalDisplay === "cart"
                     ? cartItems.map((item) => (
-                        <CartCard key={item.cartItemId} cartData={item} />
+                        <BagCard key={item.cartItemId} cartData={item} />
                       ))
                     : bookMarks.map((item) => (
-                        <CartCard key={item.bookmarkId} cartData={item} />
+                        <BagCard key={item.bookmarkId} cartData={item} />
                       ))}
 
                   {modalDisplay === "cart" && (

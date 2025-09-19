@@ -2,29 +2,18 @@ import { ProductFormData } from "@/app/ui/dashboard/zodSchema";
 import { ProductColor, ProductImage } from "./action";
 import { compressImage } from "@/libs/imageCompression";
 import { ProductVariant } from "@/store/dashbaord/products";
-import { apiCall } from "@/libs/functions";
 import { toast } from "@/app/ui/toaster";
+import { useApiClient } from "@/libs/useApiClient";
 
 export class ProductAPIService {
-  private static getHeaders(includeContentType = false): HeadersInit {
-    const headers: HeadersInit = {};
 
-    if (includeContentType) {
-      headers["Content-Type"] = "application/json";
-    }
-
-    return headers;
-  }
-
- 
   static async createProduct(
     data: ProductFormData,
-    colors: ProductColor[]
+    colors: ProductColor[],
+    post: ReturnType<typeof useApiClient>["post"]
   ): Promise<any> {
- 
-    
-    const createPromise = this.createProductWithFiles(data, colors);
-    
+    const createPromise = this.createProductWithFiles(data, colors, post);
+
     return toast.promise(createPromise, {
       loading: "Creating product...",
       success: (result) => ({
@@ -42,11 +31,11 @@ export class ProductAPIService {
   static async updateProduct(
     productId: string,
     data: ProductFormData,
-    colors: ProductColor[]
+    colors: ProductColor[],
+    patch: ReturnType<typeof useApiClient>["patch"]
   ): Promise<any> {
+    const updatePromise = this.updateProductWithFiles(productId, data, colors, patch);
 
-    const updatePromise = this.updateProductWithFiles(productId, data, colors);
-    
     return toast.promise(updatePromise, {
       loading: "Updating product...",
       success: (result) => ({
@@ -61,16 +50,16 @@ export class ProductAPIService {
     });
   }
 
-  static async deleteProduct(productId: string): Promise<any> {
-
+  static async deleteProduct(
+    productId: string,
+    del: ReturnType<typeof useApiClient>["delete"]
+  ): Promise<any> {
     const deletePromise = (async () => {
-      const response = await apiCall(`/products/${productId}`, {
-        method: "DELETE",
-         
-        headers: this.getHeaders(true),
+      const response = await del(`/products/${productId}`, {
+         requiresAuth:true
       });
 
-      return response
+      return response;
     })();
 
     return toast.promise(deletePromise, {
@@ -86,35 +75,27 @@ export class ProductAPIService {
 
   private static async createProductWithFiles(
     data: ProductFormData,
-    colors: ProductColor[]
+    colors: ProductColor[],
+    post: ReturnType<typeof useApiClient>["post"]
   ): Promise<any> {
     const formData = await this.prepareFormData(data, colors);
-    
-    const response = await apiCall("/products", {
-      method: "POST",
-       
-      headers: this.getHeaders(false),
-      body: formData,
-    });
 
-    return response
+    const response = await post("/products", formData,{ requiresAuth:true });
+
+    return response;
   }
 
   private static async updateProductWithFiles(
     productId: string,
     data: ProductFormData,
-    colors: ProductColor[]
+    colors: ProductColor[],
+    patch: ReturnType<typeof useApiClient>["patch"]
   ): Promise<any> {
     const formData = await this.prepareFormData(data, colors);
 
-    const response = await apiCall(`/products/${productId}`, {
-      method: "PATCH",
-       
-      headers: this.getHeaders(false),
-      body: formData,
-    });
+    const response = await patch(`/products/${productId}`, formData,{ requiresAuth: true });
 
-    return response
+    return response;
   }
 
   private static async prepareFormData(
@@ -126,18 +107,16 @@ export class ProductAPIService {
 
     console.log("Starting image compression and processing...");
 
-    // Process and compress images
     const processedColors = await Promise.all(
       colors.map(async (color, colorIndex) => {
         console.log(`Processing color ${colorIndex + 1}: ${color.name}`);
-        
+
         const processedImages = await Promise.all(
           color.images.map(async (img, imgIndex) => {
             if (img.file instanceof File) {
               console.log(`Processing image: ${img.file.name}, size: ${img.file.size} bytes`);
               let fileToUpload = img.file;
 
-              // Compress if file is larger than 1MB
               if (img.file.size > 1024 * 1024) {
                 try {
                   console.log(`Compressing ${img.file.name}...`);
@@ -152,8 +131,8 @@ export class ProductAPIService {
               }
 
               totalSize += fileToUpload.size;
-              return { 
-                ...img, 
+              return {
+                ...img,
                 file: fileToUpload,
               };
             }
@@ -170,12 +149,10 @@ export class ProductAPIService {
 
     console.log(`Total file size after compression: ${totalSize} bytes`);
 
-    // Check total size limit
     if (totalSize > 45 * 1024 * 1024) {
       throw new Error("Total file size too large. Please reduce image sizes.");
     }
 
-    // Add basic fields
     formData.append("name", data.name);
     formData.append("description", data.description);
     formData.append("status", data.status);
@@ -198,7 +175,6 @@ export class ProductAPIService {
 
     (data.tags || []).forEach((tag) => formData.append("tags[]", tag));
 
-    // Prepare variants data with image names
     const variants = processedColors.map((color) => ({
       color: color.name,
       colorHex: color.hex,
@@ -208,10 +184,9 @@ export class ProductAPIService {
     }));
     formData.append("variants", JSON.stringify(variants));
 
-    // Add image files and metadata
     let fileIndex = 0;
     console.log("Appending files to FormData...");
-    
+
     for (const color of processedColors) {
       if (!color.images || color.images.length === 0) {
         console.warn(`Skipping color ${color.name} - no images`);
@@ -219,16 +194,15 @@ export class ProductAPIService {
       }
 
       console.log(color.images, "color images");
-      
+
       for (const img of color.images) {
-        // Check for both File and Blob since compressed images return Blob
         if (img.file && (img.file instanceof File || img.file instanceof Blob)) {
           console.log(`Appending file ${fileIndex}: ${img.name} (${img.file.size} bytes) for color: ${color.name}`);
-    
-          // Create a File object from Blob if needed (to preserve filename)
-          const fileToAppend = img.file instanceof File ? img.file : 
-            new File([img.file], img.name, { type: img.file.type });
-          
+
+          const fileToAppend = img.file instanceof File
+            ? img.file
+            : new File([img.file], img.name, { type: img.file.type });
+
           formData.append("images", fileToAppend);
           fileIndex++;
         } else {
@@ -250,20 +224,16 @@ export const mapVariantsToColors = (
   variants.forEach((variant, index) => {
     const colorKey = variant.color || `color-${index}`;
 
-    // If color already exists, update it; otherwise create new one
     if (colorMap.has(colorKey)) {
       const existingColor = colorMap.get(colorKey)!;
 
-      // Add sizes if they don't exist
       const newSizes =
         variant.sizes?.filter((size) => !existingColor.sizes.includes(size)) ||
         [];
       existingColor.sizes.push(...newSizes);
 
-      // Add stock
       existingColor.stock += variant.stock || 0;
 
-      // Add images if they exist
       if (variant.images && variant.images.length > 0) {
         const mappedImages = variant.images.map((img, imgIndex) => ({
           _id: existingColor.images.length + imgIndex + 1,
@@ -274,7 +244,6 @@ export const mapVariantsToColors = (
         existingColor.images.push(...mappedImages);
       }
     } else {
-      // Create new color entry
       const mappedImages: ProductImage[] =
         variant.images?.map((img, imgIndex) => ({
           _id: imgIndex + 1,

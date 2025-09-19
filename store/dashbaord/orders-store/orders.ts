@@ -1,9 +1,9 @@
 import { type StateCreator } from "zustand";
-
 import { apiCall } from "@/libs/functions";
 import { toast } from "@/app/ui/toaster";
 import { ProductData } from "../products";
 import { Store } from "@/store/store";
+import { useApiClient } from "@/libs/useApiClient";
 
 export type OrdersData = {
   _id: string;
@@ -52,33 +52,22 @@ export type DateFilter = {
 };
 
 export type OrdersStore = {
-  // Separated order storage - clean architecture
   fulfilledOrders: OrdersData[];
   unfulfilledOrders: OrdersData[];
-
-  // UI state
   orderInView: OrdersData | null;
   showOrderModal: boolean;
-
-  // Filter state
   search: string;
   activeFilter: string;
   dateFilter: DateFilter;
   sortDate: "ascending" | "descending";
-
-  // Loading states
   fulfilledState: "idle" | "loading" | "success" | "failed";
   unfulfilledState: "idle" | "loading" | "success" | "failed";
   singleOrderState: "idle" | "loading" | "success" | "failed";
-
-  // Error states
   ordersError: {
     fulfilled: string;
     unfulfilled: string;
     single: string;
   };
-
-  // Actions
   setOrderError: (
     type: keyof OrdersStore["ordersError"],
     error: string
@@ -88,35 +77,35 @@ export type OrdersStore = {
     state: "idle" | "loading" | "success" | "failed"
   ) => void;
   setSingleOrderState: (state: OrdersStore["singleOrderState"]) => void;
-
-  // UI actions
   setOrderModal: (show?: boolean) => void;
   setOrderInView: (order: OrdersData | null) => void;
-
-  // Filter actions
   setSearch: (search: string) => void;
   setActiveFilter: (filter: string) => void;
   setDateFilter: (filter: DateFilter) => void;
   toggleDateSorting: () => void;
-
-  // Data actions
   loadOrders: (
     type: "fulfilled" | "unfulfilled",
-    options?: { force?: boolean; limit?: number }
+    options?: {
+      force?: boolean;
+      limit?: number;
+      get?: ReturnType<typeof useApiClient>["get"];
+    }
   ) => Promise<void>;
-  loadOrder: (id: string) => Promise<void>;
-  updateOrder: (orderId: string, updates: Partial<OrdersData>) => Promise<void>;
+  loadOrder: (
+    id: string,
+    options?: { get?: ReturnType<typeof useApiClient>["get"] }
+  ) => Promise<void>;
+  updateOrder: (
+    orderId: string,
+    updates: Partial<OrdersData>,
+    options?: { patch?: ReturnType<typeof useApiClient>["patch"] }
+  ) => Promise<void>;
   refundOrder: (orderId: string) => Promise<void>;
-
-  // Computed getters
   getFilteredOrders: (type: "fulfilled" | "unfulfilled") => OrdersData[];
   getOrdersStats: (type: "fulfilled" | "unfulfilled") => OrdersStats;
-
-  // Utility
   resetErrors: () => void;
 };
 
-// Clean stats computation
 export function computeOrdersStats(orders: OrdersData[]): OrdersStats {
   if (!orders.length) {
     return {
@@ -173,7 +162,6 @@ export function computeOrdersStats(orders: OrdersData[]): OrdersStats {
   return stats;
 }
 
-// Efficient filtering with date support
 export function filterOrders(
   orders: OrdersData[],
   search: string,
@@ -181,7 +169,6 @@ export function filterOrders(
   dateFilter: DateFilter
 ): OrdersData[] {
   return orders.filter((order) => {
-    // Search filter
     if (search.trim()) {
       const searchLower = search.toLowerCase();
       const customerName =
@@ -196,7 +183,6 @@ export function filterOrders(
       if (!searchMatch) return false;
     }
 
-    // Status filter
     if (activeFilter !== "All") {
       const filterLower = activeFilter.toLowerCase();
       const statusMatch =
@@ -207,7 +193,6 @@ export function filterOrders(
       if (!statusMatch) return false;
     }
 
-    // Date filter
     if (dateFilter.from || dateFilter.to) {
       const orderDate = new Date(order.date);
 
@@ -224,7 +209,6 @@ export function filterOrders(
   });
 }
 
-// Clean sorting utility
 export function sortOrdersByDate(
   orders: OrdersData[],
   sortDirection: "ascending" | "descending"
@@ -239,7 +223,6 @@ export function sortOrdersByDate(
   });
 }
 
-// Transform utilities (unchanged for brevity)
 const generateTrimmedId = (fullId: string): string => {
   const trimmed = fullId.substring(4, 8).toUpperCase();
   return `ORD-${trimmed}`;
@@ -247,8 +230,8 @@ const generateTrimmedId = (fullId: string): string => {
 
 export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
   const createdDate = new Date(apiOrder.createdAt);
-  const date = createdDate.toISOString().split("T")[0];
-  const time = createdDate.toLocaleTimeString("en-US", {
+  const date = createdDate?.toISOString().split("T")[0];
+  const time = createdDate?.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
@@ -290,27 +273,25 @@ export const transformApiOrdersToOrdersData = (
   return apiOrders.map(transformApiOrderToOrdersData);
 };
 
-// Clean API service
 const apiService = {
   async fetchOrders(
     type: "fulfilled" | "unfulfilled",
-    limit?: number
+    get: ReturnType<typeof useApiClient>["get"],
+    limit?: number,
+    token?: string
   ): Promise<OrdersData[]> {
     try {
       const query = new URLSearchParams();
       query.append("fulfilledStatus", type);
       if (limit) query.append("limit", limit.toString());
 
-      const response = await apiCall(`/orders?${query.toString()}`, {
-        method: "GET",
-         
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-        },
+      const response = await get<{ data:OrdersData[]}>(`/orders?${query.toString()}`, {
+        requiresAuth: true,
       });
 
-      const orders = response.orders || response.data || response;
+      console.log(response, "order response");
+
+      const orders = response.data;
       if (!Array.isArray(orders)) {
         throw new Error("Expected orders array from API");
       }
@@ -322,10 +303,15 @@ const apiService = {
     }
   },
 
-  async fetchOrder(id: string): Promise<OrdersData> {
+  async fetchOrder(
+    id: string,
+    get: ReturnType<typeof useApiClient>["get"]
+  ): Promise<OrdersData> {
     try {
-      const data = await apiCall(`/orders/${id}`);
-      return transformApiOrderToOrdersData(data.order || data);
+      const data = await get<{ data:OrdersData }>(`/orders/${id}`, {
+        requiresAuth: true,
+      });
+      return transformApiOrderToOrdersData(data);
     } catch (error) {
       console.error(`Failed to fetch order ${id}:`, error);
       throw error;
@@ -334,17 +320,21 @@ const apiService = {
 
   async updateOrderStatus(
     orderId: string,
+    patch: ReturnType<typeof useApiClient>["patch"],
     updates: Partial<OrdersData>
   ): Promise<OrdersData> {
     try {
       if (!orderId) throw new Error("Order ID not provided");
 
-      const response = await apiCall(`/orders/${orderId}`, {
-        method: "PATCH",
-        body: JSON.stringify(updates),
-      });
+      const response = await patch<OrdersData[]>(
+        `/orders/${orderId}`,
+        updates,
+        {
+          requiresAuth: true,
+        }
+      );
 
-      return transformApiOrderToOrdersData(response.order || response);
+      return transformApiOrderToOrdersData(response);
     } catch (error) {
       console.error("Failed to update order:", error);
       throw error;
@@ -369,39 +359,27 @@ export const useOrdersStore: StateCreator<
   [],
   OrdersStore
 > = (set, get) => ({
-  // Separated order storage
   fulfilledOrders: [],
   unfulfilledOrders: [],
-
-  // UI state
   orderInView: null,
   showOrderModal: false,
-
-  // Filter state
   search: "",
   activeFilter: "All",
   dateFilter: {},
   sortDate: "descending",
-
-  // Loading states
   fulfilledState: "idle",
   unfulfilledState: "idle",
   singleOrderState: "idle",
-
-  // Error states
   ordersError: {
     fulfilled: "",
     unfulfilled: "",
     single: "",
   },
-
-  // Error management
   setOrderError: (type, error) => {
     set((state) => {
       state.ordersError[type] = error;
     });
   },
-
   setOrdersState: (type, newState) => {
     set((state) => {
       if (type === "fulfilled") {
@@ -413,65 +391,56 @@ export const useOrdersStore: StateCreator<
       }
     });
   },
-
   setSingleOrderState: (newState) => {
     set((state) => {
       state.singleOrderState = newState;
       if (newState === "loading") state.ordersError.single = "";
     });
   },
-
   resetErrors: () => {
     set((state) => {
       state.ordersError = { fulfilled: "", unfulfilled: "", single: "" };
     });
   },
-
-  // UI actions
   setOrderModal: (show) => {
     set((state) => {
       state.showOrderModal = show !== undefined ? show : !state.showOrderModal;
     });
   },
-
   setOrderInView: (order) => {
     set((state) => {
       state.orderInView = order;
     });
   },
-
-  // Filter actions
   setSearch: (search) => {
     set((state) => {
       state.search = search;
     });
   },
-
   setActiveFilter: (filter) => {
     set((state) => {
       state.activeFilter = filter;
     });
   },
-
   setDateFilter: (filter) => {
     set((state) => {
       state.dateFilter = filter;
     });
   },
-
   toggleDateSorting: () => {
     set((state) => {
       state.sortDate =
         state.sortDate === "ascending" ? "descending" : "ascending";
     });
   },
-
-  // Data actions
   loadOrders: async (type, options = {}) => {
     const { setOrdersState, setOrderError } = get();
-    const { force = false, limit = 250 } = options;
+    const { force = false, limit = 250, get: apiGet } = options;
 
-    // Skip if already loaded and not forcing refresh
+    if (!apiGet) {
+      throw new Error("API get function is required");
+    }
+
     const currentOrders =
       type === "fulfilled" ? get().fulfilledOrders : get().unfulfilledOrders;
     const currentState =
@@ -484,7 +453,7 @@ export const useOrdersStore: StateCreator<
     setOrdersState(type, "loading");
 
     try {
-      const ordersData = await apiService.fetchOrders(type, limit);
+      const ordersData = await apiService.fetchOrders(type, apiGet, limit);
 
       set((state) => {
         if (type === "fulfilled") {
@@ -503,11 +472,15 @@ export const useOrdersStore: StateCreator<
       );
     }
   },
-
-  loadOrder: async (id) => {
+  loadOrder: async (id, options = {}) => {
     const { setSingleOrderState, setOrderError } = get();
 
-    // Check existing orders first
+    const { get: apiGet } = options;
+
+    if (!apiGet) {
+      throw new Error("API get function is required");
+    }
+
     const allOrders = [...get().fulfilledOrders, ...get().unfulfilledOrders];
     const existingOrder = allOrders.find((o) => o._id === id);
 
@@ -521,7 +494,7 @@ export const useOrdersStore: StateCreator<
     setSingleOrderState("loading");
 
     try {
-      const orderData = await apiService.fetchOrder(id);
+      const orderData = await apiService.fetchOrder(id, apiGet);
       set((state) => {
         state.orderInView = orderData;
       });
@@ -534,21 +507,25 @@ export const useOrdersStore: StateCreator<
       );
     }
   },
-
-  updateOrder: async (orderId, updates) => {
+  updateOrder: async (orderId, updates, options = {}) => {
     const updatePromise = (async () => {
       const { setSingleOrderState, setOrderError } = get();
+      const { patch: apiPatch } = options;
+
+      if (!apiPatch) {
+        throw new Error("API patch function is required");
+      }
 
       setSingleOrderState("loading");
 
       try {
         const updatedOrder = await apiService.updateOrderStatus(
           orderId,
+          apiPatch,
           updates
         );
 
         set((state) => {
-          // Helper to update order in array
           const updateOrderInArray = (orders: OrdersData[]) => {
             const index = orders.findIndex((o) => o._id === orderId);
             if (index !== -1) {
@@ -556,24 +533,15 @@ export const useOrdersStore: StateCreator<
             }
           };
 
-          // updateOrderInArray(state.fulfilledOrders);
           updateOrderInArray(state.unfulfilledOrders);
 
-          // Update view if same order
           if (state.orderInView?._id === orderId) {
             state.orderInView = updatedOrder;
           }
 
-          // Handle status change - move between fulfilled/unfulfilled
           if (updates.fulfilledStatus) {
-            const sourceArray =
-              updates.fulfilledStatus === "fulfilled"
-                ? state.unfulfilledOrders
-                : state.fulfilledOrders;
-            const targetArray =
-              updates.fulfilledStatus === "fulfilled"
-                ? state.fulfilledOrders
-                : state.unfulfilledOrders;
+            const sourceArray = updates.fulfilledStatus === "fulfilled"  ? state.unfulfilledOrders : state.fulfilledOrders;
+            const targetArray = updates.fulfilledStatus === "fulfilled" ? state.fulfilledOrders : state.unfulfilledOrders;
 
             const orderIndex = sourceArray.findIndex((o) => o._id === orderId);
             if (orderIndex !== -1) {
@@ -592,7 +560,7 @@ export const useOrdersStore: StateCreator<
         );
       }
     })();
-    // Show promise toast for update fulfilledStatus
+
     toast.promise(updatePromise, {
       loading: "Marking order as fulfilled...",
       success: () => {
@@ -607,21 +575,17 @@ export const useOrdersStore: StateCreator<
         };
       },
       error: "Failed to mark order as fulfilled. Please try again.",
-      position:"top-left"
-      
+      position: "top-left",
     });
 
     return updatePromise;
   },
-
   refundOrder: async (orderId) => {
-    // promise toast for refund operation
     const refundPromise = (async () => {
       try {
         await apiService.refundOrder(orderId);
 
         set((state) => {
-          // Remove from both arrays
           state.fulfilledOrders = state.fulfilledOrders.filter(
             (o) => o._id !== orderId
           );
@@ -629,7 +593,6 @@ export const useOrdersStore: StateCreator<
             (o) => o._id !== orderId
           );
 
-          // Clear view if same order
           if (state.orderInView?._id === orderId) {
             state.orderInView = null;
           }
@@ -642,7 +605,6 @@ export const useOrdersStore: StateCreator<
       }
     })();
 
-    // Show promise toast for refund
     toast.promise(refundPromise, {
       loading: "Processing refund...",
       success: () => {
@@ -659,8 +621,6 @@ export const useOrdersStore: StateCreator<
 
     return refundPromise;
   },
-
-  // Computed getters
   getFilteredOrders: (type) => {
     const { search, activeFilter, dateFilter, sortDate } = get();
     const orders =
@@ -669,7 +629,6 @@ export const useOrdersStore: StateCreator<
     const filtered = filterOrders(orders, search, activeFilter, dateFilter);
     return sortOrdersByDate(filtered, sortDate);
   },
-
   getOrdersStats: (type) => {
     const orders =
       type === "fulfilled" ? get().fulfilledOrders : get().unfulfilledOrders;

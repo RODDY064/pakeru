@@ -1,9 +1,10 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useBoundStore, initializeStore } from '@/store/store'
 import { ProductData } from '@/store/dashbaord/products';
 import { CategoryType } from '@/store/category';
+
 
 
 interface StoreProviderProps {
@@ -14,10 +15,10 @@ interface StoreProviderProps {
 
 export const StoreProvider: React.FC<StoreProviderProps> = ({
   children,
-  initialProducts,
+  initialProducts,  
   initialCategories,
 }) => {
-  const [isInitialized, setIsInitialized] = React.useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   React.useEffect(() => {
     if (!isInitialized) {

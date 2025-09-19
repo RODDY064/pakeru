@@ -6,9 +6,17 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 
 export default function CartCard({ cartData }: { cartData: CartItemType }) {
-  const { increaseQuantity, decreaseQuantity, removeFromCart } =
-    useBoundStore();
-  const [colorName, setColorName] = useState<{ color: string; colorHex: string }>({
+  const {
+    increaseQuantity,
+    decreaseQuantity,
+    removeFromCart,
+    addBookmark,
+    isBookmarked,
+  } = useBoundStore();
+  const [colorName, setColorName] = useState<{
+    color: string;
+    colorHex: string;
+  }>({
     color: "",
     colorHex: "",
   });
@@ -30,7 +38,6 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
       }
     }
   }, [cartData]);
-
 
   return (
     <div className="my-4 w-full flex flex-col md:flex-row h-fit md:h-[450px] lg:h-[500px] bg-white border border-black/10 rounded-sm ">
@@ -88,8 +95,9 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
                   <div className="w-12 h-[1px] bg-black/20 hidden md:flex" />
                   <div className="size-10 lg:size-14 flex-none hidden md:flex  border border-black/30 rounded-[10px] cursor-pointer relative overflow-hidden p-0.5">
                     <div
-                     style={{ backgroundColor: colorName.colorHex}}
-                     className="w-full h-full relative overflow-hidden rounded-[8px] "/>
+                      style={{ backgroundColor: colorName.colorHex }}
+                      className="w-full h-full relative overflow-hidden rounded-[8px] "
+                    />
                   </div>
                 </div>
                 <div className="w-full md:w-fit  items-center  justify-between flex gap-5">
@@ -142,14 +150,23 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
         </div>
         <div className="w-full flex border-t border-black/10">
           <div className="w-full h-12 flex items-center justify-center border-r border-black/10 cursor-pointer gap-1.5">
-            <div className="mt-[3.2px]">
+            <div onClick={() => addBookmark(cartData)} className="mt-[3.2px]">
               <p className="text-sm font-[400] font-avenir">BOOKMARK</p>
             </div>
             <Image
-              src="/icons/bookmark.svg"
-              width={18}
-              height={18}
-              alt="boomark"
+              src={
+                isBookmarked(
+                  cartData?._id as string,
+                  cartData?.selectedColor,
+                  cartData?.selectedSize
+                )
+                  ? "/icons/bookmark2.svg"
+                  : "/icons/bookmark.svg"
+              }
+              width={24}
+              height={24}
+              alt="bookmark"
+              className="cursor-pointer"
             />
           </div>
           <div

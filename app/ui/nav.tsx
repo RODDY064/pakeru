@@ -87,7 +87,8 @@ export default function Nav() {
     filterState,
     initializeMenuItems,
     isServerInitialized,
-    categories
+    categories,
+    loadUserToken
   } = useBoundStore();
 
   useStoreInitialization();
@@ -115,6 +116,8 @@ export default function Nav() {
 
 
   useEffect(() => {
+
+    loadUserToken()
 
     const handleResize = () => {
       if (window.innerWidth < 1000) {
@@ -181,7 +184,7 @@ export default function Nav() {
   }, [pathname]);
 
   return (
-    <div className="fixed top-0 w-full left-auto z-[90] ">
+    <div className="fixed top-0 w-full left-auto z-50 h-fit">
       <div className="w-full ">
         <div className="w-full flex items-center px-4 md:px-8 py-4 bg-black text-white overflow-hidden h-[40px] nav-ads justify-between">
           <p className="opacity-0">h</p>

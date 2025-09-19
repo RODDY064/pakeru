@@ -114,3 +114,12 @@ body {
   }
 }
 
+
+/* Add to your CSS */
+.svg-morph-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1/1; /* Adjust as needed */
+  min-height: 100px;
+  min-width: 100px;
+}

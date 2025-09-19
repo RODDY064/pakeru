@@ -1,5 +1,4 @@
 // types/userStore.ts
-
 import { type StateCreator } from "zustand";
 import { Store } from "./store";
 
@@ -10,29 +9,33 @@ export type User = {
   firstname?: string;
   lastname?: string;
   userType?: "unverified" | "verified";
-  role?: "user" |"admin";
+  role?: "user" | "admin";
 };
 
 export type UserStore = {
   user: User | null;
   token: string | null;
+  tokenExpiresAt?: number;
 
   setUser: (user: User) => void;
   completeUserProfile: (userData: Partial<User>) => void;
-  storeUserToken: (token: string) => void;
+  storeUserToken: (token: string, expiresAt?: number) => void;
   loadUserToken: () => void;
   clearUser: () => void;
   setUserType: (type: "unverified" | "verified") => void;
 };
 
+// Random-looking storage key
+const TOKEN_KEY = "Blxd4PzUPOmpH96cN9sHP1eM5Zyzzyr48";
+
 export const useUserStore: StateCreator<
   Store,
-  [["zustand/immer", never]],
+  [],
   [],
   UserStore> = (set, get) => ({
   user: null,
   token: null,
-
+  tokenExpiresAt: undefined,
 
   setUser: (user) => {
     set((state) => {
@@ -47,22 +50,32 @@ export const useUserStore: StateCreator<
     });
   },
 
-  storeUserToken: (token) => {
+  storeUserToken: (token, expiresAt) => {
     set((state) => {
       state.token = token;
+      if (expiresAt) state.tokenExpiresAt = expiresAt;
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("userToken", token);
+        sessionStorage.setItem(TOKEN_KEY, token);
+        if (expiresAt) sessionStorage.setItem(TOKEN_KEY + "_exp", expiresAt.toString());
       }
     });
   },
 
   loadUserToken: () => {
-    if (typeof window !== "undefined") {
-      const storedToken = sessionStorage.getItem("userToken");
-      if (storedToken) {
+    if (typeof window === "undefined") return;
+
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    const expiresStr = sessionStorage.getItem(TOKEN_KEY + "_exp");
+
+    if (token && expiresStr) {
+      const expiresAt = parseInt(expiresStr, 10);
+      if (expiresAt > Date.now()) {
         set((state) => {
-          state.token = storedToken;
+          state.token = token;
+          state.tokenExpiresAt = expiresAt;
         });
+      } else {
+        get().clearUser(); 
       }
     }
   },
@@ -71,11 +84,14 @@ export const useUserStore: StateCreator<
     set((state) => {
       state.user = null;
       state.token = null;
+      state.tokenExpiresAt = undefined;
     });
     if (typeof window !== "undefined") {
-      sessionStorage.removeItem("userToken");
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY + "_exp");
     }
   },
+
   setUserType: (type) =>
     set((state) => {
       if (state.user) {

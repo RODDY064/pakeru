@@ -7,13 +7,12 @@ import ProductOrderCard from "./productOrderCard";
 import { capitalize } from "@/libs/functions";
 import { useRouter, useSearchParams } from "next/navigation";
 import StatusBadge from "./statusBadge";
+import { useApiClient } from "@/libs/useApiClient";
 
 // Core modal content component
-function OrderModalContent({
-  type,
-}: {
-  type: "unfulfilled" | "fulfilled";
-}) {
+function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
+  const { patch } = useApiClient();
+
   const {
     showOrderModal,
     setOrderModal,
@@ -57,7 +56,7 @@ function OrderModalContent({
 
     setIsUpdating(true);
     try {
-      await updateOrder(orderId, updates as any);
+      await updateOrder(orderId, updates as any, { patch });
       setOrderModal(false);
     } catch (error) {
       console.error("Update failed:", error);
@@ -88,6 +87,7 @@ function OrderModalContent({
   return (
     <motion.div
       variants={modalVariants}
+      transition={{ type: "tween" }}
       className={`fixed left-0 top-0 z-[99] w-full h-full hidden md:block ${
         showOrderModal ? "pointer-events-auto" : "pointer-events-none"
       }`}
@@ -134,7 +134,7 @@ function OrderModalContent({
                     </p>
                   </div>
                 </div>
-                
+
                 {singleOrderState === "loading" && (
                   <div className="w-full h-full flex items-center justify-center">
                     <Image
@@ -145,7 +145,7 @@ function OrderModalContent({
                     />
                   </div>
                 )}
-                
+
                 {singleOrderState === "success" && (
                   <div className="h-full overflow-scroll pb-24">
                     <div className="px-10 py-6">
@@ -154,16 +154,17 @@ function OrderModalContent({
                           Date
                         </p>
                         <p className="font-avenir font-[500] text-lg mt-1">
-                          {new Date(
-                            orderInView?.date ?? ""
-                          ).toLocaleDateString("en-US", {
-                            month: "long",
-                            day: "numeric",
-                          })}
+                          {new Date(orderInView?.date ?? "").toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
                           , {orderInView?.time}
                         </p>
                       </div>
-                      
+
                       <div className="mt-4">
                         <p className="text-black/40 text-md font-avenir font-[300] mt-1">
                           Customer
@@ -176,7 +177,7 @@ function OrderModalContent({
                           {orderInView?.user?.email}
                         </p>
                       </div>
-                      
+
                       <div className="mt-10 w-full flex flex-col gap-4">
                         <div className="flex items-center justify-between">
                           <p className="font-avenir text-lg">Payment Status</p>
@@ -188,10 +189,12 @@ function OrderModalContent({
                             />
                           </div>
                         </div>
-                        
+
                         {type !== "unfulfilled" && (
                           <div className="flex items-center justify-between">
-                            <p className="font-avenir text-lg">Delivery Status</p>
+                            <p className="font-avenir text-lg">
+                              Delivery Status
+                            </p>
                             <div className="flex gap-2">
                               <div className="relative flex items-center">
                                 <select
@@ -217,7 +220,7 @@ function OrderModalContent({
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="mt-6 w-full flex flex-col gap-2">
                         <div className="flex items-center gap-2">
                           <p className="text-black/40 text-md font-avenir font-[300]">
@@ -227,7 +230,7 @@ function OrderModalContent({
                             {orderInView?.items.numOfItems}
                           </p>
                         </div>
-                        
+
                         <div className="w-full min-h-[450px] grid grid-cols-2 gap-4">
                           {orderInView?.items.products.map((prod) => (
                             <ProductOrderCard
@@ -239,7 +242,7 @@ function OrderModalContent({
                             />
                           ))}
                         </div>
-                        
+
                         <div className="mt-4">
                           <p className="text-black/70 text-md font-bold font-avenir">
                             SUBTOTAL
@@ -248,7 +251,7 @@ function OrderModalContent({
                             GHS {orderInView?.total.toFixed(2)}
                           </p>
                         </div>
-                        
+
                         <div className="">
                           <p className="text-black/70 font-bold text-md uppercase font-avenir">
                             Discount
@@ -257,7 +260,7 @@ function OrderModalContent({
                             GHS {orderInView?.discount.toFixed(2)}
                           </p>
                         </div>
-                        
+
                         <div className="mt-2">
                           <p className="text-black text-2xl font-bold font-avenir">
                             TOTAL
@@ -266,7 +269,7 @@ function OrderModalContent({
                             GHS {orderInView?.total.toFixed(2)}
                           </p>
                         </div>
-                        
+
                         {orderInView?.fulfilledStatus === "unfulfilled" && (
                           <button
                             type="button"
@@ -277,7 +280,7 @@ function OrderModalContent({
                             {isUpdating ? "Fulfilling..." : "Fulfill item"}
                           </button>
                         )}
-                        
+
                         {type !== "unfulfilled" && (
                           <>
                             <div className="mt-2">
@@ -289,7 +292,7 @@ function OrderModalContent({
                                 className="w-full h-24 max-h-24 min-h-24 bg-black/5 mt-2 rounded-2xl border p-3 flex items-start focus:outline-none focus:border-black/30 border-black/20"
                               />
                             </div>
-                            
+
                             <div className="mt-2">
                               <p className="text-black/40 text-md font-avenir font-[300]">
                                 Actions
@@ -324,7 +327,7 @@ function OrderModalContent({
           </>
         )}
       </AnimatePresence>
-      
+
       {showDeleteConfirm && (
         <DeleteModal
           orderID={orderInView?._id || ""}
@@ -362,7 +365,6 @@ export const modalVariants = {
     opacity: 1,
     transition: {
       duration: 0.3,
-      ease: "easeInOut",
       staggerChildren: 0,
     },
   },
@@ -370,7 +372,6 @@ export const modalVariants = {
     opacity: 0,
     transition: {
       duration: 0.3,
-      ease: "easeInOut",
       when: "afterChildren",
     },
   },

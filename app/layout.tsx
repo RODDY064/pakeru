@@ -7,6 +7,7 @@ import { ToastProvider } from "./ui/toaster";
 import { OrdersWebhookProvider } from "./(dashboard)/admin/orders/hooks/webhookProivider";
 import { StoreProvider } from "./ui/storeProvider";
 import { fetchInitialData } from "@/libs/data-fetcher";
+import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://thepakeru.com"),
@@ -140,7 +141,8 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={` ${avenir.variable} ${blackMango.style}  antialiased `}>
-        <StoreProvider
+        <SessionProvider>
+          <StoreProvider
           initialProducts={products}
           initialCategories={categories}>
           <OrdersWebhookProvider>
@@ -148,6 +150,7 @@ export default async function RootLayout({
             {children}
           </OrdersWebhookProvider>
         </StoreProvider>
+        </SessionProvider>
       </body>
     </html>
   );

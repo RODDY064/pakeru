@@ -153,7 +153,7 @@ export default function Bentos() {
               ]}
               rounded={64}
               items={1}
-              className="px-2 "
+              className="px-2"
               name="Vierra Crop"
             />
           </div>
