@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+const Refresh_Token_Name = process.env.REFRESH_TOKEN_NAME
+
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -21,6 +24,8 @@ export async function POST(request: Request) {
     // cookie forwarding - handle Set-Cookie properly
     const cookieHeader = backendResponse.headers.get("set-cookie");
     if (cookieHeader) {
+
+      console.log(cookieHeader,"cookie header")
       // Parse and set cookies with appropriate settings for localhost
       const cookies = cookieHeader.split(/,(?=\s*\w+\s*=)/).map(c => c.trim());
       

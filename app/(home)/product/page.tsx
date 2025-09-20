@@ -3,6 +3,7 @@
 import Button from "@/app/ui/button";
 import Filter from "@/app/ui/filter";
 import ProductCon from "@/app/ui/productCon";
+import { useApiClient } from "@/libs/useApiClient";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -12,16 +13,14 @@ export default function Product() {
   const { cartState, loadProducts, products } = useBoundStore();
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { get } = useApiClient()
 
   const [containerHeight, setContainerHeight] = useState("100vh");
 
   useEffect(() => {
     const calculateHeight = () => {
-      // Use actual viewport height for consistency across platforms
       const actualVH = window.innerHeight;
       setContainerHeight(`${actualVH}px`);
-
-      // Set CSS custom property for dvh fallback
       document.documentElement.style.setProperty(
         "--actual-vh",
         `${actualVH * 0.01}px`
@@ -41,13 +40,15 @@ export default function Product() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await loadProducts();
+      await loadProducts(true);
       await new Promise((res) => setTimeout(res, 500));
       router.refresh();
     } finally {
       setIsRefreshing(false);
     }
   };
+
+
 
   return (
     <>

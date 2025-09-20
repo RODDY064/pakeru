@@ -133,10 +133,13 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
+   searchParams,
 }: Readonly<{
   children: React.ReactNode;
+   searchParams: { [key: string]: string | string[] | undefined };
 }>) {
   const { products, categories } = await fetchInitialData();
+   const category = searchParams?.category ?? "";
 
   return (
     <html lang="en">

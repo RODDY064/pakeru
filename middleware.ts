@@ -4,12 +4,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const ROUTES = {
-  protected: ["/account", "/admin","/payment"],
+  protected: ["/account", "/admin", "/payment"],
   public: ["/", "/collections", "/products", "/blog", "/about"],
   auth: ["/sign-in", "/sign-up", "/forgot-password", "/reset-password"],
   api: ["/api"], 
 } as const;
-
 
 function getClientIP(request: NextRequest): string {
   return (
@@ -67,9 +66,9 @@ function createMemoryLimiter(points: number, duration: number) {
 }
 
 const rateLimiters = {
-  auth: createMemoryLimiter(1000, 15 * 60),    // 10 requests per 15 minutes
-  api: createMemoryLimiter(1000, 15 * 60),    // 100 requests per 15 minutes  
-  general: createMemoryLimiter(1000, 15 * 60), // 200 requests per 15 minutes
+  auth: createMemoryLimiter(50, 15 * 60),       // 50 requests per 15 minutes 
+  api: createMemoryLimiter(3000, 15 * 60),      // 3,000 requests per 15 minutes 
+  general: createMemoryLimiter(1500, 15 * 60),  // 1,500 requests per 15 minutes 
 } as const;
 
 async function handleRateLimit(
@@ -77,7 +76,6 @@ async function handleRateLimit(
   routeType: keyof typeof rateLimiters,
   userAgent?: string
 ): Promise<NextResponse | null> {
- 
   if (userAgent && isBot(userAgent)) {
     return null;
   }
@@ -112,48 +110,68 @@ async function handleRateLimit(
   }
 }
 
-export default auth(async (req) => {
-  const { pathname } = req.nextUrl;
-  const ip = getClientIP(req);
-  const userAgent = req.headers.get("user-agent") || "";
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const ip = getClientIP(request);
+  const userAgent = request.headers.get("user-agent") || "";
   
-  // Apply rate limiting
+  // Apply rate limiting first
   const routeType = getRouteType(pathname);
   const rateLimitResponse = await handleRateLimit(ip, routeType, userAgent);
   if (rateLimitResponse) {
     return rateLimitResponse;
   }
+  
+  // Get the session
+  const session = await auth();
+  
+  // Check if the current path is a protected route
+  const isProtectedRoute = ROUTES.protected.some(route => 
+    pathname.startsWith(route)
+  );
+  
+  // Check if the current path is an auth route
+  const isAuthRoute = ROUTES.auth.some(route => 
+    pathname.startsWith(route)
+  );
 
-  // Auth logic
-  const isAuthenticated = !!req.auth?.accessToken;
-  const isProtectedRoute = matchesRoutes(pathname, ROUTES.protected);
-  const isAuthRoute = matchesRoutes(pathname, ROUTES.auth);
+  // Handle protected routes
+  if (isProtectedRoute) {
+    // No session - redirect to sign-in
+    if (!session) {
+      const signInUrl = new URL("/sign-in", request.url);
+      signInUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(signInUrl);
+    }
 
-  // Redirect unauthenticated users from protected routes
-  if (isProtectedRoute && !isAuthenticated) {
-    const loginUrl = new URL("/sign-in", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+    // Session exists but token is expired
+    if (session.expiresAt && Date.now() >= session.expiresAt) {
+      const signInUrl = new URL("/sign-in", request.url);
+      signInUrl.searchParams.set("callbackUrl", pathname);
+      signInUrl.searchParams.set("error", "SessionExpired");
+      return NextResponse.redirect(signInUrl);
+    }
+
+    // Valid session - allow access
+    return NextResponse.next();
   }
 
-  // Redirect authenticated users from auth pages
-  if (isAuthRoute && isAuthenticated) {
-    const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
-    const redirectUrl = callbackUrl && callbackUrl.startsWith("/") 
-      ? callbackUrl 
-      : "/admin";
-    return NextResponse.redirect(new URL(redirectUrl, req.url));
+  // Handle auth routes when user is already authenticated
+  if (isAuthRoute && session && session.accessToken) {
+    // User is authenticated and trying to access auth routes like sign-in
+    const callbackUrl = request.nextUrl.searchParams.get("callbackUrl");
+    if (callbackUrl) {
+      return NextResponse.redirect(new URL(callbackUrl, request.url));
+    }
+    // Redirect to home sign-in
+    return NextResponse.redirect(new URL("/signin", request.url));
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|public).*)",
   ],
 };
-
-
-
-

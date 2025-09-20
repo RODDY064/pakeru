@@ -1,25 +1,22 @@
 import { CategoryType } from "@/store/category";
 import { ProductData } from "@/store/dashbaord/products";
-import { apiCall } from "./functions";
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export async function fetchProductsServer(): Promise<ProductData[]> {
   try {
-   
-    const response = await apiCall("/products", {
+    const response = await fetch(`${BASE_URL}/v1/products?limit=25`, {
       method: "GET",
-      headers: { "Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       cache: "no-store",
-    },true);
+    });
+
+    const result = await response.json();
 
     if (!response) {
-      console.log(response)
-      throw new Error(
-        `Failed to fetch products: ${response.statusText}`
-      );
+      console.log(response);
+      throw new Error(`Failed to fetch products: ${result.statusText}`);
     }
-
-    const result = await response
 
     if (!result || !Array.isArray(result.data)) {
       throw new Error(
@@ -54,20 +51,18 @@ export async function fetchProductsServer(): Promise<ProductData[]> {
 
 export async function fetchCategoriesServer(): Promise<CategoryType[]> {
   try {
-    const response = await apiCall("/categories", {
+    const response = await fetch(`${BASE_URL}/v1/categories`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       cache: "no-store",
-    },true);
+    });
+
+    const result = await response.json();
 
     if (!response) {
       console.log(response);
-      throw new Error(`Failed to fetch categories: ${response.statusText}`);
+      throw new Error(`Failed to fetch categories: ${result.statusText}`);
     }
-
-    const result = await response
 
     const categories: CategoryType[] = result.data.map((item: any) => ({
       id: item._id,

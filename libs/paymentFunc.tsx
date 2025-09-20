@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CartItemType, CartStats } from "@/store/cart";
 import { useApiClient } from "./useApiClient";
 import { ApiError, AuthError } from "./api-client-instance";
+import { useBoundStore } from "@/store/store";
 
 export interface PaymentData {
   address: string;
@@ -53,6 +54,7 @@ export const usePaymentProcessing = () => {
   
   const router = useRouter();
   const [processingPayment, setProcessingPayment] = useState(false);
+  const { clearCart } = useBoundStore()
 
   const validatePaymentData = useCallback((
     data: PaymentData,
@@ -165,8 +167,12 @@ export const usePaymentProcessing = () => {
         sessionStorage.setItem('pendingOrderId', orderId);
       }
 
+
+
+      clearCart()
       // Redirect to payment gateway
       window.location.href = authUrl;
+
       
       return { 
         success: true, 

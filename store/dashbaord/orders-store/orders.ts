@@ -54,6 +54,7 @@ export type DateFilter = {
 export type OrdersStore = {
   fulfilledOrders: OrdersData[];
   unfulfilledOrders: OrdersData[];
+  userOrders: OrdersData[];
   orderInView: OrdersData | null;
   showOrderModal: boolean;
   search: string;
@@ -63,6 +64,7 @@ export type OrdersStore = {
   fulfilledState: "idle" | "loading" | "success" | "failed";
   unfulfilledState: "idle" | "loading" | "success" | "failed";
   singleOrderState: "idle" | "loading" | "success" | "failed";
+  userOrdersState: "idle" | "loading" | "success" | "failed";
   ordersError: {
     fulfilled: string;
     unfulfilled: string;
@@ -95,11 +97,16 @@ export type OrdersStore = {
     id: string,
     options?: { get?: ReturnType<typeof useApiClient>["get"] }
   ) => Promise<void>;
+  loadUserOrders: (options?: {
+    force?: boolean;
+    limit?: number;
+    get?: ReturnType<typeof useApiClient>["get"];
+  }) => Promise<void>;
   updateOrder: (
     orderId: string,
     updates: Partial<OrdersData>,
     options?: { patch?: ReturnType<typeof useApiClient>["patch"] }
-  ) => Promise<void>;
+  ) => Promise<OrdersData>;
   refundOrder: (orderId: string) => Promise<void>;
   getFilteredOrders: (type: "fulfilled" | "unfulfilled") => OrdersData[];
   getOrdersStats: (type: "fulfilled" | "unfulfilled") => OrdersStats;
@@ -230,7 +237,8 @@ const generateTrimmedId = (fullId: string): string => {
 
 export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
   const createdDate = new Date(apiOrder.createdAt);
-  const date = createdDate?.toISOString().split("T")[0];
+  const date = createdDate ? new Date(createdDate).toISOString().split("T")[0]: "";
+
   const time = createdDate?.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -278,16 +286,18 @@ const apiService = {
     type: "fulfilled" | "unfulfilled",
     get: ReturnType<typeof useApiClient>["get"],
     limit?: number,
-    token?: string
   ): Promise<OrdersData[]> {
     try {
       const query = new URLSearchParams();
       query.append("fulfilledStatus", type);
       if (limit) query.append("limit", limit.toString());
 
-      const response = await get<{ data:OrdersData[]}>(`/orders?${query.toString()}`, {
-        requiresAuth: true,
-      });
+      const response = await get<{ data: OrdersData[] }>(
+        `/orders?${query.toString()}`,
+        {
+          requiresAuth: true,
+        }
+      );
 
       console.log(response, "order response");
 
@@ -308,7 +318,7 @@ const apiService = {
     get: ReturnType<typeof useApiClient>["get"]
   ): Promise<OrdersData> {
     try {
-      const data = await get<{ data:OrdersData }>(`/orders/${id}`, {
+      const data = await get<{ data: OrdersData }>(`/orders/id/${id}`, {
         requiresAuth: true,
       });
       return transformApiOrderToOrdersData(data);
@@ -327,11 +337,9 @@ const apiService = {
       if (!orderId) throw new Error("Order ID not provided");
 
       const response = await patch<OrdersData[]>(
-        `/orders/${orderId}`,
+        `/orders/id/${orderId}`,
         updates,
-        {
-          requiresAuth: true,
-        }
+        { requiresAuth: true }
       );
 
       return transformApiOrderToOrdersData(response);
@@ -343,11 +351,37 @@ const apiService = {
 
   async refundOrder(orderId: string): Promise<void> {
     try {
-      await apiCall(`/orders/${orderId}`, {
+      await apiCall(`/orders/id/${orderId}`, {
         method: "DELETE",
       });
     } catch (error) {
       console.error("Failed to refund order:", error);
+      throw error;
+    }
+  },
+
+  async fetchUserOrders(
+    get: ReturnType<typeof useApiClient>["get"],
+  ): Promise<OrdersData[]> {
+    try {
+
+      const myOrder = "myOrder";
+      const endpoint = `/orders/my/${myOrder}`;
+
+      const response = await get<{ data: OrdersData[] }>(endpoint, {
+        requiresAuth: true,
+      });
+
+      console.log(response, "user orders response");
+
+      const orders = response.data;
+      if (!Array.isArray(orders)) {
+        throw new Error("Expected orders array from API");
+      }
+
+      return transformApiOrdersToOrdersData(orders);
+    } catch (error) {
+      console.error("Failed to fetch user orders:", error);
       throw error;
     }
   },
@@ -361,6 +395,7 @@ export const useOrdersStore: StateCreator<
 > = (set, get) => ({
   fulfilledOrders: [],
   unfulfilledOrders: [],
+  userOrders: [],
   orderInView: null,
   showOrderModal: false,
   search: "",
@@ -370,6 +405,7 @@ export const useOrdersStore: StateCreator<
   fulfilledState: "idle",
   unfulfilledState: "idle",
   singleOrderState: "idle",
+  userOrdersState: "idle",
   ordersError: {
     fulfilled: "",
     unfulfilled: "",
@@ -380,14 +416,18 @@ export const useOrdersStore: StateCreator<
       state.ordersError[type] = error;
     });
   },
+
   setOrdersState: (type, newState) => {
     set((state) => {
       if (type === "fulfilled") {
         state.fulfilledState = newState;
         if (newState === "loading") state.ordersError.fulfilled = "";
-      } else {
+      } else if (type === "unfulfilled") {
         state.unfulfilledState = newState;
         if (newState === "loading") state.ordersError.unfulfilled = "";
+      } else if (type === "user") {
+        state.userOrdersState = newState;
+        if (newState === "loading") state.ordersError.single = "";
       }
     });
   },
@@ -507,6 +547,48 @@ export const useOrdersStore: StateCreator<
       );
     }
   },
+  loadUserOrders: async (options = {}) => {
+    const { setOrderError } = get();
+    const { force = false, get: apiGet } = options;
+
+    if (!apiGet) {
+      throw new Error("API get function is required");
+    }
+
+    const currentUserOrders = get().userOrders;
+    const currentState = get().userOrdersState;
+
+    // Skip if already loaded and not forcing reload
+    if (!force && currentState === "success" && currentUserOrders.length > 0) {
+      return;
+    }
+
+    // Set loading state
+    set((state) => {
+      state.userOrdersState = "loading";
+      state.ordersError.single = "";
+    });
+
+    try {
+      const ordersData = await apiService.fetchUserOrders(apiGet);
+
+      set((state) => {
+        state.userOrders = ordersData;
+        state.userOrdersState = "success";
+      });
+    } catch (error) {
+      set((state) => {
+        state.userOrdersState = "failed";
+        state.ordersError.single =
+          error instanceof Error ? error.message : "Failed to load user orders";
+      });
+
+      setOrderError(
+        "single",
+        error instanceof Error ? error.message : "Failed to load user orders"
+      );
+    }
+  },
   updateOrder: async (orderId, updates, options = {}) => {
     const updatePromise = (async () => {
       const { setSingleOrderState, setOrderError } = get();
@@ -534,14 +616,21 @@ export const useOrdersStore: StateCreator<
           };
 
           updateOrderInArray(state.unfulfilledOrders);
+          updateOrderInArray(state.fulfilledOrders); // Also update fulfilled orders array
 
           if (state.orderInView?._id === orderId) {
             state.orderInView = updatedOrder;
           }
 
+          // Handle fulfillment status changes (moving between arrays)
           if (updates.fulfilledStatus) {
-            const sourceArray = updates.fulfilledStatus === "fulfilled"  ? state.unfulfilledOrders : state.fulfilledOrders;
-            const targetArray = updates.fulfilledStatus === "fulfilled" ? state.fulfilledOrders : state.unfulfilledOrders;
+            const isBeingFulfilled = updates.fulfilledStatus === "fulfilled";
+            const sourceArray = isBeingFulfilled
+              ? state.unfulfilledOrders
+              : state.fulfilledOrders;
+            const targetArray = isBeingFulfilled
+              ? state.fulfilledOrders
+              : state.unfulfilledOrders;
 
             const orderIndex = sourceArray.findIndex((o) => o._id === orderId);
             if (orderIndex !== -1) {
@@ -552,29 +641,34 @@ export const useOrdersStore: StateCreator<
         });
 
         setSingleOrderState("success");
+        return updatedOrder;
       } catch (error) {
         setSingleOrderState("failed");
         setOrderError(
           "single",
           error instanceof Error ? error.message : "Failed to update order"
         );
+        throw error;
       }
     })();
 
+    // Dynamic toast messages
     toast.promise(updatePromise, {
-      loading: "Marking order as fulfilled...",
+      loading: getLoadingMessage(updates),
       success: () => {
         const order = [
           ...get().fulfilledOrders,
           ...get().unfulfilledOrders,
         ].find((o) => o._id === orderId);
+
+        const orderIdentifier = order?.IDTrim || orderId;
+        const updateDescription = getToastMessages(updates);
+
         return {
-          title: `Order ${
-            order?.IDTrim || orderId
-          } marked as fulfilled successfully`,
+          title: `Order ${orderIdentifier} ${updateDescription} successfully`,
         };
       },
-      error: "Failed to mark order as fulfilled. Please try again.",
+      error: getErrorMessage(updates),
       position: "top-left",
     });
 
@@ -635,3 +729,55 @@ export const useOrdersStore: StateCreator<
     return computeOrdersStats(orders);
   },
 });
+
+const getToastMessages = (updates: any) => {
+  const messages = [];
+
+  if (updates.fulfilledStatus) {
+    const action =
+      updates.fulfilledStatus === "fulfilled" ? "fulfilled" : "unfulfilled";
+    messages.push(`marked as ${action}`);
+  }
+
+  if (updates.deliveryStatus) {
+    const statusMap = {
+      delivered: "delivered",
+      pending: "pending",
+      cancelled: "cancelled",
+      shipped: "shipped",
+    };
+    messages.push(
+      `delivery status updated to ${
+        statusMap[updates.deliveryStatus as keyof typeof statusMap]
+      }`
+    );
+  }
+
+  return messages.length > 0 ? messages.join(" and ") : "updated";
+};
+
+const getLoadingMessage = (updates: any) => {
+  if (updates.fulfilledStatus && updates.deliveryStatus) {
+    return "Updating order status...";
+  } else if (updates.fulfilledStatus) {
+    const action =
+      updates.fulfilledStatus === "fulfilled" ? "fulfilled" : "unfulfilled";
+    return `Marking order as ${action}...`;
+  } else if (updates.deliveryStatus) {
+    return "Updating delivery status...";
+  }
+  return "Updating order...";
+};
+
+const getErrorMessage = (updates: any) => {
+  if (updates.fulfilledStatus && updates.deliveryStatus) {
+    return "Failed to update order status. Please try again.";
+  } else if (updates.fulfilledStatus) {
+    const action =
+      updates.fulfilledStatus === "fulfilled" ? "fulfilled" : "unfulfilled";
+    return `Failed to mark order as ${action}. Please try again.`;
+  } else if (updates.deliveryStatus) {
+    return "Failed to update delivery status. Please try again.";
+  }
+  return "Failed to update order. Please try again.";
+};

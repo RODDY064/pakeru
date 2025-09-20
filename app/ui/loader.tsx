@@ -4,7 +4,6 @@ import Lottie from "lottie-react";
 import loaderAnimation from "../../public/lottie/pakeru.json";
 import { useBoundStore } from "@/store/store";
 import { cn } from "@/libs/cn";
-import { usePathname } from "next/navigation";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 

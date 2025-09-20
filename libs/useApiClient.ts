@@ -38,7 +38,7 @@ export const useApiClient = (options: UseApiClientOptions = {}) => {
             onAuthError();
           } else {
             await signOut();
-            router.push('/sign-in');
+            // router.push('/sign-in');
           }
           throw error;
         }

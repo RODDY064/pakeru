@@ -1,22 +1,89 @@
+"use client";
+
+import { useApiClient } from "@/libs/useApiClient";
+import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import Button from "./button";
+import { useRouter } from "next/navigation";
+import { OrdersData } from "@/store/dashbaord/orders-store/orders";
 
 export default function MyOrders() {
+  const { get } = useApiClient();
+  const { loadUserOrders, userOrdersState, userOrders } = useBoundStore();
+  const router = useRouter();
+  const [arrivingOrder, setArrivingOrder] = useState<OrdersData[]>([])
+  const [history, setHistory] = useState<OrdersData[]>([])
+
+  useEffect(() => {
+    const initializeData = async () => {
+      loadUserOrders({ get });
+    };
+    initializeData();
+  }, []);
+
+  // seprate data 
+
+
+
+
   return (
     <div className="w-full">
       <p className="font-avenir text-xl md:text-3xl  font-semibold ">
         What's coming up
       </p>
       <div className="mt-10 flex flex-col max-sm:items-center lg:flex-row gap-4">
-        <MyOrderCard type="arriving" />
-        <MyOrderCard type="delivered" />
+        {(userOrdersState === "loading" || userOrdersState === "idle") && (
+          <div className="w-full mt-16 flex flex-col items-center">
+            <Image src="/icons/loader.svg" width={36} height={36} alt="laoding icon"/>
+          </div>
+        )}
+        {userOrdersState === "failed" && (
+          <div className="w-full mt-16 flex flex-col items-center">
+            <p className="font-avenir text-2xl text-red-500 text-balance">
+              Something went anything.
+            </p>
+            <div  className="mt-6">
+              <div onClick={() => loadUserOrders({ get })} className="py-2 px-10 cursor-pointer bg-black text-white uppercase font-avenir text-md">
+                REFRESH
+              </div>
+            </div>
+          </div>
+        )}
+        {userOrdersState === "success" && (
+          <>
+            {userOrders.length === 0 ? (
+              <div className="w-full mt-16 flex flex-col items-center">
+                <p className="font-avenir text-2xl text-black/50 text-balance">
+                  You've not ordered anything.
+                </p>
+                <div className="mt-4">
+                  <Button
+                    word="GO TO SHOP"
+                    action={() => router.push("/products")}
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                {userOrders.map((order) => (
+                  <MyOrderCard type="arriving" key={order._id} order={order} />
+                ))}
+              </>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-const MyOrderCard = ({ type }: { type: "arriving" | "delivered" }) => {
+const MyOrderCard = ({ type, order }: { type: "arriving" | "delivered", order:OrdersData }) => {
+
+  // products 
+
+
   return (
     <div className="w-full h-[400px] sm:w-[500px] md:w-[600px] xl:w-[650px] sm:h-[300px] xl:h-[350px] flex sm:flex-row flex-col bg-white rounded-2xl border border-black/15 overflow-hidden ">
       <div className="w-full h-[55%] max-sm:shrink-0 sm:h-auto sm:w-[55%] flex-srink-0  p-[5px] ">
@@ -45,9 +112,7 @@ const MyOrderCard = ({ type }: { type: "arriving" | "delivered" }) => {
       </div>
       <div className="w-full h-full self-stretch sm:w-[45%] flex-srink-0 p-4 md:pb-10 flex  flex-col justify-between">
         <div className="flex justify-between items-center">
-          <p className="font-avenir text-[12px] text-black/60 ">
-            ORD-26476
-          </p>
+          <p className="font-avenir text-[12px] text-black/60 ">{order.IDTrim}</p>
           <div className="bg-[#f2f2f2] flex rounded-full border border-black/10 px-1.5 gap-2">
             <Image
               src="/icons/shipping.svg"
@@ -78,11 +143,11 @@ const MyOrderCard = ({ type }: { type: "arriving" | "delivered" }) => {
               </p>
               <div className="w-[1px] self-stretch bg-black/10 sm:mx-2" />
               <p className="p-2 font-avenir text-[12px] md:text-[15px]  text-black/70 font-semibold ">
-                GHS 500.00
+                GHS {order.total}
               </p>
             </div>
           </div>
-          <Link href="/account/myorder/1">
+          <Link href={`/account/myorder/${order.IDTrim}?id=${order._id}`}>
             <p className="mt-2 sm:mt-4 sm:text-[15px] text-[12px] font-avenir text-blue-600 cursor-pointer underline-offset-1 underline decoration-dotted">
               View detials
             </p>

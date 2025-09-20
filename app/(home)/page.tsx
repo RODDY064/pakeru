@@ -13,7 +13,6 @@ import { InertiaPlugin } from "gsap/InertiaPlugin";
 import { horizontalLoop } from "@/libs/functions";
 import { cn } from "@/libs/cn";
 import { cubicBezier } from "motion";
-import LookAt from "../ui/lookAt";
 import ProductCard from "../ui/product-card";
 import SliderButton from "../ui/sliderButton";
 import Video from "../ui/bentos";
@@ -70,7 +69,6 @@ export default function Home() {
       />
       <div className="w-full mt-[1px]  pt-4 bg-white  ">
         <Slider   containerHeight={containerHeight} />
-        <LookAt />
         <Product />
         <Video />
       </div>
@@ -242,10 +240,6 @@ const Slider = ({ containerHeight }: { containerHeight:any }) => {
                             <p className="font-avenir font-bold  text-black  group-hover/slider:text-white py-2">
                               {product.title}
                             </p>
-
-                            <motion.div variants={imgDiv}>
-                              <p>-- TAKE A LOOK</p>
-                            </motion.div>
                           </div>
                         </motion.div>
                       </div>
@@ -288,9 +282,6 @@ const Slider = ({ containerHeight }: { containerHeight:any }) => {
                           <p className="font-avenir font-bold text-black  group-hover/slider:text-white py-1.5">
                             {product.title}
                           </p>
-                          <motion.div variants={imgDiv}>
-                            <p>-- VIEW</p>
-                          </motion.div>
                         </div>
                       </motion.div>
                     </div>
@@ -317,10 +308,6 @@ const textOverlay = {
   },
 };
 
-const imgDiv = {
-  show: { opacity: 1 },
-  hide: { opacity: 0 },
-};
 
 const textMovement = {
   show: {

@@ -85,8 +85,7 @@ export async function GET(request: NextRequest) {
     console.error('Orders GET failed:', error);
     return createErrorResponse(
       'Orders fetch failed', 
-      500, 
-      process.env.NODE_ENV === 'development' ? error.message : undefined
+      500, process.env.NODE_ENV === 'development' ? error.message : undefined
     );
   }
 }

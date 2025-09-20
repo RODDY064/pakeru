@@ -3,12 +3,11 @@ import { Store } from "../store";
 import { produce } from "immer";
 import { apiCall } from "@/libs/functions";
 import { ProductAPIService } from "@/app/(dashboard)/admin/store-products/product-actions/helpers";
-
-
+import { useApiClient } from "@/libs/useApiClient";
 
 //variant structure
 export type ProductVariant = {
-  _id: string,
+  _id: string;
   color: string;
   colorHex?: string;
   description: string;
@@ -116,7 +115,11 @@ export type StoreProductStore = {
   // Data management
   setProducts: (products: ProductData[]) => void;
   clearProducts: () => void;
-  loadStoreProducts: (force?: boolean, pagination?: number) => Promise<void>;
+  loadStoreProducts: (
+    force?: boolean,
+    get?: ReturnType<typeof useApiClient>["get"],
+    limit?:number
+  ) => Promise<void>;
   loadStoreProduct: (id: string) => Promise<void>;
 
   // Filtering and search
@@ -144,8 +147,6 @@ export type StoreProductStore = {
     lowStock: number;
   };
 };
-
-
 
 // Transform API product to local format
 const transformApiProduct = (apiProduct: any): ProductData => {
@@ -224,10 +225,8 @@ export const useStoreProductStore: StateCreator<
     id: string,
     colorID: string,
     size: string,
-    quality:number
+    quality: number
   ): Promise<ProductData | undefined> => {
-  
-
     const product = get().storeProducts.find((p) => p._id === id);
 
     if (!product) {
@@ -241,7 +240,7 @@ export const useStoreProductStore: StateCreator<
 
     if (!selectedVariant) {
       console.log(`Variant with id ${colorID} not found for product ${id}`);
-      return undefined
+      return undefined;
     }
 
     const hasSize = selectedVariant.sizes?.includes(size);
@@ -262,17 +261,16 @@ export const useStoreProductStore: StateCreator<
     };
   },
 
-   setProducts: (products: ProductData[]) => {
+  setProducts: (products: ProductData[]) => {
     set((state) => {
       state.products = products;
-      state.storeProducts = products; 
-      state.cartState = products.length > 0 ? 'success' : 'idle';
+      state.storeProducts = products;
+      state.cartState = products.length > 0 ? "success" : "idle";
       state.error = null;
     });
-    
+
     console.log(`Set ${products.length} products from server data`);
   },
-
 
   // Data management
   clearProducts: () =>
@@ -286,8 +284,13 @@ export const useStoreProductStore: StateCreator<
       })
     ),
 
-  loadStoreProducts: async (force = false, pagination = 1) => {
+  loadStoreProducts: async (force = false, apiGet, limit) => {
     const state = get();
+
+    if (!apiGet) {
+      throw new Error("API get function is required");
+    }
+
     if (state.storeProducts.length > 0 && !force) return;
 
     set(
@@ -298,13 +301,30 @@ export const useStoreProductStore: StateCreator<
     );
 
     try {
-      // Load categories first
+   
       await get().loadCategories();
 
-      // Fetch products from API
-      const result = await apiCall("/products",{},true);
+      const urlParams = new URLSearchParams(
+        typeof window !== "undefined" ? window.location.search : ""
+      );
+      const page = urlParams.get("page") 
 
-      // console.log(result, "respone from api");
+      // Build query parameters
+      const query = new URLSearchParams();
+      if (page && page !== "1") {
+        query.append("page", page);
+      }
+      // Optionally include limit if provided
+      if (limit) {
+        query.append("limit", limit.toString());
+      }
+
+      console.log(query.toString(), "Query parameters");
+
+      // Fetch products from API with query parameters
+      const result = await apiGet<{ data: ProductData[]; total?: number }>(
+        `/products?${query.toString()}`
+      );
 
       if (!result || !Array.isArray(result.data)) {
         throw new Error(
@@ -317,7 +337,21 @@ export const useStoreProductStore: StateCreator<
         transformApiProduct(product)
       );
 
-      get().setStoreProducts(transformedProducts);
+      // Merge new products with existing ones, avoiding duplicates
+      set(
+        produce((state: Store) => {
+          const existingProductIds = new Set(
+            state.storeProducts.map((p) => p._id) 
+          );
+          const newProducts = transformedProducts.filter(
+            (product) => !existingProductIds.has(product._id)
+          );
+          state.storeProducts = [...state.storeProducts, ...newProducts];
+          if (result.total !== undefined) {
+            state.totalItems = result.total;
+          }
+        })
+      );
     } catch (error) {
       console.error("Error loading products:", error);
       set(
@@ -345,7 +379,7 @@ export const useStoreProductStore: StateCreator<
       }
 
       // Fetch single product from API
-      const result = await apiCall(`/products/${id}`,{},true);
+      const result = await apiCall(`/products/${id}`, {}, true);
 
       const product = transformApiProduct(result.data || result);
 

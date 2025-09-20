@@ -283,15 +283,6 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
 
                         {type !== "unfulfilled" && (
                           <>
-                            <div className="mt-2">
-                              <p className="text-black/40 text-md font-avenir font-[300]">
-                                Comment
-                              </p>
-                              <textarea
-                                placeholder="Add a comment"
-                                className="w-full h-24 max-h-24 min-h-24 bg-black/5 mt-2 rounded-2xl border p-3 flex items-start focus:outline-none focus:border-black/30 border-black/20"
-                              />
-                            </div>
 
                             <div className="mt-2">
                               <p className="text-black/40 text-md font-avenir font-[300]">

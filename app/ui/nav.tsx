@@ -21,6 +21,7 @@ import Icon from "./Icon";
 import { usePathname, useRouter } from "next/navigation";
 import { handleNavigation } from "@/libs/navigate";
 import { useStoreInitialization } from "@/libs/cartPersist";
+import { useApiClient } from "@/libs/useApiClient";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -77,8 +78,6 @@ export default function Nav() {
     setIsMobile,
     routeChange,
     setRouteChange,
-    loadProducts,
-    loadCategories,
     products,
     modalDisplay,
     modal,
@@ -89,6 +88,7 @@ export default function Nav() {
     isServerInitialized,
     categories,
   } = useBoundStore();
+  const { get } = useApiClient()
 
   useStoreInitialization();
 
@@ -108,7 +108,7 @@ export default function Nav() {
     // Only load if server initialization failed and we don't have data
     if (!isServerInitialized && (!products?.length || !categories?.length)) {
       console.log('Server initialization failed, loading data client-side...');
-      useBoundStore.getState().loadProducts?.(true);
+      useBoundStore.getState().loadProducts?.();
       useBoundStore.getState().loadCategories?.();
     }
   }, [isServerInitialized, products?.length, categories?.length]);

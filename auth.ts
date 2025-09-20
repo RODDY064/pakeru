@@ -10,6 +10,26 @@ const SignInType = z.object({
     .min(6, { message: "Password must be at least 6 characters." }),
 });
 
+interface CookieMap {
+  [key: string]: string;
+}
+
+function extractSessionToken(cookieHeader: string): string | undefined {
+  const tokenName: string =
+    process.env.REFRESH_TOKEN_NAME || "authjs.session-token";
+
+  // Parse cookies from header string
+  const cookies: CookieMap = {};
+  cookieHeader.split(";").forEach((cookie: string) => {
+    const [name, ...rest] = cookie.trim().split("=");
+    if (name && rest.length > 0) {
+      cookies[name] = rest.join("=");
+    }
+  });
+
+  return cookies[tokenName];
+}
+
 class AuthService {
   private static baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -95,36 +115,67 @@ class AuthService {
   } | null> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const response = await fetch(`${this.baseUrl}/v1/auth/refresh`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        // const cookieStore = await cookies();
+        // const cookieHeader = cookieStore.toString();
 
-        if (!response.ok) {
-          console.log(
-            `Refresh attempt ${attempt} failed with status: ${response.status}`
-          );
-          if (attempt === maxRetries) {
-            return null;
-          }
-          await new Promise((resolve) => setTimeout(resolve, retryDelay));
-          continue;
-        }
+        // // Extract the specific session token
+        // const sessionToken = extractSessionToken(cookieHeader);
 
-        const data = await response.json();
-        console.log("Refresh response:", data);
+        // const response = await fetch(`${this.baseUrl}/v1/auth/refresh`, {
+        //   method: "GET",
+        //   credentials: "include",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //     Cookie: `${process.env.REFRESH_TOKEN_NAME}=${sessionToken}`,
+        //   },
+        // });
 
-        // Decode the new access token to get expiration
-        const expiresAt = this.getTokenExpiration(data.accessToken);
+    
+        // const datar = await response.json();
 
-        return {
-          accessToken: data.accessToken,
-          expiresAt,
-          user: data.user,
-        };
+
+        // console.log(datar);
+
+        // if (!response.ok) { console.log(`Refresh attempt ${attempt} failed with status: ${response.status}`);
+
+        //   // Handle different error scenarios
+        //   if (response.status === 401) {
+        //     console.log("Session expired or invalid - redirecting to login");
+
+        //     return null;
+        //   }
+
+        //   if (response.status === 403) {
+        //     console.log("Token invalid/expired - attempting to get new token");
+        //     if (attempt === maxRetries) {
+        //       console.log("All refresh attempts failed - redirecting to login");
+   
+        //       return null;
+        //     }
+        //     await new Promise((resolve) => setTimeout(resolve, retryDelay));
+        //     continue;
+        //   }
+
+        //   if (attempt === maxRetries) {
+        //     console.log("Max retries reached - refresh failed");
+        //     return null;
+        //   }
+        //   await new Promise((resolve) => setTimeout(resolve, retryDelay));
+        //   continue;
+        // }
+
+
+        // const data = await response.json();
+        // console.log("Refresh response:", data);
+
+        // // Decode the new access token to get expiration
+        // const expiresAt = this.getTokenExpiration(data.accessToken);
+
+        // return {
+        //   accessToken: data.accessToken,
+        //   expiresAt,
+        //   user: data.user,
+        // };
       } catch (error) {
         console.error(
           `Refresh token request failed on attempt ${attempt}:`,
@@ -228,7 +279,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        console.log("JWT callback - initial sign-in:", user);
         return {
           accessToken: user.accessToken,
           expiresAt: user.expiresAt,
@@ -241,37 +291,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       }
 
-      // Add buffer time (5 minutes) before attempting refresh
-      const bufferTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+      const bufferTime = 5 * 60 * 1000;
       const shouldRefresh =
         typeof token.expiresAt === "number" &&
         Date.now() >= token.expiresAt - bufferTime;
 
-      if (!shouldRefresh) {
-        console.log("JWT callback - token still valid");
-        return token;
+      if (!shouldRefresh) return token;
+
+      try {
+        const refreshed = await AuthService.refresh();
+        if (!refreshed) throw new Error("Refresh failed");
+
+        return {
+          accessToken: refreshed.accessToken,
+          expiresAt: refreshed.expiresAt,
+          user: token.user,
+        };
+      } catch (e) {
+        console.error("JWT refresh error:", e);
+        return {
+          ...token,
+          error: "RefreshAccessTokenError",
+        };
       }
-
-      console.log("JWT callback - attempting refresh");
-      const refreshed = await AuthService.refresh();
-
-      if (!refreshed) {
-        console.log("JWT callback - refresh failed");
-        // Return null to force re-authentication
-        return null;
-      }
-
-      console.log("JWT callback - refresh successful:", refreshed);
-      return {
-        accessToken: refreshed.accessToken,
-        expiresAt: refreshed.expiresAt,
-        user: {
-          id: refreshed.user?._id || refreshed.user?.id,
-          username: refreshed.user?.username || refreshed.user?.email,
-          firstname: refreshed.user?.firstName || refreshed.user?.firstname,
-          lastname: refreshed.user?.lastName || refreshed.user?.lastname,
-        },
-      };
     },
 
     async session({ session, token }): Promise<Session> {
@@ -286,14 +328,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return {
           ...session,
           user: {
-            _id: "",
-            username: "",
-            firstname: "",
-            lastname: "",
+            ...session.user,
+            ...(typeof token.user === "object" && token.user !== null
+              ? token.user
+              : {}),
           },
           accessToken: "",
           expiresAt: 0,
-          expires: new Date(0).toISOString(), // Set to epoch to force expiry
+          expires: new Date(0).toISOString(),
         };
       }
 

@@ -448,7 +448,7 @@ export default function Menu() {
                       }
                     )}
                   >
-                    <p>{item.category}</p>
+                    <p className="font-avenir uppercase">{item.category}</p>
                     <motion.div
                       className="w-full h-[1px]"
                       animate={{
@@ -506,7 +506,7 @@ export default function Menu() {
             variants={list}
             key={index}
             onClick={() => handleMobileMenuClick(item.category)}
-            className="font-avenir w-fit text-lg cursor-pointer"
+            className="font-avenir w-fit text-lg cursor-pointer uppercase"
           >
             {item.category}
             <p className="w-full h-[1px] bg-amber-600"></p>

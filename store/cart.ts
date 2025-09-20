@@ -2,6 +2,8 @@ import { type StateCreator } from "zustand";
 import { Store } from "./store";
 import { v4 as uuidv4 } from "uuid";
 import { ProductData, ProductVariant } from "./dashbaord/products";
+import { useApiClient } from "@/libs/useApiClient";
+import { produce } from "immer";
 
 // Cart Item with unique identifier for color/size combinations
 export type CartItemType = ProductData & {
@@ -37,6 +39,7 @@ export type CartStore = {
   cartInView: boolean;
   products: ProductData[];
   cartState: "idle" | "loading" | "success" | "error";
+  productPaginationState: "idle" | "loading" | "success" | "error";
   error: string | null;
   bookMarks: BookmarkType[];
 
@@ -80,7 +83,11 @@ export type CartStore = {
   removeMultipleBookmarks: (bookmarkIds: string[]) => void;
 
   // Product management
-  loadProducts: (force?:boolean) => Promise<void>;
+  loadProducts: (
+    force?: boolean,
+    page?: number,
+    limit?: number
+  ) => Promise<void>;
   refreshProducts: () => Promise<void>;
   syncCartWithProducts: () => void;
   syncBookmarksWithProducts: () => void;
@@ -149,6 +156,7 @@ export const useCartStore: StateCreator<
   cartItems: [],
   cartInView: false,
   cartState: "idle",
+  productPaginationState: "idle",
   products: [],
   error: null,
   bookMarks: [],
@@ -503,6 +511,7 @@ export const useCartStore: StateCreator<
   //     }
   //   }),
   // Update color - works both before and after adding to cart
+
   updateColor: (identifier, newColorId) =>
     set((state) => {
       const updateSizeIfNeeded = (
@@ -929,29 +938,44 @@ export const useCartStore: StateCreator<
         .filter(Boolean) as BookmarkType[]; // Remove null items
     }),
 
-  // Enhanced loadProducts to sync with cart and bookmarks after loading
-  loadProducts: async (force) => {
+  //  loadProducts to sync with cart and bookmarks after loading
+  loadProducts: async (force, page, limit = 25) => {
     const state = get();
-    if (state.storeProducts.length > 0 && !force) return;
 
-    set((state) => {
-      state.cartState = "loading";
-      state.error = null;
-    });
+    if (!force && page === undefined && state.products.length !== 0) return;
+    const isFreshLoad = force || page === 1 || state.products.length === 0;
+
+    if (isFreshLoad) {
+      set((state) => {
+        state.cartState = "loading";
+        state.error = null;
+      });
+    } else {
+      set((state) => {
+        state.productPaginationState = "loading";
+      });
+    }
+
+    const RESET_DELAY_MS = 3000;
+
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-      if (!baseUrl) {
-        throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
+      // Build query parameters
+      const query = new URLSearchParams();
+      if (page && page !== 1) {
+        query.append("page", page.toString());
+      }
+      if (limit) {
+        query.append("limit", limit.toString());
       }
 
-      const response = await fetch(`${baseUrl}/v1/products`, {
-        method: "GET",
-         
-        headers: {
-          "Content-Type": "application/json",
-        },
-        signal: AbortSignal.timeout(100000),
+      if (process.env.NODE_ENV === "development") {
+        console.log(query.toString(), "Query parameters");
+      }
+
+      // Fetch products from API with query parameters
+      const response = await fetch(`/api/products?${query.toString()}`, {
+        signal: AbortSignal.timeout(10000), // 10 seconds
       });
 
       if (!response.ok) {
@@ -961,8 +985,12 @@ export const useCartStore: StateCreator<
         );
       }
 
-      const result = await response.json();
-      console.log(result, "results");
+      let result: { data: ProductData; total: number };
+      try {
+        result = await response.json();
+      } catch (error) {
+        throw new Error("Failed to parse response JSON");
+      }
 
       if (!result || !Array.isArray(result.data)) {
         throw new Error(
@@ -970,35 +998,62 @@ export const useCartStore: StateCreator<
         );
       }
 
-      // get color by id
+      if (process.env.NODE_ENV === "development") {
+        console.log(result, "results");
+      }
 
-      const products: ProductData[] = result.data.map((product: any) => {
-        const firstVariant = product?.variants?.[0];
+      // Transform products
+      const transformedProducts: ProductData[] = result.data.map(
+        (product: any) => {
+          const firstVariant = product?.variants?.[0];
+          return {
+            ...product,
+            id: product._id,
+            colors:
+              product.variants?.map((variant: any) => variant.color) || [],
+            selectedColor: firstVariant?._id || null,
+            mainImage: product.images?.[0]?.url || product.mainImage || "",
+            sizes: firstVariant?.sizes || [],
+            variants:
+              product.variants?.map((variant: any) => ({
+                ...variant,
+                id: variant._id,
+              })) || [],
+          };
+        }
+      );
 
-        return {
-          ...product,
-          id: product._id,
-          colors: product.variants?.map((variant: any) => variant.color) || [],
-          selectedColor: firstVariant?._id || null,
-          mainImage: product.images?.[0]?.url || product.mainImage || "",
-          sizes: firstVariant?.sizes || [],
-          variants:
-            product.variants?.map((variant: any) => ({
-              ...variant,
-              id: variant._id,
-            })) || [],
-        };
-      });
+      // Merge new products with existing ones, avoiding duplicates
+      set(
+        produce((state: Store) => {
+          // Clear products if force is true or page is 1
+          if (force || page === 1) {
+            state.products = [];
+          }
+          const existingProductIds = new Set(state.products.map((p) => p._id));
+          const newProducts = transformedProducts.filter(
+            (product) => product._id && !existingProductIds.has(product._id)
+          );
+          state.products = [...state.products, ...newProducts];
+          if (result.total !== undefined) {
+            state.totalItems = result.total;
+          }
+          // Only set success state for fresh loads
+          if (isFreshLoad) {
+            state.cartState = "success";
+          } else {
+            state.productPaginationState = "success";
+          }
+        })
+      );
 
-      set((state) => {
-        state.products = products;
-        state.cartState = "success";
-      });
-
-      set((state) => {
-        state.products = products;
-        state.cartState = "success";
-      });
+      if (!isFreshLoad) {
+        setTimeout(() => {
+          set((state) => {
+             state.productPaginationState = "idle";
+          });
+        }, RESET_DELAY_MS);
+      }
 
       // Sync cart and bookmarks with fresh product data
       get().syncCartWithProducts();
@@ -1007,10 +1062,25 @@ export const useCartStore: StateCreator<
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
       console.error("Failed to load products:", error);
-      set((state) => {
-        state.cartState = "error";
-        state.error = errorMessage;
-      });
+      if (isFreshLoad) {
+        set((state) => {
+          state.cartState = "error";
+          state.productPaginationState = "idle";
+          state.error = errorMessage;
+        });
+      } else {
+        set((state) => {
+          state.productPaginationState = "error";
+        });
+
+        setTimeout(() => {
+          set((state) => {
+             state.productPaginationState = "idle";
+          });
+        }, RESET_DELAY_MS);
+
+        console.warn("Pagination fetch failed:", errorMessage);
+      }
     }
   },
 

@@ -6,9 +6,8 @@ export async function GET(request: NextRequest) {
 
     // Forward query parameters
     const queryString = searchParams.toString();
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products${
-      queryString ? `?${queryString}` : ""
-    }`;
+    console.log(queryString)
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products${queryString ? `?${queryString}` : "" }`;
 
     const response = await fetch(url, {
       method: "GET",

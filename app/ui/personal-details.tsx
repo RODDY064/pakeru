@@ -8,10 +8,22 @@ import Image from "next/image";
 import { useBoundStore } from "@/store/store";
 import { capitalize } from "@/libs/functions";
 import { useSession } from "next-auth/react";
+import { useApiClient } from "@/libs/useApiClient";
 
 export default function PersonalDetails() {
   const { data: session } = useSession();
   const { register } = useForm();
+  const { get } = useApiClient()
+
+  async function Refresh() {
+    try {
+      
+      const res = await get("/api/auth/refresh")
+
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <div className="w-full flex flex-col md:flex-row gap-6 items-center justify-center ">
@@ -36,12 +48,6 @@ export default function PersonalDetails() {
               </p>
               <p className="font-avenir text-md font-[500] text-black/50">
                 {session?.user?.username}
-              </p>
-            </div>
-            <div className="mt-1 xl:inline hidden">
-              <p>Date of Birth</p>
-              <p className="font-avenir text-md font-[500] text-black/50">
-                11/07/2025
               </p>
             </div>
           </div>

@@ -1,20 +1,35 @@
-"use client"
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import {  useRouter } from 'next/navigation';
-import React from 'react'
+import { useApiClient } from "@/libs/useApiClient";
+import { useBoundStore } from "@/store/store";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect } from "react";
 
+export default function MyOrderDynamic({ name }: { name: string }) {
+  const router = useRouter();
+  const { loadOrder, singleOrderState, orderInView } = useBoundStore();
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+  const { get } = useApiClient();
 
+  useEffect(() => {
+    loadOrder(id as string, { get });
+  }, [id]);
 
-export default function  MyOrderDynamic ({ name }: { name: string }){
-    const router = useRouter()
+  useEffect(()=>{
 
-  
+    console.log(singleOrderState,"state")
+
+  },[singleOrderState])
+
   return (
     <div className="w-full  h-full bg-[#f2f2f2] px-4  pt-20 sm:px-12 xl:px-24 md:pt-32 pb-24 ">
       <div className="flex gap-2 items-center">
-        <div onClick={()=> router.back()} className="size-6 md:size-8 cursor-pointer border border-black/30 flex items-center justify-center rounded-full">
+        <div
+          onClick={() => router.back()}
+          className="size-6 md:size-8 cursor-pointer border border-black/30 flex items-center justify-center rounded-full">
           <Image
             src="/icons/arrow.svg"
             width={16}
@@ -38,7 +53,7 @@ export default function  MyOrderDynamic ({ name }: { name: string }){
         </p>
       </div>
       <div className="flex flex-col items-center mt-10">
-        <div className="w-full sm:w-[80%]  lg:w-[55%] border border-black/20 bg-white p-4 md:p-10 rounded-xl">
+        {singleOrderState === "success" && (<div className="w-full sm:w-[80%]  lg:w-[55%] border border-black/20 bg-white p-4 md:p-10 rounded-xl">
           <div className="flex items-center justify-between">
             <p className="text-[#888888] text-lg md:text-2xl">Receipt</p>
             <div className="bg-[#f2f2f2] flex rounded-full  border border-black/10 px-1.5 gap-2">
@@ -136,36 +151,49 @@ export default function  MyOrderDynamic ({ name }: { name: string }){
                 </div>
               </div>
               <div className="flex  flex-col justify-end gap-1">
-                <p className="font-avenir text-[12px] md:text-[13px] text-black/60 text-end">QUANTITY: 1</p>
+                <p className="font-avenir text-[12px] md:text-[13px] text-black/60 text-end">
+                  QUANTITY: 1
+                </p>
                 <p className="font-avenir text-[13px]  md:text-[18px] ">
                   GHS 300.99
                 </p>
               </div>
             </div>
             <div className="  pt-3 border-black/20 flex justify-end">
-              <p className="font-avenir text-[12px] md:text-[13px]  text-black/40">SUBTOTAL: <span className="text-black/60 text-[13px] md:text-[16px] ">GHS 500.00</span></p>
+              <p className="font-avenir text-[12px] md:text-[13px]  text-black/40">
+                SUBTOTAL:{" "}
+                <span className="text-black/60 text-[13px] md:text-[16px] ">
+                  GHS 500.00
+                </span>
+              </p>
             </div>
             <div className="border-b-[0.5px] pb-3 border-black/20 flex justify-end">
-              <p className="font-avenir text-[13px] md:text-[16px] text-black/40">DISCOUNT: <span className="text-black/60"> - GHS 500.00</span></p>
+              <p className="font-avenir text-[13px] md:text-[16px] text-black/40">
+                DISCOUNT: <span className="text-black/60"> - GHS 500.00</span>
+              </p>
             </div>
             <div className="border-b-[0.5px]  border-black/20 flex gap-2 justify-end">
-              <p className="font-avenir text-[15px] md:text-[18px] text-black/80 py-3">TOTAL</p>
-              <div className="w-[1px] sefl-stretch  bg-black/20"/>
-               <p className="font-avenir text-[16px] md:text-[20px] text-black/80  py-3">GHS 500.00</p>
+              <p className="font-avenir text-[15px] md:text-[18px] text-black/80 py-3">
+                TOTAL
+              </p>
+              <div className="w-[1px] sefl-stretch  bg-black/20" />
+              <p className="font-avenir text-[16px] md:text-[20px] text-black/80  py-3">
+                GHS 500.00
+              </p>
             </div>
           </div>
           <div className="mt-6 text-center w-full flex flex-col items-center ">
             <p className="font-avenir text-[13px] text-balance md:text-[17px] text-black/60 w-[90%] md:w-[70%]">
-              Thank you for your purchase! Your order is being processed and will be shipped within 7 days.
+              Thank you for your purchase! Your order is being processed and
+              will be shipped within 7 days.
             </p>
             <p className="font-avenir text-[13px] text-balance md:text-[17px] text-black/60 mt-4  w-[90%] md:w-[70%]">
               We appreciate your business and look forward to serving you again.
             </p>
           </div>
-        </div>
-        
+        </div>)
+        }
       </div>
-      
     </div>
   );
-};
+}

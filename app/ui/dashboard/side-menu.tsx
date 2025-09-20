@@ -49,14 +49,7 @@ const pages: Array<{
     icon_w: "customers-w.svg",
     path: "/admin/customers",
     imgW: 18,
-  },
-  {
-    name: "Discount",
-    icon: "discount.svg",
-    icon_w: "discount-w.svg",
-    path: "/admin/discount",
-    imgW: 18,
-  },
+  }
 ];
 
 export default function SideMenu() {

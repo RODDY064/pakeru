@@ -11,6 +11,7 @@ export default function Filter() {
     filter,
     filterState,
     filteritems,
+    setFilterPrice,
     toggleSelection,
     setFilterView,
     modal,
@@ -76,7 +77,7 @@ export default function Filter() {
                 )}
               >
                 <motion.div className="w-full h-full z-50   bg-white border-r-[0.5px] relative">
-                  <motion.div className="w-full h-full flex-none overflow-hidden   p-10">
+                  <motion.div className="w-full h-full flex-none overflow-hidden   p-10 items-start">
                     <div
                       onClick={() => filterState(!filter)}
                       className="flex items-center mb-10 gap-1 cursor-pointer"
@@ -125,32 +126,48 @@ export default function Filter() {
                               filt.name === "sort by",
                           })}
                         >
-                          {filt.content.map((item, index) => (
-                            <div
-                              onClick={() => toggleSelection(filt.name, item)}
-                              key={index}
-                              className={cn(
-                                "flex gap-2 items-center cursor-pointer "
-                              )}
-                            >
-                              <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
-                                <motion.div
-                                  animate={
-                                    filt.selected.includes(item)
-                                      ? { opacity: 1 }
-                                      : { opacity: 0 }
-                                  }
-                                  className="w-full h-full bg-black rounded-full"
-                                ></motion.div>
-                              </div>
-                              <p className=" font-avenir text-black/70 text-sm">
-                                {item.toLocaleUpperCase()}
+                          {typeof filt.content === "string" ? (
+                            <div className="flex flex-col gap-2">
+                              <input
+                                type="number"
+                                value={filt?.content ?? "0"}
+                                min={0}
+                                onChange={(e) => setFilterPrice(e.target.value)}
+                                className="w-full h-12 cursor-pointer mt-2 focus:outline-none"
+                              />
+                              <p className="text-xs text-black/50 font-avenir">
+                                Above GHS {filt.content}
                               </p>
                             </div>
-                          ))}
+                          ) : (
+                            filt.content.map((item: string, index: number) => (
+                              <div
+                                onClick={() => toggleSelection(filt.name, item)}
+                                key={index}
+                                className="flex gap-2 items-center cursor-pointer"
+                              >
+                                <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
+                                  <motion.div
+                                    animate={
+                                      filt.selected.includes(item)
+                                        ? { opacity: 1 }
+                                        : { opacity: 0 }
+                                    }
+                                    className="w-full h-full bg-black rounded-full"
+                                  />
+                                </div>
+                                <p className="font-avenir text-black/70 text-sm">
+                                  {item.toLocaleUpperCase()}
+                                </p>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </motion.div>
                     ))}
+                    <div className="mt-12 w-full py-3 text-center bg-black rounded-full cursor-pointer">
+                      <p className="font-avenir text-white text-md">Apply Filter</p>
+                    </div>
                   </motion.div>
                 </motion.div>
               </motion.div>
@@ -253,29 +270,50 @@ export default function Filter() {
                                 filt.name === "sort by",
                             })}
                           >
-                            {filt.content.map((item, index) => (
-                              <div
-                                onClick={() => toggleSelection(filt.name, item)}
-                                key={index}
-                                className={cn(
-                                  "flex gap-2 items-center cursor-pointer "
-                                )}
-                              >
-                                <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
-                                  <motion.div
-                                    animate={
-                                      filt.selected.includes(item)
-                                        ? { opacity: 1 }
-                                        : { opacity: 0 }
-                                    }
-                                    className="w-full h-full bg-black rounded-full"
-                                  ></motion.div>
-                                </div>
-                                <p className="font-medium text-black/70 text-sm">
-                                  {item.toLocaleUpperCase()}
+                            {typeof filt.content === "string" ? (
+                              <div className="flex flex-col gap-2">
+                                <input
+                                  type="number"
+                                  value={filt?.content ?? "0"}
+                                  min={0}
+                                  onChange={(e) =>
+                                    setFilterPrice(e.target.value)
+                                  }
+                                  className="w-full h-12 cursor-pointer mt-2"
+                                />
+                                <p className="text-xs text-black/50">
+                                  Above ${filt.content}
                                 </p>
                               </div>
-                            ))}
+                            ) : (
+                              filt.content.map(
+                                (item: string, index: number) => (
+                                  <div
+                                    onClick={() =>
+                                      toggleSelection(filt.name, item)
+                                    }
+                                    key={index}
+                                    className={cn(
+                                      "flex gap-2 items-center cursor-pointer "
+                                    )}
+                                  >
+                                    <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
+                                      <motion.div
+                                        animate={
+                                          filt.selected.includes(item)
+                                            ? { opacity: 1 }
+                                            : { opacity: 0 }
+                                        }
+                                        className="w-full h-full bg-black rounded-full"
+                                      ></motion.div>
+                                    </div>
+                                    <p className="font-medium text-black/70 text-sm">
+                                      {item.toLocaleUpperCase()}
+                                    </p>
+                                  </div>
+                                )
+                              )
+                            )}
                           </div>
                         </motion.div>
                       ))}
