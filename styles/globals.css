@@ -22,6 +22,15 @@ body {
   font-family: var(--font-avenir), var(--font-mango),sans-serif;
 }
 
+@theme {
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+}
+
+
 .nav-slider {
   scrollbar-width: none;
   -ms-overflow-style: none; 
@@ -122,4 +131,20 @@ body {
   aspect-ratio: 1/1; /* Adjust as needed */
   min-height: 100px;
   min-width: 100px;
+}
+
+
+
+.pin-spacer {
+  position: relative !important;
+  margin: 0px 20px 0px 0px;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

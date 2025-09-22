@@ -163,8 +163,8 @@ export async function middleware(request: NextRequest) {
     if (callbackUrl) {
       return NextResponse.redirect(new URL(callbackUrl, request.url));
     }
-    // Redirect to home sign-in
-    return NextResponse.redirect(new URL("/signin", request.url));
+    // Redirect to home 
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();

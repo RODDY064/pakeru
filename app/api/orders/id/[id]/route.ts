@@ -54,9 +54,9 @@ export async function GET(
 
     const data = await response.json();
 
-    console.log(data, "single order");
+ 
 
-    return NextResponse.json(data, { status: response.status });
+    return NextResponse.json(data.data, { status: response.status });
   } catch (error: any) {
     return NextResponse.json(
       { error: "Order fetch failed", message: error.message },

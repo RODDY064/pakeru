@@ -4,6 +4,7 @@ import { cn } from "@/libs/cn";
 import { useBoundStore } from "@/store/store";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 export default function Filter() {
@@ -19,6 +20,9 @@ export default function Filter() {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const contentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [heights, setHeights] = useState<{ [key: string]: number }>({});
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleResize = () => {
@@ -51,8 +55,41 @@ export default function Filter() {
   }, [filteritems]);
 
   useEffect(() => {
-    console.log(filter, "filter");
-  }, [filter]);
+    const category = searchParams.get("category");
+
+    console.log(category);
+  }, [searchParams]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    // Update query parameters based on filteritems
+    filteritems.forEach((item) => {
+      if (item.name === "Category" && item.selected.length > 0) {
+        params.set("category", item.selected.join(","));
+      } else if (item.name === "sort by" && item.selected.length > 0) {
+        params.set("sort", String(item.selected[0]));
+      } else if (
+        item.name === "price" &&
+        typeof item.selected === "object" &&
+        !Array.isArray(item.selected) &&
+        (item.selected !== null )
+      ) {
+        params.set(
+          "price",
+          `${item.selected?? 0}`
+        );
+      } else {
+        params.delete(item.name.toLowerCase());
+      }
+    });
+
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [filteritems, pathname, router, searchParams]);
+
+
+  const ApplyFilter = ()=>{
+    
+  }
 
   return (
     <>
@@ -166,7 +203,9 @@ export default function Filter() {
                       </motion.div>
                     ))}
                     <div className="mt-12 w-full py-3 text-center bg-black rounded-full cursor-pointer">
-                      <p className="font-avenir text-white text-md">Apply Filter</p>
+                      <p className="font-avenir text-white text-md">
+                        Apply Filter
+                      </p>
                     </div>
                   </motion.div>
                 </motion.div>

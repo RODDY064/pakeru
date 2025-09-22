@@ -11,7 +11,7 @@ export type OrdersData = {
   date: string;
   time: string;
   shippedAt?: string;
-  deliveredAt?: string;
+  deliveredAt: string;
   user: {
     userID: string;
     firstname: string;
@@ -22,6 +22,12 @@ export type OrdersData = {
   paymentStatus: "completed" | "pending" | "cancelled";
   deliveryStatus: "delivered" | "pending" | "cancelled" | "shipped";
   fulfilledStatus: "unfulfilled" | "fulfilled";
+  shippingAddress: {
+    address: string
+    landmark?:string
+    region: string
+    town: string
+  };
   items: {
     numOfItems: number;
     products: Array<{
@@ -236,20 +242,28 @@ const generateTrimmedId = (fullId: string): string => {
 };
 
 export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
-  const createdDate = new Date(apiOrder.createdAt);
-  const date = createdDate ? new Date(createdDate).toISOString().split("T")[0]: "";
+  const createdDate = apiOrder.createdAt ? new Date(apiOrder.createdAt) : null;
+  const isValidDate = createdDate && !isNaN(createdDate.getTime());
 
-  const time = createdDate?.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  const date = isValidDate ? createdDate.toISOString().split("T")[0] : "";
+  const time = isValidDate
+    ? createdDate.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "";
 
-  const shipmentDeadline = new Date(createdDate);
-  shipmentDeadline.setDate(createdDate.getDate() + 7);
-  const today = new Date();
-  const msDiff = shipmentDeadline.getTime() - today.getTime();
-  const daysLeft = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
+  let shipmentDeadline: Date | null = null;
+  let daysLeft: number = 0;
+
+  if (isValidDate && createdDate) {
+    shipmentDeadline = new Date(createdDate);
+    shipmentDeadline.setDate(createdDate.getDate() + 7);
+    const today = new Date();
+    const msDiff = shipmentDeadline.getTime() - today.getTime();
+    daysLeft = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
+  }
 
   return {
     _id: apiOrder._id,
@@ -257,20 +271,22 @@ export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
     date,
     time,
     user: {
-      userID: apiOrder.user.userID,
-      firstname: apiOrder.user.firstname,
-      lastname: apiOrder.user.lastname,
-      email: apiOrder.user.email,
+      userID: apiOrder.user?.userID || "",
+      firstname: apiOrder.user?.firstname || "",
+      lastname: apiOrder.user?.lastname || "",
+      email: apiOrder.user?.email || "",
     },
-    total: apiOrder.totalPrice,
-    deliveryStatus: apiOrder.deliveryStatus,
-    paymentStatus: apiOrder.paymentStatus,
-    fulfilledStatus: apiOrder.fulfilledStatus,
+    total: apiOrder.totalPrice || 0,
+    deliveryStatus: apiOrder.deliveryStatus || "",
+    deliveredAt:apiOrder.deliveryDate || "",
+    paymentStatus: apiOrder.paymentStatus || "",
+    fulfilledStatus: apiOrder.fulfilledStatus || "",
+    shippingAddress: apiOrder.shippingAddress || null,
     items: {
-      numOfItems: apiOrder.items.numOfItems,
-      products: apiOrder.items.products,
+      numOfItems: apiOrder.items?.numOfItems || 0,
+      products: apiOrder.items?.products || [],
     },
-    discount: apiOrder.discount,
+    discount: apiOrder.discount || 0,
     shipmentDays: daysLeft > 0 ? `${daysLeft} day(s) left` : "ready to ship",
   };
 };
@@ -285,7 +301,7 @@ const apiService = {
   async fetchOrders(
     type: "fulfilled" | "unfulfilled",
     get: ReturnType<typeof useApiClient>["get"],
-    limit?: number,
+    limit?: number
   ): Promise<OrdersData[]> {
     try {
       const query = new URLSearchParams();
@@ -361,10 +377,9 @@ const apiService = {
   },
 
   async fetchUserOrders(
-    get: ReturnType<typeof useApiClient>["get"],
+    get: ReturnType<typeof useApiClient>["get"]
   ): Promise<OrdersData[]> {
     try {
-
       const myOrder = "myOrder";
       const endpoint = `/orders/my/${myOrder}`;
 

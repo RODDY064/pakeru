@@ -21,6 +21,8 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   const stickyRef = useRef<HTMLDivElement>(null);
   const imageDiv = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const imageDivSim = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
+  const mainContainerRef = useRef<HTMLDivElement>(null);
+  const [mainContainerHeight, setMainContainerHeight] = useState("600px");
   const {
     isMobile,
     products,
@@ -42,6 +44,14 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     shown: boolean;
     active: boolean;
   }>({ shown: false, active: false });
+
+  useEffect(() => {
+    if (imageDiv.current) {
+      const height = imageDiv.current.offsetHeight; 
+   
+      setMainContainerHeight(`${height}px`);
+    }
+  }, []);
 
   // Mobile scroll state
   const [mobileScrollIndex, setMobileScrollIndex] = useState(0);
@@ -156,14 +166,11 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     }
   };
 
-  // Handle image click for pinch zoom (fallback for non-touch devices)
   const handleImageClick = (imageIndex: number) => {
-    if (!isMobile) {
-      setPinchZoom({
-        show: true,
-        currentImageIndex: imageIndex,
-      });
-    }
+    setPinchZoom({
+      show: true,
+      currentImageIndex: imageIndex,
+    });
   };
 
   useEffect(() => {
@@ -196,42 +203,78 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     };
   }, [isMobile]);
 
-  
-
   useGSAP(() => {
     if (isMobile) return;
     if (!stickyRef.current || !imageDiv.current) return;
 
     const sticky = stickyRef.current;
     const image = imageDiv.current;
+    const container = mainContainerRef.current;
 
-    // Clean up all ScrollTriggers for this component
-    ScrollTrigger.getAll().forEach((trigger) => {
-      if (trigger.trigger === image || trigger.vars.pin === sticky) {
+      ScrollTrigger.getAll().forEach((trigger) => {
+      if (trigger.trigger === image || trigger.vars.pin === sticky || trigger.trigger === container) {
         trigger.kill();
       }
     });
 
-    // Ensure images are loaded before creating ScrollTrigger
-    const images = image.querySelectorAll("img");
-    Promise.all(
-      Array.from(images).map((img) =>
-        img.complete
-          ? Promise.resolve()
-          : new Promise((resolve) => img.addEventListener("load", resolve))
-      )
-    ).then(() => {
-      ScrollTrigger.create({
-        trigger: image,
+    // Wait for images to load and layout to stabilize
+    const initScrollTrigger = () => {
+      const st = ScrollTrigger.create({
+        trigger: container,
         start: "top top",
         end: "bottom bottom",
         pin: sticky,
+        pinSpacing: false, 
         anticipatePin: 1,
+        invalidateOnRefresh: true,
         refreshPriority: -1,
+        onRefresh: () => {
+          if (sticky) {
+            sticky.style.transform = '';
+          }
+        },
+        onToggle: (self) => {
+          // Reset transform when not pinned
+          if (!self.isActive && sticky) {
+            sticky.style.transform = '';
+          }
+        }
       });
 
-      ScrollTrigger.refresh();
-    });
+      return st;
+    };
+
+    // Initialize after a brief delay to ensure layout is ready
+    const timer = setTimeout(() => {
+      const scrollTrigger = initScrollTrigger();
+      
+      // Refresh after initialization
+      setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 50);
+
+      return scrollTrigger;
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      ScrollTrigger.getAll().forEach((trigger) => {
+        if (trigger.trigger === image || trigger.vars.pin === sticky || trigger.trigger === container) {
+          trigger.kill();
+        }
+      });
+      
+      // Clean up any remaining transforms
+      if (sticky) {
+        sticky.style.transform = '';
+        sticky.style.position = '';
+        sticky.style.top = '';
+        sticky.style.left = '';
+        sticky.style.width = '';
+        sticky.style.height = '';
+      }
+    };
+
   }, [colorActive, productData, isMobile]);
 
   // buttons ref
@@ -314,260 +357,278 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     productData?.variants.find((variant) => variant._id === colorActive._id)
       ?.images || [];
 
-
-      
-
   return (
-    <div className="w-full min-h-dvh flex flex-col items-center text-black bg-white home-main">
-      <div className="pt-18 opacity-0">hell</div>
-      <div className="w-full flex flex-col md:flex-row pb-24 md:min-h-[150vh]">
-        <div className="w-full md:w-[50%] relative">
-          <div
-            ref={imageDiv}
-            className="w-full flex flex-row md:flex-col image-div relative overflow-x-auto md:overflow-x-hidden"
-            style={{
-              scrollSnapType: isMobile ? "x mandatory" : "none",
-              scrollBehavior: "smooth",
-    
-            }}>
-            {currentImages.map((img, index) => (
-              <div
-                key={index}
-                className="w-full flex-none h-[400px] md:h-[70vh] lg:h-[80vh] relative overflow-hidden border flex items-center justify-center border-black/10 cursor-pointer"
-                style={{
-                  scrollSnapAlign: isMobile ? "start" : "none",
-                }}
-                onClick={() => handleImageClick(index)}
-                onTouchStart={(e) => handleImageTouchStart(e, index)}
-                onTouchMove={(e) => handleImageTouchMove(e, index)}
-                onTouchEnd={handleImageTouchEnd}
-              >
-                <div className="w-[110%] h-[110%] absolute overflow-hidden">
-                  <Image
-                    src={img.url}
-                    fill
-                    className="object-cover select-none"
-                    alt={productData?.name || "Product image"}
-                  />
-                </div>
-              </div>
-            ))}
+    <div className="w-full  flex flex-col items-center text-black bg-white min-h-screen ">
+      <div className="pt-20 md:pt-16">
+        <div className="w-1/2 h-full bg-[#f2f2f2]" />
+        <div className="w-1/2 h-full bg-white" />
+      </div>
+      {(cartState === "loading" || cartState === "idle") && (
+        <div className="w-full flex flex-col items-center pt-36">
+          <div className="h-[400px] flex items-center flex-col">
+            <Image
+              src="/icons/loader.svg"
+              width={38}
+              height={38}
+              alt="loading icon "
+            />
           </div>
-
-          {/* Mobile navigation overlay */}
-          {isMobile && (
-            <div className="w-full h-full absolute top-0 pointer-events-none z-20 flex items-center">
-              <div
-                className={cn(
-                  "flex w-full justify-between px-4 imageButton opacity-0 transition-opacity duration-300",
-                  {
-                    "opacity-100": showButtons,
-                  }
-                )}
-              >
-                <button
-                  onClick={goToPreviousImage}
-                  aria-label="Previous image"
-                  className={cn(
-                    "size-10 hover:bg-black cursor-pointer pointer-events-auto flex items-center justify-center border-black/30  invisible border rounded-full bg-white/80 backdrop-blur-sm transition-all",
-                    {
-                      visible: mobileScrollIndex > 0,
-                    }
-                  )}
-                >
-                  <Image
-                    src="/icons/arrow.svg"
-                    width={18}
-                    height={18}
-                    alt="arrow"
-                    className="rotate-90"
-                  />
-                </button>
-                <button
-                  onClick={goToNextImage}
-                  aria-label="Next image"
-                  className={cn(
-                    "size-10 hover:bg-black cursor-pointer pointer-events-auto flex items-center invisible justify-center border border-black/30 rounded-full bg-white/80 backdrop-blur-sm transition-all",
-                    {
-                      visible: mobileScrollIndex < currentImages.length - 1,
-                    }
-                  )}
-                >
-                  <Image
-                    src="/icons/arrow.svg"
-                    width={20}
-                    height={20}
-                    alt="arrow"
-                    className="rotate-270"
-                  />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Mobile image indicators */}
-          {isMobile && currentImages.length > 1 && (
-            <div className="flex flex-col items-center">
-              <div className="w-[60%]  bottom-4 left-1/2 transform flex gap-2 z-20 items-center justify-center py-4">
-                {currentImages.map((_, index) => (
-                  <div
-                    key={index}
-                    className={cn("w-4 h-2 rounded-full transition-all", {
-                      "bg-black w-6": index === mobileScrollIndex,
-                      "bg-black/50": index !== mobileScrollIndex,
-                    })}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
-
-        {/* Product details section */}
+      )}
+      {cartState === "success" && (
         <div
-          ref={stickyRef}
-          className="md:w-[50%] flex flex-col items-center pt-10  lg:pt-20"
-        >
-          <div className="w-full px-6 md:px-8 md:w-[90%] lg:w-[80%] xl:w-[60%]">
-            <div className="flex justify-between items-center">
-              <p className="text-black/50 text-sm font-[300] font-avenir">
-                A440-2
-              </p>
-              <Image
-                onClick={() => addBookmark(productData as ProductData)}
-                src={
-                  isBookmarked(
-                    productData?._id as string,
-                    productData?.selectedColor,
-                    productData?.selectedSize
-                  )
-                    ? "/icons/bookmark2.svg"
-                    : "/icons/bookmark.svg"
-                }
-                width={24}
-                height={24}
-                alt="bookmark"
-                className="cursor-pointer"
-              />
-            </div>
-            <div className="my-4">
-              <p className="font-avenir text-sm font-[300] text-black/50 my-1">
-                NEW
-              </p>
-              <p className="font-avenir font-[400] text-lg">
-                {productData?.name.toLocaleUpperCase()}
-              </p>
-              <p className="text-black/50 font-avenir font-[400] text-md">
-                GHS {productData?.price}
-              </p>
-              <div
-                className="my-4 font-avenir text-lg responsive-description"
-                dangerouslySetInnerHTML={{
-                  __html: productData?.description || "",
-                }}
-              />
-            </div>
-            <div className="my-4 mt-10 md:mt-6">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-avenir font-[400]">COLORS </p>
-                <div className="text-sm font-avenir font-[400] text-black/50 flex items-center gap-2 ml-4">
-                  <div className="w-12 h-[1px] bg-black/30"></div>
-                  <p className="font-avenir uppercase text-xs">
-                    {colorActive.name}
-                  </p>
-                </div>
-              </div>
-              <div className="my-3 grid grid-cols-4 gap-3 md:gap-4 w-fit">
-                {productData?.variants.map((variant, index) => (
-                  <div key={index}>
-                    <div
-                      onClick={() => updateColor(productData?._id, variant._id)}
-                      key={variant._id}
-                      className={cn(
-                        "size-16 md:w-18 lg:size-20 border border-black/30 rounded-xl cursor-pointer relative overflow-hidden p-[3px]",
-                        {
-                          "border-2":
-                            variant._id === productData?.selectedColor,
-                        }
-                      )}
-                    >
-                      <div className="w-full h-full relative overflow-hidden rounded-lg">
-                        <Image
-                          src={variant.images[0].url}
-                          fill
-                          className="object-cover"
-                          alt="hero"
-                        />
-                      </div>
-                    </div>
+          ref={mainContainerRef}
+          className="w-full h-fit flex flex-col md:flex-row ">
+          <div className="w-full md:w-[50%] relative">
+            <div
+              ref={imageDiv}
+              className="w-full flex flex-row md:flex-col image-div relative overflow-x-auto md:overflow-x-hidden"
+              style={{
+                scrollSnapType: isMobile ? "x mandatory" : "none",
+                scrollBehavior: "smooth",
+              }}>
+              {currentImages.map((img, index) => (
+                <div
+                  key={index}
+                  className="w-full flex-none h-[400px] md:h-[70vh] lg:h-[80vh] relative overflow-hidden border flex items-center justify-center border-black/10 cursor-pointer"
+                  style={{
+                    scrollSnapAlign: isMobile ? "start" : "none",
+                  }}
+                  onClick={() => handleImageClick(index)}
+                  onTouchStart={(e) => handleImageTouchStart(e, index)}
+                  onTouchMove={(e) => handleImageTouchMove(e, index)}
+                  onTouchEnd={handleImageTouchEnd}>
+                  <div className="w-[110%] h-[110%] absolute overflow-hidden">
+                    <Image
+                      src={img.url}
+                      fill
+                      className="object-cover select-none"
+                      alt={productData?.name || "Product image"}
+                      onLoad={() => ScrollTrigger.refresh()}
+                    />
                   </div>
-                ))}
-              </div>
-              <div className="w-full border-t mt-10 pt-4 border-black/30">
-                <div className="w-full flex justify-between items-center mb-2">
-                  <p
-                    className={cn("text-sm font-avenir font-[400]", {
-                      "text-red-500": sizeSelected.shown,
-                    })}
-                  >
-                    SIZE
-                  </p>
-                    <p
-                    onClick={setSizeGuild}
-                    className="underline text-sm font-avenir font-[400] underline-offset-4 underline-black/40 text-black/30 cursor-pointer"
-                    >
-                    SIZE GUIDE
-                    </p>
                 </div>
-                <div className="w-full flex items-center gap-2 md:gap-3 my-4">
-                  {productData?.sizes?.map((item) => (
+              ))}
+            </div>
+
+            {/* Mobile navigation overlay */}
+            {isMobile && (
+              <div className="w-full h-full absolute top-0 pointer-events-none z-20 flex items-center">
+                <div
+                  className={cn(
+                    "flex w-full justify-between px-4 imageButton opacity-0 transition-opacity duration-300",
+                    {
+                      "opacity-100": showButtons,
+                    }
+                  )}
+                >
+                  <button
+                    onClick={goToPreviousImage}
+                    aria-label="Previous image"
+                    className={cn(
+                      "size-10 hover:bg-black cursor-pointer pointer-events-auto flex items-center justify-center border-black/30  invisible border rounded-full bg-white/80 backdrop-blur-sm transition-all",
+                      {
+                        visible: mobileScrollIndex > 0,
+                      }
+                    )}
+                  >
+                    <Image
+                      src="/icons/arrow.svg"
+                      width={18}
+                      height={18}
+                      alt="arrow"
+                      className="rotate-90"
+                    />
+                  </button>
+                  <button
+                    onClick={goToNextImage}
+                    aria-label="Next image"
+                    className={cn(
+                      "size-10 hover:bg-black cursor-pointer pointer-events-auto flex items-center invisible justify-center border border-black/30 rounded-full bg-white/80 backdrop-blur-sm transition-all",
+                      {
+                        visible: mobileScrollIndex < currentImages.length - 1,
+                      }
+                    )}
+                  >
+                    <Image
+                      src="/icons/arrow.svg"
+                      width={20}
+                      height={20}
+                      alt="arrow"
+                      className="rotate-270"
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Mobile image indicators */}
+            {isMobile && currentImages.length > 1 && (
+              <div className="flex flex-col items-center">
+                <div className="w-[60%]  bottom-4 left-1/2 transform flex gap-2 z-20 items-center justify-center py-4">
+                  {currentImages.map((_, index) => (
                     <div
-                      onClick={() => handleSize(productData._id, item)}
-                      key={item}
-                      className={cn(
-                        "w-12 md:w-16 h-10 flex items-center justify-center rounded-[8px] hover:bg-black hover:text-white border-[0.5px] border-black/10 cursor-pointer bg-gray-100",
-                        {
-                          "bg-black text-white":
-                            item === productData.selectedSize,
-                          "border-red-500 bg-red-100": sizeSelected.shown,
-                        }
-                      )}>
-                      <p className="font-avenir text-xs">
-                        {item.toUpperCase()}
-                      </p>
-                    </div>
+                      key={index}
+                      className={cn("w-4 h-2 rounded-full transition-all", {
+                        "bg-black w-6": index === mobileScrollIndex,
+                        "bg-black/50": index !== mobileScrollIndex,
+                      })}
+                    />
                   ))}
                 </div>
               </div>
-              <div
-                onClick={() => handleAdd(productData as ProductData)}
-                className="mt-10 rounded py-2.5 flex items-center justify-center gap-3 w-full bg-black hover:bg-green-500 hover:border-green-500 border border-black/20 group/add cursor-pointer transition-all" >
-                <p className="font-avenir font-[400] text-sm pt-[4px] text-white">
-                  ADD TO CART
+            )}
+          </div>
+
+          {/* Product details section */}
+          <div
+            ref={stickyRef}
+            className="md:w-[50%] flex flex-col items-center pt-10  lg:pt-24">
+            <div className="w-full px-6 md:px-8 md:w-[90%] lg:w-[80%] xl:w-[60%]">
+              <div className="flex justify-between items-center">
+                <p className="text-black/50 text-sm font-[300] font-avenir">
+                  A440-2
                 </p>
-                <div className="w-4 h-[1px] bg-white" />
                 <Image
-                  src="/icons/bag-w.svg"
-                  width={18}
-                  height={18}
-                  alt="bag"
-                  className=""
+                  onClick={() => addBookmark(productData as ProductData)}
+                  src={
+                    isBookmarked(
+                      productData?._id as string,
+                      productData?.selectedColor,
+                      productData?.selectedSize
+                    )
+                      ? "/icons/bookmark2.svg"
+                      : "/icons/bookmark.svg"
+                  }
+                  width={24}
+                  height={24}
+                  alt="bookmark"
+                  className="cursor-pointer"
                 />
               </div>
-              <div className="mt-8 w-full pt-10">
-                <ProductCare/>
+              <div className="my-4">
+                <p className="font-avenir text-sm font-[300] text-black/50 my-1">
+                  NEW
+                </p>
+                <p className="font-avenir font-[400] text-lg">
+                  {productData?.name.toLocaleUpperCase()}
+                </p>
+                <p className="text-black/50 font-avenir font-[400] text-md">
+                  GHS {productData?.price}
+                </p>
+                <div
+                  className="my-4 font-avenir text-lg responsive-description"
+                  dangerouslySetInnerHTML={{
+                    __html: productData?.description || "",
+                  }}
+                />
+              </div>
+              <div className="my-4 mt-10 md:mt-6">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-avenir font-[400]">COLORS </p>
+                  <div className="text-sm font-avenir font-[400] text-black/50 flex items-center gap-2 ml-4">
+                    <div className="w-12 h-[1px] bg-black/30"></div>
+                    <p className="font-avenir uppercase text-xs">
+                      {colorActive.name}
+                    </p>
+                  </div>
+                </div>
+                <div className="my-3 grid grid-cols-4 gap-3 md:gap-4 w-fit">
+                  {productData?.variants.map((variant, index) => (
+                    <div key={index}>
+                      <div
+                        onClick={() =>
+                          updateColor(productData?._id, variant._id)
+                        }
+                        key={variant._id}
+                        className={cn(
+                          "size-16 md:w-18 lg:size-20 border border-black/30 rounded-xl cursor-pointer relative overflow-hidden p-[3px]",
+                          {
+                            "border-2":
+                              variant._id === productData?.selectedColor,
+                          }
+                        )}
+                      >
+                        <div className="w-full h-full relative overflow-hidden rounded-lg">
+                          <Image
+                            src={variant.images[0].url}
+                            fill
+                            className="object-cover"
+                            alt="hero"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="w-full border-t mt-10 pt-4 border-black/30">
+                  <div className="w-full flex justify-between items-center mb-2">
+                    <p
+                      className={cn("text-sm font-avenir font-[400]", {
+                        "text-red-500": sizeSelected.shown,
+                      })}
+                    >
+                      SIZE
+                    </p>
+                    <p
+                      onClick={setSizeGuild}
+                      className="underline text-sm font-avenir font-[400] underline-offset-4 underline-black/40 text-black/30 cursor-pointer"
+                    >
+                      SIZE GUIDE
+                    </p>
+                  </div>
+                  <div className="w-full flex items-center gap-2 md:gap-3 my-4">
+                    {productData?.sizes?.map((item) => (
+                      <div
+                        onClick={() => handleSize(productData._id, item)}
+                        key={item}
+                        className={cn(
+                          "w-12 md:w-16 h-10 flex items-center justify-center rounded-[8px] hover:bg-black hover:text-white border-[0.5px] border-black/10 cursor-pointer bg-gray-100",
+                          {
+                            "bg-black text-white":
+                              item === productData.selectedSize,
+                            "border-red-500 bg-red-100": sizeSelected.shown,
+                          }
+                        )}
+                      >
+                        <p className="font-avenir text-xs">
+                          {item.toUpperCase()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div
+                  onClick={() => handleAdd(productData as ProductData)}
+                  className="mt-10 rounded py-2.5 flex items-center justify-center gap-3 w-full bg-black hover:bg-green-500 hover:border-green-500 border border-black/20 group/add cursor-pointer transition-all"
+                >
+                  <p className="font-avenir font-[400] text-sm pt-[4px] text-white">
+                    ADD TO CART
+                  </p>
+                  <div className="w-4 h-[1px] bg-white" />
+                  <Image
+                    src="/icons/bag-w.svg"
+                    width={18}
+                    height={18}
+                    alt="bag"
+                    className=""
+                  />
+                </div>
+                <div className="mt-8 w-full pt-10">
+                  <ProductCare />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Similar Products Section */}
-      <div className="w-full mt-[60px] md:my-24 relative clear-both">
+      <div className="w-full mt-24 md:my-24 relative ">
         <p className="font-avenir font-[400] text-md px-4 md:px-8">
           SIMILAR PRODUCTS
         </p>
-        <div className="mt-4 px-10">
+        <div className="mt-4 px-10 pb-16">
           <div className="w-full flex items-center justify-center">
             <div
               ref={imageDivSim}

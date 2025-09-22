@@ -153,6 +153,7 @@ const Slider = ({ containerHeight }: { containerHeight:any }) => {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const { slider, setLookAt, scrollAmount } = useBoundStore();
+  const router = useRouter()
 
   useGSAP(() => {
     gsap.registerPlugin(Draggable, InertiaPlugin);
@@ -197,7 +198,7 @@ const Slider = ({ containerHeight }: { containerHeight:any }) => {
           {slider.map((product) => (
             <div
               key={product._id}
-              onClick={() => setLookAt(product._id)}
+              onClick={() => router.push(`/product?category=${product.title.toLocaleLowerCase()}`)}
               className={cn(
                 "w-[calc(90vw)] slider-element md:w-[calc(70vw)] card h-[350px]  flex-shrink-0  relative lg:h-[calc(35vw)]  flex-none  flex items-center justify-center overflow-hidden  ",
                 {
@@ -406,7 +407,7 @@ const Product = () => {
                 type="large"
                 cardRef={index === 0 ? cardRef : undefined}
                 cardStyle="md:mb-6"
-                showDetails={true}
+                hideDetails={true}
               />
             ))}
           </>

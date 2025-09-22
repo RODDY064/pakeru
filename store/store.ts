@@ -24,7 +24,7 @@ export type Store = ScrollStore &
   CartStore &
   ModalStore &
   ImgSlideStore &
-  UserStore & 
+  UserStore &
   GeneralStore &
   CategoryStore &
   OrdersStore &
@@ -38,7 +38,10 @@ export type Store = ScrollStore &
   };
 
 // 🔖  persisted state
-type PersistedState = Pick<Store, "cartItems" | "cartInView" | "bookMarks">;
+type PersistedState = Pick<
+  Store,
+  "cartItems" | "cartInView" | "bookMarks" | "userData"
+>;
 
 const persistOptions: PersistOptions<Store, PersistedState> = {
   name: "app-storage",
@@ -48,8 +51,8 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
     cartItems: state.cartItems,
     cartInView: state.cartInView,
     bookMarks: state.bookMarks,
+    userData: state.userData,
   }),
-
 
   storage: {
     getItem: (name: string) => {
@@ -165,6 +168,7 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
       ...currentState,
       ...persisted,
       bookMarks: validBookmarks,
+      userData: persisted?.userData ?? null,
     };
   },
 
@@ -291,6 +295,15 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
           );
           state.bookMarks = validBookmarks;
         }
+      } else if (state?.userData) {
+        const { email } = state.userData;
+        if (typeof email !== "string" || !email.includes("@")) {
+          console.warn(
+            "Invalid user data removed after rehydration:",
+            state.userData
+          );
+          state.userData = null;
+        }
       }
     };
   },
@@ -298,7 +311,7 @@ const persistOptions: PersistOptions<Store, PersistedState> = {
 
 export const useBoundStore = create<Store>()(
   persist(
-   immer((set, get, store) => ({
+    immer((set, get, store) => ({
       ...useScrollStore(set, get, store),
       ...useSearch(set, get, store),
       ...useFilterStore(set, get, store),
@@ -335,53 +348,62 @@ export const useBoundStore = create<Store>()(
   )
 );
 
-
 // 🚀store initialization
-export const initializeStore = async (serverProducts?: ProductData[], serverCategories?: CategoryType[]) => {
-  if (typeof window !== 'undefined') {
+export const initializeStore = async (
+  serverProducts?: ProductData[],
+  serverCategories?: CategoryType[]
+) => {
+  if (typeof window !== "undefined") {
     try {
       // Rehydrate persisted state first
       useBoundStore.persist.rehydrate();
-      
+
       // Wait for rehydration to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // If server data is provided, use it (this is the preferred path)
       if (serverProducts && serverCategories) {
-        useBoundStore.getState().initializeWithServerData(serverProducts, serverCategories);
+        useBoundStore
+          .getState()
+          .initializeWithServerData(serverProducts, serverCategories);
       } else {
         // Fallback to client-side loading if no server data
-        console.log('No server data provided, falling back to client-side loading...');
+        console.log(
+          "No server data provided, falling back to client-side loading..."
+        );
         await useBoundStore.getState().loadProducts?.();
         await useBoundStore.getState().loadCategories?.();
       }
-      
+
       // Sync bookmarks with products
       useBoundStore.getState().syncBookmarksWithProducts?.();
-      
+
       const bookmarkCount = useBoundStore.getState().bookMarks?.length || 0;
       console.log(`Store initialized with ${bookmarkCount} bookmarks`);
-      
+
       // Cleanup old bookmarks
-      const maxBookmarks = 100; 
+      const maxBookmarks = 100;
       if (bookmarkCount > maxBookmarks) {
         const bookmarks = useBoundStore.getState().bookMarks || [];
         const recentBookmarks = bookmarks
-          .sort((a, b) => 
-            new Date(b.bookmarkCreatedAt).getTime() - new Date(a.bookmarkCreatedAt).getTime()
+          .sort(
+            (a, b) =>
+              new Date(b.bookmarkCreatedAt).getTime() -
+              new Date(a.bookmarkCreatedAt).getTime()
           )
           .slice(0, maxBookmarks);
-        
-        useBoundStore.setState(state => {
+
+        useBoundStore.setState((state) => {
           state.bookMarks = recentBookmarks;
         });
-        
-        console.log(`Cleaned up old bookmarks, kept ${maxBookmarks} most recent`);
+
+        console.log(
+          `Cleaned up old bookmarks, kept ${maxBookmarks} most recent`
+        );
       }
-      
     } catch (error) {
-      console.error('Error initializing store:', error);
-      useBoundStore.setState(state => {
+      console.error("Error initializing store:", error);
+      useBoundStore.setState((state) => {
         state.bookMarks = [];
       });
     }

@@ -2,9 +2,11 @@
 
 import Button from "@/app/ui/button";
 import Filter from "@/app/ui/filter";
+import ProductSkeleton from "@/app/ui/product-skeleton";
 import ProductCon from "@/app/ui/productCon";
 import { useApiClient } from "@/libs/useApiClient";
 import { useBoundStore } from "@/store/store";
+import { motion } from "motion/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -13,7 +15,7 @@ export default function Product() {
   const { cartState, loadProducts, products } = useBoundStore();
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { get } = useApiClient()
+  const { get } = useApiClient();
 
   const [containerHeight, setContainerHeight] = useState("100vh");
 
@@ -48,17 +50,22 @@ export default function Product() {
     }
   };
 
-
-
   return (
     <>
-      <div 
-       style={{ minHeight: containerHeight }}
-      className="w-full min-h-screen  flex flex-col items-center text-black  home-main  transition-all">
+      <div
+        style={{ minHeight: containerHeight }}
+        className="w-full min-h-screen  flex flex-col items-center text-black  home-main  transition-all">
         <div className="w-full h-full  bg-white flex overflow-hidden gap-4 pt-30">
-          {cartState === "loading" ||
-          cartState === "error" ||
-          cartState === "idle" ? (
+          {(cartState === "loading" || cartState === "idle" ) && (
+              <motion.div
+                className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out"
+                layout>
+                {[1, 2, 3, 4].map((item) => (
+                  <ProductSkeleton type="large" key={item} />
+                ))}
+              </motion.div>
+            )}
+          {cartState === "error" && (
             <div className="w-full h-dvh flex items-center flex-col pt-12 md:pt-24">
               <Image
                 src="/icons/cloth.svg"
@@ -99,11 +106,8 @@ export default function Product() {
                 )}
               </div>
             </div>
-          ) : (
-            <>
-              <ProductCon />
-            </>
           )}
+          {cartState === "success" && <ProductCon />}
         </div>
       </div>
       <Filter />

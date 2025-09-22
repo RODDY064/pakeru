@@ -396,122 +396,6 @@ export const useCartStore: StateCreator<
         item.quantity = Math.min(quantity, item.selectedVariant.stock);
       }
     }),
-
-  // Update color - works both before and after adding to cart
-  // updateColor: (identifier, newColorId) =>
-  //   set((state) => {
-
-  //     const updateSizeIfNeeded = (
-  //       entity: { selectedSize?: string; sizes?: string[] },
-  //       newVariant: ProductVariant
-  //     ) => {
-  //       entity.sizes = [...newVariant.sizes];
-  //       if (
-  //         entity.selectedSize &&
-  //         !newVariant.sizes.includes(entity.selectedSize)
-  //       ) {
-  //         entity.selectedSize = newVariant.sizes[0] || undefined;
-  //       }
-  //     };
-
-  //     // Try to find cart item first (for items already in cart)
-  //     const cartItem = state.cartItems.find(
-  //       (item) => item.cartItemId === identifier
-  //     );
-
-  //     if (cartItem) {
-  //       // SCENARIO 1: Item exists in cart - update cart item + product
-  //       const product = state.products.find((p) => p._id === cartItem._id);
-  //       const newVariant = product?.variants.find((v) => v._id === newColorId);
-
-  //       if (!newVariant) {
-  //         console.error(
-  //           `Color variant ${newColorId} not found for product ${cartItem._id}`
-  //         );
-  //         return;
-  //       }
-
-  //       const newCartItemId = generateCartItemId(
-  //         cartItem._id,
-  //         newColorId,
-  //         cartItem.selectedSize
-  //       );
-
-  //       // Check if item with new color already exists in cart
-  //       const existingItem = state.cartItems.find(
-  //         (item) => item.cartItemId === newCartItemId
-  //       );
-
-  //       if (existingItem) {
-  //         // Merge quantities (respecting variant stock)
-  //         const maxQuantity = Math.min(
-  //           existingItem.quantity + cartItem.quantity,
-  //           newVariant.stock
-  //         );
-  //         existingItem.quantity = maxQuantity;
-
-  //         // Remove old item
-  //         const index = state.cartItems.findIndex(
-  //           (item) => item.cartItemId === identifier
-  //         );
-  //         if (index !== -1) {
-  //           state.cartItems.splice(index, 1);
-  //         }
-  //       } else {
-  //         // Update existing cart item
-  //         cartItem.selectedColor = newColorId;
-  //         cartItem.cartItemId = newCartItemId;
-  //         cartItem.selectedVariant = newVariant;
-
-  //         // Check if current size is available in new color variant
-  //         if (
-  //           cartItem.selectedSize &&
-  //           !newVariant.sizes.includes(cartItem.selectedSize)
-  //         ) {
-  //           // Reset to first available size if current size not available
-  //           cartItem.selectedSize = newVariant.sizes[0] || undefined;
-  //           cartItem.cartItemId = generateCartItemId(
-  //             cartItem._id,
-  //             newColorId,
-  //             cartItem.selectedSize
-  //           );
-  //         }
-  //         updateSizeIfNeeded(cartItem, newVariant);
-
-  //         // Adjust quantity if it exceeds new variant's stock
-  //         cartItem.quantity = Math.min(cartItem.quantity, newVariant.stock);
-  //       }
-
-  //       // Update corresponding product
-  //       if (product) {
-  //         product.selectedColor = newColorId;
-  //         // Update size if needed
-  //         if (
-  //           product.selectedSize &&
-  //           !newVariant.sizes.includes(product.selectedSize)
-  //         ) {
-  //           product.selectedSize = newVariant.sizes[0] || undefined;
-  //         }
-  //       }
-  //     } else {
-  //       // SCENARIO 2: Update product (before adding to cart)
-  //       const product = state.products.find((p) => p._id === identifier);
-  //       const newVariant = product?.variants.find((v) => v._id === newColorId);
-
-  //       if (product && newVariant) {
-  //         product.selectedColor = newColorId;
-  //         // Update size if current size not available in new color
-  //         if (
-  //           product.selectedSize &&
-  //           !newVariant.sizes.includes(product.selectedSize)
-  //         ) {
-  //           product.selectedSize = newVariant.sizes[0] || undefined;
-  //         }
-  //       }
-  //     }
-  //   }),
-  // Update color - works both before and after adding to cart
-
   updateColor: (identifier, newColorId) =>
     set((state) => {
       const updateSizeIfNeeded = (
@@ -1038,6 +922,7 @@ export const useCartStore: StateCreator<
           if (result.total !== undefined) {
             state.totalItems = result.total;
           }
+
           // Only set success state for fresh loads
           if (isFreshLoad) {
             state.cartState = "success";

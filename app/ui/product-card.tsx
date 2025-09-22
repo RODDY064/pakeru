@@ -15,7 +15,7 @@ interface ProductCardProps {
   cardRef?: React.RefObject<HTMLDivElement>;
   cardStyle?: string;
   productData: ProductData;
-  showDetails?: boolean;
+  hideDetails?: boolean;
 }
 
 const ProductCard = ({
@@ -23,7 +23,7 @@ const ProductCard = ({
   cardRef,
   cardStyle,
   productData,
-  showDetails = false,
+  hideDetails = false,
 }: ProductCardProps) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -60,8 +60,8 @@ const ProductCard = ({
       height: 400,
     },
     small: {
-      container: "w-[200px] md:w-[250px] h-[300px]",
-      details: "w-[200px] md:w-[250px]",
+      container: "w-[200px] h-[250px] md:w-[250px] md:h-[300px]",
+      details: "w-[200px] md:w-[150px]",
       sizes: "(max-width: 768px) 200px, 250px",
       width: 250,
       height: 300,
@@ -86,7 +86,7 @@ const ProductCard = ({
             ? "c_pad,w_800,h_700,q_90,b_rgb:f2f2f2,f_auto,g_center"
             : type === "medium"
             ? "c_fit,w_300,h_400,q_90,f_auto,g_center"
-            : "c_fit,w_250,h_300,q_90,f_auto,g_center";
+            : "c_fit,w_250,h_300,q_90,b_rgb:f2f2f2,f_auto,f_auto,g_center";
 
         const optimizedUrl = buildCloudinaryUrl(publicId, transforms);
 
@@ -176,7 +176,7 @@ const ProductCard = ({
         type={type}
         productData={productData}
         productName={productName}
-        showDetails={showDetails}
+        hideDetails={hideDetails}
         updateColor={updateColor}
         containerWidth={config.details}
       />
@@ -189,14 +189,14 @@ const ProductDetails = ({
   type,
   productData,
   productName,
-  showDetails,
+  hideDetails,
   updateColor,
   containerWidth,
 }: {
   type: "small" | "medium" | "large";
   productData: ProductData;
   productName: string;
-  showDetails: boolean;
+  hideDetails: boolean;
   updateColor: (id: string, color: string) => void;
   containerWidth: string;
 }) => {
@@ -214,7 +214,7 @@ const ProductDetails = ({
         >
          <p className="font-avenir  font-normal text-black/70">{productName}</p>
         </div>
-        {!showDetails && (
+        {!hideDetails && (
           <div className="w-[30%] text-right">
             <p
               className={cn("font-avenir font-normal text-black/50", textSize)}
@@ -225,7 +225,7 @@ const ProductDetails = ({
         )}
       </div>
 
-      {!showDetails && (
+      {!hideDetails && (
         <div className="mt-2 flex justify-between items-center">
           <ColorVariants
             variants={productData?.variants?.map((variant) => ({

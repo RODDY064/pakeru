@@ -28,7 +28,8 @@ export default function Bentos() {
               ]}
               rounded={64}
               items={1}
-              className="px-2 absolute bot"
+              className="px-2 absolute"
+              name="Verde"
             />
           </div>
           <div className="w-full  h-[200px] xl:h-[270px]   items-center justify-center">

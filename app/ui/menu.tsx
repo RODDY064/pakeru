@@ -1,11 +1,7 @@
 "use client";
 
 import { useBoundStore } from "@/store/store";
-import {
-  motion,
-  AnimatePresence,
-  cubicBezier,
-} from "motion/react";
+import { motion, AnimatePresence, cubicBezier } from "motion/react";
 import Image from "next/image";
 import React, {
   useEffect,
@@ -20,6 +16,7 @@ import { cn } from "@/libs/cn";
 import SearchIcon from "./searchIcon";
 import { MenuItem } from "@/store/modal";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Menu() {
   const {
@@ -37,6 +34,7 @@ export default function Menu() {
   );
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [contentKey, setContentKey] = useState(0);
+  const router = useRouter();
 
   const [mobileActiveItem, setMobileActiveItem] = useState<string | null>(null);
   const [showMobileSubMenu, setShowMobileSubMenu] = useState(false);
@@ -50,7 +48,15 @@ export default function Menu() {
   );
   const cardRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
 
-  const { isStart, isEnd } = useGsapSlider({
+  const {
+    isStart,
+    isEnd,
+    currentPage,
+    itemsArray,
+    totalPages,
+    goToPage,
+    reinitialize,
+  } = useGsapSlider({
     sliderRef,
     prevRef: prevBtnRef,
     nextRef: nextBtnRef,
@@ -71,9 +77,12 @@ export default function Menu() {
     fetchMenuItems();
   }, []);
 
-  useEffect(()=>{
-   console.log(menuItems)
-  },[menuItems])
+  useEffect(() => {
+    if (menuItems && menuItems.length > 0) {
+      console.log("Menu loaded, reinitializing slider");
+      reinitialize();
+    }
+  }, [menuItems]);
 
   // Stable transition handler
   const handleItemTransition = useCallback(
@@ -117,20 +126,23 @@ export default function Menu() {
     handleItemTransition(newActiveTitle);
   }, [activeMenuItem, handleItemTransition]);
 
+  const handlePush = (category: string) => {
+    router.push(`/product?category=${category.toLocaleLowerCase()}`);
+    closeModal()
+  };
+
   const MenuRender = React.memo(({ data }: { data: MenuItem }) => {
     const memoizedProducts = useMemo(
       () => data.menuProducts || [],
       [data.menuProducts]
     );
 
-    console.log("Memoized products:", memoizedProducts);
-    console.log("data menu ", data);
-
     return (
       <div className="w-full h-full">
         <div className="w-full flex">
           {data.images.map((image, index) => (
             <div
+              onClick={() => handlePush(data.category)}
               key={`${image._id}-img-${index}`}
               className={cn("h-fit cursor-pointer", {
                 "w-[50%] border-r border-black/20": data.images.length === 2,
@@ -139,7 +151,7 @@ export default function Menu() {
                 "w-full": data.images.length === 1,
               })}
             >
-              <div className="w-full min-h-[300px] xl:min-h-[360px] relative overflow-hidden border-b border-black/20">
+              <div className="w-full min-h-[300px] xl:h-[350px] relative overflow-hidden border-b border-black/20">
                 <Image
                   src={image.url}
                   fill
@@ -156,7 +168,7 @@ export default function Menu() {
         </div>
 
         <div className="border-t border-black/20">
-          <p className="font-avenir font-[400] text-lg text-black/30 p-6 pb-4">
+          <p className="font-avenir font-[400] text-lg text-black/30 p-6 pb-2">
             TRENDING
           </p>
           <div className="w-full pl-6">
@@ -164,7 +176,7 @@ export default function Menu() {
             <AnimatePresence mode="wait">
               <div
                 ref={sliderRef}
-                className="w-full my-4 grid grid-flow-col auto-cols-[minmax(300,2fr)] md:auto-cols-[minmax(100,270px)]  pr-20 nav-slider "
+                className="w-full py-2 px-4 grid grid-flow-col auto-cols-[minmax(300,2fr)] md:auto-cols-[minmax(100,270px)]  pr-20 nav-slider "
               >
                 <motion.div
                   key={`${data.category}-products-${contentKey}`}
@@ -179,20 +191,35 @@ export default function Menu() {
                       className="w-full"
                       key={`${product._id}-${
                         product.selectedColor || "default"
-                      }-${index}`}>
+                      }-${index}`}
+                    >
                       <ProductCard
                         type="small"
                         productData={product}
                         cardRef={index === 0 ? cardRef : undefined}
+                        hideDetails={true}
                       />
                     </motion.div>
                   ))}
                 </motion.div>
               </div>
             </AnimatePresence>
+            <div className="flex flex-col items-center">
+              <div className="w-[80%] md:w-full my-2 flex flex-wrap items-center justify-center gap-1 md:gap-3">
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goToPage(i)}
+                    className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full ${
+                      i === currentPage ? "bg-black " : "bg-black/20"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
 
             {/* Navigation buttons */}
-            <div className="hidden md:flex items-center pt-2 justify-center gap-6 md:gap-12">
+            <div className="hidden md:flex items-center  justify-center gap-6 md:gap-12">
               <button
                 ref={prevBtnRef}
                 aria-label="Scroll left"
@@ -333,15 +360,19 @@ export default function Menu() {
                     key={`mobile-${product._id}-${index}`}
                     className="flex-shrink-0"
                   >
-                    <ProductCard type="small" productData={product} />
+                    <ProductCard
+                      type="small"
+                      productData={product}
+                      hideDetails={true}
+                    />
                   </motion.div>
                 ))}
               </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* Mobile Navigation Buttons */}
-          <div className="flex items-center pt-4 justify-center gap-6">
+          {/* Navigation Buttons */}
+          {/* <div className="flex items-center  justify-center gap-6">
             <button
               aria-label="Scroll left"
               className={cn(
@@ -390,7 +421,7 @@ export default function Menu() {
                 className="hidden rotate-270 group-hover/w:flex transition-all duration-200"
               />
             </button>
-          </div>
+          </div> */}
         </div>
       </motion.div>
     );
@@ -430,9 +461,14 @@ export default function Menu() {
           <div className="w-full flex flex-none flex-col gap-6 pt-[120px] px-9">
             {menuItems?.length === 0 ? (
               <div className="w-full min-h-[300px] flex items-center justify-center">
-                  <div className="flex items-center gap-0">
-                     <Image src="/icons/loader.svg" width={36} height={36} alt="loader"/>
-                  </div>
+                <div className="flex items-center gap-0">
+                  <Image
+                    src="/icons/loader.svg"
+                    width={36}
+                    height={36}
+                    alt="loader"
+                  />
+                </div>
               </div>
             ) : (
               <>
@@ -466,7 +502,7 @@ export default function Menu() {
 
           <motion.div
             variants={menuCon}
-            transition={{ type:"tween" }}
+            transition={{ type: "tween" }}
             animate={isSubBarRendered ? "visible" : "hide"}
             initial="hide"
             exit="hide"

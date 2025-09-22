@@ -4,17 +4,19 @@ import { useApiClient } from "@/libs/useApiClient";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Button from "./button";
 import { useRouter } from "next/navigation";
 import { OrdersData } from "@/store/dashbaord/orders-store/orders";
+import { capitalize } from "@/libs/functions";
+import { cn } from "@/libs/cn";
 
 export default function MyOrders() {
   const { get } = useApiClient();
   const { loadUserOrders, userOrdersState, userOrders } = useBoundStore();
   const router = useRouter();
-  const [arrivingOrder, setArrivingOrder] = useState<OrdersData[]>([])
-  const [history, setHistory] = useState<OrdersData[]>([])
+  const [arrivingOrder, setArrivingOrder] = useState<OrdersData[]>([]);
+  const [history, setHistory] = useState<OrdersData[]>([]);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -23,10 +25,7 @@ export default function MyOrders() {
     initializeData();
   }, []);
 
-  // seprate data 
-
-
-
+  // seprate data
 
   return (
     <div className="w-full">
@@ -36,7 +35,12 @@ export default function MyOrders() {
       <div className="mt-10 flex flex-col max-sm:items-center lg:flex-row gap-4">
         {(userOrdersState === "loading" || userOrdersState === "idle") && (
           <div className="w-full mt-16 flex flex-col items-center">
-            <Image src="/icons/loader.svg" width={36} height={36} alt="laoding icon"/>
+            <Image
+              src="/icons/loader.svg"
+              width={36}
+              height={36}
+              alt="laoding icon"
+            />
           </div>
         )}
         {userOrdersState === "failed" && (
@@ -44,8 +48,11 @@ export default function MyOrders() {
             <p className="font-avenir text-2xl text-red-500 text-balance">
               Something went anything.
             </p>
-            <div  className="mt-6">
-              <div onClick={() => loadUserOrders({ get })} className="py-2 px-10 cursor-pointer bg-black text-white uppercase font-avenir text-md">
+            <div className="mt-6">
+              <div
+                onClick={() => loadUserOrders({ get })}
+                className="py-2 px-10 cursor-pointer bg-black text-white uppercase font-avenir text-md"
+              >
                 REFRESH
               </div>
             </div>
@@ -61,16 +68,16 @@ export default function MyOrders() {
                 <div className="mt-4">
                   <Button
                     word="GO TO SHOP"
-                    action={() => router.push("/products")}
+                    action={() => router.push("/product")}
                   />
                 </div>
               </div>
             ) : (
-              <>
+              <div className="w-full flex flex-wrap gap-4">
                 {userOrders.map((order) => (
                   <MyOrderCard type="arriving" key={order._id} order={order} />
                 ))}
-              </>
+              </div>
             )}
           </>
         )}
@@ -79,62 +86,113 @@ export default function MyOrders() {
   );
 }
 
-const MyOrderCard = ({ type, order }: { type: "arriving" | "delivered", order:OrdersData }) => {
+const MyOrderCard = ({
+  type,
+  order,
+}: {
+  type: "arriving" | "delivered";
+  order: OrdersData;
+}) => {
+  // products
 
-  // products 
+  const variant = useMemo(() => {
+    return order.items.products[0].product?.variants?.find(
+      (v) => v._id === order.items.products[0].variantID
+    );
+  }, [order]);
 
+  function formatToDayMonth(dateString: string): string {
+    const date = new Date(dateString);
+
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = date.toLocaleString("en-US", { month: "long" });
+
+    return `${day} ${month}`;
+  }
+
+  type DeliveryStatus = "delivered" | "pending" | "cancelled" | "shipped";
+
+  const deliveryStyles: Record<DeliveryStatus, string> = {
+    delivered: "border-green-500/50 text-green-600 bg-green-50",
+    pending: "border-yellow-500/50 text-yellow-600 bg-yellow-50",
+    cancelled: "border-red-500/50 text-red-600 bg-red-50",
+    shipped: "border-blue-500/50 text-blue-600 bg-blue-50",
+  };
+
+  const normalizeStatus = (status: string): DeliveryStatus => {
+    const s = status.toLowerCase();
+    if (["delivered", "pending", "cancelled", "shipped"].includes(s)) {
+      return s as DeliveryStatus;
+    }
+    return "pending";
+  };
 
   return (
-    <div className="w-full h-[400px] sm:w-[500px] md:w-[600px] xl:w-[650px] sm:h-[300px] xl:h-[350px] flex sm:flex-row flex-col bg-white rounded-2xl border border-black/15 overflow-hidden ">
+    <div className="w-full h-[400px] sm:w-[500px] md:w-[600px] xl:w-[650px] sm:h-[300px] xl:h-[350px] flex sm:flex-row flex-col bg-white rounded-2xl border border-black/15 overflow-hidden flex-none ">
       <div className="w-full h-[55%] max-sm:shrink-0 sm:h-auto sm:w-[55%] flex-srink-0  p-[5px] ">
         <div className="w-full h-full bg-[#f2f2f2] rounded-xl overflow-hidden border border-black/5">
           <div className="w-full h-[80%]  relative overflow-hidden">
             <Image
-              src="/images/hero-2.png"
+              src={variant?.images[0].url as string}
               fill
-              alt="hero"
+              alt={order.items.products[0].product.name}
               className="object-cover"
             />
           </div>
           <div className="flex-1 self-stretch p-1.5 sm:p-3  flex justify-between">
             <p className="font-avenir text-[12px] sm:text-[16px]">
-              Uname Product
+              {order?.items?.products[0]?.product.name}
             </p>
-            <div className="rounded-full size-6 sm:size-9 flex gap-0.5 items-center justify-center bg-black right-2 bottom-2">
-              <div className="items-center flex justify-center relative">
-                <div className="w-[1px] h-[6px] bg-white"></div>
-                <div className="w-[6px] h-[1px] bg-white absolute"></div>
+            {order.items.products.length > 1 && (
+              <div className="rounded-full size-6 sm:size-9 flex gap-0.5 items-center justify-center bg-black right-2 bottom-2">
+                <div className="items-center flex justify-center relative">
+                  <div className="w-[1px] h-[6px] bg-white"></div>
+                  <div className="w-[6px] h-[1px] bg-white absolute"></div>
+                </div>
+                <p className="font-avenir text-[12px] text-white pt-[1px]">
+                  {order.items.products.length-1}
+                </p>
               </div>
-              <p className="font-avenir text-[12px] text-white pt-[1px]">3</p>
-            </div>
+            )}
           </div>
         </div>
       </div>
       <div className="w-full h-full self-stretch sm:w-[45%] flex-srink-0 p-4 md:pb-10 flex  flex-col justify-between">
         <div className="flex justify-between items-center">
-          <p className="font-avenir text-[12px] text-black/60 ">{order.IDTrim}</p>
-          <div className="bg-[#f2f2f2] flex rounded-full border border-black/10 px-1.5 gap-2">
+          <p className="font-avenir text-[12px] text-black/60 ">
+            {order.IDTrim}
+          </p>
+          <div
+            className={`flex rounded-full border px-2 gap-1.5 ${
+              deliveryStyles[normalizeStatus(order.deliveryStatus)]
+            }`}>
             <Image
-              src="/icons/shipping.svg"
+              src={`/icons/shipping-${order.deliveryStatus.slice(0,1).toLocaleLowerCase()}.svg`}
               width={24}
               height={24}
-              alt="shipped"
+              alt={order.paymentStatus}
               className="sm:flex hidden"
             />
             <Image
-              src="/icons/shipping.svg"
+              src={`/icons/shipping-${order.deliveryStatus.slice(0,1).toLocaleLowerCase()}.svg`}
               width={16}
               height={16}
-              alt="shipped"
+              alt={order.paymentStatus}
               className=" sm:hidden"
             />
-            <p className="font-avenir text-[13px] pt-[3px]">Shipped</p>
+            <p className="font-avenir text-[13px] pt-[3.5px]">
+              {capitalize(order.deliveryStatus)}
+            </p>
           </div>
         </div>
         <div>
           <p className="font-avenir text-[15px] sm:text-[16px] xl:text-[18px] text-balance">
-            Arriving at <span className="font-semibold"> 09 Augutst,</span>{" "}
-            7:00am to 1:00am.
+            Arriving at{" "}
+            <span className="font-semibold">
+              {" "}
+              {formatToDayMonth(order.deliveredAt)},
+            </span>{" "}
+            7:00am to 8:00pm.
           </p>
           <div className="mt-1 md:mt-4 ">
             <div className="border-y-[0.5px] border-black/10 w-full flex justify-end ">

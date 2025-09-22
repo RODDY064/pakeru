@@ -85,7 +85,7 @@ export const useCategory: StateCreator<
       }
 
       const categories: CategoryType[] = result.data.map((item: any) => ({
-        id: item._id,
+        _id: item._id,
         name: item.name,
         description: item.description,
         parentCategory: item.parentCategory,

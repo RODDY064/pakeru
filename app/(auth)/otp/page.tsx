@@ -6,23 +6,24 @@ import { useRouter } from "next/navigation";
 import React, { useState, useRef, useEffect } from "react";
 
 export default function OTP() {
-  const { userData } = useBoundStore();
+  const { userData, clearUser } = useBoundStore();
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(""));
-  const [counter, setCounter] = useState<number>(300); 
+  const [counter, setCounter] = useState<number>(30);
   const [isResendDisabled, setIsResendDisabled] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [errorMessage,setErrorMessage] = useState("")
+  const [errorMessage, setErrorMessage] = useState("");
+  const [resendErrorMessage, setResendErrorMessage] = useState("");
   const [oState, setOState] = useState<
     "loading" | "idle" | "submitted" | "error"
   >("idle");
+  const [isResending, setIsResending] = useState<boolean>(false);
 
   const router = useRouter();
 
-  useEffect(()=>{
-    console.log(userData)
-  },[userData])
-
+  useEffect(() => {
+    console.log(userData);
+  }, [userData]);
 
   // Timer effect for countdown
   useEffect(() => {
@@ -131,44 +132,69 @@ export default function OTP() {
           }
         );
 
-        if (!res.ok){
-           throw new Error("OTP verification failed");
+        if (!res.ok) {
+          throw new Error("OTP verification failed");
         }
 
         console.log("OTP submitted:", otpValue);
 
-        const response = await res.json()
+        const response = await res.json();
         setOState("submitted");
 
-        setTimeout(()=>{
-           router.push('/sign-in');
-        },3000)
+        setTimeout(() => {
+          router.push("/sign-in");
+          clearUser();
+        }, 3000);
       }
     } catch (error) {
       console.error("OTP verification failed:", error);
-      setErrorMessage("OTP verification failed.")
+      setErrorMessage("OTP verification failed.");
       setOState("error");
     }
   };
 
-  // Handle resend code
-  const handleResend = async () => {
-    if (isResendDisabled) return;
+  const ResendOTP = async () => {
+    if (!userData?.email) {
+      setErrorMessage("No email found for resend.");
+      return;
+    }
 
+    if (isResendDisabled || isResending) return;
+
+    setIsResending(true);
     try {
-      // Simulate resend API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/v1/auth/resend-otp`,
+        {
+          method: "POST",
+          body: JSON.stringify({ email: userData.email }),
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to resend OTP");
+      }
+
+      const response = await res.json();
+      console.log("Resend OTP response:", response);
+
       setCounter(300);
       setIsResendDisabled(true);
-      setOtp(new Array(6).fill(""));
-
+      setOtp(new Array(6).fill("")); // Clear OTP inputs
       inputRefs.current[0]?.focus();
+      setResendErrorMessage(
+        "OTP resent successfully. Please check your email."
+      );
     } catch (error) {
-      console.error("Failed to resend OTP:", error);
-      alert("Failed to resend OTP. Please try again.");
+      console.error("Resend OTP failed:", error);
+      let message = "Failed to resend OTP. Please try again.";
+      setResendErrorMessage(message);
+    } finally {
+      setIsResending(false);
     }
   };
-
   // Check if OTP is complete
   const isOtpComplete = otp.every((digit) => digit !== "");
 
@@ -181,7 +207,9 @@ export default function OTP() {
         Verify your email with the 6-digit code <br /> sent to
         <span>
           {userData?.userType === "unverified" && (
-            <span className="font-semibold px-2">{formatEmail(userData.email)}</span>
+            <span className="font-semibold px-2">
+              {formatEmail(userData.email)}
+            </span>
           )}
         </span>
       </p>
@@ -223,21 +251,23 @@ export default function OTP() {
         <Submit type={oState} submitType="otp" errorMessage={errorMessage} />
 
         <div className="flex justify-between mt-4 w-full px-[3px]">
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={isResendDisabled}
+          <div
+            onClick={() => ResendOTP()}
             className={`
               font-medium font-avenir transition-colors duration-200
               ${
-                isResendDisabled
+                isResendDisabled || isResending
                   ? "text-black/30 cursor-not-allowed"
                   : "text-blue-600 hover:text-blue-800 cursor-pointer underline"
               }
             `}
           >
-            {isResendDisabled ? "Resend code in" : "Resend New Code"}
-          </button>
+            {isResending
+              ? "Resending..."
+              : isResendDisabled
+              ? "Resend code in"
+              : "Resend New Code"}
+          </div>
 
           {isResendDisabled && (
             <p className="text-black/60 font-medium font-avenir">
@@ -245,6 +275,7 @@ export default function OTP() {
             </p>
           )}
         </div>
+        <p className="py-4 text-sm font-avenir text-red-500">{resendErrorMessage}</p>
       </form>
     </div>
   );

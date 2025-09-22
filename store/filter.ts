@@ -41,7 +41,6 @@ export const useFilterStore: StateCreator<
         "price: low to high",
         "price: high to low",
         "newest",
-        "popularity",
         "rating",
       ],
       view: false,

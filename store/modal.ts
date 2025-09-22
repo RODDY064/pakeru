@@ -97,22 +97,40 @@ export const useModalStore: StateCreator<
         await state.loadCategories();
       }
 
+      if (state.products.length === 0) {
+        await state.loadProducts();
+      }
+
+      if (!state.categories?.length) {
+        console.warn("No product available for menu initialization");
+        return;
+      }
+
       if (!state.categories?.length) {
         console.warn("No categories available for menu initialization");
         return;
       }
 
+      console.log(state.categories," categories")
+
       set((draft) => {
-        draft.menuItems = state.categories.map((category) => ({
-          category: category.name,
-          isActive: false,
-          images: [
-            { _id: "1", url: "/images/women-2.png" },
-            { _id: "2", url: "/images/women-2.png" },
-          ],
-          catID: category._id,
-          menuProducts: [],
-        }));
+        draft.menuItems = state.categories.map((category) => {
+          const categoryProducts = state.products.filter(
+            (product) => product?.category === category._id
+          );
+
+
+          return {
+            category: category.name,
+            isActive: false,
+            images: [
+              { _id: "1", url: "/images/women-2.png" },
+              { _id: "2", url: "/images/women-2.png" },
+            ],
+            catID: category._id,
+            menuProducts: categoryProducts, 
+          };
+        });
       });
     } catch (error) {
       console.error("Failed to initialize menu items:", error);
@@ -124,13 +142,15 @@ export const useModalStore: StateCreator<
     const state = get();
 
     try {
-      await state.loadCategories();
+      // await state.loadCategories();
 
       set((draft) => {
         draft.menuItems.forEach((menuItem, index) => {
           const categoryProducts = state.products.filter(
             (product) => product?.category === menuItem.catID
           );
+
+          console.log(state.menuItems, "menu item");
 
           draft.menuItems[index].menuProducts = categoryProducts;
         });
