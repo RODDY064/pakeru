@@ -106,14 +106,14 @@ export const useFilterStore: StateCreator<
       multiSelect: false,
       type: 'sort',
     },
-    {
-      name: "price",
-      content: { min: 0, max: 10000 }, // Default price range
-      view: false,
-      selected: [],
-      multiSelect: false,
-      type: 'price',
-    },
+    // {
+    //   name: "price",
+    //   content: { min: 0, max: 10000 }, // Default price range
+    //   view: false,
+    //   selected: [],
+    //   multiSelect: false,
+    //   type: 'price',
+    // },
   ],
 
   toggleSelection: (name, value) =>
