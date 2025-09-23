@@ -128,7 +128,7 @@ const MyOrderCard = ({
   };
 
   return (
-    <div className="w-full h-[400px] sm:w-[500px] md:w-[600px] xl:w-[650px] sm:h-[300px] xl:h-[350px] flex sm:flex-row flex-col bg-white rounded-2xl border border-black/15 overflow-hidden flex-none ">
+    <div className="w-full h-[400px] sm:w-[500px] md:w-[600px] xl:w-[650px] sm:h-[300px] xl:h-[350px] flex sm:flex-row flex-col bg-white rounded-2xl border border-black/15 overflow-hidden shrink-0 ">
       <div className="w-full h-[55%] max-sm:shrink-0 sm:h-auto sm:w-[55%] flex-srink-0  p-[5px] ">
         <div className="w-full h-full bg-[#f2f2f2] rounded-xl overflow-hidden border border-black/5">
           <div className="w-full h-[80%]  relative overflow-hidden">

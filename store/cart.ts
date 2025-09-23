@@ -86,7 +86,8 @@ export type CartStore = {
   loadProducts: (
     force?: boolean,
     page?: number,
-    limit?: number
+    limit?: number,
+    filters?: FilterQueries
   ) => Promise<void>;
   refreshProducts: () => Promise<void>;
   syncCartWithProducts: () => void;
@@ -144,6 +145,27 @@ const getVariantStock = (product: ProductData, colorId?: string): number => {
 
   const variant = product.variants.find((v) => v._id === colorId);
   return variant ? variant.stock : 0;
+};
+
+interface FilterQueries {
+  category?: string[];
+  sort_by?: string;
+  price?: string;
+}
+
+const sortMapping: { [key: string]: string } = {
+  "Price: Low to High": "price",
+  "Price: High to Low": "-price",
+  "Rating: High to Low": "-averageRating,numReviews,stock,-createdAt,price",
+  "Rating: Low to High": "averageRating,numReviews,stock,-createdAt,price",
+  "Newest First": "-createdAt,price",
+  "Oldest First": "createdAt,price",
+  "Name: A to Z": "name,price",
+  "Name: Z to A": "-name,price",
+  "Stock: High to Low": "-stock,price",
+  "Stock: Low to High": "stock,price",
+  "Most Reviews": "-numReviews,averageRating,price",
+  "Least Reviews": "numReviews,averageRating,price",
 };
 
 // Enhanced Zustand Store Creator
@@ -823,7 +845,7 @@ export const useCartStore: StateCreator<
     }),
 
   //  loadProducts to sync with cart and bookmarks after loading
-  loadProducts: async (force, page, limit = 25) => {
+  loadProducts: async (force, page, limit = 25, filters) => {
     const state = get();
 
     if (!force && page === undefined && state.products.length !== 0) return;
@@ -842,10 +864,11 @@ export const useCartStore: StateCreator<
 
     const RESET_DELAY_MS = 3000;
 
-
     try {
       // Build query parameters
       const query = new URLSearchParams();
+      state.loadCategories()
+
       if (page && page !== 1) {
         query.append("page", page.toString());
       }
@@ -853,8 +876,48 @@ export const useCartStore: StateCreator<
         query.append("limit", limit.toString());
       }
 
+      // Add filter parameters
+      if (filters) {
+        // Category filter - join multiple categories with comma
+        if (filters.category && filters.category.length > 0) {
+          const categoryIds = filters.category
+            .map((name) => {
+              const category = state.categories.find(
+                (cat) => cat.name.toLowerCase() === name.toLowerCase()
+              );
+              return category ? category._id : null;
+            })
+            .filter((id) => id !== null);
+          if (categoryIds.length > 0) {
+            query.append("category", categoryIds.join(","));
+          } else {
+            console.warn(
+              "No matching category IDs found for:",
+              filters.category
+            );
+          }
+        }
+
+        // Sort filter - convert to API format
+        if (filters.sort_by) {
+          const apiSortFormat = sortMapping[filters.sort_by] || filters.sort_by;
+          query.append("sort", apiSortFormat);
+        }
+
+        // Price filter
+        // if (filters.price) {
+        //   query.append("price", filters.price);
+        // }
+      }
+
+      // Store current filters in state for pagination
+      set((state) => {
+        state.currentFilters = filters ?? null;
+      });
+
       if (process.env.NODE_ENV === "development") {
         console.log(query.toString(), "Query parameters");
+        console.log(filters, "Applied filters");
       }
 
       // Fetch products from API with query parameters
@@ -935,7 +998,7 @@ export const useCartStore: StateCreator<
       if (!isFreshLoad) {
         setTimeout(() => {
           set((state) => {
-             state.productPaginationState = "idle";
+            state.productPaginationState = "idle";
           });
         }, RESET_DELAY_MS);
       }
@@ -960,7 +1023,7 @@ export const useCartStore: StateCreator<
 
         setTimeout(() => {
           set((state) => {
-             state.productPaginationState = "idle";
+            state.productPaginationState = "idle";
           });
         }, RESET_DELAY_MS);
 

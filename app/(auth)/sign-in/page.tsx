@@ -59,7 +59,28 @@ function SignInForm() {
       });
 
       if (!response || response.error) {
-        throw new Error(response?.error || "Authentication failed");
+        let errorMessage = "Authentication failed";
+
+        // Map AuthJS error types to user-friendly messages
+        switch (response?.error) {
+          case "CredentialsSignin":
+            errorMessage = "Invalid username or password";
+            break;
+          case "User not found":
+            errorMessage = "User not found";
+            break;
+          case "CallbackRouteError":
+            errorMessage = "Authentication error occurred";
+            break;
+          default:
+            errorMessage = response?.error || "Sign in failed";
+        }
+
+        setSignState("error");
+        setErrorMessage(errorMessage);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        setSignState("idle");
+        return;
       }
 
       setSignState("submitted");

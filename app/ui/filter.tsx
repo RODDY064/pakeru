@@ -12,12 +12,22 @@ export default function Filter() {
     filter,
     filterState,
     filteritems,
-    setFilterPrice,
     toggleSelection,
     setFilterView,
+    setPriceRange,
+    getFilterQueries,
+    applyFiltersToURL,
+    loadFiltersFromURL,
+    clearAllSelections,
+    hasActiveFilters,
+    getActiveFilterCount,
     modal,
+    loadProducts,
+    setFilterCategories
   } = useBoundStore();
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
   const contentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [heights, setHeights] = useState<{ [key: string]: number }>({});
   const searchParams = useSearchParams();
@@ -25,6 +35,8 @@ export default function Filter() {
   const pathname = usePathname();
 
   useEffect(() => {
+    setFilterCategories()
+    
     const handleResize = () => {
       if (window.innerWidth < 1000) {
         setIsMobile(true);
@@ -40,10 +52,6 @@ export default function Filter() {
   }, []);
 
   useEffect(() => {
-    console.log(isMobile);
-  }, [isMobile]);
-
-  useEffect(() => {
     const newHeights: { [key: string]: number } = {};
     filteritems.forEach((filt) => {
       const el = contentRefs.current[filt.name];
@@ -55,41 +63,89 @@ export default function Filter() {
   }, [filteritems]);
 
   useEffect(() => {
-    const category = searchParams.get("category");
-
-    console.log(category);
-  }, [searchParams]);
+    loadFiltersFromURL(searchParams);
+  }, [loadFiltersFromURL, searchParams]);
 
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    // Update query parameters based on filteritems
-    filteritems.forEach((item) => {
-      if (item.name === "Category" && item.selected.length > 0) {
-        params.set("category", item.selected.join(","));
-      } else if (item.name === "sort by" && item.selected.length > 0) {
-        params.set("sort", String(item.selected[0]));
-      } else if (
-        item.name === "price" &&
-        typeof item.selected === "object" &&
-        !Array.isArray(item.selected) &&
-        (item.selected !== null )
-      ) {
-        params.set(
-          "price",
-          `${item.selected?? 0}`
-        );
-      } else {
-        params.delete(item.name.toLowerCase());
-      }
-    });
+    applyFiltersToURL(searchParams, pathname, router);
+  }, [filteritems, applyFiltersToURL, pathname, router, searchParams]);
 
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [filteritems, pathname, router, searchParams]);
+  const handlePriceChange = (type: "min" | "max", value: string) => {
+    if (type === "min") {
+      setPriceMin(value);
+    } else {
+      setPriceMax(value);
+    }
 
+    // Update the filter store
+    const min =
+      type === "min"
+        ? value
+          ? parseInt(value)
+          : undefined
+        : priceMin
+        ? parseInt(priceMin)
+        : undefined;
+    const max =
+      type === "max"
+        ? value
+          ? parseInt(value)
+          : undefined
+        : priceMax
+        ? parseInt(priceMax)
+        : undefined;
 
-  const ApplyFilter = ()=>{
-    
-  }
+    setPriceRange(min, max);
+  };
+
+  const ApplyFilter = () => {
+    const queries = getFilterQueries();
+
+    loadProducts(true, 1, 25, queries);
+    filterState(false);
+  };
+
+  const ClearAllFilters = () => {
+    clearAllSelections();
+    setPriceMin("");
+    setPriceMax("");
+    loadProducts(true, 1, 25, {});
+  };
+
+  const activeFilterCount = getActiveFilterCount();
+  const hasFilters = hasActiveFilters();
+
+  const renderPriceInputs = (isMobileView: boolean = false) => (
+    <div className="flex flex-col gap-3 font-avenir">
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-medium w-12">Min:</label>
+        <input
+          type="number"
+          value={priceMin}
+          min={0}
+          placeholder="0"
+          onChange={(e) => handlePriceChange("min", e.target.value)}
+          className="flex-1 h-10 px-3 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black"
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-medium w-12">Max:</label>
+        <input
+          type="number"
+          value={priceMax}
+          min={0}
+          placeholder="No limit"
+          onChange={(e) => handlePriceChange("max", e.target.value)}
+          className="flex-1 h-10 px-3 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black"
+        />
+      </div>
+      {(priceMin || priceMax) && (
+        <p className="text-xs text-black/60 font-avenir">
+          GHS {priceMin || "0"} - GHS {priceMax || "∞"}
+        </p>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -115,94 +171,110 @@ export default function Filter() {
               >
                 <motion.div className="w-full h-full z-50   bg-white border-r-[0.5px] relative">
                   <motion.div className="w-full h-full flex-none overflow-hidden   p-10 items-start">
-                    <div
-                      onClick={() => filterState(!filter)}
-                      className="flex items-center mb-10 gap-1 cursor-pointer"
-                    >
-                      <div className="relative flex">
-                        <div className="w-[16px] h-[1px] bg-black rotate-45"></div>
-                        <div className="w-[16px] h-[1px] bg-black rotate-[-45deg] absolute"></div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-lg font-avenir">FILTERS</h2>
+                        {hasFilters && (
+                          <span className="bg-black text-white text-xs size-6 py-1 flex items-center justify-center rounded-full">
+                            {activeFilterCount}
+                          </span>
+                        )}
                       </div>
-                      <p className="tex-sm font-avenir font-medium pt-0.5">
-                        CLOSE
-                      </p>
-                    </div>
-                    {filteritems.map((filt) => (
-                      <motion.div
-                        layout
-                        animate={
-                          filt.view
-                            ? { height: heights[filt.name] }
-                            : { height: 40 }
-                        }
-                        key={filt.name}
-                        className="mr-6 pb-4  overflow-hidden border-b border-dashed mt-4"
+                      <div
+                        onClick={() => filterState(!filter)}
+                        className="flex items-center gap-1 cursor-pointer"
                       >
-                        <div className="w-full flex justify-between">
-                          <p className="text-md  font-avenir">
-                            {filt.name.toLocaleUpperCase()}
-                          </p>
-                          <div
-                            onClick={() => setFilterView(filt.name)}
-                            className="cursor-pointer"
-                          >
-                            <Image
-                              src="/icons/arrow.svg"
-                              width={16}
-                              height={16}
-                              alt="arrow"
-                              className={cn("", {
-                                "rotate-[-180deg]": filt.view,
-                              })}
-                            />
-                          </div>
+                        <div className="relative flex">
+                          <div className="w-[16px] h-[1px] bg-black rotate-45"></div>
+                          <div className="w-[16px] h-[1px] bg-black rotate-[-45deg] absolute"></div>
                         </div>
-                        <div
-                          className={cn("mt-4 grid gap-1.5 grid-cols-2 ", {
-                            "grid-cols-1 max-h-[100px] ":
-                              filt.name === "sort by",
-                          })}
+                        <p className="text-sm font-avenir font-medium pt-0.5">
+                          CLOSE
+                        </p>
+                      </div>
+                    </div>
+
+                    <AnimatePresence>
+                      {filteritems.map((filt) => (
+                        <motion.div
+                          layout
+                          animate={
+                            filt.view ? { height: "auto" } : { height: 50 }
+                          }
+                          key={filt.name}
+                          className="overflow-hidden border-b border-dashed"
                         >
-                          {typeof filt.content === "string" ? (
-                            <div className="flex flex-col gap-2">
-                              <input
-                                type="number"
-                                value={filt?.content ?? "0"}
-                                min={0}
-                                onChange={(e) => setFilterPrice(e.target.value)}
-                                className="w-full h-12 cursor-pointer mt-2 focus:outline-none"
-                              />
-                              <p className="text-xs text-black/50 font-avenir">
-                                Above GHS {filt.content}
-                              </p>
-                            </div>
-                          ) : (
-                            filt.content.map((item: string, index: number) => (
-                              <div
-                                onClick={() => toggleSelection(filt.name, item)}
-                                key={index}
-                                className="flex gap-2 items-center cursor-pointer"
-                              >
-                                <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
-                                  <motion.div
-                                    animate={
-                                      filt.selected.includes(item)
-                                        ? { opacity: 1 }
-                                        : { opacity: 0 }
-                                    }
-                                    className="w-full h-full bg-black rounded-full"
-                                  />
-                                </div>
-                                <p className="font-avenir text-black/70 text-sm">
-                                  {item.toLocaleUpperCase()}
+                          <div className="py-4">
+                            <div className="w-full flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <p className="text-md font-avenir pt-[3px]">
+                                  {filt.name.toUpperCase()}
                                 </p>
+                                {filt.selected.length > 0 && (
+                                  <div className="bg-black text-white text-center text-[11px] size-5 pt-1 flex items-center justify-center flex-none rounded-full">
+                                    {filt.selected.length}
+                                  </div>
+                                )}
                               </div>
-                            ))
-                          )}
-                        </div>
-                      </motion.div>
-                    ))}
-                    <div className="mt-12 w-full py-3 text-center bg-black rounded-full cursor-pointer">
+                              <div
+                                onClick={() => setFilterView(filt.name)}
+                                className="cursor-pointer"
+                              >
+                                <Image
+                                  src="/icons/arrow.svg"
+                                  width={16}
+                                  height={16}
+                                  alt="arrow"
+                                  className={cn("transition-transform", {
+                                    "rotate-[-180deg]": filt.view,
+                                  })}
+                                />
+                              </div>
+                            </div>
+
+                            <div
+                              ref={(el) => {
+                                contentRefs.current[filt.name] = el;
+                              }}
+                              className={cn("mt-4 grid gap-1.5 grid-cols-2  ", {
+                                "grid-cols-1 h-fit ": filt.name === "sort by",
+                              })}
+                            >
+                              {filt.name === "price"
+                                ? renderPriceInputs()
+                                : Array.isArray(filt.content) &&
+                                  filt.content.map(
+                                    (item: string, index: number) => (
+                                      <div
+                                        onClick={() =>
+                                          toggleSelection(filt.name, item)
+                                        }
+                                        key={index}
+                                        className="flex gap-2 items-center cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                                      >
+                                        <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
+                                          <motion.div
+                                            animate={
+                                              filt.selected.includes(item)
+                                                ? { opacity: 1 }
+                                                : { opacity: 0 }
+                                            }
+                                            className="w-full h-full bg-black rounded-full"
+                                          />
+                                        </div>
+                                        <p className="font-avenir text-black/70 text-sm">
+                                          {item.toUpperCase()}
+                                        </p>
+                                      </div>
+                                    )
+                                  )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+
+                    <div  onClick={ApplyFilter} className="mt-12 w-full py-3 text-center bg-black rounded-full cursor-pointer">
                       <p className="font-avenir text-white text-md">
                         Apply Filter
                       </p>
@@ -277,85 +349,88 @@ export default function Filter() {
                         <motion.div
                           layout
                           animate={
-                            filt.view
-                              ? { height: heights[filt.name] }
-                              : { height: 40 }
+                            filt.view ? { height: "auto" } : { height: 50 }
                           }
                           key={filt.name}
-                          className="pb-4  overflow-hidden border-b border-dashed mt-4"
+                          className="overflow-hidden border-b border-dashed"
                         >
-                          <div className="w-full flex justify-between">
-                            <p className="text-md font-medium md:font-semibold">
-                              {filt.name.toLocaleUpperCase()}
-                            </p>
-                            <div
-                              onClick={() => setFilterView(filt.name)}
-                              className="cursor-pointer"
-                            >
-                              <Image
-                                src="/icons/arrow.svg"
-                                width={16}
-                                height={16}
-                                alt="arrow"
-                                className={cn("", {
-                                  "rotate-[-180deg]": filt.view,
-                                })}
-                              />
-                            </div>
-                          </div>
-                          <div
-                            className={cn("mt-4 grid gap-1.5 grid-cols-2 ", {
-                              "grid-cols-1 max-h-[150px] ":
-                                filt.name === "sort by",
-                            })}
-                          >
-                            {typeof filt.content === "string" ? (
-                              <div className="flex flex-col gap-2">
-                                <input
-                                  type="number"
-                                  value={filt?.content ?? "0"}
-                                  min={0}
-                                  onChange={(e) =>
-                                    setFilterPrice(e.target.value)
-                                  }
-                                  className="w-full h-12 cursor-pointer mt-2"
-                                />
-                                <p className="text-xs text-black/50">
-                                  Above ${filt.content}
+                          <div className="py-4">
+                            <div className="w-full flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <p className="text-md font-avenir pt-[3px]">
+                                  {filt.name.toUpperCase()}
                                 </p>
-                              </div>
-                            ) : (
-                              filt.content.map(
-                                (item: string, index: number) => (
-                                  <div
-                                    onClick={() =>
-                                      toggleSelection(filt.name, item)
-                                    }
-                                    key={index}
-                                    className={cn(
-                                      "flex gap-2 items-center cursor-pointer "
-                                    )}
-                                  >
-                                    <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
-                                      <motion.div
-                                        animate={
-                                          filt.selected.includes(item)
-                                            ? { opacity: 1 }
-                                            : { opacity: 0 }
-                                        }
-                                        className="w-full h-full bg-black rounded-full"
-                                      ></motion.div>
-                                    </div>
-                                    <p className="font-medium text-black/70 text-sm">
-                                      {item.toLocaleUpperCase()}
-                                    </p>
+                                {filt.selected.length > 0 && (
+                                  <div className="bg-black text-white text-center text-[11px] size-5  flex items-center justify-center flex-none rounded-full">
+                                    {filt.selected.length}
                                   </div>
-                                )
-                              )
-                            )}
+                                )}
+                              </div>
+                              <div
+                                onClick={() => setFilterView(filt.name)}
+                                className="cursor-pointer"
+                              >
+                                <Image
+                                  src="/icons/arrow.svg"
+                                  width={16}
+                                  height={16}
+                                  alt="arrow"
+                                  className={cn("transition-transform", {
+                                    "rotate-[-180deg]": filt.view,
+                                  })}
+                                />
+                              </div>
+                            </div>
+
+                            <div
+                              ref={(el) => {
+                                contentRefs.current[filt.name] = el;
+                              }}
+                              className={cn("mt-4 grid gap-1.5 grid-cols-2  ", {
+                                "grid-cols-1 h-fit ": filt.name === "sort by",
+                              })}
+                            >
+                              {filt.name === "price"
+                                ? renderPriceInputs()
+                                : Array.isArray(filt.content) &&
+                                  filt.content.map(
+                                    (item: string, index: number) => (
+                                      <div
+                                        onClick={() =>
+                                          toggleSelection(filt.name, item)
+                                        }
+                                        key={index}
+                                        className="flex gap-2 items-center cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                                      >
+                                        <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
+                                          <motion.div
+                                            animate={
+                                              filt.selected.includes(item)
+                                                ? { opacity: 1 }
+                                                : { opacity: 0 }
+                                            }
+                                            className="w-full h-full bg-black rounded-full"
+                                          />
+                                        </div>
+                                        <p className="font-avenir text-black/70 text-sm">
+                                          {item.toUpperCase()}
+                                        </p>
+                                      </div>
+                                    )
+                                  )}
+                            </div>
                           </div>
                         </motion.div>
                       ))}
+
+                      <button
+                        onClick={ApplyFilter}
+                        className="mt-6 w-full py-3 text-center bg-black rounded-full cursor-pointer">
+                        <p className="font-avenir text-white text-md">
+                          Apply Filters
+                        </p>
+                      </button>
+
                     </motion.div>
                   </motion.div>
                 </motion.div>

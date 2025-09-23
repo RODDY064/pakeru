@@ -29,7 +29,7 @@ export default function Account() {
 
   return (
     <div className="w-full min-h-dvh">
-      <div className="text-black  w-full h-full bg-[#f2f2f2] px-4  pt-20 sm:px-12 xl:px-24 md:pt-32 pb-24 ">
+      <div className="text-black  w-full h-full bg-[#f2f2f2] px-4  pt-20 sm:px-12 lg:px-16 xl:px-24 md:pt-32 pb-24 ">
         {render()}
       </div>
     </div>

@@ -37,8 +37,9 @@ export default function AccountWrapper({
   ]);
   const router = useRouter()
   const pathname = usePathname()
-  const { scrollAmount } = useBoundStore()
+  const { modal, isSearching  } = useBoundStore()
   const navRef = useRef<HTMLDivElement>(null); 
+  const [navZ,setNavZ] = useState("z-50")
 
   const handlePage = (pageName: string) => {
     // if not on /account, navigate there
@@ -73,7 +74,7 @@ export default function AccountWrapper({
           const progress = self.progress;
           gsap.to(navRef.current, {
             y: progress > 0.02 ? -35 : 0,
-            duration: 0.6,
+            duration: 0.2,
           });
         }
       }
@@ -93,13 +94,23 @@ export default function AccountWrapper({
     return () => clearTimeout(timer);
   }, [pathname]);
 
+  useEffect(()=>{
+    if(modal || isSearching){
+      setNavZ("z-20")
+    }else {
+      setTimeout(()=>{
+        setNavZ("z-50")
+      },300)
+    }
+  },[modal, isSearching])
+
 
   return (
     <AccountContext.Provider value={{ pages, handlePage }}>
       <div 
       ref={navRef}
       style={{ transform: "translateY(0)" }} 
-      className="w-full h-12 md:h-20 px-2 md:px-8 fixed border-t border-b border-black/10 flex justify-between account-nav z-20 bg-white ">
+      className={`w-full h-12 md:h-20 px-2 md:px-8 fixed border-t border-b border-black/10 flex justify-between account-nav  bg-white ${navZ}`}>
         <div
           onClick={() => handlePage("profile")}
           className="h-full flex  items-center relative md:border-x border-black/10 cursor-pointer " >
