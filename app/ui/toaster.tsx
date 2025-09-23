@@ -73,17 +73,15 @@ function Toast(props: ToastProps & { position?: string }) {
       className={`
         ${animationClass}  font-avenir inline-block self-start rounded-[26px] shadow-lg 
         ${variantStyles[variant]} w-full md:max-w-[370px] border-[0.5px]
-        items-center px-3 transition-all duration-300 ${description ? "py-3 " : "py-2"}
+        items-center px-3 transition-all duration-300 ${description ? "py-3 px-4" : "py-2"}
         toast-item
       `}
-      onClick={() => sonnerToast.dismiss(id)}
-    >
+      onClick={() => sonnerToast.dismiss(id)}>
       <div
         className={`flex flex-1  ${
           description ? "items-start" : " items-center"
         }`}
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
         {variant === "loading" && (
           <div className="mr-1.5">
             <Image

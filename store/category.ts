@@ -27,6 +27,7 @@ export type CategoryStore = {
   getProductsWithID: (categoryId: string) => void;
   findCategories: () => void;
   getCategoryNameById: (categoryId: string) => string | null;
+  getCartIdByName: (name: string) => string | null;
   getCategoryById: (categoryId: string) => CategoryType | null;
   getChildCategories: (parentId: string) => CategoryType[];
 };
@@ -182,7 +183,7 @@ export const useCategory: StateCreator<
 
         const response = await apiCall(`/categories/${categoryId}`, {
           method: "DELETE",
-           
+
           headers: {
             "Content-Type": "application/json",
           },
@@ -237,6 +238,10 @@ export const useCategory: StateCreator<
   getCategoryNameById: (categoryId: string) => {
     const category = get().categories.find((c) => c._id === categoryId);
     return category ? category.name : null;
+  },
+  getCartIdByName: (name) => {
+    const category = get().categories.find((c) => c.name.toLowerCase() === name.toLowerCase());
+    return category ? category._id : null;
   },
 
   getCategoryById: (categoryId: string) => {

@@ -13,7 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useCallback, useEffect, useState } from "react";
 
 function FulfilledContent() {
-  const { get, patch }  = useApiClient()
+  const { get, patch } = useApiClient();
   const [fulfilledStats, setFulfilledStats] = useState([
     { label: "Delivered", value: 0 },
     { label: "Shipped", value: 0 },
@@ -37,12 +37,13 @@ function FulfilledContent() {
     pagination,
   } = useBoundStore();
 
+  const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
   useEffect(() => {
     const initializeData = async () => {
       try {
         await Promise.all([
-          loadOrders("fulfilled",{ force: true, get }),
-          loadStoreProducts(),
+          loadOrders("fulfilled", { force: true, get }),
+          loadStoreProducts(false, get),
         ]);
       } catch (error) {
         console.log("Failed to initialize data:", error);
@@ -51,12 +52,35 @@ function FulfilledContent() {
     initializeData();
   }, [loadOrders, loadStoreProducts]);
 
+  useEffect(() => {
+    setPaginationConfig({
+      dataKey: "fulfilledOrders",
+      loadFunction: "loadOrders",
+      itemsPerPage: 10,
+      backendItemsPerPage: 1250,
+      apiGet: get,
+    });
+  }, []);
+
+  useEffect(() => {
+    updatePaginationFromAPI({
+      totalItems: fulfilledOrders?.length,
+      currentBackendPage: 1,
+    });
+  }, [fulfilledOrders]);
+
+  useEffect(() => {
+    const sliceData = getPaginatedSlice(fulfilledOrders);
+    setCurrentOrders(sliceData);
+  }, [pagination, fulfilledOrders]);
+
   const handleSelect = useCallback(
     (order: OrdersData) => {
       setOrderInView(order);
       setOrderModal(!showOrderModal);
     },
-    [showOrderModal, setOrderInView, setOrderModal]);
+    [showOrderModal, setOrderInView, setOrderModal]
+  );
 
   const tableColumns = [
     {
@@ -159,7 +183,7 @@ function FulfilledContent() {
   ];
 
   return (
-    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[15%] pb-36 pt-20   md:pt-24 md:pb-32 ">
+    <div className="overflow-hidden h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[15%] pb-36 pt-20   md:pt-24 md:pb-32 ">
       <p className="font-avenir text-xl md:text-2xl font-bold max-sm:px-3">
         Fulfilled Orders
       </p>
@@ -171,10 +195,10 @@ function FulfilledContent() {
       <Table
         header={<Header />}
         columns={tableColumns}
-        data={fulfilledOrders}
+        data={currentOrders}
         tableName="Fulfuilled Orders"
         tabelState={fulfilledState}
-        reload={() => loadOrders("fulfilled",{ force: true, get })}
+        reload={() => loadOrders("fulfilled", { force: true, get })}
         columnStyle="py-4"
         dateKey="date"
         columnClick={(order) => handleSelect(order)}
@@ -184,14 +208,15 @@ function FulfilledContent() {
   );
 }
 
-
-
-
 export default function Fulfilled() {
   return (
-    <Suspense fallback={<div className="w-full h-full fixed top-0 left-0 flex flex-col items-center justify-center">
-          <Image src="/icons/loader.svg" width={34} height={34} alt="loader"/>
-        </div>}>
+    <Suspense
+      fallback={
+        <div className="w-full h-full fixed top-0 left-0 flex flex-col items-center justify-center">
+          <Image src="/icons/loader.svg" width={34} height={34} alt="loader" />
+        </div>
+      }
+    >
       <FulfilledContent />
     </Suspense>
   );

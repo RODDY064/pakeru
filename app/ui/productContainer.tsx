@@ -22,7 +22,6 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   const imageDiv = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const imageDivSim = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const mainContainerRef = useRef<HTMLDivElement>(null);
-  const [mainContainerHeight, setMainContainerHeight] = useState("600px");
   const {
     isMobile,
     products,
@@ -45,13 +44,6 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     active: boolean;
   }>({ shown: false, active: false });
 
-  useEffect(() => {
-    if (imageDiv.current) {
-      const height = imageDiv.current.offsetHeight; 
-   
-      setMainContainerHeight(`${height}px`);
-    }
-  }, []);
 
   // Mobile scroll state
   const [mobileScrollIndex, setMobileScrollIndex] = useState(0);
@@ -220,7 +212,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     // Wait for images to load and layout to stabilize
     const initScrollTrigger = () => {
       const st = ScrollTrigger.create({
-        trigger: container,
+        trigger: image,
         start: "top top",
         end: "bottom bottom",
         pin: sticky,
@@ -420,8 +412,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                     {
                       "opacity-100": showButtons,
                     }
-                  )}
-                >
+                  )}>
                   <button
                     onClick={goToPreviousImage}
                     aria-label="Previous image"
@@ -625,7 +616,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
 
       {/* Similar Products Section */}
       <div className="w-full mt-24 md:my-24 relative ">
-        <p className="font-avenir font-[400] text-md px-4 md:px-8">
+        <p className="font-avenir font-[400] text-md px-4 md:px-12">
           SIMILAR PRODUCTS
         </p>
         <div className="mt-4 px-10 pb-16">
@@ -657,7 +648,12 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                 </div>
               ) : (
                 <>
-                  {products?.map((product, index) => (
+                  {(productData
+                    ? products
+                        .filter((prod) => prod.category === productData.category)
+                        .slice(0, 10)
+                    : []
+                  ).map((product: ProductData, index: number) => (
                     <ProductCard
                       key={product._id}
                       productData={product}

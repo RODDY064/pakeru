@@ -7,7 +7,7 @@ const ROUTES = {
   protected: ["/account", "/admin", "/payment"],
   public: ["/", "/collections", "/products", "/blog", "/about"],
   auth: ["/sign-in", "/sign-up", "/forgot-password", "/reset-password"],
-  api: ["/api"], 
+  api: ["/api"],
 } as const;
 
 function getClientIP(request: NextRequest): string {
@@ -45,12 +45,12 @@ function createMemoryLimiter(points: number, duration: number) {
         count: 0,
         resetTime: now + duration * 1000,
       };
-      
+
       if (now > entry.resetTime) {
         entry.count = 0;
         entry.resetTime = now + duration * 1000;
       }
-      
+
       if (entry.count >= points) {
         const msBeforeNext = entry.resetTime - now;
         const error = new Error("Rate limit exceeded") as any;
@@ -58,7 +58,7 @@ function createMemoryLimiter(points: number, duration: number) {
         error.msBeforeNext = msBeforeNext;
         throw error;
       }
-      
+
       entry.count++;
       memoryStore.set(key, entry);
     },
@@ -66,9 +66,9 @@ function createMemoryLimiter(points: number, duration: number) {
 }
 
 const rateLimiters = {
-  auth: createMemoryLimiter(50, 15 * 60),       // 50 requests per 15 minutes 
-  api: createMemoryLimiter(3000, 15 * 60),      // 3,000 requests per 15 minutes 
-  general: createMemoryLimiter(1500, 15 * 60),  // 1,500 requests per 15 minutes 
+  auth: createMemoryLimiter(500, 15 * 60), // 500 requests per 15 minutes
+  api: createMemoryLimiter(5000, 15 * 60), // 5,000 requests per 15 minutes
+  general: createMemoryLimiter(3000, 15 * 60), // 3,000 requests per 15 minutes
 } as const;
 
 async function handleRateLimit(
@@ -87,11 +87,13 @@ async function handleRateLimit(
   } catch (err: any) {
     const msBeforeNext = err?.msBeforeNext || 60000;
     const remainingPoints = err?.remainingPoints || 0;
-    
+
     console.warn(
-      `Rate limit exceeded - IP: ${ip}, Route: ${routeType}, Retry in: ${Math.round(msBeforeNext / 1000)}s`
+      `Rate limit exceeded - IP: ${ip}, Route: ${routeType}, Retry in: ${Math.round(
+        msBeforeNext / 1000
+      )}s`
     );
-    
+
     const response = NextResponse.json(
       {
         error: "Too many requests",
@@ -100,12 +102,12 @@ async function handleRateLimit(
       },
       { status: 429 }
     );
-    
+
     response.headers.set(
       "Retry-After",
       Math.round(msBeforeNext / 1000).toString()
     );
-    
+
     return response;
   }
 }
@@ -114,26 +116,33 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const ip = getClientIP(request);
   const userAgent = request.headers.get("user-agent") || "";
-  
+
+  const isMobile = /Mobi|iPhone|iPod|Android(?!.*Tablet)/i.test(userAgent);
+
   // Apply rate limiting first
   const routeType = getRouteType(pathname);
   const rateLimitResponse = await handleRateLimit(ip, routeType, userAgent);
   if (rateLimitResponse) {
     return rateLimitResponse;
   }
-  
+
+  if (pathname.startsWith("/admin") && isMobile) {
+    return new NextResponse(
+      "<h1  style='font-family:sans-serif;text-align:center;margin-top:50%;text-wrap:balance;max-width:600px;margin-left:auto;margin-right:auto;'>Admin is only accessible from tablet or desktop</h1>",
+      { headers: { "Content-Type": "text/html" }, status: 403 }
+    );
+  }
+
   // Get the session
   const session = await auth();
-  
+
   // Check if the current path is a protected route
-  const isProtectedRoute = ROUTES.protected.some(route => 
+  const isProtectedRoute = ROUTES.protected.some((route) =>
     pathname.startsWith(route)
   );
-  
+
   // Check if the current path is an auth route
-  const isAuthRoute = ROUTES.auth.some(route => 
-    pathname.startsWith(route)
-  );
+  const isAuthRoute = ROUTES.auth.some((route) => pathname.startsWith(route));
 
   // Handle protected routes
   if (isProtectedRoute) {
@@ -163,7 +172,7 @@ export async function middleware(request: NextRequest) {
     if (callbackUrl) {
       return NextResponse.redirect(new URL(callbackUrl, request.url));
     }
-    // Redirect to home 
+    // Redirect to home
     return NextResponse.redirect(new URL("/", request.url));
   }
 
@@ -171,7 +180,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|public).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|public).*)"],
 };

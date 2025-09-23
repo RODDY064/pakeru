@@ -158,9 +158,14 @@ class AuthService {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `${refreshTokenName}=${refreshToken}`,
+            cookie: `${refreshTokenName}=${refreshToken}`,
           },
         });
+
+        const res = await response.json()
+
+        console.log(res.msg, 'res message')
+        // console.log(response)
 
         console.log(`Refresh attempt ${attempt}, status: ${response.status}`);
 

@@ -23,7 +23,8 @@ export default function Filter() {
     getActiveFilterCount,
     modal,
     loadProducts,
-    setFilterCategories
+    setFilterCategories,
+    getCartIdByName,
   } = useBoundStore();
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [priceMin, setPriceMin] = useState<string>("");
@@ -35,8 +36,8 @@ export default function Filter() {
   const pathname = usePathname();
 
   useEffect(() => {
-    setFilterCategories()
-    
+    setFilterCategories();
+
     const handleResize = () => {
       if (window.innerWidth < 1000) {
         setIsMobile(true);
@@ -114,6 +115,10 @@ export default function Filter() {
 
   const activeFilterCount = getActiveFilterCount();
   const hasFilters = hasActiveFilters();
+
+  useEffect(() => {
+    console.log(filteritems);
+  }, [filteritems]);
 
   const renderPriceInputs = (isMobileView: boolean = false) => (
     <div className="flex flex-col gap-3 font-avenir">
@@ -244,29 +249,41 @@ export default function Filter() {
                                 ? renderPriceInputs()
                                 : Array.isArray(filt.content) &&
                                   filt.content.map(
-                                    (item: string, index: number) => (
-                                      <div
-                                        onClick={() =>
-                                          toggleSelection(filt.name, item)
-                                        }
-                                        key={index}
-                                        className="flex gap-2 items-center cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
-                                      >
-                                        <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
-                                          <motion.div
-                                            animate={
-                                              filt.selected.includes(item)
-                                                ? { opacity: 1 }
-                                                : { opacity: 0 }
-                                            }
-                                            className="w-full h-full bg-black rounded-full"
-                                          />
+                                    (item: string, index: number) => {
+                                      const targetValue =
+                                        filt.type === "category"
+                                          ? getCartIdByName(
+                                              item as string
+                                            )?.toLowerCase() ?? ""
+                                          : (item as string);
+                                      const isSelected =
+                                        filt.selected.includes(targetValue);
+
+                                      return (
+                                        <div
+                                          onClick={() =>
+                                            toggleSelection(filt.name, item)
+                                          }
+                                          key={index}
+                                          className="flex gap-2 items-center cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                                        >
+                                          <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
+                                            <motion.div
+                                              animate={
+                                                isSelected
+                                                  ? { opacity: 1 }
+                                                  : { opacity: 0 }
+                                              }
+                                              transition={{ duration: 0.3 }}
+                                              className="w-full h-full bg-black rounded-full"
+                                            />
+                                          </div>
+                                          <p className="font-avenir text-black/70 text-sm">
+                                            {item.toUpperCase()}
+                                          </p>
                                         </div>
-                                        <p className="font-avenir text-black/70 text-sm">
-                                          {item.toUpperCase()}
-                                        </p>
-                                      </div>
-                                    )
+                                      );
+                                    }
                                   )}
                             </div>
                           </div>
@@ -274,7 +291,10 @@ export default function Filter() {
                       ))}
                     </AnimatePresence>
 
-                    <div  onClick={ApplyFilter} className="mt-12 w-full py-3 text-center bg-black rounded-full cursor-pointer">
+                    <div
+                      onClick={ApplyFilter}
+                      className="mt-12 w-full py-3 text-center bg-black rounded-full cursor-pointer"
+                    >
                       <p className="font-avenir text-white text-md">
                         Apply Filter
                       </p>
@@ -394,29 +414,39 @@ export default function Filter() {
                                 ? renderPriceInputs()
                                 : Array.isArray(filt.content) &&
                                   filt.content.map(
-                                    (item: string, index: number) => (
-                                      <div
-                                        onClick={() =>
-                                          toggleSelection(filt.name, item)
-                                        }
-                                        key={index}
-                                        className="flex gap-2 items-center cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
-                                      >
-                                        <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
-                                          <motion.div
-                                            animate={
-                                              filt.selected.includes(item)
-                                                ? { opacity: 1 }
-                                                : { opacity: 0 }
-                                            }
-                                            className="w-full h-full bg-black rounded-full"
-                                          />
+                                    (item: string, index: number) => {
+                                      const targetValue =
+                                        filt.type === "category"
+                                          ? getCartIdByName(
+                                              item as string
+                                            )?.toLowerCase() ?? ""
+                                          : (item as string);
+                                      const isSelected =
+                                        filt.selected.includes(targetValue);
+
+                                      return (
+                                        <div
+                                          onClick={() =>
+                                            toggleSelection(filt.name, item)
+                                          }
+                                          key={index}
+                                          className="flex gap-2 items-center cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
+                                          <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
+                                            <motion.div
+                                              animate={
+                                                isSelected
+                                                  ? { opacity: 1 }
+                                                  : { opacity: 0 }
+                                              }
+                                              className="w-full h-full bg-black rounded-full"
+                                            />
+                                          </div>
+                                          <p className="font-avenir text-black/70 text-sm">
+                                            {item.toUpperCase()}
+                                          </p>
                                         </div>
-                                        <p className="font-avenir text-black/70 text-sm">
-                                          {item.toUpperCase()}
-                                        </p>
-                                      </div>
-                                    )
+                                      );
+                                    }
                                   )}
                             </div>
                           </div>
@@ -425,12 +455,12 @@ export default function Filter() {
 
                       <button
                         onClick={ApplyFilter}
-                        className="mt-6 w-full py-3 text-center bg-black rounded-full cursor-pointer">
+                        className="mt-6 w-full py-3 text-center bg-black rounded-full cursor-pointer"
+                      >
                         <p className="font-avenir text-white text-md">
                           Apply Filters
                         </p>
                       </button>
-
                     </motion.div>
                   </motion.div>
                 </motion.div>

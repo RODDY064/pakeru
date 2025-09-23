@@ -5,6 +5,7 @@ import StatCard from "@/app/ui/dashboard/statsCard";
 import StatusBadge from "@/app/ui/dashboard/statusBadge";
 import Table, { Column } from "@/app/ui/dashboard/table";
 import { cn } from "@/libs/cn";
+import { useApiClient } from "@/libs/useApiClient";
 import { Filters, ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
@@ -32,9 +33,8 @@ export default function Products() {
     getCategoryNameById,
   } = useBoundStore();
 
-  const [currentPageProducts, setCurrentPageProducts] = useState<ProductData[]>(
-    []
-  );
+  const { get } = useApiClient()
+  const [currentPageProducts, setCurrentPageProducts] = useState<ProductData[]>([]);
   const [categoriesSelect, setCategoriesSelect] = useState<string[]>([]);
   const router = useRouter();
   const [productState, setProductState] = useState<
@@ -56,7 +56,7 @@ export default function Products() {
   ]);
 
   useEffect(() => {
-    loadStoreProducts(true);
+    loadStoreProducts(true,get);
     loadCategories();
   }, []);
 
@@ -70,9 +70,10 @@ export default function Products() {
   useEffect(() => {
     setPaginationConfig({
       dataKey: "storeProducts",
-      loadFunction: "loadProducts",
+      loadFunction: "loadStoreProducts",
       itemsPerPage: 10,
-      backendItemsPerPage: 10,
+      backendItemsPerPage: 1250,
+      apiGet:get
     });
   }, []);
 
@@ -281,7 +282,7 @@ export default function Products() {
         columns={tableColumns}
         data={currentPageProducts}
         tableName="Products"
-        reload={() => loadStoreProducts()}
+        reload={() => loadStoreProducts(false, get)}
         columnStyle="py-4"
         columnClick={(product)=> handleLink(product)}
         dateKey="createdAt"

@@ -11,7 +11,7 @@ import { useApiClient } from "@/libs/useApiClient";
 
 // Core modal content component
 function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
-  const { patch } = useApiClient();
+  const { patch, get } = useApiClient();
 
   const {
     showOrderModal,
@@ -23,6 +23,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
     updateOrder,
     singleOrderState,
     setSingleOrderState,
+    loadStoreProducts
   } = useBoundStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -56,7 +57,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
 
     setIsUpdating(true);
     try {
-      await updateOrder(orderId, updates as any, { patch });
+      await updateOrder(orderId, updates as any, { patch, get });
       setOrderModal(false);
     } catch (error) {
       console.error("Update failed:", error);
@@ -70,6 +71,10 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
       handleUpdate(orderInView._id, { fulfilledStatus: "fulfilled" });
     }
   };
+
+  useEffect(()=>{
+    loadStoreProducts(false,get)
+  },[singleOrderState])
 
   const handleDeliveryStatusChange = async (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -118,7 +123,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                 <div className="flex items-center justify-between pt-8 pb-4 px-10 border-b border-black/20">
                   <div className="flex items-center gap-4">
                     <p className="font-avenir text-lg font-normal pt-1">
-                      #{orderInView?.IDTrim ?? orderIdTrim}
+                      {orderInView?.IDTrim ?? orderIdTrim}
                     </p>
                   </div>
                   <div

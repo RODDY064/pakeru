@@ -867,7 +867,7 @@ export const useCartStore: StateCreator<
     try {
       // Build query parameters
       const query = new URLSearchParams();
-      state.loadCategories()
+      state.loadCategories();
 
       if (page && page !== 1) {
         query.append("page", page.toString());
@@ -879,23 +879,8 @@ export const useCartStore: StateCreator<
       // Add filter parameters
       if (filters) {
         // Category filter - join multiple categories with comma
-        if (filters.category && filters.category.length > 0) {
-          const categoryIds = filters.category
-            .map((name) => {
-              const category = state.categories.find(
-                (cat) => cat.name.toLowerCase() === name.toLowerCase()
-              );
-              return category ? category._id : null;
-            })
-            .filter((id) => id !== null);
-          if (categoryIds.length > 0) {
-            query.append("category", categoryIds.join(","));
-          } else {
-            console.warn(
-              "No matching category IDs found for:",
-              filters.category
-            );
-          }
+        if (filters?.category && filters.category.length > 0) {
+          query.append("category", filters.category.join(","));
         }
 
         // Sort filter - convert to API format
@@ -905,9 +890,17 @@ export const useCartStore: StateCreator<
         }
 
         // Price filter
-        // if (filters.price) {
-        //   query.append("price", filters.price);
-        // }
+        if (filters.price) {
+          const [minPrice, maxPrice] = filters.price.split("-");
+
+          if (minPrice) {
+            query.append("minPrice", minPrice);
+          }
+
+          if (maxPrice) {
+            query.append("maxPrice", maxPrice);
+          }
+        }
       }
 
       // Store current filters in state for pagination

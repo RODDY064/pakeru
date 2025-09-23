@@ -148,3 +148,34 @@ body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+.main-container {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Ensure the sticky element has proper positioning */
+.sticky-element {
+  position: relative;
+  width: 100%;
+  height: fit-content;
+  /* Remove any fixed heights that might interfere */
+}
+
+/* Ensure image container has proper height for triggering */
+.image-container {
+  min-height: 200vh; /* This ensures there's enough scroll distance */
+  position: relative;
+}
+
+/* Fix for potential layout issues */
+.product-details {
+  position: relative;
+  z-index: 1;
+}
+
+/* Prevent any unwanted transforms during initialization */
+.scroll-trigger-init {
+  transform: none !important;
+  position: relative !important;
+}

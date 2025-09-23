@@ -5,7 +5,10 @@ import StatusBadge from "@/app/ui/dashboard/statusBadge";
 import Table from "@/app/ui/dashboard/table";
 import { toast } from "@/app/ui/toaster";
 import { formatJoinedDate } from "@/libs/functions";
-import { computeOrdersStats, OrdersData } from "@/store/dashbaord/orders-store/orders";
+import {
+  computeOrdersStats,
+  OrdersData,
+} from "@/store/dashbaord/orders-store/orders";
 import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
@@ -15,14 +18,8 @@ import { useOrdersWebhook } from "../../hooks/orderWebhooks";
 import { useApiClient } from "@/libs/useApiClient";
 
 export default function Unfulfilled() {
-   const { get, patch }  = useApiClient()
-  const [unfulfilledStats, setUnfulfilledStats] = useState([
-    { label: "Total Unfulfilled", value: 0 },
-    { label: "Pending", value: 0 },
-    { label: "Response per order", value: 0 },
-  ]);
-
-  const { isConnected, } = useOrdersWebhook();
+  const { get, patch } = useApiClient();
+  const { isConnected } = useOrdersWebhook();
 
   const {
     unfulfilledOrders,
@@ -45,17 +42,39 @@ export default function Unfulfilled() {
     updateOrder,
   } = useBoundStore();
 
-  const orderStats = useMemo(() => computeOrdersStats(unfulfilledOrders), [unfulfilledOrders]);
+  const orderStats = useMemo(() => computeOrdersStats(unfulfilledOrders),[unfulfilledOrders]);
+    const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
 
-  useEffect(() => {
-    if (!orderStats) return;
-
-    setUnfulfilledStats([
+  const unfulfilledStats = useMemo(() => {
+    if (!orderStats) return [];
+    return [
       { label: "Total Unfulfilled", value: orderStats.totalOrders ?? 0 },
       { label: "Pending", value: orderStats.pendingOrders ?? 0 },
       { label: "Response per order", value: 0 },
-    ]);
+    ];
   }, [orderStats]);
+
+  useEffect(() => {
+    setPaginationConfig({
+      dataKey: "unfulfilledOrders",
+      loadFunction: "loadOrders",
+      itemsPerPage: 10,
+      backendItemsPerPage: 1250,
+      apiGet: get,
+    });
+  }, []);
+
+  useEffect(() => {
+    updatePaginationFromAPI({
+      totalItems: unfulfilledOrders?.length,
+      currentBackendPage: 1,
+    });
+  }, [unfulfilledOrders]);
+
+  useEffect(() => {
+    const sliceData = getPaginatedSlice(unfulfilledOrders);
+    setCurrentOrders(sliceData);
+  }, [pagination, unfulfilledOrders]);
 
   const [renderCount, setRenderCount] = React.useState(0);
   useEffect(() => {
@@ -66,7 +85,7 @@ export default function Unfulfilled() {
     const initializeData = async () => {
       try {
         await Promise.all([
-          loadOrders("unfulfilled",{ force: true, get }),
+          loadOrders("unfulfilled", { force: true, get }),
           loadStoreProducts(),
         ]);
       } catch (error) {
@@ -76,8 +95,6 @@ export default function Unfulfilled() {
 
     initializeData();
   }, [loadOrders, loadStoreProducts]);
-
-  
 
   const tableColumns = [
     {
@@ -168,28 +185,16 @@ export default function Unfulfilled() {
 
   return (
     <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[15%] pb-36 pt-20   md:pt-24 md:pb-32 ">
-      {/* <div className="relative w-24 overflow-hidden">
-       <div  className="absolute left-0 bg-amber-500">
-         {process.env.NODE_ENV === 'development' && <DebugPanelComponent  />}
-       </div>
-       </div> */}
-      {/* <div
-        style={{
-          position: "fixed",
-          top: 120,
-          left: 10,
-          background: "black",
-          color: "white",
-          padding: 10,
-          borderRadius: 5,
-          fontSize: 12,
-          zIndex: 9999,
-        }}
+      <p
+        onClick={() =>
+          toast.success({
+            title: "font-avenir text-xl md:text-2xl font-bold ",
+            description:
+              "mt-4 w-full h-fit bg-white border border-black/15 sm:rounded-2xl ",
+          })
+        }
+        className="font-avenir text-xl md:text-2xl font-bold max-sm:px-3"
       >
-        <div>Renders: {renderCount}</div>
-        <div>Orders: {unfulfilledOrders.length}</div>
-      </div> */}
-      <p className="font-avenir text-xl md:text-2xl font-bold max-sm:px-3">
         Unfulfilled Orders
       </p>
       <div className="mt-4 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
@@ -200,10 +205,10 @@ export default function Unfulfilled() {
       <Table
         header={<Header />}
         columns={tableColumns}
-        data={unfulfilledOrders}
+        data={currentOrders}
         tableName="Unfulfuilled Orders"
         tabelState={unfulfilledState}
-        reload={() => loadOrders("unfulfilled",{ force: true, get })}
+        reload={() => loadOrders("unfulfilled", { force: true, get })}
         columnStyle="py-4"
         dateKey="date"
         columnClick={(order) => handleSelect(order)}

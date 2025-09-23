@@ -23,10 +23,10 @@ export type OrdersData = {
   deliveryStatus: "delivered" | "pending" | "cancelled" | "shipped";
   fulfilledStatus: "unfulfilled" | "fulfilled";
   shippingAddress: {
-    address: string
-    landmark?:string
-    region: string
-    town: string
+    address: string;
+    landmark?: string;
+    region: string;
+    town: string;
   };
   items: {
     numOfItems: number;
@@ -111,7 +111,10 @@ export type OrdersStore = {
   updateOrder: (
     orderId: string,
     updates: Partial<OrdersData>,
-    options?: { patch?: ReturnType<typeof useApiClient>["patch"] }
+    options?: { 
+      patch?: ReturnType<typeof useApiClient>["patch"],
+      get?: ReturnType<typeof useApiClient>["get"] 
+     }
   ) => Promise<OrdersData>;
   refundOrder: (orderId: string) => Promise<void>;
   getFilteredOrders: (type: "fulfilled" | "unfulfilled") => OrdersData[];
@@ -237,17 +240,17 @@ export function sortOrdersByDate(
 }
 
 const generateTrimmedId = (fullId: string): string => {
-  const trimmed = fullId.substring(4, 8).toUpperCase();
+  const trimmed = fullId?.substring(4, 8).toUpperCase();
   return `ORD-${trimmed}`;
 };
 
 export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
-  const createdDate = apiOrder.createdAt ? new Date(apiOrder.createdAt) : null;
-  const isValidDate = createdDate && !isNaN(createdDate.getTime());
+  const deliveredAt = apiOrder.deliveryDate ? new Date(apiOrder.deliveryDate) : null;
+  const isValidDate = deliveredAt && !isNaN(deliveredAt.getTime());
 
-  const date = isValidDate ? createdDate.toISOString().split("T")[0] : "";
+  const date = isValidDate ? deliveredAt.toISOString().split("T")[0] : "";
   const time = isValidDate
-    ? createdDate.toLocaleTimeString("en-US", {
+    ? deliveredAt.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
@@ -257,9 +260,9 @@ export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
   let shipmentDeadline: Date | null = null;
   let daysLeft: number = 0;
 
-  if (isValidDate && createdDate) {
-    shipmentDeadline = new Date(createdDate);
-    shipmentDeadline.setDate(createdDate.getDate() + 7);
+  if (isValidDate && deliveredAt) {
+    shipmentDeadline = new Date(deliveredAt);
+    shipmentDeadline.setDate(deliveredAt.getDate());
     const today = new Date();
     const msDiff = shipmentDeadline.getTime() - today.getTime();
     daysLeft = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
@@ -267,7 +270,7 @@ export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
 
   return {
     _id: apiOrder._id,
-    IDTrim: generateTrimmedId(apiOrder._id),
+    IDTrim: apiOrder.orderId || generateTrimmedId(apiOrder._id),
     date,
     time,
     user: {
@@ -278,7 +281,7 @@ export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
     },
     total: apiOrder.totalPrice || 0,
     deliveryStatus: apiOrder.deliveryStatus || "",
-    deliveredAt:apiOrder.deliveryDate || "",
+    deliveredAt: apiOrder.deliveryDate || "",
     paymentStatus: apiOrder.paymentStatus || "",
     fulfilledStatus: apiOrder.fulfilledStatus || "",
     shippingAddress: apiOrder.shippingAddress || null,
@@ -351,6 +354,8 @@ const apiService = {
   ): Promise<OrdersData> {
     try {
       if (!orderId) throw new Error("Order ID not provided");
+
+      console.log(updates)
 
       const response = await patch<OrdersData[]>(
         `/orders/id/${orderId}`,
@@ -490,7 +495,7 @@ export const useOrdersStore: StateCreator<
   },
   loadOrders: async (type, options = {}) => {
     const { setOrdersState, setOrderError } = get();
-    const { force = false, limit = 250, get: apiGet } = options;
+    const { force = false, limit = 25, get: apiGet } = options;
 
     if (!apiGet) {
       throw new Error("API get function is required");
@@ -605,9 +610,11 @@ export const useOrdersStore: StateCreator<
     }
   },
   updateOrder: async (orderId, updates, options = {}) => {
+     const { loadStoreProducts } = get();
+
     const updatePromise = (async () => {
       const { setSingleOrderState, setOrderError } = get();
-      const { patch: apiPatch } = options;
+      const { patch: apiPatch, get:apiGet } = options;
 
       if (!apiPatch) {
         throw new Error("API patch function is required");
@@ -656,6 +663,7 @@ export const useOrdersStore: StateCreator<
         });
 
         setSingleOrderState("success");
+        
         return updatedOrder;
       } catch (error) {
         setSingleOrderState("failed");
@@ -676,11 +684,12 @@ export const useOrdersStore: StateCreator<
           ...get().unfulfilledOrders,
         ].find((o) => o._id === orderId);
 
-        const orderIdentifier = order?.IDTrim || orderId;
-        const updateDescription = getToastMessages(updates);
+        const orderIdentifier = order?.IDTrim || generateTrimmedId(orderId);
+        const toastMessage = getToastMessages(updates);
 
         return {
-          title: `Order ${orderIdentifier} ${updateDescription} successfully`,
+          title: `Order ${orderIdentifier}`,
+          description: toastMessage.description,
         };
       },
       error: getErrorMessage(updates),
@@ -689,6 +698,7 @@ export const useOrdersStore: StateCreator<
 
     return updatePromise;
   },
+
   refundOrder: async (orderId) => {
     const refundPromise = (async () => {
       try {
@@ -722,7 +732,9 @@ export const useOrdersStore: StateCreator<
           ...get().unfulfilledOrders,
         ].find((o) => o._id === orderId);
         return {
-          title: `Order ${order?.IDTrim || orderId} refunded successfully`,
+          title: `Order ${
+            order?.IDTrim || generateTrimmedId(orderId)
+          } refunded successfully`,
         };
       },
       error: "Failed to process refund. Please try again.",
@@ -745,15 +757,63 @@ export const useOrdersStore: StateCreator<
   },
 });
 
+const getLoadingMessage = (updates: any) => {
+  if (updates.fulfilledStatus && updates.deliveryStatus) {
+    return {
+      title: "Updating Order",
+      description: "Updating order status...",
+    };
+  } else if (updates.fulfilledStatus) {
+    const action =
+      updates.fulfilledStatus === "fulfilled" ? "fulfilled" : "unfulfilled";
+    return {
+      title: "Updating Order",
+      description: `Marking order as ${action}...`,
+    };
+  } else if (updates.deliveryStatus) {
+    return {
+      title: "Updating Delivery",
+      description: "Updating delivery status...",
+    };
+  }
+  return {
+    title: "Updating Order",
+    description: "Updating order...",
+  };
+};
+
+const getErrorMessage = (updates: any) => {
+  if (updates.fulfilledStatus && updates.deliveryStatus) {
+    return {
+      title: "Update Failed",
+      description: "Failed to update order status. Please try again.",
+    };
+  } else if (updates.fulfilledStatus) {
+    const action =
+      updates.fulfilledStatus === "fulfilled" ? "fulfilled" : "unfulfilled";
+    return {
+      title: "Update Failed",
+      description: `Failed to mark order as ${action}. Please try again.`,
+    };
+  } else if (updates.deliveryStatus) {
+    return {
+      title: "Update Failed",
+      description: "Failed to update delivery status. Please try again.",
+    };
+  }
+  return {
+    title: "Update Failed",
+    description: "Failed to update order. Please try again.",
+  };
+};
+
 const getToastMessages = (updates: any) => {
   const messages = [];
-
   if (updates.fulfilledStatus) {
     const action =
       updates.fulfilledStatus === "fulfilled" ? "fulfilled" : "unfulfilled";
     messages.push(`marked as ${action}`);
   }
-
   if (updates.deliveryStatus) {
     const statusMap = {
       delivered: "delivered",
@@ -768,31 +828,9 @@ const getToastMessages = (updates: any) => {
     );
   }
 
-  return messages.length > 0 ? messages.join(" and ") : "updated";
-};
-
-const getLoadingMessage = (updates: any) => {
-  if (updates.fulfilledStatus && updates.deliveryStatus) {
-    return "Updating order status...";
-  } else if (updates.fulfilledStatus) {
-    const action =
-      updates.fulfilledStatus === "fulfilled" ? "fulfilled" : "unfulfilled";
-    return `Marking order as ${action}...`;
-  } else if (updates.deliveryStatus) {
-    return "Updating delivery status...";
-  }
-  return "Updating order...";
-};
-
-const getErrorMessage = (updates: any) => {
-  if (updates.fulfilledStatus && updates.deliveryStatus) {
-    return "Failed to update order status. Please try again.";
-  } else if (updates.fulfilledStatus) {
-    const action =
-      updates.fulfilledStatus === "fulfilled" ? "fulfilled" : "unfulfilled";
-    return `Failed to mark order as ${action}. Please try again.`;
-  } else if (updates.deliveryStatus) {
-    return "Failed to update delivery status. Please try again.";
-  }
-  return "Failed to update order. Please try again.";
+  const description = messages.length > 0 ? messages.join(" and ") : "updated";
+  return {
+    title: "Order Updated",
+    description: `Order ${description} successfully`,
+  };
 };

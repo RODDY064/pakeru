@@ -1,6 +1,7 @@
 import { type StateCreator } from "zustand";
 import { Store } from "../store";
 import { produce } from "immer";
+import { useApiClient } from "@/libs/useApiClient";
 
 // Enhanced pagination type with smart caching support
 type PaginationType = {
@@ -13,6 +14,7 @@ type PaginationType = {
   hasPrevPage: boolean;
   loadFunction: string;
   dataKey: string;
+  apiGet?: ReturnType<typeof useApiClient>["get"];
 
   // Backend pagination (actual API calls)
   backendCurrentPage: number;
@@ -25,7 +27,7 @@ type PaginationType = {
   cachedItemsStartIndex: number;
   cachedItemsEndIndex: number;
   needsBackendFetch: boolean;
-  
+
   // Loading state management
   isPagLoading: boolean;
   lastFetchedPage: number;
@@ -36,7 +38,10 @@ export type PaginationStore = {
   pagination: PaginationType;
 
   // Core pagination actions
-  setCurrentPage: (page: number, options?: { dataKey?: string; loadFunction?: string }) => Promise<void>;
+  setCurrentPage: (
+    page: number,
+    options?: { dataKey?: string; loadFunction?: string }
+  ) => Promise<void>;
   setItemsPerPage: (itemsPerPage: number) => void;
   setTotalItems: (totalItems: number) => void;
   goToNextPage: () => Promise<void>;
@@ -58,6 +63,7 @@ export type PaginationStore = {
     loadFunction: string;
     itemsPerPage?: number;
     backendItemsPerPage?: number;
+    apiGet?: ReturnType<typeof useApiClient>["get"];
   }) => void;
 
   // Pagination helpers
@@ -69,7 +75,7 @@ export type PaginationStore = {
   updatePaginationMeta: (meta: Partial<PaginationType>) => void;
   resetPagination: () => void;
   getPaginatedSlice: <T>(data?: T[], dataKey?: string) => T[];
-  
+
   // Loading state
   setPagLoading: (loading: boolean) => void;
 
@@ -110,7 +116,7 @@ const defaultPagination: PaginationType = {
   cachedItemsStartIndex: 0,
   cachedItemsEndIndex: -1, // -1 indicates no cached data
   needsBackendFetch: true,
-  
+
   // Loading state
   isPagLoading: false,
   lastFetchedPage: 0,
@@ -140,7 +146,8 @@ const calculateBackendPaginationMeta = (
   backendItemsPerPage: number,
   totalItems: number
 ): Partial<PaginationType> => {
-  const backendTotalPages = totalItems > 0 ? Math.ceil(totalItems / backendItemsPerPage) : 0;
+  const backendTotalPages =
+    totalItems > 0 ? Math.ceil(totalItems / backendItemsPerPage) : 0;
   const backendOffset = Math.max(0, (backendPage - 1) * backendItemsPerPage);
 
   return {
@@ -163,11 +170,15 @@ const getDataFromState = (state: Store, dataKey: string): any[] => {
   }
 };
 
-// Helper function to safely call load function
-const callLoadFunction = async (store: any, loadFunction: string, forceReload: boolean = false): Promise<void> => {
+const callLoadFunction = async (
+  store: any,
+  loadFunction: string,
+  forceReload: boolean = false,
+  apiGet?: ReturnType<typeof useApiClient>["get"]
+): Promise<void> => {
   try {
-    if (typeof store[loadFunction] === 'function') {
-      await store[loadFunction](forceReload);
+    if (typeof store[loadFunction] === "function") {
+      await store[loadFunction](forceReload, apiGet);
     } else {
       console.warn(`Load function '${loadFunction}' not found in store`);
     }
@@ -182,81 +193,82 @@ export const usePaginationStore: StateCreator<
   [],
   PaginationStore
 > = (set, get) => ({
-  // Initial state
   pagination: defaultPagination,
-
-  // Set loading state
   setPagLoading: (loading: boolean) => {
-    set(produce((state: Store) => {
-      state.pagination.isPagLoading = loading;
-    }));
+    set(
+      produce((state: Store) => {
+        state.pagination.isPagLoading = loading;
+      })
+    );
   },
 
-  // Set pagination configuration
   setPaginationConfig: (config) => {
-    set(produce((state: Store) => {
-      state.pagination.dataKey = config.dataKey;
-      state.pagination.loadFunction = config.loadFunction;
-      
-      if (config.itemsPerPage && config.itemsPerPage > 0) {
-        state.pagination.itemsPerPage = config.itemsPerPage;
-      }
-      
-      if (config.backendItemsPerPage && config.backendItemsPerPage > 0) {
-        state.pagination.backendItemsPerPage = config.backendItemsPerPage;
-        state.pagination.backendLimit = config.backendItemsPerPage;
-      }
-      
-      // Reset pagination state when changing configuration
-      state.pagination.currentPage = 1;
-      state.pagination.needsBackendFetch = true;
-      state.pagination.cachedItemsStartIndex = 0;
-      state.pagination.cachedItemsEndIndex = -1;
-      state.pagination.lastFetchedPage = 0;
-    }));
+    set(
+      produce((state: Store) => {
+        state.pagination.dataKey = config.dataKey;
+        state.pagination.loadFunction = config.loadFunction;
+        state.pagination.apiGet = config.apiGet
+
+        if (config.itemsPerPage && config.itemsPerPage > 0) {
+          state.pagination.itemsPerPage = config.itemsPerPage;
+        }
+
+        if (config.backendItemsPerPage && config.backendItemsPerPage > 0) {
+          state.pagination.backendItemsPerPage = config.backendItemsPerPage;
+          state.pagination.backendLimit = config.backendItemsPerPage;
+        }
+
+        // Reset pagination state when changing configuration
+        state.pagination.currentPage = 1;
+        state.pagination.needsBackendFetch = true;
+        state.pagination.cachedItemsStartIndex = 0;
+        state.pagination.cachedItemsEndIndex = -1;
+        state.pagination.lastFetchedPage = 0;
+      })
+    );
   },
 
-  // Set current page with smart backend fetching
   setCurrentPage: async (page: number, options = {}) => {
     const { pagination } = get();
-    
-    // Input validation
+
     if (!page || page < 1 || !Number.isInteger(page)) {
       console.warn(`Invalid page number: ${page}`);
       return;
     }
-    
+
     // Prevent concurrent page changes
     if (pagination.isPagLoading) {
       // console.log('Page change blocked - already loading');
       return;
     }
-    
+
     const dataKey = options.dataKey || pagination.dataKey;
     const loadFunction = options.loadFunction || pagination.loadFunction;
-    
+
     // Don't exceed total pages if we know them
-    const targetPage = pagination.totalPages > 0 
-      ? Math.min(page, pagination.totalPages) 
-      : page;
+    const targetPage =
+      pagination.totalPages > 0 ? Math.min(page, pagination.totalPages) : page;
 
     // Check if we need to fetch from backend
     const needsFetch = get().checkIfNeedsBackendFetch(targetPage, dataKey);
-    
+
     // Update state first
-    set(produce((state: Store) => {
-      const userMeta = calculateUserPaginationMeta(
-        targetPage,
-        pagination.itemsPerPage,
-        pagination.totalItems
-      );
-      Object.assign(state.pagination, userMeta);
+    set(
+      produce((state: Store) => {
+        const userMeta = calculateUserPaginationMeta(
+          targetPage,
+          pagination.itemsPerPage,
+          pagination.totalItems
+        );
+        Object.assign(state.pagination, userMeta);
 
-      if (options.dataKey) state.pagination.dataKey = options.dataKey;
-      if (options.loadFunction) state.pagination.loadFunction = options.loadFunction;
+        if (options.dataKey) state.pagination.dataKey = options.dataKey;
+        if (options.loadFunction)
+          state.pagination.loadFunction = options.loadFunction;
 
-      state.pagination.needsBackendFetch = needsFetch;
-    }));
+        state.pagination.needsBackendFetch = needsFetch;
+      })
+    );
 
     // Handle backend fetch if needed
     if (needsFetch) {
@@ -266,43 +278,48 @@ export const usePaginationStore: StateCreator<
       const globalEndIndex = globalStartIndex + pagination.itemsPerPage - 1;
 
       // Check if we have sufficient data in memory
-      const hasRequiredData = data.length > globalEndIndex && 
-                            globalStartIndex >= pagination.cachedItemsStartIndex &&
-                            globalEndIndex <= pagination.cachedItemsEndIndex;
+      const hasRequiredData =
+        data.length > globalEndIndex &&
+        globalStartIndex >= pagination.cachedItemsStartIndex &&
+        globalEndIndex <= pagination.cachedItemsEndIndex;
 
       if (!hasRequiredData) {
         const backendPage = get().getBackendPageForUserPage(targetPage);
-        
+
         // Prevent duplicate fetches
         if (pagination.lastFetchedPage !== backendPage) {
           get().setPagLoading(true);
-          
+
           try {
             // Update backend pagination info
-            set(produce((state: Store) => {
-              const backendMeta = calculateBackendPaginationMeta(
-                backendPage,
-                pagination.backendItemsPerPage,
-                pagination.totalItems
-              );
-              Object.assign(state.pagination, backendMeta);
-              state.pagination.lastFetchedPage = backendPage;
-            }));
-            
-            await callLoadFunction(get(), loadFunction, true);
+            set(
+              produce((state: Store) => {
+                const backendMeta = calculateBackendPaginationMeta(
+                  backendPage,
+                  pagination.backendItemsPerPage,
+                  pagination.totalItems
+                );
+                Object.assign(state.pagination, backendMeta);
+                state.pagination.lastFetchedPage = backendPage;
+              })
+            );
+
+            await callLoadFunction(get(), loadFunction, true, state.pagination?.apiGet);
           } catch (error) {
-            console.error('Failed to load data:', error);
+            console.error("Failed to load data:", error);
           } finally {
             get().setPagLoading(false);
           }
         }
       } else {
         // We have the data, update cached range
-        set(produce((state: Store) => {
-          state.pagination.needsBackendFetch = false;
-          state.pagination.cachedItemsStartIndex = 0;
-          state.pagination.cachedItemsEndIndex = Math.max(0, data.length - 1);
-        }));
+        set(
+          produce((state: Store) => {
+            state.pagination.needsBackendFetch = false;
+            state.pagination.cachedItemsStartIndex = 0;
+            state.pagination.cachedItemsEndIndex = Math.max(0, data.length - 1);
+          })
+        );
       }
     }
   },
@@ -313,21 +330,23 @@ export const usePaginationStore: StateCreator<
       console.warn(`Invalid itemsPerPage: ${itemsPerPage}`);
       return;
     }
-    
+
     const { pagination } = get();
 
-    set(produce((state: Store) => {
-      const userMeta = calculateUserPaginationMeta(
-        1, // Reset to first page
-        itemsPerPage,
-        pagination.totalItems
-      );
-      Object.assign(state.pagination, userMeta);
-      state.pagination.needsBackendFetch = true;
-      state.pagination.lastFetchedPage = 0;
-    }));
+    set(
+      produce((state: Store) => {
+        const userMeta = calculateUserPaginationMeta(
+          1, // Reset to first page
+          itemsPerPage,
+          pagination.totalItems
+        );
+        Object.assign(state.pagination, userMeta);
+        state.pagination.needsBackendFetch = true;
+        state.pagination.lastFetchedPage = 0;
+      })
+    );
 
-    callLoadFunction(get(), pagination.loadFunction, true);
+    callLoadFunction(get(), pagination.loadFunction, true, pagination?.apiGet);
   },
 
   // Set backend items per page
@@ -336,27 +355,29 @@ export const usePaginationStore: StateCreator<
       console.warn(`Invalid backend itemsPerPage: ${itemsPerPage}`);
       return;
     }
-    
+
     const { pagination } = get();
 
-    set(produce((state: Store) => {
-      state.pagination.backendItemsPerPage = itemsPerPage;
-      state.pagination.backendLimit = itemsPerPage;
-      state.pagination.needsBackendFetch = true;
-      state.pagination.lastFetchedPage = 0;
+    set(
+      produce((state: Store) => {
+        state.pagination.backendItemsPerPage = itemsPerPage;
+        state.pagination.backendLimit = itemsPerPage;
+        state.pagination.needsBackendFetch = true;
+        state.pagination.lastFetchedPage = 0;
 
-      const backendMeta = calculateBackendPaginationMeta(
-        1,
-        itemsPerPage,
-        pagination.totalItems
-      );
-      Object.assign(state.pagination, backendMeta);
+        const backendMeta = calculateBackendPaginationMeta(
+          1,
+          itemsPerPage,
+          pagination.totalItems
+        );
+        Object.assign(state.pagination, backendMeta);
 
-      state.pagination.cachedItemsStartIndex = 0;
-      state.pagination.cachedItemsEndIndex = -1;
-    }));
+        state.pagination.cachedItemsStartIndex = 0;
+        state.pagination.cachedItemsEndIndex = -1;
+      })
+    );
 
-    callLoadFunction(get(), pagination.loadFunction, true);
+    callLoadFunction(get(), pagination.loadFunction, true, pagination.apiGet);
   },
 
   // Update total items and recalculate pagination
@@ -365,96 +386,112 @@ export const usePaginationStore: StateCreator<
       console.warn(`Invalid totalItems: ${totalItems}`);
       return;
     }
-    
+
     const { pagination } = get();
 
-    set(produce((state: Store) => {
-      const userMeta = calculateUserPaginationMeta(
-        pagination.currentPage,
-        pagination.itemsPerPage,
-        totalItems
-      );
-      Object.assign(state.pagination, userMeta);
+    set(
+      produce((state: Store) => {
+        const userMeta = calculateUserPaginationMeta(
+          pagination.currentPage,
+          pagination.itemsPerPage,
+          totalItems
+        );
+        Object.assign(state.pagination, userMeta);
 
-      const backendMeta = calculateBackendPaginationMeta(
-        pagination.backendCurrentPage,
-        pagination.backendItemsPerPage,
-        totalItems
-      );
-      Object.assign(state.pagination, backendMeta);
-    }));
+        const backendMeta = calculateBackendPaginationMeta(
+          pagination.backendCurrentPage,
+          pagination.backendItemsPerPage,
+          totalItems
+        );
+        Object.assign(state.pagination, backendMeta);
+      })
+    );
   },
 
   // Update pagination from API response
   updatePaginationFromAPI: (apiResponse) => {
-    if (!apiResponse || typeof apiResponse.totalItems !== 'number') {
-      console.warn('Invalid API response for pagination update');
+    if (!apiResponse || typeof apiResponse.totalItems !== "number") {
+      console.warn("Invalid API response for pagination update");
       return;
     }
-    
-    set(produce((state: Store) => {
-      const { pagination } = get();
 
-      state.pagination.totalItems = Math.max(0, apiResponse.totalItems);
+    set(
+      produce((state: Store) => {
+        const { pagination } = get();
 
-      if (apiResponse.currentBackendPage && apiResponse.currentBackendPage > 0) {
-        state.pagination.backendCurrentPage = apiResponse.currentBackendPage;
-      }
+        state.pagination.totalItems = Math.max(0, apiResponse.totalItems);
 
-      if (apiResponse.totalBackendPages && apiResponse.totalBackendPages > 0) {
-        state.pagination.backendTotalPages = apiResponse.totalBackendPages;
-      } else {
-        state.pagination.backendTotalPages = Math.ceil(
-          apiResponse.totalItems / pagination.backendItemsPerPage
+        if (
+          apiResponse.currentBackendPage &&
+          apiResponse.currentBackendPage > 0
+        ) {
+          state.pagination.backendCurrentPage = apiResponse.currentBackendPage;
+        }
+
+        if (
+          apiResponse.totalBackendPages &&
+          apiResponse.totalBackendPages > 0
+        ) {
+          state.pagination.backendTotalPages = apiResponse.totalBackendPages;
+        } else {
+          state.pagination.backendTotalPages = Math.ceil(
+            apiResponse.totalItems / pagination.backendItemsPerPage
+          );
+        }
+
+        const userMeta = calculateUserPaginationMeta(
+          pagination.currentPage,
+          pagination.itemsPerPage,
+          apiResponse.totalItems
         );
-      }
+        Object.assign(state.pagination, userMeta);
 
-      const userMeta = calculateUserPaginationMeta(
-        pagination.currentPage,
-        pagination.itemsPerPage,
-        apiResponse.totalItems
-      );
-      Object.assign(state.pagination, userMeta);
+        // Update cached range based on fetched data
+        const data = getDataFromState(state, pagination.dataKey);
+        const backendPage = state.pagination.backendCurrentPage;
+        const startIndex = (backendPage - 1) * pagination.backendItemsPerPage;
 
-      // Update cached range based on fetched data
-      const data = getDataFromState(state, pagination.dataKey);
-      const backendPage = state.pagination.backendCurrentPage;
-      const startIndex = (backendPage - 1) * pagination.backendItemsPerPage;
+        state.pagination.cachedItemsStartIndex = startIndex;
+        state.pagination.cachedItemsEndIndex =
+          data.length > 0
+            ? Math.min(startIndex + data.length - 1, apiResponse.totalItems - 1)
+            : -1;
 
-      state.pagination.cachedItemsStartIndex = startIndex;
-      state.pagination.cachedItemsEndIndex = data.length > 0 
-        ? Math.min(startIndex + data.length - 1, apiResponse.totalItems - 1)
-        : -1;
-
-      state.pagination.needsBackendFetch = false;
-    }));
+        state.pagination.needsBackendFetch = false;
+      })
+    );
   },
 
   // Update the cached range after fetching from backend
   updateCachedRange: (backendPage: number, dataLength: number) => {
     if (backendPage < 1 || dataLength < 0) {
-      console.warn(`Invalid cached range parameters: backendPage=${backendPage}, dataLength=${dataLength}`);
+      console.warn(
+        `Invalid cached range parameters: backendPage=${backendPage}, dataLength=${dataLength}`
+      );
       return;
     }
-    
+
     const { pagination } = get();
 
-    set(produce((state: Store) => {
-      const startIndex = (backendPage - 1) * pagination.backendItemsPerPage;
-      state.pagination.cachedItemsStartIndex = startIndex;
-      state.pagination.cachedItemsEndIndex = dataLength > 0
-        ? Math.min(startIndex + dataLength - 1, pagination.totalItems - 1)
-        : -1;
-      state.pagination.needsBackendFetch = false;
-    }));
+    set(
+      produce((state: Store) => {
+        const startIndex = (backendPage - 1) * pagination.backendItemsPerPage;
+        state.pagination.cachedItemsStartIndex = startIndex;
+        state.pagination.cachedItemsEndIndex =
+          dataLength > 0
+            ? Math.min(startIndex + dataLength - 1, pagination.totalItems - 1)
+            : -1;
+        state.pagination.needsBackendFetch = false;
+      })
+    );
   },
 
   // Check if we need to fetch from backend for a given user page
   checkIfNeedsBackendFetch: (targetPage: number, dataKey?: string) => {
     const { pagination } = get();
-    
+
     if (targetPage < 1) return false;
-    
+
     const state = get();
     const key = dataKey || pagination.dataKey;
     const data = getDataFromState(state, key);
@@ -465,19 +502,25 @@ export const usePaginationStore: StateCreator<
     // Check various conditions that would require a fetch
     const hasNoCachedData = pagination.cachedItemsEndIndex < 0;
     const hasInsufficientData = data.length <= endIndex;
-    const isOutsideCachedRange = startIndex < pagination.cachedItemsStartIndex || 
-                                endIndex > pagination.cachedItemsEndIndex;
+    const isOutsideCachedRange =
+      startIndex < pagination.cachedItemsStartIndex ||
+      endIndex > pagination.cachedItemsEndIndex;
     const isForcedFetch = pagination.needsBackendFetch;
 
-    return hasNoCachedData || hasInsufficientData || isOutsideCachedRange || isForcedFetch;
+    return (
+      hasNoCachedData ||
+      hasInsufficientData ||
+      isOutsideCachedRange ||
+      isForcedFetch
+    );
   },
 
   // Get which backend page we need for a given user page
   getBackendPageForUserPage: (userPage: number) => {
     const { pagination } = get();
-    
+
     if (userPage < 1) return 1;
-    
+
     const startIndex = (userPage - 1) * pagination.itemsPerPage;
     return Math.floor(startIndex / pagination.backendItemsPerPage) + 1;
   },
@@ -512,16 +555,20 @@ export const usePaginationStore: StateCreator<
 
   // Update pagination metadata
   updatePaginationMeta: (meta: Partial<PaginationType>) => {
-    set(produce((state: Store) => {
-      state.pagination = { ...state.pagination, ...meta };
-    }));
+    set(
+      produce((state: Store) => {
+        state.pagination = { ...state.pagination, ...meta };
+      })
+    );
   },
 
   // Reset pagination to defaults
   resetPagination: () => {
-    set(produce((state: Store) => {
-      state.pagination = { ...defaultPagination };
-    }));
+    set(
+      produce((state: Store) => {
+        state.pagination = { ...defaultPagination };
+      })
+    );
   },
 
   // Get paginated slice for current page from data in state
@@ -540,7 +587,7 @@ export const usePaginationStore: StateCreator<
     // Simple slicing for current page
     const startIndex = (pagination.currentPage - 1) * pagination.itemsPerPage;
     const endIndex = startIndex + pagination.itemsPerPage;
-    
+
     return sourceData.slice(startIndex, endIndex);
   },
 
@@ -550,7 +597,8 @@ export const usePaginationStore: StateCreator<
     const state = get();
     const key = dataKey || pagination.dataKey;
     const data = getDataFromState(state, key);
-    const globalStartIndex = (pagination.currentPage - 1) * pagination.itemsPerPage;
+    const globalStartIndex =
+      (pagination.currentPage - 1) * pagination.itemsPerPage;
     const globalEndIndex = globalStartIndex + pagination.itemsPerPage - 1;
 
     return {

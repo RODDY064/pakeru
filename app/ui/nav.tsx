@@ -84,6 +84,8 @@ export default function Nav() {
     bookMarks,
     filter,
     filterState,
+    filteritems,
+    loadProducts,
     initializeMenuItems,
     isServerInitialized,
     categories,
@@ -115,6 +117,9 @@ export default function Nav() {
 
 
   useEffect(() => {
+    if (filteritems.length > 0) {
+      loadProducts(true);
+    }
 
     const handleResize = () => {
       if (window.innerWidth < 1000) {
@@ -128,7 +133,7 @@ export default function Nav() {
     handleResize();
 
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [pathname]);
 
 
   useGSAP(() => {
