@@ -9,13 +9,12 @@ import { useBoundStore } from "@/store/store";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 
 export default function Product() {
-  const { cartState, loadProducts, products } = useBoundStore();
+  const { cartState, loadProducts } = useBoundStore();
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { get } = useApiClient();
 
   const [containerHeight, setContainerHeight] = useState("100vh");
 
@@ -51,7 +50,7 @@ export default function Product() {
   };
 
   return (
-    <>
+    <Suspense>
       <div
         style={{ minHeight: containerHeight }}
         className="w-full min-h-screen  flex flex-col items-center text-black  home-main  transition-all">
@@ -111,6 +110,6 @@ export default function Product() {
         </div>
       </div>
       <Filter />
-    </>
+    </Suspense>
   );
 }
