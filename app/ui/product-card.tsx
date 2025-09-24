@@ -147,8 +147,8 @@ const ProductCard = ({
         {/* Overlay and Interactive Elements */}
         <div className="absolute inset-0 flex flex-col justify-end z-10">
           <Link
-            href={`/product/${productData?._id}`}
-            onClick={(e) => handleLink(e, `/product/${productData?._id}`)}
+            href={`/shop/${productData?._id}`}
+            onClick={(e) => handleLink(e, `/shop/${productData?._id}`)}
             className="absolute inset-0"
             aria-label={`View details for ${productName}`}
           />

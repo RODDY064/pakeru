@@ -23,9 +23,9 @@ export default function Products() {
     loadStoreProducts,
     dashboardProductLoading,
     dashboardProductErrors,
-    getPaginatedSlice,
-    setPaginationConfig,
-    updatePaginationFromAPI,
+    slice,
+    configure,
+    updateFromAPI,
     pagination,
     categories,
     loadCategories,
@@ -42,7 +42,7 @@ export default function Products() {
   >("idle");
 
   useEffect(() => {
-    if (dashboardProductLoading.products || pagination.isPagLoading) {
+    if (dashboardProductLoading.products || pagination.isLoading) {
       setProductState("loading");
     } else if (dashboardProductErrors.products) {
       setProductState("failed");
@@ -51,7 +51,7 @@ export default function Products() {
     }
   }, [
     dashboardProductLoading.products,
-    pagination.isPagLoading,
+    pagination.isLoading,
     dashboardProductErrors.products,
   ]);
 
@@ -60,6 +60,10 @@ export default function Products() {
     loadCategories();
   }, []);
 
+  useEffect(()=>{
+   console.log(storeProducts)
+  },[storeProducts])
+
   const productStats = useMemo(() => getProductStats(), [getProductStats]);
 
   useEffect(() => {
@@ -67,27 +71,33 @@ export default function Products() {
     setCategoriesSelect(catNames);
   }, [categories]);
 
+
+  useEffect(()=>{
+   console.log(pagination)
+  },[pagination])
+
   useEffect(() => {
-    setPaginationConfig({
+    configure({
       dataKey: "storeProducts",
       loadFunction: "loadStoreProducts",
-      itemsPerPage: 10,
-      backendItemsPerPage: 1250,
-      apiGet:get
+      size: 10,
+      backendSize: 25,
+      apiClient:get
     });
   }, []);
 
   useEffect(() => {
-    updatePaginationFromAPI({
-      totalItems: filteredStoreProducts.length,
-      currentBackendPage: 1,
+    updateFromAPI({
+      total:storeProducts.length,
+      totalPages: storeProducts.length,
+      page: 1,
     });
-  }, [storeProducts, filteredStoreProducts]);
+  }, [storeProducts]);
 
   useEffect(() => {
-    const sliceData = getPaginatedSlice(filteredStoreProducts);
+    const sliceData = slice(storeProducts);
     setCurrentPageProducts(sliceData);
-  }, [pagination, storeProductFilters, storeProducts]);
+  }, [pagination, storeProducts]);
 
   const [stats, setStats] = useState([
     { label: "Product Sells Rate", value: 0 },

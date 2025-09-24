@@ -146,7 +146,7 @@ export async function middleware(request: NextRequest) {
 
   // Handle protected routes
   if (isProtectedRoute) {
-    // No session - redirect to sign-in
+   // No session - redirect to sign-in
     if (!session) {
       const signInUrl = new URL("/sign-in", request.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
@@ -158,7 +158,7 @@ export async function middleware(request: NextRequest) {
       const signInUrl = new URL("/sign-in", request.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
       signInUrl.searchParams.set("error", "SessionExpired");
-      return NextResponse.redirect(signInUrl);
+      // return NextResponse.redirect(signInUrl);
     }
 
     // Valid session - allow access

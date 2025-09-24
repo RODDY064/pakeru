@@ -35,9 +35,9 @@ export default function Unfulfilled() {
     setOrderInView,
     loadStoreProducts,
     storeProducts,
-    setPaginationConfig,
-    updatePaginationFromAPI,
-    getPaginatedSlice,
+    configure,
+    updateFromAPI,
+    slice,
     pagination,
     updateOrder,
   } = useBoundStore();
@@ -55,24 +55,24 @@ export default function Unfulfilled() {
   }, [orderStats]);
 
   useEffect(() => {
-    setPaginationConfig({
+    configure({
       dataKey: "unfulfilledOrders",
       loadFunction: "loadOrders",
-      itemsPerPage: 10,
-      backendItemsPerPage: 1250,
-      apiGet: get,
+      size:10,
+      backendSize: 25,
+      apiClient: get,
     });
   }, []);
 
   useEffect(() => {
-    updatePaginationFromAPI({
-      totalItems: unfulfilledOrders?.length,
-      currentBackendPage: 1,
+    updateFromAPI({
+      total: unfulfilledOrders?.length,
+      page: 1,
     });
   }, [unfulfilledOrders]);
 
   useEffect(() => {
-    const sliceData = getPaginatedSlice(unfulfilledOrders);
+    const sliceData = slice(unfulfilledOrders);
     setCurrentOrders(sliceData);
   }, [pagination, unfulfilledOrders]);
 

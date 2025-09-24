@@ -1,122 +1,82 @@
-import NextAuth, { Session, JWT } from "next-auth";
+import NextAuth, { Session, JWT, CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { cookies } from "next/headers";
 import { z } from "zod";
+import { AuthCache } from "./libs/redis";
 
 const SignInType = z.object({
   username: z.string().min(1, { message: "Username is required." }),
-  password: z
-    .string()
-    .min(6, { message: "Password must be at least 6 characters." }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
-interface CookieMap {
-  [key: string]: string;
+class InvalidLoginError extends CredentialsSignin {
+  code = "Invalid identifier or password";
 }
 
-function extractSessionToken(cookieHeader: string): string | undefined {
-  const tokenName: string =
-    process.env.REFRESH_TOKEN_NAME || "authjs.session-token";
-  const cookieParts = cookieHeader.split(';');
-  
-  if (cookieParts.length > 0) {
-    const firstPart = cookieParts[0].trim();
-    if (firstPart.includes('=')) {
-      const cookies: CookieMap = {};
-      cookieHeader.split(";").forEach((cookie: string) => {
-        const [name, ...rest] = cookie.trim().split("=");
-        if (name && rest.length > 0) {
-          cookies[name] = rest.join("=");
-        }
-      });
-      return cookies[tokenName];
-    } else {
-      const jwtPattern = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
-      if (jwtPattern.test(firstPart)) {
-        return firstPart;
-      }
-      for (const part of cookieParts) {
-        const trimmed = part.trim();
-        if (jwtPattern.test(trimmed)) {
-          return trimmed;
-        }
-      }
-    }
-  }
+export class AuthService {
+  private static baseUrl = `${process.env.NEXT_PUBLIC_URL}/api/auth`;
 
-  return undefined;
-}
-
-class AuthService {
-  private static baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-
-  // Helper method to decode JWT using Buffer and get expiration
-  private static getTokenExpiration(token: string): number {
+  public static getTokenExpiration(token: string): number {
     try {
-      // Split the JWT into parts
-      const parts = token.split(".");
-      if (parts.length !== 3) {
-        throw new Error("Invalid JWT format");
-      }
+      const [, payload] = token.split(".");
+      if (!payload) throw new Error("Invalid JWT format");
 
-      // Decode the payload (second part)
-      const payload = parts[1];
-      // Add padding if needed for base64 decoding
       const paddedPayload =
         payload + "=".repeat((4 - (payload.length % 4)) % 4);
-
-      // Decode from base64url to buffer, then to string
       const decodedBuffer = Buffer.from(
         paddedPayload.replace(/-/g, "+").replace(/_/g, "/"),
         "base64"
       );
-      const decodedPayload = JSON.parse(decodedBuffer.toString("utf8"));
+      const { exp } = JSON.parse(decodedBuffer.toString("utf8"));
 
-      // JWT exp is in seconds, convert to milliseconds
-      return (decodedPayload.exp || 0) * 1000;
+      return (exp || 0) * 1000;
     } catch (error) {
-      console.error("Failed to decode JWT:", error);
-      // Fallback: assume token expires in 1 hour
+      console.error("JWT decode failed:", error);
       return Date.now() + 60 * 60 * 1000;
     }
   }
 
-  static async authenticate(username: string, password: string) {
-    const response = await fetch(`${this.baseUrl}/v1/auth/login`, {
+  static async authenticate(username: string, password: string, sessionId?: string) {
+    if (sessionId) {
+      const cachedResult = await AuthCache.getAuthResult(sessionId);
+      if (cachedResult) {
+        console.log("Using cached authentication result");
+        if (cachedResult.status !== 200) {
+          throw new Error(cachedResult.msg || "Cached authentication failed");
+        }
+
+        const expiresAt = this.getTokenExpiration(cachedResult.accessToken);
+
+        return {
+          _id: cachedResult.user._id,
+          email: cachedResult.user.email,
+          firstname: cachedResult.user.firstName,
+          lastname: cachedResult.user.lastName,
+          accessToken: cachedResult.accessToken,
+          expiresAt,
+          sessionId, 
+        };
+      }
+    }
+
+    const response = await fetch(`${this.baseUrl}/login`, {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: username, password }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.log(errorData);
+      console.error("Authentication failed:", errorData);
       throw new Error(
-        errorData.msg || `Authentication failed: ${response.statusText}`
+        errorData.msg ||
+          errorData.message ||
+          `Authentication failed: ${response.statusText}`
       );
     }
 
     const data = await response.json();
-    console.log(data, "user data from backend");
+    console.log("Authentication successful");
 
-    // Extract refresh token from response cookies
-    const setCookieHeader = response.headers.get('set-cookie');
-    let refreshToken: string | undefined = undefined;
-    
-    console.log(setCookieHeader, 'set-cookie header');
-    
-    if (setCookieHeader) {
-      refreshToken = extractSessionToken(setCookieHeader);
-      if (!refreshToken) {
-        const jwtMatch = setCookieHeader.match(/([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)/);
-        refreshToken = jwtMatch ? jwtMatch[1] : undefined;
-      }
-      
-      console.log('Extracted refresh token:', refreshToken);
-    }
-
-    // Decode the access token to get expiration
     const expiresAt = this.getTokenExpiration(data.accessToken);
 
     return {
@@ -125,118 +85,9 @@ class AuthService {
       firstname: data.user.firstName,
       lastname: data.user.lastName,
       accessToken: data.accessToken,
-      refreshToken,
       expiresAt,
+      sessionId, // Include sessionId
     };
-  }
-
-  static async refresh(
-    refreshToken: string,
-    maxRetries = 3,
-    retryDelay = 1000
-  ): Promise<{
-    accessToken: string;
-    expiresAt: number;
-    refreshToken?: string;
-    user?: {
-      _id?: string;
-      id?: string;
-      username?: string;
-      email?: string;
-      firstName?: string;
-      lastName?: string;
-      firstname?: string;
-      lastname?: string;
-    };
-  } | null> {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const refreshTokenName = process.env.REFRESH_TOKEN_NAME || "authjs.session-token";
-        
-        const response = await fetch(`${this.baseUrl}/v1/auth/refresh`, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            cookie: `${refreshTokenName}=${refreshToken}`,
-          },
-        });
-
-        const res = await response.json()
-
-        console.log(res.msg, 'res message')
-        // console.log(response)
-
-        console.log(`Refresh attempt ${attempt}, status: ${response.status}`);
-
-        if (!response.ok) {
-          console.log(`Refresh attempt ${attempt} failed with status: ${response.status}`);
-
-          // Handle different error scenarios
-          if (response.status === 401) {
-            console.log("Session expired or invalid - redirecting to login");
-            return null;
-          }
-
-          if (response.status === 403) {
-            console.log("Token invalid/expired - attempting to get new token");
-            if (attempt === maxRetries) {
-              console.log("All refresh attempts failed - redirecting to login");
-              return null;
-            }
-            await new Promise((resolve) => setTimeout(resolve, retryDelay));
-            continue;
-          }
-
-          if (attempt === maxRetries) {
-            console.log("Max retries reached - refresh failed");
-            return null;
-          }
-          await new Promise((resolve) => setTimeout(resolve, retryDelay));
-          continue;
-        }
-
-        const data = await response.json();
-        console.log("Refresh response:", data);
-
-        // Extract new refresh token from response cookies if provided
-        const setCookieHeader = response.headers.get('set-cookie');
-        let newRefreshToken: string | undefined = refreshToken; // Keep existing if no new one provided
-        
-        if (setCookieHeader) {
-          // First try the extractSessionToken function
-          const extracted = extractSessionToken(setCookieHeader);
-          
-          // If that doesn't work, try to extract JWT directly
-          if (!extracted) {
-            const jwtMatch = setCookieHeader.match(/([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)/);
-            newRefreshToken = jwtMatch ? jwtMatch[1] : refreshToken;
-          } else {
-            newRefreshToken = extracted;
-          }
-        }
-
-        // Decode the new access token to get expiration
-        const expiresAt = this.getTokenExpiration(data.accessToken);
-
-        return {
-          accessToken: data.accessToken,
-          expiresAt,
-          refreshToken: newRefreshToken,
-          user: data.user,
-        };
-      } catch (error) {
-        console.error(
-          `Refresh token request failed on attempt ${attempt}:`,
-          error
-        );
-        if (attempt === maxRetries) {
-          return null;
-        }
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-      }
-    }
-    return null;
   }
 }
 
@@ -247,8 +98,8 @@ declare module "next-auth" {
     firstname: string;
     lastname: string;
     accessToken: string;
-    refreshToken?: string;
     expiresAt: number;
+    sessionId?: string; // Add sessionId
   }
 
   interface Session {
@@ -261,13 +112,14 @@ declare module "next-auth" {
     accessToken: string;
     expiresAt: number;
     expires: string;
-    error?: "RefreshTokenError"
+    sessionId?: string; // Add sessionId
+    error?: "RefreshTokenError" | "TokenExpiredError";
   }
 
   interface JWT {
     accessToken: string;
     expiresAt: number;
-    refresh_token?: string;
+    sessionId?: string; // Add sessionId
     user: {
       id: string;
       username: string;
@@ -285,10 +137,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
+        sessionId: { label: "Session ID", type: "text" },
       },
       async authorize(credentials) {
         try {
-          // Validate input with Zod
           const result = SignInType.safeParse(credentials);
           if (!result.success) {
             const errorMessage = result.error.errors
@@ -297,8 +149,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             throw new Error(errorMessage);
           }
 
-          const { username, password } = result.data;
-          const user = await AuthService.authenticate(username, password);
+          const { username, password, sessionId } = credentials as {
+            username: string;
+            password: string;
+            sessionId?: string;
+          };
+          const user = await AuthService.authenticate(username, password, sessionId);
 
           if (!user) {
             throw new Error("Invalid credentials");
@@ -310,17 +166,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             firstname: user.firstname,
             lastname: user.lastname,
             accessToken: user.accessToken,
-            refreshToken: user.refreshToken,
             expiresAt: user.expiresAt,
+            sessionId: user.sessionId, // Store sessionId
           };
         } catch (error) {
+          console.error("Authorization failed:", error);
           if (error instanceof Error) {
-            console.log(error.message, " from auth");
             throw new Error(error.message);
-          } else {
-            console.log("Unknown error from auth");
-            throw new Error("Invalid credentials");
           }
+          throw new InvalidLoginError("Authentication failed");
         }
       },
     }),
@@ -328,16 +182,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   pages: {
     signIn: "/sign-in",
+    signOut: "/sign-in",
   },
 
   callbacks: {
+    async signIn({ user, credentials }) {
+      const sessionId = (credentials as any)?.sessionId;
+      if (sessionId) {
+        await AuthCache.clearAuthResult(sessionId);
+        console.log(`Cleared Redis cache for sessionId: ${sessionId}`);
+      }
+      return true;
+    },
+
     async jwt({ token, user }) {
-      // First-time login, save the access_token, its expiry and the refresh_token
       if (user) {
+        console.log("JWT callback - storing tokens");
         return {
           accessToken: user.accessToken,
           expiresAt: user.expiresAt,
-          refresh_token: user.refreshToken,
+          sessionId: user.sessionId, // Store sessionId in JWT
           user: {
             id: user.id,
             username: user.username,
@@ -347,52 +211,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       }
 
-      
-      const bufferTime = 5 * 60 * 1000; 
-      const shouldRefresh =
-        typeof token.expiresAt === "number" &&
-        Date.now() >= token.expiresAt - bufferTime;
+      const bufferTime = 5 * 60 * 1000;
+      const shouldRefresh = Date.now() >= (token.expiresAt as number) - bufferTime;
 
       if (!shouldRefresh) return token;
 
-      // Token has expired, try to refresh it
-      if (!token.refresh_token) {
-        console.error("Missing refresh_token");
-        return {
-          ...token,
-          error: "RefreshTokenError",
-        };
-      }
-
-      try {
-        const refreshed = await AuthService.refresh(token.refresh_token as string);
-        
-        if (!refreshed) {
-          console.error("Refresh failed");
-          return {
-            ...token,
-            error: "RefreshTokenError",
-          };
-        }
-
-        return {
-          accessToken: refreshed.accessToken,
-          expiresAt: refreshed.expiresAt,
-          refresh_token: refreshed.refreshToken ?? token.refresh_token, 
-          user: token.user, 
-        };
-      } catch (error) {
-        console.error("JWT refresh error:", error);
-        return {
-          ...token,
-          error: "RefreshTokenError",
-        };
-      }
+      return {
+        ...token,
+        error: "TokenExpiredError",
+      };
     },
 
     async session({ session, token }): Promise<Session> {
-      // Handle refresh token errors
-      if (token?.error === "RefreshTokenError") {
+      if (token?.error === "TokenExpiredError") {
+        if (typeof token.sessionId === "string" && token.sessionId.length > 0) {
+          await AuthCache.clearAuthResult(token.sessionId); 
+        }
         return {
           ...session,
           user: {
@@ -404,84 +238,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           accessToken: "",
           expiresAt: 0,
           expires: new Date(0).toISOString(),
-          error: "RefreshTokenError",
-        };
-      }
-
-      if (
-        !token ||
-        !token?.accessToken ||
-        typeof token.accessToken !== "string"
-      ) {
-        console.log("Invalid token, returning minimal session");
-        return {
-          ...session,
-          user: {
-            ...session.user,
-            ...(typeof token?.user === "object" && token.user !== null
-              ? token.user
-              : {}),
-          },
-          accessToken: "",
-          expiresAt: 0,
-          expires: new Date(0).toISOString(),
-        };
-      }
-
-      // Check if token is expired
-      if (
-        typeof token.expiresAt === "number" &&
-        Date.now() >= token.expiresAt
-      ) {
-        console.log("Token expired, returning expired session");
-        return {
-          ...session,
-          user: {
-            _id: "",
-            username: "",
-            firstname: "",
-            lastname: "",
-          },
-          accessToken: "",
-          expiresAt: 0,
-          expires: new Date(0).toISOString(),
+          sessionId: typeof token.sessionId === "string" ? token.sessionId : undefined,
+          error: "TokenExpiredError",
         };
       }
 
       return {
         ...session,
         user: {
-          _id:
-            (token.user &&
-            typeof token.user === "object" &&
-            token.user !== null &&
-            "id" in token.user
-              ? (token.user as any).id
-              : "") || "",
-          username:
-            (token.user &&
-            typeof token.user === "object" &&
-            token.user !== null &&
-            "username" in token.user
-              ? (token.user as any).username
-              : "") || "",
-          firstname:
-            (token.user &&
-            typeof token.user === "object" &&
-            token.user !== null &&
-            "firstname" in token.user
-              ? (token.user as any).firstname
-              : "") || "",
-          lastname:
-            (token.user &&
-            typeof token.user === "object" &&
-            token.user !== null &&
-            "lastname" in token.user
-              ? (token.user as any).lastname
-              : "") || "",
+          _id: (token.user as any)?.id || "",
+          username: (token.user as any)?.username || "",
+          firstname: (token.user as any)?.firstname || "",
+          lastname: (token.user as any)?.lastname || "",
         },
-        accessToken: token.accessToken,
-        expiresAt: typeof token.expiresAt === "number" ? token.expiresAt : 0,
+        accessToken: (token.accessToken as string) || "",
+        expiresAt: (token.expiresAt as number) || 0,
+        sessionId: typeof token.sessionId === "string" ? token.sessionId : undefined,
         expires: session.expires,
       };
     },
@@ -489,20 +261,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   session: {
     strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60, // 7 days to match your refresh token lifetime
+    maxAge: 7 * 24 * 60 * 60,
   },
 
   events: {
-    async signOut() {
+    async signOut(event) {
+      const token = (event as { token?: JWT | null })?.token;
+      if (token && token.sessionId) {
+        await AuthCache.clearAuthResult(token.sessionId);
+        console.log(`Cleared Redis cache for sessionId: ${token.sessionId} during sign-out`);
+      }
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/auth/logout`, {
+        await fetch(`${process.env.NEXT_PUBLIC_URL}/api/auth/logout`, {
           method: "POST",
           credentials: "include",
         });
       } catch (error) {
-        console.error("Logout request failed:", error);
-        // Don't throw error as sign out should complete locally even if backend fails
+        console.error("Logout failed:", error);
       }
     },
   },
+
+  secret: process.env.AUTH_SECRET,
 });
+

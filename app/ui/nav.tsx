@@ -22,6 +22,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { handleNavigation } from "@/libs/navigate";
 import { useStoreInitialization } from "@/libs/cartPersist";
 import { useApiClient } from "@/libs/useApiClient";
+import { useSession } from "next-auth/react";
+import { useAuthRefresh } from "@/libs/auth/useAuthRefresh";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -39,7 +41,6 @@ const ads = [
     link: "/",
   },
 ];
-
 
 const iconTabs = [
   {
@@ -90,7 +91,16 @@ export default function Nav() {
     isServerInitialized,
     categories,
   } = useBoundStore();
-  const { get } = useApiClient()
+
+  const { data: session, status } = useSession();
+  const { refreshSession } = useAuthRefresh();
+
+  useEffect(() => {
+    if (session?.error === "RefreshTokenError") {
+      console.log("Refresh token expired - redirecting to login");
+      window.location.href = "/sign-in";
+    }
+  }, [session?.error]);
 
   useStoreInitialization();
 
@@ -104,17 +114,14 @@ export default function Nav() {
     return () => clearInterval(interval);
   }, [paused, ads.length]);
 
-
-
-   useEffect(() => {
+  useEffect(() => {
     // Only load if server initialization failed and we don't have data
     if (!isServerInitialized && (!products?.length || !categories?.length)) {
-      console.log('Server initialization failed, loading data client-side...');
+      console.log("Server initialization failed, loading data client-side...");
       useBoundStore.getState().loadProducts?.();
       useBoundStore.getState().loadCategories?.();
     }
   }, [isServerInitialized, products?.length, categories?.length]);
-
 
   useEffect(() => {
     if (filteritems.length > 0) {
@@ -134,7 +141,6 @@ export default function Nav() {
 
     return () => window.removeEventListener("resize", handleResize);
   }, [pathname]);
-
 
   useGSAP(() => {
     // Clean up any existing ScrollTriggers first
@@ -196,10 +202,12 @@ export default function Nav() {
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}>
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
               <Link
                 href={ads[currentAd].link}
-                className="font-avenir text-xs flex-none flex-nowrap">
+                className="font-avenir text-xs flex-none flex-nowrap"
+              >
                 {ads[currentAd].ad}
               </Link>
             </motion.div>
@@ -228,20 +236,27 @@ export default function Nav() {
             {
               "bg-white border-[1px] border-black/20": isSnap,
               "border-none": pathname.includes("/account"),
-              "bg-white border-[1px] border-black/20 ": pathname.includes("/product"),
-
+              "bg-white border-[1px] border-black/20 ":
+                pathname.includes("/shop"),
             }
-          )}>
+          )}
+        >
           <div
             className={`w-10 md:w-20 flex-none flex overflow-visible  relative gap-4 items-center ${
               !routeChange ? "pointer-events-auto" : "pointer-events-none"
-            }`}>
+            }`}
+          >
             <SearchIcon style="hidden md:flex  mt-4" />
           </div>
           <Link
             href="/"
-            onClick={(e) => handleNavigation(e, "/", router, setRouteChange, 200)}
-            className={`flex-none pt-3 w-24 h-[24px] ${!routeChange ? "pointer-events-auto" : "pointer-events-none"}`}>
+            onClick={(e) =>
+              handleNavigation(e, "/", router, setRouteChange, 200)
+            }
+            className={`flex-none pt-3 w-24 h-[24px] ${
+              !routeChange ? "pointer-events-auto" : "pointer-events-none"
+            }`}
+          >
             <Image
               src="/icons/text-logo.svg"
               width={150}
@@ -253,7 +268,8 @@ export default function Nav() {
           <div
             className={`flex md:gap-4 max-sm:mr-1 pt-3 ${
               !routeChange ? "pointer-events-auto" : "pointer-events-none"
-            }`}>
+            }`}
+          >
             {iconTabs.map((icon, index) => (
               <div key={icon.name} className="relative">
                 {icon.name !== "user" ? (
@@ -266,10 +282,13 @@ export default function Nav() {
                     className={cn("md:flex hidden cursor-pointer", {
                       flex: index === 0,
                     })}
-                    key={index}>
+                    key={index}
+                  >
                     <Image
                       src={
-                        icon.name === "bookmark" && bookMarks.length > 0 ? icon.src_w : icon.src
+                        icon.name === "bookmark" && bookMarks.length > 0
+                          ? icon.src_w
+                          : icon.src
                       }
                       width={22}
                       height={22}
@@ -289,7 +308,8 @@ export default function Nav() {
                     className={cn("md:flex hidden", {
                       flex: index === 0,
                     })}
-                    key={index}>
+                    key={index}
+                  >
                     <Image
                       src={icon.src}
                       width={22}
@@ -311,15 +331,23 @@ export default function Nav() {
           {
             "z-[98]": modalDisplay === "menu",
           }
-        )}>
+        )}
+      >
         <Icon style="pt-[3px]" name="menu" onToggle={() => openModal("menu")} />
-          {pathname === "/product" && !modal &&  
+        {pathname === "/shop" && !modal && (
           <div
-           onClick={()=>filterState(!filter)} className="hidden md:flex md:ml-30 lg:ml-36 py-[1px]  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1">
+            onClick={() => filterState(!filter)}
+            className="hidden md:flex md:ml-30 lg:ml-36 py-[1px]  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1"
+          >
             <p>Filter</p>
-            <Image src="/icons/filter-w.svg" width={16} height={16} alt="filter"/>
-          </div> }
-
+            <Image
+              src="/icons/filter-w.svg"
+              width={16}
+              height={16}
+              alt="filter"
+            />
+          </div>
+        )}
       </div>
       <Modal />
       <Search />

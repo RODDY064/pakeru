@@ -24,7 +24,7 @@ export default function YourCart() {
   })
 
   const handleLink = (e:any)=>{
-     handleNavigation(e, "/product", router, setRouteChange, 200)
+     handleNavigation(e, "/shop", router, setRouteChange, 200)
   }
 
   const handlePayment = (e:any)=>{

@@ -31,9 +31,9 @@ function FulfilledContent() {
     setOrderInView,
     loadStoreProducts,
     storeProducts,
-    setPaginationConfig,
-    updatePaginationFromAPI,
-    getPaginatedSlice,
+    configure,
+    updateFromAPI,
+    slice,
     pagination,
   } = useBoundStore();
 
@@ -53,24 +53,24 @@ function FulfilledContent() {
   }, [loadOrders, loadStoreProducts]);
 
   useEffect(() => {
-    setPaginationConfig({
+    configure({
       dataKey: "fulfilledOrders",
       loadFunction: "loadOrders",
-      itemsPerPage: 10,
-      backendItemsPerPage: 1250,
-      apiGet: get,
+      backendSize: 25,
+      size:10,
+      apiClient: get,
     });
   }, []);
 
   useEffect(() => {
-    updatePaginationFromAPI({
-      totalItems: fulfilledOrders?.length,
-      currentBackendPage: 1,
+    updateFromAPI({
+      total: fulfilledOrders?.length,
+      page: 1,
     });
   }, [fulfilledOrders]);
 
   useEffect(() => {
-    const sliceData = getPaginatedSlice(fulfilledOrders);
+    const sliceData = slice(fulfilledOrders);
     setCurrentOrders(sliceData);
   }, [pagination, fulfilledOrders]);
 

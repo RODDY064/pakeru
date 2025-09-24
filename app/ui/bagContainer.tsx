@@ -39,7 +39,7 @@ export default function BagContainer() {
 
   const handleLink = (e: any) => {
     closeModal();
-    handleNavigation(e, "/product", router, setRouteChange, 200);
+    handleNavigation(e, "/shop", router, setRouteChange, 200);
   };
 
 

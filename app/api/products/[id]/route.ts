@@ -42,8 +42,7 @@ export async function DELETE(
     });
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`,
-      {
+      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`,{
         method: "DELETE",
         headers:incomingHeaders,
         body: JSON.stringify(body),

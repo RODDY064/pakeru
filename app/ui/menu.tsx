@@ -127,7 +127,7 @@ export default function Menu() {
   }, [activeMenuItem, handleItemTransition]);
 
   const handlePush = (category: string) => {
-    router.push(`/product?category=${category.toLocaleLowerCase()}`);
+    router.push(`/shop?category=${category.toLocaleLowerCase()}`);
     closeModal()
   };
 
@@ -228,8 +228,7 @@ export default function Menu() {
                   {
                     visible: !isStart,
                   }
-                )}
-              >
+                )}>
                 <Image
                   src="/icons/arrow.svg"
                   width={18}
@@ -478,7 +477,7 @@ export default function Menu() {
                     onClick={() => toggleMenuItem(item.category)}
                     key={`menu-${item.category}-${index}`}
                     className={cn(
-                      "font-avenir w-fit text-lg cursor-pointer relative z-20 transition-colors duration-200",
+                      "font-avenir w-fit text-md hover:text-black/60 cursor-pointer relative text-black z-20 transition-colors duration-200",
                       {
                         "text-black/30": item.isActive,
                       }
@@ -496,6 +495,16 @@ export default function Menu() {
                     />
                   </motion.div>
                 ))}
+                <motion.div 
+                animate={{ opacity:1, y:0}}
+                initial={{ opacity:0, y:20}}
+                transition={{ type:"tween", delay:0.5}}
+                className="mt-6">
+                    <Link onClick={closeModal} href="/about-us">
+                    <p className="font-avenir my-2 uppercase text-md cursor-pointer hover:text-black text-blue-600">ABOUT US</p></Link>
+                   <Link onClick={closeModal} href="/faqs">
+                    <p className="font-avenir uppercase text-md cursor-pointer  hover:text-black  text-blue-600">FAQs</p></Link>
+                </motion.div>
               </>
             )}
           </div>

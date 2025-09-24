@@ -64,7 +64,7 @@ export default function Home() {
       <Images
         containerHeight={containerHeight}
         action={(e: any) =>
-          handleNavigation(e, "/product", router, setRouteChange, 200)
+          handleNavigation(e, "/shop", router, setRouteChange, 200)
         }
       />
       <div className="w-full mt-[1px]  pt-4 bg-white  ">
@@ -198,7 +198,7 @@ const Slider = ({ containerHeight }: { containerHeight:any }) => {
           {slider.map((product) => (
             <div
               key={product._id}
-              onClick={() => router.push(`/product?category=${product.title.toLocaleLowerCase()}`)}
+              onClick={() => router.push(`/shop?category=${product.title.toLocaleLowerCase()}`)}
               className={cn(
                 "w-[calc(90vw)] slider-element md:w-[calc(70vw)] card h-[350px]  flex-shrink-0  relative lg:h-[calc(35vw)]  flex-none  flex items-center justify-center overflow-hidden  ",
                 {

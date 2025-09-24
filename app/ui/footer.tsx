@@ -64,15 +64,14 @@ export default function Footer() {
                 <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Shipping & Returns
                 </li>
+                <Link href="/account">
                 <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Order Tracking
-                </li>
-                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Size Guide
-                </li>
+                </li></Link>
+                <Link href="/faqs">
                 <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   FAQs
-                </li>
+                </li></Link>
               </ul>
             </div>
 

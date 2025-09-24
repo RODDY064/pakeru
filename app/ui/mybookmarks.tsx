@@ -21,7 +21,7 @@ export default function MyBookmarks() {
             <p className="font-avenir text-lg text-black/70 text-center text-balance">
               You haven’t saved any products yet
             </p>
-            <Button word="GO TO SHOP" action={() => router.push("/product")} />
+            <Button word="GO TO SHOP" action={() => router.push("/shop")} />
           </div>
         ) : (
           <>

@@ -1,54 +1,52 @@
 import { NextResponse } from "next/server";
-
-const Refresh_Token_Name = process.env.REFRESH_TOKEN_NAME
-
+import { AuthCache } from "@/libs/redis";
+import { v4 as uuidv4 } from "uuid";
+import { AuthService } from "@/auth";
 
 export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    
-    const backendResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/auth/login`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      }
-    );
+  const body = await request.json();
+  const sessionId = uuidv4();
 
-    const result = await backendResponse.json();
-    const response = NextResponse.json(result, {
-      status: backendResponse.status,
-    });
+  const backendResponse = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/v1/auth/login`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(body),
+    }
+  );
 
-    // cookie forwarding - handle Set-Cookie properly
-    const cookieHeader = backendResponse.headers.get("set-cookie");
-    if (cookieHeader) {
+  const result = await backendResponse.json();
 
-      console.log(cookieHeader,"cookie header")
-      // Parse and set cookies with appropriate settings for localhost
-      const cookies = cookieHeader.split(/,(?=\s*\w+\s*=)/).map(c => c.trim());
-      
-      for (const cookie of cookies) {
-        const [nameValue, ...attributes] = cookie.split(";");
+  await AuthCache.setAuthResult(sessionId, {
+    ...result,
+    status: backendResponse.status,
+  }, 30); // Use 30-second TTL
+
+  const response = NextResponse.json({ ...result, sessionId }, {
+    status: backendResponse.status,
+  });
+
+  const cookieHeader = backendResponse.headers.get("set-cookie");
+  if (cookieHeader) {
+    cookieHeader
+      .split(/,(?=\s*\w+\s*=)/)
+      .forEach((cookie) => {
+        const [nameValue] = cookie.split(";");
         const [name, value] = nameValue.split("=");
-        
+
         if (name && value) {
           response.cookies.set(name.trim(), value.trim(), {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             path: "/",
+            expires: new Date(AuthService.getTokenExpiration(result.accessToken)),
           });
         }
-      }
-    }
-
-    return response;
-  } catch (error: any) {
-    return NextResponse.json(
-      { message: "Authentication failed", error: error.message },
-      { status: 500 }
-    );
+      });
   }
+
+  return response;
 }

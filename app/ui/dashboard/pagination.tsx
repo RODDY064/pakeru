@@ -15,11 +15,14 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
 
   const {
     pagination,
-    setCurrentPage,
-    setItemsPerPage,
-    goToNextPage,
-    goToPrevPage,
+    setPage,
+    setSize,
+    next,
+    prev,
+    computed
   } = useBoundStore();
+
+  const { totalPages } = computed()
 
   useEffect(() => {
     // console.log(pagination, "pagination");
@@ -29,22 +32,16 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
 
   const handlePageChange = React.useCallback(
     (page: number) => {
-      setCurrentPage(page);
+      setPage(page);
     },
-    [setCurrentPage]
+    [setPage]
   );
 
-  const handleNextPage = async () => {
-    goToNextPage();
-  };
 
-  const handlePrevPage = async () => {
-    await goToPrevPage();
-  };
 
   // Calculate visible page numbers
   const getVisiblePages = (maxVisiblePages: number = 3) => {
-  const { totalPages, currentPage } = pagination;
+  const { total, page, } = pagination;
   const pages: (number | string)[] = [];
 
   if (totalPages <= 0) return pages;
@@ -58,19 +55,19 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
   }
 
   const half = Math.floor(maxVisiblePages / 2);
-  let windowStart = Math.max(2, currentPage - half);
-  let windowEnd = Math.min(totalPages - 1, currentPage + half);
+  let windowStart = Math.max(2, page- half);
+  let windowEnd = Math.min(total - 1, page + half);
 
   // Adjust if near the start
-  if (currentPage <= half + 1) {
+  if (page<= half + 1) {
     windowStart = 2;
     windowEnd = maxVisiblePages;
   }
 
   // Adjust if near the end
-  if (currentPage >= totalPages - half) {
-    windowStart = totalPages - maxVisiblePages + 1;
-    windowEnd = totalPages - 1;
+  if (page>= total - half) {
+    windowStart = total - maxVisiblePages + 1;
+    windowEnd = total - 1;
   }
 
   // Always show first page
@@ -87,7 +84,7 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
   }
 
   // Right ellipsis
-  if (windowEnd < totalPages - 1) {
+  if (windowEnd < total - 1) {
     pages.push("...");
   }
 
@@ -97,10 +94,6 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
   return pages;
 };
 
-
-  const handlePageSizeChange = (newSize: number) => {
-    setItemsPerPage(newSize);
-  };
 
   const handlePageClick = (page: number | string) => {
     if (typeof page === "number") {
@@ -113,7 +106,7 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
 
   return (
     <div className="w-full h-fit flex items-center justify-between pt-4 px-10 gap-4 border-t border-black/10">
-    <p className="font-avenir font-[500] text-md text-black/50">Showing: {pagination.currentPage}/{pagination.totalPages} </p>
+    <p className="font-avenir font-[500] text-md text-black/50">Showing: {pagination.page}/{pagination.total} </p>
      <div className="flex items-center gap-4 ">
        {showPageSize && (
         <div className="h-12 border border-black/15 items-center flex rounded-xl">
@@ -123,8 +116,8 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
           <div className="px-3 pl-4 border-l border-black/15 h-full flex items-center justify-center">
             <div className="flex items-center gap-2 cursor-pointer">
               <select
-                value={pagination.itemsPerPage}
-                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                value={pagination.size}
+                onChange={(e) => setPage(Number(e.target.value))}
                 className="font-avenir font-[500] text-md appearance-none h-full focus:outline-none cursor-pointer">
                 {pageSizeOptions.map((size) => (
                   <option key={size} value={size}>
@@ -145,7 +138,7 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
       )}
       <div className="h-12 border  border-black/15 flex overflow-hidden rounded-xl items-center justify-center cursor-pointer">
         <div 
-        onClick={handlePrevPage}
+        onClick={prev}
         className="flex items-center  hover:bg-black/10  justify-center px-4 gap-2 border-r h-full border-black/15">
           <Image
             src="/icons/arrow.svg"
@@ -165,8 +158,7 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
                 return (
                   <div
                     key={`ellipsis-${index}`}
-                    className="h-7.5 rounded-md flex items-center justify-center"
-                  >
+                    className="h-7.5 rounded-md flex items-center justify-center">
                     <Image
                       src="/icons/dots.svg"
                       width={15}
@@ -178,7 +170,7 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
                 );
               }
 
-              const isCurrentPage = page === pagination.currentPage;
+              const isCurrentPage = page === pagination.page;
 
               return (
                 <button
@@ -186,8 +178,7 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
                   className={`size-7.5 rounded-md border border-black/25 flex items-center justify-center transition-all cursor-pointer  ${
                     isCurrentPage ? "bg-black/30 " : "bg-black/5 "
                   }`}
-                  onClick={() => handlePageClick(page)}
-                >
+                  onClick={() => handlePageClick(page)}>
                   <p className="font-avenir text-sm font-[500]">{page}</p>
                 </button>
               );
@@ -195,7 +186,7 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
           </div>
         </div>
         <div
-          onClick={handleNextPage}
+          onClick={next}
           className="flex hover:bg-black/10 h-full items-center justify-center px-4 border-l border-black/15 gap-2">
           <p>Next</p>
           <Image
