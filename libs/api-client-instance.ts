@@ -24,6 +24,15 @@ class ApiError extends Error {
   }
 }
 
+function isFormData(value: any): value is FormData {
+  return (
+    typeof FormData !== "undefined" &&
+    value instanceof FormData
+  );
+}
+
+
+
 class AuthError extends Error {
   constructor(
     message: string,
@@ -48,9 +57,13 @@ class ApiClient {
     }
     
     const url = useBaseUrl ? `${baseUrl}/v1${endpoint}` : `/api${endpoint}`;
+
+    console.log(body instanceof FormData,'body type')
+
+    const isFD = isFormData(body);
     
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...(isFD ? {} : { "Content-Type": "application/json" }),
       ...((fetchOptions.headers as Record<string, string>) ?? {})
     };
 
@@ -63,11 +76,13 @@ class ApiClient {
       headers.Authorization = `Bearer ${session.accessToken}`;
     }
 
+    console.log(body, 'body')
+
     const requestConfig: RequestInit = {
       ...fetchOptions,
       headers,
       signal: AbortSignal.timeout(30000),
-      ...(body && { body: JSON.stringify(body) })
+      body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined
     };
 
     try {

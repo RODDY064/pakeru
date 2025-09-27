@@ -19,8 +19,8 @@ export default function StatusBadge({
   statuses,
   className,
 }: StatusBadgeProps) {
-  const normalizedStatus = status.toLowerCase();
-  const normalizedStatuses = statuses.map((s) => s.toLowerCase());
+  const normalizedStatus = status?.toLowerCase();
+  const normalizedStatuses = statuses?.map((s) => s.toLowerCase());
 
   const index = normalizedStatuses.indexOf(normalizedStatus);
   const style = colorClasses[index] ?? colorClasses[colorClasses.length - 1];

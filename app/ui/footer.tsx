@@ -59,29 +59,37 @@ export default function Footer() {
 
             {/* Customer Service */}
             <div className="text-black/70 ">
-              <p className="text-sm md:text-md font-[400] font-avenir">CUSTOMER SERVICE</p>
+              <p className="text-sm md:text-md font-[400] font-avenir">
+                CUSTOMER SERVICE
+              </p>
               <ul className="mt-3 list-disc ml-4 flex flex-col gap-2">
                 <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Shipping & Returns
                 </li>
                 <Link href="/account">
-                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Order Tracking
-                </li></Link>
+                  <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                    Order Tracking
+                  </li>
+                </Link>
                 <Link href="/faqs">
-                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  FAQs
-                </li></Link>
+                  <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                    FAQs
+                  </li>
+                </Link>
               </ul>
             </div>
 
             {/* Company Info */}
             <div className="text-black/70">
-              <p className="text-sm md:text-md font-[400] font-avenir">COMPANY</p>
+              <p className="text-sm md:text-md font-[400] font-avenir">
+                COMPANY
+              </p>
               <ul className="mt-3 list-disc ml-4 flex flex-col gap-2">
-                <li className="w-fit text-sm md:text-md font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  About Us
-                </li>
+                <Link href="/about-us">
+                  <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                    About us
+                  </li>
+                </Link>
                 <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Privacy Policy
                 </li>
@@ -100,24 +108,17 @@ export default function Footer() {
             <p className="text-sm font-[400] text-black/70 font-avenir">
               GET IN TOUCH
             </p>
-            <div className="my-4 mt-2 w-full flex items-center justify-center gap-2">
-              <div className="w-[70%]">
-                <Input
-                  label=""
-                  textStyle="hidden"
-                  register={register}
-                  name="phone"
-                  placeH="Get in touch with us"
-                  type="email"
-                  image="/icons/contact.svg"
-                  imageW={24}
-                  imageH={24}
-                  style="md:text-md text-sm"
+            <div className="my-4 mt-2 w-full flex gap-2">
+              <Link href="mailto:pakeru@gmail.com" className="w-full">
+              <div className="w-[70%] h-12 bg-black flex gap-2 items-center justify-center rounded-md cursor-pointer">
+                <Image
+                  src="/icons/contacts.svg"
+                  width={24}
+                  height={24}
+                  alt="contacts"
                 />
-              </div>
-              <div className="w-[30%]">
-                <Submit submitType="in-touch" type="idle" subStyle="mt-1" />
-              </div>
+                <p className="text-white font-avenir pt-[3px]">Email Us</p>
+              </div></Link>
             </div>
           </div>
           <div className="flex flex-col md:flex-row justify-between md:items-center">
@@ -145,10 +146,23 @@ export default function Footer() {
         <Link
           href="/"
           onClick={(e) => handleNavigation(e, "/", router, setRouteChange, 200)}
-          className="w-fit " >
+          className="w-fit "
+        >
           <div className=" w-fit h-12 overflow-hidden flex my-2 items-center gap-1 cursor-pointer ">
-            <Image src="/icons/logo.svg" width={38} height={24} alt="logo" className="hidden md:flex" />
-            <Image src="/icons/logo.svg" width={24} height={24} alt="logo"  className="md:hidden"/>
+            <Image
+              src="/icons/logo.svg"
+              width={38}
+              height={24}
+              alt="logo"
+              className="hidden md:flex"
+            />
+            <Image
+              src="/icons/logo.svg"
+              width={24}
+              height={24}
+              alt="logo"
+              className="md:hidden"
+            />
             <Image
               src="/icons/logoText.svg"
               width={150}

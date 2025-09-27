@@ -81,8 +81,7 @@ export default function ColorStockAndSizes ({
           <select
             value={selectedSize}
             onChange={(e) => setSelectedSize(e.target.value)}
-            className="w-full appearance-none focus:outline-none px-2"
-          >
+            className="w-full appearance-none focus:outline-none px-2">
             <option value="">Select size to add</option>
             {availableSizes
               .filter((size) => !activeColor.sizes.includes(size))

@@ -57,16 +57,38 @@ export type DateFilter = {
   to?: string;
 };
 
+export type DeliveryStatusFilter =
+  | "All"
+  | "Pending"
+  | "Delivered"
+  | "Shipped"
+  | "Cancelled";
+
+export type PaymentStatusFilter = "All" | "Completed" | "Pending" | "Cancelled";
+
+export type OrderFiltersTypes = {
+  search: string;
+  deliveryStatus: DeliveryStatusFilter;
+  type: "fulfilled" | "unfulfilled" | null;
+  paymentStatus: PaymentStatusFilter;
+  dateFilter: DateFilter;
+  sortDate: "ascending" | "descending";
+};
+
 export type OrdersStore = {
   fulfilledOrders: OrdersData[];
   unfulfilledOrders: OrdersData[];
+  filteredOrders: OrdersData[];
   userOrders: OrdersData[];
   orderInView: OrdersData | null;
   showOrderModal: boolean;
-  search: string;
-  activeFilter: string;
-  dateFilter: DateFilter;
-  sortDate: "ascending" | "descending";
+
+  OrderFilters: OrderFiltersTypes;
+
+  // search: string;
+  // activeFilter: string;
+  // dateFilter: DateFilter;
+
   fulfilledState: "idle" | "loading" | "success" | "failed";
   unfulfilledState: "idle" | "loading" | "success" | "failed";
   singleOrderState: "idle" | "loading" | "success" | "failed";
@@ -76,6 +98,7 @@ export type OrdersStore = {
     unfulfilled: string;
     single: string;
   };
+
   setOrderError: (
     type: keyof OrdersStore["ordersError"],
     error: string
@@ -87,10 +110,17 @@ export type OrdersStore = {
   setSingleOrderState: (state: OrdersStore["singleOrderState"]) => void;
   setOrderModal: (show?: boolean) => void;
   setOrderInView: (order: OrdersData | null) => void;
-  setSearch: (search: string) => void;
-  setActiveFilter: (filter: string) => void;
+
+  setDeliveryStatusFilter: (status: DeliveryStatusFilter) => void;
+  setPaymentStatusFilter: (status: PaymentStatusFilter) => void;
+  setOrderSearch: (search: string) => void;
+  setOrderTypeFilter: (type: "fulfilled" | "unfulfilled" | null) => void;
+  applyOrderFilters: () => void;
+
   setDateFilter: (filter: DateFilter) => void;
   toggleDateSorting: () => void;
+  resetOrdersFilters: () => void;
+
   loadOrders: (
     type: "fulfilled" | "unfulfilled",
     options?: {
@@ -111,10 +141,10 @@ export type OrdersStore = {
   updateOrder: (
     orderId: string,
     updates: Partial<OrdersData>,
-    options?: { 
-      patch?: ReturnType<typeof useApiClient>["patch"],
-      get?: ReturnType<typeof useApiClient>["get"] 
-     }
+    options?: {
+      patch?: ReturnType<typeof useApiClient>["patch"];
+      get?: ReturnType<typeof useApiClient>["get"];
+    }
   ) => Promise<OrdersData>;
   refundOrder: (orderId: string) => Promise<void>;
   getFilteredOrders: (type: "fulfilled" | "unfulfilled") => OrdersData[];
@@ -180,43 +210,69 @@ export function computeOrdersStats(orders: OrdersData[]): OrdersStats {
 
 export function filterOrders(
   orders: OrdersData[],
-  search: string,
-  activeFilter: string,
-  dateFilter: DateFilter
+  filters: OrderFiltersTypes
 ): OrdersData[] {
   return orders.filter((order) => {
-    if (search.trim()) {
-      const searchLower = search.toLowerCase();
+    // Search filter (by ID, customer name, or email)
+    if (filters.search.trim()) {
+      const searchLower = filters.search.toLowerCase();
       const customerName =
         `${order.user.firstname} ${order.user.lastname}`.toLowerCase();
+      const customerEmail = order.user.email.toLowerCase();
+
       const searchMatch =
         customerName.includes(searchLower) ||
+        customerEmail.includes(searchLower) ||
         order._id.toLowerCase().includes(searchLower) ||
-        order.IDTrim?.toLowerCase().includes(searchLower) ||
-        order.paymentStatus.toLowerCase().includes(searchLower) ||
-        order.deliveryStatus.toLowerCase().includes(searchLower);
+        order.IDTrim?.toLowerCase().includes(searchLower);
 
       if (!searchMatch) return false;
     }
 
-    if (activeFilter !== "All") {
-      const filterLower = activeFilter.toLowerCase();
-      const statusMatch =
-        order.paymentStatus.toLowerCase() === filterLower ||
-        order.deliveryStatus.toLowerCase() === filterLower ||
-        order.fulfilledStatus.toLowerCase() === filterLower;
+    // Delivery status filter
+    if (filters.deliveryStatus !== "All") {
+      const statusMap: Record<DeliveryStatusFilter, string> = {
+        All: "all",
+        Pending: "pending",
+        Delivered: "delivered",
+        Shipped: "shipped",
+        Cancelled: "cancelled",
+      };
 
-      if (!statusMatch) return false;
+      if (order.deliveryStatus !== statusMap[filters.deliveryStatus]) {
+        return false;
+      }
     }
 
-    if (dateFilter.from || dateFilter.to) {
+    // Payment status filter
+    if (filters.paymentStatus !== "All") {
+      const statusMap: Record<PaymentStatusFilter, string> = {
+        All: "",
+        Completed: "completed",
+        Pending: "pending",
+        Cancelled: "cancelled",
+      };
+
+      if (order.paymentStatus !== statusMap[filters.paymentStatus]) {
+        return false;
+      }
+    }
+
+    // Date range filter
+    if (filters.dateFilter.from || filters.dateFilter.to) {
       const orderDate = new Date(order.date);
 
-      if (dateFilter.from && orderDate < new Date(dateFilter.from)) {
+      if (
+        filters.dateFilter.from &&
+        orderDate < new Date(filters.dateFilter.from)
+      ) {
         return false;
       }
 
-      if (dateFilter.to && orderDate > new Date(dateFilter.to)) {
+      if (
+        filters.dateFilter.to &&
+        orderDate > new Date(filters.dateFilter.to)
+      ) {
         return false;
       }
     }
@@ -245,12 +301,16 @@ const generateTrimmedId = (fullId: string): string => {
 };
 
 export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
-  const deliveredAt = apiOrder.deliveryDate ? new Date(apiOrder.deliveryDate) : null;
-  const isValidDate = deliveredAt && !isNaN(deliveredAt.getTime());
+  const createdAt = apiOrder.createdAt ? new Date(apiOrder.createdAt) : null;
+  const deliveredAt = apiOrder.deliveryDate
+    ? new Date(apiOrder.deliveryDate)
+    : null;
+  const isDeleiveredDateValid = deliveredAt && !isNaN(deliveredAt.getTime());
+  const isCreatedAtValid = createdAt && !isNaN(createdAt.getTime());
 
-  const date = isValidDate ? deliveredAt.toISOString().split("T")[0] : "";
-  const time = isValidDate
-    ? deliveredAt.toLocaleTimeString("en-US", {
+  const date = isCreatedAtValid ? createdAt.toISOString().split("T")[0] : "";
+  const time = isCreatedAtValid
+    ? createdAt.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
@@ -260,7 +320,7 @@ export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
   let shipmentDeadline: Date | null = null;
   let daysLeft: number = 0;
 
-  if (isValidDate && deliveredAt) {
+  if (isDeleiveredDateValid && deliveredAt) {
     shipmentDeadline = new Date(deliveredAt);
     shipmentDeadline.setDate(deliveredAt.getDate());
     const today = new Date();
@@ -355,7 +415,7 @@ const apiService = {
     try {
       if (!orderId) throw new Error("Order ID not provided");
 
-      console.log(updates)
+      console.log(updates, "updates");
 
       const response = await patch<OrdersData[]>(
         `/orders/id/${orderId}`,
@@ -415,22 +475,104 @@ export const useOrdersStore: StateCreator<
 > = (set, get) => ({
   fulfilledOrders: [],
   unfulfilledOrders: [],
+  filteredOrders: [],
   userOrders: [],
   orderInView: null,
   showOrderModal: false,
-  search: "",
-  activeFilter: "All",
-  dateFilter: {},
-  sortDate: "descending",
+
+  OrderFilters: {
+    search: "",
+    deliveryStatus: "All",
+    type: null,
+    paymentStatus: "All",
+    dateFilter: {},
+    sortDate: "descending",
+  },
+
   fulfilledState: "idle",
   unfulfilledState: "idle",
   singleOrderState: "idle",
   userOrdersState: "idle",
+
   ordersError: {
     fulfilled: "",
     unfulfilled: "",
     single: "",
   },
+
+  setOrderSearch: (search) => {
+    set((state) => {
+      state.OrderFilters.search = search;
+    });
+    get().applyOrderFilters();
+  },
+
+  setDeliveryStatusFilter: (status) => {
+    set((state) => {
+      state.OrderFilters.deliveryStatus = status;
+    });
+    get().applyOrderFilters();
+  },
+
+  setPaymentStatusFilter: (status) => {
+    set((state) => {
+      state.OrderFilters.paymentStatus = status;
+    });
+    get().applyOrderFilters();
+  },
+
+  setDateFilter: (filter) => {
+    set((state) => {
+      state.OrderFilters.dateFilter = {
+        ...state.OrderFilters.dateFilter,
+        ...filter,
+      };
+    });
+    get().applyOrderFilters();
+  },
+
+  setOrderTypeFilter: (type: "fulfilled" | "unfulfilled" | null) => {
+    set((state) => {
+      state.OrderFilters.type = type;
+    });
+    get().applyOrderFilters();
+  },
+
+  resetOrdersFilters: () => {
+    set((state) => {
+      state.OrderFilters = {
+        search: "",
+        deliveryStatus: "All",
+        paymentStatus: "All",
+        type: null,
+        dateFilter: {},
+        sortDate: "descending",
+      };
+    });
+  },
+
+  applyOrderFilters: () => {
+    const { OrderFilters, fulfilledOrders, unfulfilledOrders } = get();
+
+    let ordersToFilter: OrdersData[] = [];
+
+    if (OrderFilters.type === "fulfilled") {
+      ordersToFilter = fulfilledOrders;
+    } else if (OrderFilters.type === "unfulfilled") {
+      ordersToFilter = unfulfilledOrders;
+    }
+
+    const filteredOrders = filterOrders(ordersToFilter, OrderFilters);
+    const sortedOrders = sortOrdersByDate(
+      filteredOrders,
+      OrderFilters.sortDate
+    );
+
+    set((state) => {
+      state.filteredOrders = sortedOrders;
+    });
+  },
+
   setOrderError: (type, error) => {
     set((state) => {
       state.ordersError[type] = error;
@@ -472,27 +614,16 @@ export const useOrdersStore: StateCreator<
       state.orderInView = order;
     });
   },
-  setSearch: (search) => {
-    set((state) => {
-      state.search = search;
-    });
-  },
-  setActiveFilter: (filter) => {
-    set((state) => {
-      state.activeFilter = filter;
-    });
-  },
-  setDateFilter: (filter) => {
-    set((state) => {
-      state.dateFilter = filter;
-    });
-  },
+
   toggleDateSorting: () => {
     set((state) => {
-      state.sortDate =
-        state.sortDate === "ascending" ? "descending" : "ascending";
+      const newSort =
+        state.OrderFilters.sortDate === "ascending"
+          ? "descending"
+          : "ascending";
     });
   },
+
   loadOrders: async (type, options = {}) => {
     const { setOrdersState, setOrderError } = get();
     const { force = false, limit = 25, get: apiGet } = options;
@@ -524,6 +655,7 @@ export const useOrdersStore: StateCreator<
       });
 
       setOrdersState(type, "success");
+      get().applyOrderFilters();
     } catch (error) {
       setOrdersState(type, "failed");
       setOrderError(
@@ -610,18 +742,17 @@ export const useOrdersStore: StateCreator<
     }
   },
   updateOrder: async (orderId, updates, options = {}) => {
-     const { loadStoreProducts } = get();
+    const { patch: apiPatch } = options;
+
+    if (!apiPatch) {
+      throw new Error("API patch function is required");
+    }
+
+    const { setSingleOrderState, setOrderError } = get();
+
+    setSingleOrderState("loading");
 
     const updatePromise = (async () => {
-      const { setSingleOrderState, setOrderError } = get();
-      const { patch: apiPatch, get:apiGet } = options;
-
-      if (!apiPatch) {
-        throw new Error("API patch function is required");
-      }
-
-      setSingleOrderState("loading");
-
       try {
         const updatedOrder = await apiService.updateOrderStatus(
           orderId,
@@ -630,42 +761,58 @@ export const useOrdersStore: StateCreator<
         );
 
         set((state) => {
-          const updateOrderInArray = (orders: OrdersData[]) => {
-            const index = orders.findIndex((o) => o._id === orderId);
-            if (index !== -1) {
-              orders[index] = updatedOrder;
+          // Helper function to update order in array
+            interface UpdateOrderInArray {
+            (orders: OrdersData[]): boolean;
             }
-          };
 
-          updateOrderInArray(state.unfulfilledOrders);
-          updateOrderInArray(state.fulfilledOrders); // Also update fulfilled orders array
+            const updateOrderInArray: UpdateOrderInArray = (orders: OrdersData[]): boolean => {
+            const index: number = orders.findIndex((o: OrdersData) => o._id === orderId);
+            if (index !== -1) {
+              orders[index] = { ...orders[index], ...updatedOrder };
+            }
+            return index !== -1;
+            };
 
+          // Update in both arrays first
+          let foundInUnfulfilled = updateOrderInArray(state.unfulfilledOrders);
+          let foundInFulfilled = updateOrderInArray(state.fulfilledOrders);
+
+          // Update orderInView if it matches
           if (state.orderInView?._id === orderId) {
-            state.orderInView = updatedOrder;
+            state.orderInView = { ...state.orderInView, ...updatedOrder };
           }
 
           // Handle fulfillment status changes (moving between arrays)
-          if (updates.fulfilledStatus) {
+          if (updates.fulfilledStatus !== undefined) {
             const isBeingFulfilled = updates.fulfilledStatus === "fulfilled";
-            const sourceArray = isBeingFulfilled
-              ? state.unfulfilledOrders
-              : state.fulfilledOrders;
-            const targetArray = isBeingFulfilled
-              ? state.fulfilledOrders
-              : state.unfulfilledOrders;
 
-            const orderIndex = sourceArray.findIndex((o) => o._id === orderId);
-            if (orderIndex !== -1) {
-              const [order] = sourceArray.splice(orderIndex, 1);
-              targetArray.push({ ...order, ...updates });
+            if (isBeingFulfilled && foundInUnfulfilled) {
+              // Move from unfulfilled to fulfilled
+              const orderIndex = state.unfulfilledOrders.findIndex(
+                (o) => o._id === orderId
+              );
+              if (orderIndex !== -1) {
+                const [order] = state.unfulfilledOrders.splice(orderIndex, 1);
+                state.fulfilledOrders.push({ ...order, ...updatedOrder });
+              }
+            } else if (!isBeingFulfilled && foundInFulfilled) {
+              // Move from fulfilled to unfulfilled
+              const orderIndex = state.fulfilledOrders.findIndex(
+                (o) => o._id === orderId
+              );
+              if (orderIndex !== -1) {
+                const [order] = state.fulfilledOrders.splice(orderIndex, 1);
+                state.unfulfilledOrders.push({ ...order, ...updatedOrder });
+              }
             }
           }
         });
 
         setSingleOrderState("success");
-        
         return updatedOrder;
       } catch (error) {
+        console.error("Order update failed:", error);
         setSingleOrderState("failed");
         setOrderError(
           "single",
@@ -675,16 +822,13 @@ export const useOrdersStore: StateCreator<
       }
     })();
 
-    // Dynamic toast messages
+    // Toast notifications
     toast.promise(updatePromise, {
       loading: getLoadingMessage(updates),
-      success: () => {
-        const order = [
-          ...get().fulfilledOrders,
-          ...get().unfulfilledOrders,
-        ].find((o) => o._id === orderId);
+      success: (updatedOrder) => {
 
-        const orderIdentifier = order?.IDTrim || generateTrimmedId(orderId);
+        const orderIdentifier =
+          updatedOrder?.IDTrim || generateTrimmedId(orderId);
         const toastMessage = getToastMessages(updates);
 
         return {
@@ -743,12 +887,12 @@ export const useOrdersStore: StateCreator<
     return refundPromise;
   },
   getFilteredOrders: (type) => {
-    const { search, activeFilter, dateFilter, sortDate } = get();
+    const { OrderFilters: filters } = get();
     const orders =
       type === "fulfilled" ? get().fulfilledOrders : get().unfulfilledOrders;
 
-    const filtered = filterOrders(orders, search, activeFilter, dateFilter);
-    return sortOrdersByDate(filtered, sortDate);
+    const filtered = filterOrders(orders, filters);
+    return sortOrdersByDate(filtered, filters.sortDate);
   },
   getOrdersStats: (type) => {
     const orders =

@@ -23,7 +23,7 @@ import { handleNavigation } from "@/libs/navigate";
 import { useStoreInitialization } from "@/libs/cartPersist";
 import { useApiClient } from "@/libs/useApiClient";
 import { useSession } from "next-auth/react";
-import { useAuthRefresh } from "@/libs/auth/useAuthRefresh";
+
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -93,7 +93,7 @@ export default function Nav() {
   } = useBoundStore();
 
   const { data: session, status } = useSession();
-  const { refreshSession } = useAuthRefresh();
+
 
   useEffect(() => {
     if (session?.error === "RefreshTokenError") {

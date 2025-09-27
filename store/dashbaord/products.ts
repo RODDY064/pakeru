@@ -118,7 +118,8 @@ export type StoreProductStore = {
   loadStoreProducts: (
     force?: boolean,
     get?: ReturnType<typeof useApiClient>["get"],
-    limit?:number
+    limit?: number,
+    page?: number
   ) => Promise<void>;
   loadStoreProduct: (id: string) => Promise<void>;
 
@@ -129,7 +130,7 @@ export type StoreProductStore = {
   setStoreProductFilters: (filters: Partial<Filters>) => void;
   setSortStoreProductOption: (sort: SortStoreProductOption) => void;
   searchStoreProducts: (query: string) => void;
-  applyFilters: () => void;
+  applyStoreProductFilters: () => void;
 
   // Batch operations
   setStoreProducts: (products: ProductData[]) => void;
@@ -301,27 +302,23 @@ export const useStoreProductStore: StateCreator<
     );
 
     try {
-   
       await get().loadCategories();
 
       const urlParams = new URLSearchParams(
         typeof window !== "undefined" ? window.location.search : ""
       );
-      const page = urlParams.get("page") 
+      const page = urlParams.get("page");
 
-      // Build query parameters
       const query = new URLSearchParams();
       if (page && page !== "1") {
         query.append("page", page);
       }
-      // Optionally include limit if provided
       if (limit) {
         query.append("limit", limit.toString());
       }
 
       console.log(query.toString(), "Query parameters");
 
-      // Fetch products from API with query parameters
       const result = await apiGet<{ data: ProductData[]; total?: number }>(
         `/products?${query.toString()}`
       );
@@ -332,26 +329,30 @@ export const useStoreProductStore: StateCreator<
         );
       }
 
-      // Transform API products to local format
       const transformedProducts = result.data.map((product: any) =>
         transformApiProduct(product)
       );
 
-      // Merge new products with existing ones, avoiding duplicates
       set(
         produce((state: Store) => {
           const existingProductIds = new Set(
-            state.storeProducts.map((p) => p._id) 
+            state.storeProducts.map((p) => p._id)
           );
           const newProducts = transformedProducts.filter(
             (product) => !existingProductIds.has(product._id)
           );
           state.storeProducts = [...state.storeProducts, ...newProducts];
+          state.filteredStoreProducts = [
+            ...state.storeProducts,
+            ...newProducts,
+          ];
           if (result.total !== undefined) {
             state.totalItems = result.total;
           }
         })
       );
+
+      setTimeout(() => get().applyStoreProductFilters(), 0);
     } catch (error) {
       console.error("Error loading products:", error);
       set(
@@ -412,7 +413,8 @@ export const useStoreProductStore: StateCreator<
         };
       })
     );
-    get().applyFilters();
+
+    setTimeout(() => get().applyStoreProductFilters(), 0);
   },
 
   setSortStoreProductOption: (sort) => {
@@ -421,36 +423,163 @@ export const useStoreProductStore: StateCreator<
         state.sortstoreProductOption = sort;
       })
     );
-    get().applyFilters();
+    get().applyStoreProductFilters();
   },
 
   searchStoreProducts: (query) => {
     get().setStoreProductFilters({ search: query });
   },
 
-  applyFilters: () => {
+  applyStoreProductFilters: () => {
     const { storeProducts, storeProductFilters, sortstoreProductOption } =
       get();
+
+    // console.log("=== FILTER DEBUG START ===");
+    // console.log("Store filters:", storeProductFilters);
+    // console.log("Total products:", storeProducts.length);
+
+    // Start with all products
     let filtered = [...storeProducts];
 
+    // Debug: Log some sample products to understand the data structure
+    if (storeProducts.length > 0) {
+      console.log("Sample product:", {
+        name: storeProducts[0].name,
+        category: storeProducts[0].category,
+        status: storeProducts[0].status,
+        totalNumber: storeProducts[0].totalNumber,
+      });
+    }
+
     // Apply status filter
-    if (storeProductFilters.status !== "all") {
-      filtered = filtered.filter(
-        (p) => p.status === storeProductFilters.status
+    if (storeProductFilters.status && storeProductFilters.status !== "all") {
+      const beforeCount = filtered.length;
+      filtered = filtered.filter((p) => {
+        const matches = p.status === storeProductFilters.status;
+        if (!matches && beforeCount <= 5) {
+          // Debug first few mismatches
+          console.log(
+            `Product ${p.name} status "${p.status}" doesn't match filter "${storeProductFilters.status}"`
+          );
+        }
+        return matches;
+      });
+      console.log(
+        `After status filter (${storeProductFilters.status}): ${beforeCount} → ${filtered.length}`
       );
     }
 
-    // Apply category filter
-    if (storeProductFilters.category !== "all") {
-      filtered = filtered.filter(
-        (p) => p.category === storeProductFilters.category
-      );
+    // Apply category filter - FIXED VERSION
+    if (
+      storeProductFilters.category &&
+      storeProductFilters.category !== "all" &&
+      storeProductFilters.category !== ""
+    ) {
+      const beforeCount = filtered.length;
+      filtered = filtered.filter((p) => {
+        // Case-insensitive comparison and handle potential undefined
+        const productCategory = get().getCategoryById(p.category)?.name?.toLowerCase()|| "";
+        const filterCategory = storeProductFilters.category.toLowerCase();
+        const matches = productCategory === filterCategory;
+
+        if (!matches && beforeCount <= 5) {
+          // Debug first few mismatches
+          // console.log(
+          //   `Product ${p.name} category "${p.category}" doesn't match filter "${storeProductFilters.category}"`
+          // );
+        }
+        return matches;
+      });
+      // console.log(
+      //   `After category filter (${storeProductFilters.category}): ${beforeCount} → ${filtered.length}`
+      // );
     }
 
-    // Apply search filter
-    if (storeProductFilters.search) {
-      const query = storeProductFilters.search.toLowerCase();
-      filtered = filtered.filter((p) => p.name.toLowerCase().includes(query));
+    // Apply stock status filter - NEW LOGIC
+    if (storeProductFilters.status && storeProductFilters.status !== "all") {
+      const beforeCount = filtered.length;
+      filtered = filtered.filter((p) => {
+        const stock = p.totalNumber || 0;
+        let matches = false;
+
+        switch (storeProductFilters.status) {
+          case "active":
+            matches = stock === 0 || p.status === "active";
+            break;
+          case "inactive":
+            matches = stock === 0 || p.status === "inactive";
+            break;
+
+          case "out-of-stock":
+            matches = stock === 0 || p.status === "out-of-stock";
+            break;
+          case "draft":
+            matches = stock === 0 || p.status === "draft";
+            break;
+          default:
+            matches = true;
+        }
+
+        return matches;
+      });
+      // console.log(
+      //   `After stock status filter (${storeProductFilters.status}): ${beforeCount} → ${filtered.length}`
+      // );
+    }
+
+    // Apply price range filter
+    // if (
+    //   storeProductFilters.priceRange &&
+    //   storeProductFilters.priceRange.length === 2
+    // ) {
+    //   const beforeCount = filtered.length;
+    //   const [minPrice, maxPrice] = storeProductFilters.priceRange;
+    //   filtered = filtered.filter((p) => {
+    //     const price = p.price || 0;
+    //     return price >= minPrice && price <= maxPrice;
+    //   });
+    //   // console.log(
+    //   //   `After price filter (${minPrice}-${maxPrice}): ${beforeCount} → ${filtered.length}`
+    //   // );
+    // }
+
+    // Apply tags filter
+    if (storeProductFilters.tags && storeProductFilters.tags.length > 0) {
+      const beforeCount = filtered.length;
+      filtered = filtered.filter((p) =>
+        storeProductFilters.tags!.some((tag) =>
+          p.tags?.some((productTag) =>
+            productTag.toLowerCase().includes(tag.toLowerCase())
+          )
+        )
+      );
+      console.log(`After tags filter: ${beforeCount} → ${filtered.length}`);
+    }
+
+    // Apply search filter - IMPROVED VERSION
+    if (
+      storeProductFilters.search &&
+      storeProductFilters.search.trim() !== ""
+    ) {
+      const beforeCount = filtered.length;
+      const query = storeProductFilters.search.toLowerCase().trim();
+      filtered = filtered.filter((p) => {
+        const searchableText = [
+          p.name || "",
+          // p.description || "",
+          // p.category || "",
+          // p.subCategory || "",
+          // ...(p.tags || []),
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        const matches = searchableText.includes(query);
+        return matches;
+      });
+      console.log(
+        `After search filter (${query}): ${beforeCount} → ${filtered.length}`
+      );
     }
 
     // Apply sorting
@@ -460,21 +589,46 @@ export const useStoreProductStore: StateCreator<
       let bValue: any = b[field as keyof ProductData];
 
       if (field === "stock") {
-        aValue = a.totalNumber;
-        bValue = b.totalNumber;
+        aValue = a.totalNumber || 0;
+        bValue = b.totalNumber || 0;
       }
 
-      if (typeof aValue === "string") {
+      // Handle date objects
+      if (aValue instanceof Date && bValue instanceof Date) {
+        aValue = aValue.getTime();
+        bValue = bValue.getTime();
+      }
+
+      if (typeof aValue === "string" && typeof bValue === "string") {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
       }
 
+      // Handle undefined/null values
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return direction === "asc" ? -1 : 1;
+      if (bValue == null) return direction === "asc" ? 1 : -1;
+
       if (direction === "asc") {
-        return aValue > bValue ? 1 : -1;
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
       } else {
-        return aValue < bValue ? 1 : -1;
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
       }
     });
+
+    // console.log("=== FINAL RESULT ===");
+    // console.log(`Final filtered products: ${filtered.length}`);
+    // console.log(
+    //   "Sample filtered product:",
+    //   filtered[0]
+    //     ? {
+    //         name: filtered[0].name,
+    //         category: filtered[0].category,
+    //         status: filtered[0].status,
+    //       }
+    //     : "None"
+    // );
+    // console.log("=== FILTER DEBUG END ===");
 
     set(
       produce((state: Store) => {
@@ -495,7 +649,7 @@ export const useStoreProductStore: StateCreator<
         state.currentPage = 1;
       })
     );
-    get().applyFilters();
+    get().applyStoreProductFilters();
   },
 
   // Batch operations
@@ -507,7 +661,7 @@ export const useStoreProductStore: StateCreator<
         state.totalPages = Math.ceil(products.length / state.itemsPerPage);
       })
     );
-    get().applyFilters();
+    get().applyStoreProductFilters();
   },
 
   // Computed getters

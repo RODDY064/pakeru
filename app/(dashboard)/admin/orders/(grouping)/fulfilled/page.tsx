@@ -5,12 +5,18 @@ import StatusBadge from "@/app/ui/dashboard/statusBadge";
 import Table from "@/app/ui/dashboard/table";
 import { formatJoinedDate } from "@/libs/functions";
 import { useApiClient } from "@/libs/useApiClient";
-import { OrdersData } from "@/store/dashbaord/orders-store/orders";
+import { DeliveryStatusFilter, OrdersData } from "@/store/dashbaord/orders-store/orders";
 import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { Suspense, useCallback, useEffect, useState } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 function FulfilledContent() {
   const { get, patch } = useApiClient();
@@ -18,11 +24,11 @@ function FulfilledContent() {
     { label: "Delivered", value: 0 },
     { label: "Shipped", value: 0 },
     { label: "Processing (ready to ship)", value: 0 },
+    { label: "Cancelled", value: 0 },
   ]);
 
   const {
     fulfilledOrders,
-    sortDate,
     toggleDateSorting,
     setOrderModal,
     loadOrders,
@@ -35,6 +41,9 @@ function FulfilledContent() {
     updateFromAPI,
     slice,
     pagination,
+    getOrdersStats,
+    filteredOrders,
+    setOrderTypeFilter,
   } = useBoundStore();
 
   const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
@@ -52,15 +61,41 @@ function FulfilledContent() {
     initializeData();
   }, [loadOrders, loadStoreProducts]);
 
+  const loadOrdersForPagination = async (page: number) => {
+    await loadOrders("fulfilled", {
+      get,
+      force: false,
+    });
+  };
+
   useEffect(() => {
     configure({
       dataKey: "fulfilledOrders",
-      loadFunction: "loadOrders",
-      backendSize: 25,
-      size:10,
-      apiClient: get,
+      loadFunction: loadOrdersForPagination,
+      size: 25,
     });
+
+    setOrderTypeFilter("fulfilled");
   }, []);
+
+  const orderStats = useMemo(
+    () => getOrdersStats("fulfilled"),
+    [getOrdersStats]
+  );
+
+  useEffect(() => {
+    if (!orderStats) return;
+
+    setFulfilledStats([
+      { label: "Delivered", value: orderStats.ordersDelivered ?? 0 },
+      { label: "Shipped", value: orderStats.orderShipped ?? 0 },
+      {
+        label: "Processing (ready to ship)",
+        value: orderStats.pendingOrders ?? 0,
+      },
+      { label: "Cancelled", value: orderStats.cancelledOrders ?? 0 },
+    ]);
+  }, [orderStats]);
 
   useEffect(() => {
     updateFromAPI({
@@ -70,9 +105,9 @@ function FulfilledContent() {
   }, [fulfilledOrders]);
 
   useEffect(() => {
-    const sliceData = slice(fulfilledOrders);
+    const sliceData = slice(filteredOrders);
     setCurrentOrders(sliceData);
-  }, [pagination, fulfilledOrders]);
+  }, [pagination, fulfilledOrders, filteredOrders]);
 
   const handleSelect = useCallback(
     (order: OrdersData) => {
@@ -224,6 +259,19 @@ export default function Fulfilled() {
 
 // table headr
 const Header = () => {
+  const {
+    OrderFilters,
+    setOrderSearch,
+    setDeliveryStatusFilter,
+    setPaymentStatusFilter,
+    setDateFilter,
+    resetOrdersFilters,
+  } = useBoundStore();
+
+  useEffect(() => {
+    resetOrdersFilters();
+  }, []);
+
   return (
     <>
       <div className="px-2 w-[50%] lg:w-[30%] py-2 bg-black/10 rounded-xl border-black/15 border flex gap-1 items-center">
@@ -235,7 +283,9 @@ const Header = () => {
           className="mb-[5px]"
         />
         <input
-          placeholder="Search by order id, customer "
+          value={OrderFilters.search ?? ""}
+          onChange={(e) => setOrderSearch(e.target.value)}
+          placeholder="Search (by ID, customer name, or email) "
           className="w-full h-full focus:outline-none px-2 text-md font-avenir "
         />
       </div>
@@ -244,11 +294,20 @@ const Header = () => {
           Filter by:
         </p>
         <div className="flex items-center justify-center gap-2 border border-black/20 pl-3 pr-1 py-[2px] rounded-lg">
-          <p className="font-avenir font-[500] text-sm">Status: </p>
+          <p className="font-avenir font-[500] text-sm">Delivery Status: </p>
           <div className="relative flex items-center">
-            <select className="appearance-none cursor-pointer text-sm text-gray-600 focus:outline-none px-2 py-[2px] rounded-md font-avenir font-[500] text-md bg-gray-200 border border-gray-500/20 pr-7">
-              <option value="Clothing">All</option>
-              <option className="font-avenir">Active</option>
+            <select
+              value={OrderFilters.deliveryStatus}
+              onChange={(e) =>
+                setDeliveryStatusFilter(e.target.value as DeliveryStatusFilter)
+              }
+              className="appearance-none cursor-pointer text-sm text-gray-600 focus:outline-none px-2 py-[2px] rounded-md font-avenir font-[500] text-md bg-gray-200 border border-gray-500/20 pr-7"
+            >
+              <option value="All">All</option>
+              <option value="Pending">Pending</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Shipped">Shipped</option>
+              <option value="Cancelled">Cancelled</option>
             </select>
             <Image
               src="/icons/arrow.svg"
@@ -266,6 +325,8 @@ const Header = () => {
             <input
               type="date"
               placeholder="GHS 00.00"
+              value={OrderFilters.dateFilter.from ?? ""}
+              onChange={(e) => setDateFilter({ from: e.target.value })}
               className="w-24 focus:outline-none  px-2 text-sm font-avenir cursor-pointer"
             />
           </div>
@@ -274,6 +335,8 @@ const Header = () => {
             <input
               type="date"
               placeholder="GHS 00.00"
+              value={OrderFilters.dateFilter.to ?? ""}
+              onChange={(e) => setDateFilter({ to: e.target.value })}
               className="w-24 focus:outline-none  px-2 text-sm font-avenir cursor-pointer"
             />
           </div>

@@ -6,11 +6,12 @@ import React, { useEffect, useState } from "react";
 interface PaginationProps {
   showPageSize?: boolean;
   maxVisiblePages?: number;
-  loadFunction?: string;
+  Refresh?: ()=>void;
   dataKey?: string;
+
 }
 
-export default function Pagination({ showPageSize = true }: PaginationProps) {
+export default function Pagination({ showPageSize = true, Refresh }: PaginationProps) {
   const [visiblePages, setVisiblePage] = useState<(string | number)[]>([]);
 
   const {
@@ -107,7 +108,13 @@ export default function Pagination({ showPageSize = true }: PaginationProps) {
   return (
     <div className="w-full h-fit flex items-center justify-between pt-4 px-10 gap-4 border-t border-black/10">
     <p className="font-avenir font-[500] text-md text-black/50">Showing: {pagination.page}/{pagination.total} </p>
+         
      <div className="flex items-center gap-4 ">
+       <div 
+       onClick={Refresh}
+       className="h-12 px-6 bg-blue-50 border border-blue-600 cursor-pointer items-center flex rounded-xl justify-center ">
+        <p className="px-6 font-avenir font-[500] text-[#083f9d] ">Refresh</p>
+       </div>
        {showPageSize && (
         <div className="h-12 border border-black/15 items-center flex rounded-xl">
           <p className="px-6 font-avenir font-[500] text-md text-black/50">

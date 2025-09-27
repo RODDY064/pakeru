@@ -1,16 +1,18 @@
-
-"use client"
-
+"use client";
 import { SessionProvider } from "next-auth/react";
-import { useAuthRefresh } from "./useAuthRefresh";
+import { useBackgroundAuth } from "./useAuthManager";
 import { ReactNode } from "react";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-function AuthRefreshHandler({ children }: AuthProviderProps) {
-  useAuthRefresh(); 
+function BackgroundAuthHandler({ children }: AuthProviderProps) {
+  const { isRefreshing, hasSession } = useBackgroundAuth();
+  
+  if (typeof window !== 'undefined' && window.location.pathname.includes('/admin')) {
+    console.log("🔍 Auth Status:", { isRefreshing, hasSession });
+  }
 
   return <>{children}</>;
 }
@@ -18,7 +20,7 @@ function AuthRefreshHandler({ children }: AuthProviderProps) {
 export function AuthProvider({ children }: AuthProviderProps) {
   return (
     <SessionProvider>
-      <AuthRefreshHandler>{children}</AuthRefreshHandler>
+      <BackgroundAuthHandler>{children}</BackgroundAuthHandler>
     </SessionProvider>
   );
 }

@@ -29,82 +29,85 @@ export default function Filter() {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [priceMin, setPriceMin] = useState<string>("");
   const [priceMax, setPriceMax] = useState<string>("");
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const contentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [heights, setHeights] = useState<{ [key: string]: number }>({});
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+useEffect(() => {
+  setFilterCategories();
+  const handleResize = () => {
+    setIsMobile(window.innerWidth < 1000);
+  };
+  
+  window.addEventListener("resize", handleResize);
+  handleResize();
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
 
-  useEffect(() => {
-    setFilterCategories();
-
-    const handleResize = () => {
-      if (window.innerWidth < 1000) {
-        setIsMobile(true);
-      } else {
-        setIsMobile(false);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize();
-
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    const newHeights: { [key: string]: number } = {};
-    filteritems.forEach((filt) => {
-      const el = contentRefs.current[filt.name];
-      if (el) {
-        newHeights[filt.name] = el.scrollHeight + 10;
-      }
-    });
-    setHeights(newHeights);
-  }, [filteritems]);
-
-  useEffect(() => {
-    loadFiltersFromURL(searchParams);
-  }, [loadFiltersFromURL, searchParams]);
-
-  useEffect(() => {
-    applyFiltersToURL(searchParams, pathname, router);
-  }, [filteritems, applyFiltersToURL, pathname, router, searchParams]);
-
-  const handlePriceChange = (type: "min" | "max", value: string) => {
-    if (type === "min") {
-      setPriceMin(value);
-    } else {
-      setPriceMax(value);
+useEffect(() => {
+  const newHeights: { [key: string]: number } = {};
+  filteritems.forEach((filt) => {
+    const el = contentRefs.current[filt.name];
+    if (el) {
+      newHeights[filt.name] = el.scrollHeight + 10;
     }
+  });
+  setHeights(newHeights);
+}, [filteritems]);
 
-    // Update the filter store
-    const min =
-      type === "min"
-        ? value
-          ? parseInt(value)
-          : undefined
-        : priceMin
-        ? parseInt(priceMin)
-        : undefined;
-    const max =
-      type === "max"
-        ? value
-          ? parseInt(value)
-          : undefined
-        : priceMax
-        ? parseInt(priceMax)
-        : undefined;
+useEffect(() => {
+  if (!isInitialized) {
+    loadFiltersFromURL(searchParams);
+    const hasParams = Array.from(searchParams.keys()).some(key => 
+      key !== 'page' && searchParams.get(key)
+    );
+    
+    if (hasParams) {
 
-    setPriceRange(min, max);
-  };
+      const timer = setTimeout(() => {
+        const queries = getFilterQueries();
+        loadProducts(true, 1, 25, queries);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+    
+    setIsInitialized(true);
+  }
+}, [searchParams, loadFiltersFromURL, getFilterQueries, loadProducts, isInitialized]);
 
-  const ApplyFilter = () => {
-    const queries = getFilterQueries();
+// Subsequent updates: sync URL when filters change
+useEffect(() => {
+  if (isInitialized) {
+    applyFiltersToURL(searchParams, pathname, router);
+  }
+}, [filteritems, applyFiltersToURL, pathname, router, searchParams, isInitialized]);
 
-    loadProducts(true, 1, 25, queries);
-    filterState(false);
-  };
+const handlePriceChange = (type: "min" | "max", value: string) => {
+  if (type === "min") {
+    setPriceMin(value);
+  } else {
+    setPriceMax(value);
+  }
+
+  const min = type === "min" 
+    ? (value ? parseInt(value) : undefined)
+    : (priceMin ? parseInt(priceMin) : undefined);
+    
+  const max = type === "max" 
+    ? (value ? parseInt(value) : undefined)
+    : (priceMax ? parseInt(priceMax) : undefined);
+    
+  setPriceRange(min, max);
+};
+
+const ApplyFilter = () => {
+  const queries = getFilterQueries();
+  loadProducts(true, 1, 25, queries);
+  filterState(false);
+};
 
   const ClearAllFilters = () => {
     clearAllSelections();
@@ -116,9 +119,7 @@ export default function Filter() {
   const activeFilterCount = getActiveFilterCount();
   const hasFilters = hasActiveFilters();
 
-  useEffect(() => {
-    console.log(filteritems);
-  }, [filteritems]);
+
 
   const renderPriceInputs = (isMobileView: boolean = false) => (
     <div className="flex flex-col gap-3 font-avenir">

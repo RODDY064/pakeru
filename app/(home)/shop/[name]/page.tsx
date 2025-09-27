@@ -81,8 +81,7 @@ export default async function SingleProduct({
               alt="loader"
             />
           </div>
-        }
-      >
+        }>
         <ProductContainer nameID={name} />
       </Suspense>
     </>

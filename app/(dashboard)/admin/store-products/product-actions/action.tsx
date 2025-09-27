@@ -1,5 +1,12 @@
 "use client";
-import React, { use, useCallback, useEffect, useRef, useState, Suspense } from "react";
+import React, {
+  use,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  Suspense,
+} from "react";
 import Image from "next/image";
 import Editor from "@/app/ui/dashboard/editor";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,7 +16,7 @@ import {
   ProductFormSchema,
   type ProductFormData,
 } from "@/app/ui/dashboard/zodSchema";
-import {  ProductData } from "@/store/dashbaord/products";
+import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Media from "@/app/ui/dashboard/media";
 import Category from "@/app/ui/dashboard/categories";
@@ -18,6 +25,41 @@ import ProductTags from "@/app/ui/dashboard/productTags";
 import { mapVariantsToColors, ProductAPIService } from "./helpers";
 import DeleteModal from "./deleletModal";
 import { useApiClient } from "@/libs/useApiClient";
+import SizeType from "@/app/ui/dashboard/sizeType";
+import Instructions from "@/app/ui/dashboard/instructions";
+import StatusBadge from "@/app/ui/dashboard/statusBadge";
+
+const debugFormData = (data: ProductFormData, colors: ProductColor[]) => {
+  console.log("🐛 Form submission debug:", {
+    formData: {
+      name: `"${data.name}" (length: ${data.name?.length})`,
+      description: `"${data.description?.slice(0, 50)}..." (length: ${
+        data.description?.length
+      })`,
+      price: `"${data.price}" (type: ${typeof data.price})`,
+      totalNumber: `"${data.totalNumber}" (type: ${typeof data.totalNumber})`,
+      status: `"${data.status}"`,
+      category: `"${data.category}" (length: ${data.category?.length})`,
+      tags: data.tags?.map((t) => `"${t}"`),
+      tagsLength: data.tags?.length,
+    },
+    colors: colors.map((color) => ({
+      name: `"${color.name}" (length: ${color.name?.length})`,
+      hex: color.hex,
+      stock: color.stock,
+      sizes: color.sizes,
+      imagesCount: color.images?.length,
+      hasFiles: color.images?.some((img) => img.file instanceof File),
+    })),
+    validation: {
+      hasName: !!data.name?.trim(),
+      hasPrice: !!data.price,
+      hasColors: colors.length > 0,
+      hasValidColors: colors.some((c) => c.name?.trim()),
+      hasSufficientImages: colors.every((c) => c.images?.length >= 3),
+    },
+  });
+};
 
 export type ProductImage = {
   _id: number;
@@ -68,7 +110,7 @@ function ProductActionsContent() {
     getCategoryNameById,
   } = useBoundStore();
 
-  const { patch, post  } = useApiClient()
+  const { patch, post } = useApiClient();
 
   const [colors, setColors] = useState<ProductColor[]>([]);
   const [submitError, setSubmitError] = useState<string>("");
@@ -84,6 +126,20 @@ function ProductActionsContent() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [productLoadError, setProductLoadError] = useState<string | null>(null);
+  const [originalData, setOriginalData] = useState<ProductFormData | null>(null);
+  const [originalColors, setOriginalColors] = useState<ProductColor[] | null>(
+    null
+  );
+  const [productCare, setProductCare] = useState("");
+  const [instruction, setInstruction] = useState("");
+  const [instructions, setInstructions] = useState<string[]>([]);
+  const [sizeTye, setSizeTye] = useState<{
+    gender: "male" | "female";
+    clothType: "pants";
+  }>({
+    gender: "male",
+    clothType: "pants",
+  });
 
   const productID = searchParams.get("productID");
   const productName = searchParams.get("productName");
@@ -92,19 +148,34 @@ function ProductActionsContent() {
   const populateFormWithProduct = useCallback(
     (product: ProductData) => {
       console.log("🔧 Populating form with product:", product._id);
-      setValue("name", product.name);
-      setValue("description", product.description as string);
-      setValue("price", product.price.toString());
-      setValue("totalNumber", product.totalNumber.toString());
-      setValue(
-        "status",
-        product.status as "active" | "inactive" | "out-of-stock" | "draft"
-      );
-      setValue("category", product.category);
-      setValue("tags", product.tags as string[]);
-      setEditorValue(product?.description as string);
-      setTags(product.tags ?? ([] as string[]));
-      setSelectedCategory(product.category);
+
+      const formData: ProductFormData = {
+        name: product.name,
+        description: product.description as string,
+        price: product.price.toString(),
+        totalNumber: product.totalNumber.toString(),
+        status: product.status as
+          | "active"
+          | "inactive"
+          | "out-of-stock"
+          | "draft",
+        category: product.category,
+        tags: product.tags as string[],
+        colors: [],
+      };
+
+      // Set form values
+      setValue("name", formData.name);
+      setValue("description", formData.description);
+      setValue("price", formData.price);
+      setValue("totalNumber", formData.totalNumber);
+      setValue("status", formData.status);
+      setValue("category", formData.category);
+      setValue("tags", formData.tags);
+
+      setEditorValue(formData.description);
+      setTags(formData.tags ?? []);
+      setSelectedCategory(formData.category);
 
       if (product.variants && product.variants.length > 0) {
         const mappedColors = mapVariantsToColors(product.variants);
@@ -112,7 +183,12 @@ function ProductActionsContent() {
         if (mappedColors.length > 0) {
           setActiveColorId(mappedColors[0]._id);
         }
+        // Store original colors for comparison
+        setOriginalColors(mappedColors);
       }
+
+      // Store original form data for comparison
+      setOriginalData(formData);
       setIsInitialized(true);
     },
     [setValue]
@@ -187,6 +263,12 @@ function ProductActionsContent() {
   // Watch form values for real-time updates
   const watchedValues = watch();
 
+  const handleAddInstruction = () => {
+    if (!instruction.trim()) return;
+    setInstructions((prev) => [...prev, instruction.trim()]);
+    setInstruction(""); //
+  };
+
   useEffect(() => {
     console.log(selectedProduct, "selected product");
   }, [selectedProduct]);
@@ -225,7 +307,6 @@ function ProductActionsContent() {
   const onSubmit = async (data: ProductFormData) => {
     setSubmitError("");
     setStocksError("");
-    console.log(data, "data");
 
     // Validate form
     const validationError = validateForm(data);
@@ -235,26 +316,42 @@ function ProductActionsContent() {
     }
 
     setIsSubmitting(true);
+
+    debugFormData(data, colors);
+
     try {
-      if (isEditMode && productID) {
-        // Update existing product
+      if (isEditMode && productID && originalData && originalColors) {
+        // Update existing product - send only changes
         const result = await ProductAPIService.updateProduct(
           productID,
           data,
           colors,
+          originalData,
+          originalColors,
           patch
         );
-        console.log("Product updated successfully:", result);
+
+        if (result.message === "No changes to save") {
+          // User-friendly message for no changes
+          setSubmitError("No changes detected to save");
+          return;
+        }
+
+        console.log("✅ Product updated successfully:", result);
       } else {
-        // Create new product
-        const result = await ProductAPIService.createProduct(data, colors, post);
-        console.log("Product created successfully:", result);
+        // Create new product - send all data
+        const result = await ProductAPIService.createProduct(
+          data,
+          colors,
+          post
+        );
+        console.log("✅ Product created successfully:", result);
       }
 
       // Success - redirect
       router.push("/admin/store-products");
     } catch (error) {
-      console.error("Submission error:", error);
+      console.error("💥 Submission error:", error);
       if (error instanceof Error) {
         setSubmitError(
           `Failed to ${isEditMode ? "update" : "create"} product: ${
@@ -286,6 +383,13 @@ function ProductActionsContent() {
     console.log(colors, "colors");
   }, [colors]);
 
+  useEffect(() => {
+    if (!isEditMode) {
+      setOriginalData(null);
+      setOriginalColors(null);
+    }
+  }, [isEditMode, productID]);
+
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -301,9 +405,18 @@ function ProductActionsContent() {
               />
             </div>
             <div className="flex justify-between items-center w-full">
-              <p className="font-avenir text-xl sm:text-2xl font-bold mt-[5px]">
-                {productID ? productName : " Add Product"}
-              </p>
+              <div >
+                {productID ? (
+                  <div className="flex items-center gap-3">
+                    <p className="font-avenir text-xl sm:text-2xl font-bold mt-[5px]">
+                      {productName}
+                    </p>
+                    {selectedProduct?._id && <StatusBadge status={selectedProduct?.status as string} statuses={["active","inactive","out-of-stock","draft" ]}/>}
+                  </div>
+                ) : (
+                  " Add Product"
+                )}
+              </div>
               {productID && (
                 <div className="flex gap-4 items-center sm:w-[40%] md:w-[30%]">
                   <div
@@ -311,17 +424,18 @@ function ProductActionsContent() {
                     className="px-3 sm:px-3 py-1.5 sm:py-2 bg-red-100 border border-red-500 flex items-center gap-2 cursor-pointer rounded-lg"
                   >
                     <p className="font-avenir text-sm font-[500] text-red-500">
-                      Delete <span className="hidden sm:inline-flex">product</span>
+                      Delete{" "}
+                      <span className="hidden sm:inline-flex">product</span>
                     </p>
                   </div>
                 </div>
               )}
             </div>
           </div>
-          
+
           {!loadingProduct ? (
             <div className="w-full flex gap-4 mt-4 h-full sm:flex-row flex-col items-stretch">
-              <div className="flex-1 sm:w-[60%] md:w-[70%] relative">
+              <div className="fle sm:w-[60%] md:w-[65%] relative flex-none ">
                 <div className="flex items-stretch flex-col h-full">
                   <div className="w-full min-h-[300px] bg-white border border-black/20 rounded-[35px] inline-block self-start p-4 sm:p-6 pb-10">
                     <div>
@@ -360,15 +474,15 @@ function ProductActionsContent() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <Media
                     setColors={setColors}
                     colors={colors}
                     activeColorId={activeColorId}
                     setActiveColorId={setActiveColorId}
                   />
-                  
-                  <div className="flex-1 min-h-30 mt-4 bg-white border border-black/20 rounded-[32px]">
+
+                  <div className="min-h-36 mt-4 bg-white border border-black/20 rounded-[32px]">
                     <div className="h-auto flex-1 flex p-4 md:p-6 pb-10 gap-4 md:gap-10 flex-col md:flex-row">
                       <div className="px-2 flex-1">
                         <p className="font-avenir font-[500] text-lg">
@@ -402,117 +516,123 @@ function ProductActionsContent() {
                       </div>
                     </div>
                   </div>
+                  <Instructions />
                 </div>
               </div>
-              
-              <div className="w-full h-full sm:w-[40%] md:w-[30%] flex flex-col gap-4">
-                <div className="w-full min-h-[140px] bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-6">
-                  <div>
-                    <p className="font-avenir font-[500] text-lg">Status</p>
-                    <div className="relative mt-2 flex items-center">
-                      <select
-                        {...register("status")}
-                        className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl"
-                      >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="out-of-stock">Out of Stock</option>
-                      </select>
-                      <div className="absolute right-3">
-                        <Image
-                          src="/icons/arrow.svg"
-                          width={16}
-                          height={16}
-                          alt="arrow"
-                        />
+
+              <div className=" flex-1 sm:w-[40%]  md:w-[35%]  ">
+                <div className="flex items-stretch flex-col h-full  gap-4">
+                  <div className="w-full h-[140px] bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-6">
+                    <div>
+                      <p className="font-avenir font-[500] text-lg">Status</p>
+                      <div className="relative mt-2 flex items-center">
+                        <select
+                          {...register("status")}
+                          className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl"
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                          <option value="out-of-stock">Out of Stock</option>
+                        </select>
+                        <div className="absolute right-3">
+                          <Image
+                            src="/icons/arrow.svg"
+                            width={16}
+                            height={16}
+                            alt="arrow"
+                          />
+                        </div>
+                        {errors.status && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.status.message}
+                          </p>
+                        )}
                       </div>
-                      {errors.status && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.status.message}
-                        </p>
-                      )}
                     </div>
                   </div>
-                </div>
-                
-                <div className="w-full min-h-[300px] bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-6">
-                  <Category
-                    selectedCategory={selectedCategory}
-                    setSelectedCategory={setSelectedCategory}
-                  />
-                  {errors.category && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.category.message}
+
+                  <div className="w-full min-h-[300px] bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-6">
+                    <Category
+                      selectedCategory={selectedCategory}
+                      setSelectedCategory={setSelectedCategory}
+                    />
+                    {errors.category && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.category.message}
+                      </p>
+                    )}
+                    <ProductTags tags={tags} setTags={setTags} />
+                    {errors.tags && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.tags.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="w-full min-h-[350px] bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-4 relative overflow-hidden">
+                    <p className="text-sm pb-2 text-black/50 font-avenir">
+                      Stock and sizes for selected color
                     </p>
-                  )}
-                  <ProductTags tags={tags} setTags={setTags} />
-                  {errors.tags && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.tags.message}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="w-full min-h-[350px] bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-4 relative overflow-hidden">
-                  <p className="text-sm pb-2 text-black/50 font-avenir">
-                    Stock and sizes for selected color
-                  </p>
-                  <div className="w-full pb-4 grid grid-cols-3 gap-2">
-                    {colors.map((color) => (
-                      <div
-                        key={color._id}
-                        onClick={() => setActiveColorId(color._id)}
-                        className={`flex justify-between gap-2 px-1 sm:px-3 cursor-pointer py-0.5 sm:py-1 rounded-[24px]
+                    <div className="w-full pb-4 grid grid-cols-3 gap-2">
+                      {colors.map((color) => (
+                        <div
+                          key={color._id}
+                          onClick={() => setActiveColorId(color._id)}
+                          className={`flex justify-between gap-2 px-1 sm:px-3 cursor-pointer py-0.5 sm:py-1 rounded-[24px]
                         ${
                           activeColorId === color._id
                             ? "bg-black/20 border border-black/20"
                             : "bg-black/2 border border-black/10"
                         }`}
-                      >
-                        <div className="flex items-center gap-1">
-                          <div
-                            style={{ backgroundColor: color.hex }}
-                            className="size-4.5 border border-black/30 rounded-full"
-                          ></div>
-                          <p className="font-avenir uppercase pt-1 sm:pt-[0.4px] text-[11px] sm:text-sm">
-                            {color.name}
-                          </p>
+                        >
+                          <div className="flex items-center gap-1">
+                            <div
+                              style={{ backgroundColor: color.hex }}
+                              className="size-4.5 border border-black/30 rounded-full"
+                            ></div>
+                            <p className="font-avenir uppercase pt-1 sm:pt-[0.4px] text-[11px] sm:text-sm">
+                              {color.name}
+                            </p>
+                          </div>
+                          <div className="flex items-centern gap-1"></div>
                         </div>
-                        <div className="flex items-centern gap-1"></div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {activeColorId && colors.find((c) => c._id === activeColorId) ? (
-                    <ColorStockAndSizes
-                      colors={colors}
-                      setColors={setColors}
-                      activeColorId={activeColorId}
-                    />
-                  ) : (
-                    <div className="text-center py-8 h-full">
-                      <p className="text-black/50 font-avenir">
-                        {colors.length === 0
-                          ? "Add a color first"
-                          : "Select a color to manage stock and sizes"}
-                      </p>
+                      ))}
                     </div>
-                  )}
+
+                    {activeColorId &&
+                    colors.find((c) => c._id === activeColorId) ? (
+                      <ColorStockAndSizes
+                        colors={colors}
+                        setColors={setColors}
+                        activeColorId={activeColorId}
+                      />
+                    ) : (
+                      <div className="text-center py-8 h-full">
+                        <p className="text-black/50 font-avenir">
+                          {colors.length === 0
+                            ? "Add a color first"
+                            : "Select a color to manage stock and sizes"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <SizeType />
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="mt-2 w-full p-4 md:p-6 md:h-35 rounded-2xl md:rounded-[26px] cursor-pointer flex items-center justify-center bg-black"
+                  >
+                    <p className="text-white font-avenir font-black text-xl md:text-4xl">
+                      {productID
+                        ? isSubmitting
+                          ? "Saving..."
+                          : "Save"
+                        : isSubmitting
+                        ? "Publishing..."
+                        : "Publish"}
+                    </p>
+                  </button>
                 </div>
-                
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="mt-2 w-full p-4 md:p-6 md:h-35 rounded-2xl md:rounded-[26px] cursor-pointer flex items-center justify-center bg-black"
-                >
-                  <p className="text-white font-avenir font-black text-xl md:text-4xl">
-                    {productID
-                      ? isSubmitting ? "Saving..." : "Save"
-                      : isSubmitting
-                      ? "Publishing..."
-                      : "Publish"}
-                  </p>
-                </button>
               </div>
             </div>
           ) : (
@@ -552,11 +672,11 @@ function ProductActionsContent() {
           )}
         </div>
       </form>
-      
+
       {showDeleteConfirm && (
         <DeleteModal
-          productID={productID || ''}
-          productName={productName || ''}
+          productID={productID || ""}
+          productName={productName || ""}
           isOpen={showDeleteConfirm}
           onClose={() => setShowDeleteConfirm(false)}
         />
@@ -568,7 +688,7 @@ function ProductActionsContent() {
 // Main component with Suspense boundary
 export default function ProductActions() {
   return (
-    <Suspense 
+    <Suspense
       fallback={
         <div className="px-4 xl:px-8 xl:ml-[15%] pt-24 pb-32">
           <div className="flex flex-col items-center mt-36">
@@ -585,7 +705,8 @@ export default function ProductActions() {
             </div>
           </div>
         </div>
-      }>
+      }
+    >
       <ProductActionsContent />
     </Suspense>
   );

@@ -21,7 +21,6 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   const stickyRef = useRef<HTMLDivElement>(null);
   const imageDiv = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const imageDivSim = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
-  const mainContainerRef = useRef<HTMLDivElement>(null);
   const {
     isMobile,
     products,
@@ -43,7 +42,6 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     shown: boolean;
     active: boolean;
   }>({ shown: false, active: false });
-
 
   // Mobile scroll state
   const [mobileScrollIndex, setMobileScrollIndex] = useState(0);
@@ -196,78 +194,64 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   }, [isMobile]);
 
   useGSAP(() => {
-    if (isMobile) return;
-    if (!stickyRef.current || !imageDiv.current) return;
+  if (isMobile) return;
 
-    const sticky = stickyRef.current;
-    const image = imageDiv.current;
-    const container = mainContainerRef.current;
+  const sticky = document.querySelector(".stickyDiv") as HTMLElement;
+  const trigger = document.querySelector(".triggerDiv") as HTMLElement;
+  
+  if (!sticky || !trigger) return;
 
-      ScrollTrigger.getAll().forEach((trigger) => {
-      if (trigger.trigger === image || trigger.vars.pin === sticky || trigger.trigger === container) {
-        trigger.kill();
-      }
-    });
-
-    // Wait for images to load and layout to stabilize
-    const initScrollTrigger = () => {
-      const st = ScrollTrigger.create({
-        trigger: image,
-        start: "top top",
-        end: "bottom bottom",
-        pin: sticky,
-        pinSpacing: false, 
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        refreshPriority: -1,
-        onRefresh: () => {
-          if (sticky) {
-            sticky.style.transform = '';
-          }
-        },
-        onToggle: (self) => {
-          // Reset transform when not pinned
-          if (!self.isActive && sticky) {
-            sticky.style.transform = '';
-          }
-        }
-      });
-
-      return st;
-    };
-
-    // Initialize after a brief delay to ensure layout is ready
-    const timer = setTimeout(() => {
-      const scrollTrigger = initScrollTrigger();
+  // Store original position
+  const originalPosition = sticky.style.position;
+  const originalTop = sticky.style.top;
+  
+  ScrollTrigger.create({
+    trigger: trigger,
+    start: "top 8%",
+    end: "bottom bottom",
+    onUpdate: (self) => {
+      const progress = self.progress;
+      const triggerRect = trigger.getBoundingClientRect();
+      const stickyHeight = sticky.offsetHeight;
+      const triggerHeight = trigger.offsetHeight;
       
-      // Refresh after initialization
-      setTimeout(() => {
-        ScrollTrigger.refresh();
-      }, 50);
-
-      return scrollTrigger;
-    }, 100);
-
-    return () => {
-      clearTimeout(timer);
-      ScrollTrigger.getAll().forEach((trigger) => {
-        if (trigger.trigger === image || trigger.vars.pin === sticky || trigger.trigger === container) {
-          trigger.kill();
-        }
-      });
-      
-      // Clean up any remaining transforms
-      if (sticky) {
-        sticky.style.transform = '';
-        sticky.style.position = '';
-        sticky.style.top = '';
-        sticky.style.left = '';
-        sticky.style.width = '';
-        sticky.style.height = '';
+      if (progress === 0) {
+        // Reset to original position
+        sticky.style.position = originalPosition;
+        sticky.style.top = originalTop;
+        sticky.style.transform = 'none';
+      } else if (triggerRect.bottom > stickyHeight) {
+        // Pin at top
+        sticky.style.position = 'fixed';
+        sticky.style.top = '35px';
+        sticky.style.transform = 'none';
+      } else {
+        // Pin at bottom of trigger
+        sticky.style.position = 'absolute';
+        sticky.style.top = `${triggerHeight - stickyHeight}px`;
+        sticky.style.transform = 'none';
       }
-    };
+    },
+    onLeave: () => {
+      // Ensure proper cleanup when leaving trigger area
+      sticky.style.position = 'absolute';
+      sticky.style.top = `${trigger.offsetHeight - sticky.offsetHeight}px`;
+    },
+    onEnterBack: () => {
+      // Smooth re-entry
+      sticky.style.position = 'fixed';
+      sticky.style.top = '35px';
+    }
+  });
 
-  }, [colorActive, productData, isMobile]);
+  // Cleanup function
+  return () => {
+    sticky.style.position = originalPosition;
+    sticky.style.top = originalTop;
+    sticky.style.transform = 'none';
+  };
+
+}, [colorActive, productData, isMobile]);
 
   // buttons ref
   const prevBtnRef = useRef<HTMLButtonElement>(
@@ -368,17 +352,10 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
         </div>
       )}
       {cartState === "success" && (
-        <div
-          ref={mainContainerRef}
-          className="w-full h-fit flex flex-col md:flex-row ">
-          <div className="w-full md:w-[50%] relative">
+        <div className="w-full min-h-screen flex flex-col md:flex-row  pinCon">
+          <div className="w-full md:w-[50%] relative triggerDiv">
             <div
-              ref={imageDiv}
-              className="w-full flex flex-row md:flex-col image-div relative overflow-x-auto md:overflow-x-hidden"
-              style={{
-                scrollSnapType: isMobile ? "x mandatory" : "none",
-                scrollBehavior: "smooth",
-              }}>
+              className="w-full flex flex-row md:flex-col relative overflow-x-auto md:overflow-x-hidden">
               {currentImages.map((img, index) => (
                 <div
                   key={index}
@@ -412,7 +389,8 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                     {
                       "opacity-100": showButtons,
                     }
-                  )}>
+                  )}
+                >
                   <button
                     onClick={goToPreviousImage}
                     aria-label="Previous image"
@@ -472,9 +450,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           </div>
 
           {/* Product details section */}
-          <div
-            ref={stickyRef}
-            className="md:w-[50%] flex flex-col items-center pt-10  lg:pt-24">
+          <div className="md:w-[50%] flex flex-col items-center pt-10  lg:pt-24 stickyDiv right-0 top-[35px]">
             <div className="w-full px-6 md:px-8 md:w-[90%] lg:w-[80%] xl:w-[60%]">
               <div className="flex justify-between items-center">
                 <p className="text-black/50 text-sm font-[300] font-avenir">
@@ -650,7 +626,9 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                 <>
                   {(productData
                     ? products
-                        .filter((prod) => prod.category === productData.category)
+                        .filter(
+                          (prod) => prod.category === productData.category
+                        )
                         .slice(0, 10)
                     : []
                   ).map((product: ProductData, index: number) => (
@@ -850,7 +828,7 @@ const PinchZoom = ({
       >
         <div
           ref={imageRef}
-          className="w-full md:w-[80%] h-[80%] relative overflow-hidden select-none"
+          className="w-full md:w-[80%] h-[80%] bg-[#f2f2f2]  relative overflow-hidden select-none"
           style={{
             transform: `scale(${transform.scale}) translate(${
               transform.x / transform.scale
@@ -862,7 +840,7 @@ const PinchZoom = ({
           <Image
             src={images[currentIndex].url}
             fill
-            className="object-cover pointer-events-none"
+            className="object-cover max-w-xl mx-auto bg-[#f2f2f2] pointer-events-none"
             alt={title}
             priority
           />

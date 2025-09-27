@@ -45,7 +45,7 @@ function SignInForm() {
       if (!parseResult.success) {
         setSignState("error");
         setErrorMessage("Please check your input");
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
         setSignState("idle");
         return;
       }
@@ -67,7 +67,7 @@ function SignInForm() {
       if (!loginRes.ok) {
         setSignState("error");
         setErrorMessage(logRes.msg || "Invalid username or password");
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
         setSignState("idle");
         return;
       }
@@ -100,7 +100,7 @@ function SignInForm() {
 
         setSignState("error");
         setErrorMessage(errorMessage);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
         setSignState("idle");
         return;
       }
@@ -112,7 +112,7 @@ function SignInForm() {
     } catch (error: any) {
       setSignState("error");
       setErrorMessage(error.message || "Sign in failed");
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       setSignState("idle");
     }
   };

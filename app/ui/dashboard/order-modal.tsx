@@ -8,6 +8,7 @@ import { capitalize } from "@/libs/functions";
 import { useRouter, useSearchParams } from "next/navigation";
 import StatusBadge from "./statusBadge";
 import { useApiClient } from "@/libs/useApiClient";
+import { cn } from "@/libs/cn";
 
 // Core modal content component
 function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
@@ -86,6 +87,8 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
       | "pending"
       | "cancelled"
       | "shipped";
+    console.log(newStatus) 
+ 
     await handleUpdate(orderInView._id, { deliveryStatus: newStatus });
   };
 
@@ -206,12 +209,15 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                                   value={orderInView?.deliveryStatus.toLowerCase()}
                                   onChange={handleDeliveryStatusChange}
                                   disabled={isUpdating}
-                                  className="appearance-none w-[150px] px-4 py-1 pr-8 text-sm border border-yellow-500/50 text-yellow-600 bg-yellow-50 rounded-lg focus:outline-none disabled:opacity-50"
-                                >
+                                  className={cn("appearance-none w-[150px] px-4 py-1 pr-8 text-sm border border-yellow-500/50 text-yellow-600 bg-yellow-50 rounded-lg focus:outline-none disabled:opacity-50",{
+                                    "border-green-500/50 text-green-600 bg-green-50 ":orderInView?.deliveryStatus === "delivered",
+                                     "border-red-500/50 text-red-600 bg-red-50 ":orderInView?.deliveryStatus === "cancelled",
+                                     "border-blue-500/50 text-blue-600 bg-blue-50 ":orderInView?.deliveryStatus === "shipped"
+                                  })} >
                                   <option value="delivered">Delivered</option>
                                   <option value="pending">Pending</option>
                                   <option value="cancelled">Cancelled</option>
-                                  <option value="shipped">Shipped</option>
+                                  {/* <option value="shipped">Shipped</option> */}
                                 </select>
                                 <Image
                                   src="/icons/arrow-y.svg"

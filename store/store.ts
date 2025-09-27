@@ -17,6 +17,8 @@ import {
   useStoreProductStore,
 } from "./dashbaord/products";
 import { PaginationStore, usePaginationStore } from "./dashbaord/pagination";
+import { ContentStore, useContentStore } from "./dashbaord/content-store/content";
+import { NotificationStore, useNotificationStore } from "./notification";
 
 export type Store = ScrollStore &
   SearchStore &
@@ -28,7 +30,9 @@ export type Store = ScrollStore &
   GeneralStore &
   CategoryStore &
   OrdersStore &
-  StoreProductStore &
+  StoreProductStore & 
+  NotificationStore &
+  ContentStore &
   PaginationStore & {
     initializeWithServerData: (
       products: ProductData[],
@@ -324,6 +328,8 @@ export const useBoundStore = create<Store>()(
       ...useOrdersStore(set, get, store),
       ...useStoreProductStore(set, get, store),
       ...usePaginationStore(set, get, store),
+      ...useContentStore(set,get,store),
+      ...useNotificationStore(set,get,store),
       // custom state
       isServerInitialized: false,
 

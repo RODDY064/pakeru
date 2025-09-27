@@ -5,10 +5,17 @@ import Link from "next/link";
 import React from "react";
 import Icon from "../Icon";
 import { WebhookConnectionStatus } from "@/app/(dashboard)/admin/orders/hooks/webhookProivider";
+import Notification from "./notification";
+import { useBoundStore } from "@/store/store";
 
 
 export default function Navbar() {
+
+  const { toggleNotModal } = useBoundStore()
+
+
   return (
+   <>
     <div className="w-full fixed z-[99] py-2 md:py-4 px-2 md:px-8 bg-black text-white font-avenir font-[500] flex items-center justify-between">
       <div>
         <Image
@@ -41,16 +48,18 @@ export default function Navbar() {
             </p>
           </div>
         </div>
-        <Link
+        {/* <Link
           href="/"
           className="px-4 py-2 bg-white/15 rounded-lg cursor-pointer hidden md:flex">
           <p className="font-avenir font-[500] text-md">Pakeru Store</p>
-        </Link>
-        <div className="size-11 rounded-full  items-center justify-center bg-white/15 hidden md:flex cursor-pointer">
+        </Link> */}
+        <div onClick={toggleNotModal} className="size-11 rounded-full  items-center justify-center bg-white/15 hidden md:flex cursor-pointer">
           <p className="font-avenir font-[500] text-md">MS</p>
         </div>
     
       </div>
     </div>
+    <Notification/>
+   </>
   );
 }

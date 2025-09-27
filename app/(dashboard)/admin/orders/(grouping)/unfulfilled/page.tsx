@@ -8,6 +8,7 @@ import { formatJoinedDate } from "@/libs/functions";
 import {
   computeOrdersStats,
   OrdersData,
+  PaymentStatusFilter,
 } from "@/store/dashbaord/orders-store/orders";
 import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
@@ -23,7 +24,6 @@ export default function Unfulfilled() {
 
   const {
     unfulfilledOrders,
-    sortDate,
     toggleDateSorting,
     setOrderModal,
     loadOrders,
@@ -40,10 +40,15 @@ export default function Unfulfilled() {
     slice,
     pagination,
     updateOrder,
+    filteredOrders,
+    setOrderTypeFilter,
   } = useBoundStore();
 
-  const orderStats = useMemo(() => computeOrdersStats(unfulfilledOrders),[unfulfilledOrders]);
-    const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
+  const orderStats = useMemo(
+    () => computeOrdersStats(unfulfilledOrders),
+    [unfulfilledOrders]
+  );
+  const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
 
   const unfulfilledStats = useMemo(() => {
     if (!orderStats) return [];
@@ -54,14 +59,21 @@ export default function Unfulfilled() {
     ];
   }, [orderStats]);
 
+  const loadOrdersForPagination = async (page: number) => {
+    await loadOrders("unfulfilled", {
+      get,
+      force: false,
+    });
+  };
+
   useEffect(() => {
     configure({
       dataKey: "unfulfilledOrders",
-      loadFunction: "loadOrders",
-      size:10,
-      backendSize: 25,
-      apiClient: get,
+      loadFunction: loadOrdersForPagination,
+      size: 25,
     });
+
+    setOrderTypeFilter("unfulfilled");
   }, []);
 
   useEffect(() => {
@@ -72,9 +84,9 @@ export default function Unfulfilled() {
   }, [unfulfilledOrders]);
 
   useEffect(() => {
-    const sliceData = slice(unfulfilledOrders);
+    const sliceData = slice(filteredOrders);
     setCurrentOrders(sliceData);
-  }, [pagination, unfulfilledOrders]);
+  }, [pagination, unfulfilledOrders, filteredOrders]);
 
   const [renderCount, setRenderCount] = React.useState(0);
   useEffect(() => {
@@ -219,6 +231,20 @@ export default function Unfulfilled() {
 }
 
 const Header = () => {
+  const {
+    OrderFilters,
+    setOrderSearch,
+    setDeliveryStatusFilter,
+    setPaymentStatusFilter,
+    setDateFilter,
+    resetOrdersFilters
+  } = useBoundStore();
+
+   useEffect(()=>{
+      resetOrdersFilters()
+    },[])
+  
+
   return (
     <>
       <div className="px-2 w-[50%] lg:w-[30%] py-2 bg-black/10 rounded-xl border-black/15 border flex gap-1 items-center">
@@ -230,7 +256,9 @@ const Header = () => {
           className="mb-[5px]"
         />
         <input
-          placeholder="Search by order id, customer "
+          value={OrderFilters.search}
+          onChange={(e) => setOrderSearch(e.target.value)}
+          placeholder="Search  (by ID, customer name, or email) "
           className="w-full h-full focus:outline-none px-2 text-md font-avenir "
         />
       </div>
@@ -241,10 +269,17 @@ const Header = () => {
         <div className="flex items-center justify-center gap-2 border border-black/20 pl-3 pr-1 py-[2px] rounded-lg">
           <p className="font-avenir font-[500] text-sm">Payment Status: </p>
           <div className="relative flex items-center">
-            <select className="appearance-none text-sm cursor-pointer text-gray-600 focus:outline-none px-2 py-[2px] rounded-md font-avenir font-[500] text-md bg-gray-200 border border-gray-500/20 pr-7">
-              <option value="Clothing">Completed</option>
-              <option>Pending</option>
-              <option>Cancelled</option>
+            <select
+              value={OrderFilters.paymentStatus}
+              onChange={(e) =>
+                setPaymentStatusFilter(e.target.value as PaymentStatusFilter)
+              }
+              className="appearance-none text-sm cursor-pointer text-gray-600 focus:outline-none px-2 py-[2px] rounded-md font-avenir font-[500] text-md bg-gray-200 border border-gray-500/20 pr-7"
+            >
+              <option value="All">All</option>
+              <option value="Completed">Completed</option>
+              <option value="Pending">Pending</option>
+              <option value="Cancelled">Cancelled</option>
             </select>
             <Image
               src="/icons/arrow.svg"
@@ -262,6 +297,8 @@ const Header = () => {
             <input
               type="date"
               placeholder="GHS 00.00"
+              value={OrderFilters.dateFilter.from ?? ""}
+              onChange={(e) => setDateFilter({ from: e.target.value })}
               className="w-24 focus:outline-none text-sm  px-2 text-md font-avenir cursor-pointer"
             />
           </div>
@@ -270,6 +307,8 @@ const Header = () => {
             <input
               type="date"
               placeholder="GHS 00.00"
+              value={OrderFilters.dateFilter.to ?? ""}
+              onChange={(e) => setDateFilter({ to: e.target.value })}
               className="w-24 focus:outline-none  px-2 text-sm font-avenir cursor-pointer"
             />
           </div>

@@ -7,11 +7,13 @@ import PersonalDetails from "@/app/ui/personal-details";
 import MyBookmarks from "@/app/ui/mybookmarks";
 import { useAccount } from "./account-context";
 import MyOrders from "@/app/ui/myorders";
+import { useSession } from "next-auth/react";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Account() {
   const { pages } = useAccount();
+  const {data:session} = useSession()
 
   function render() {
     const activePage = pages?.find((page) => page.isActive)?.name;

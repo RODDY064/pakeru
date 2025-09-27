@@ -21,12 +21,6 @@ const pages: Array<{
   }>;
 }> = [
   {
-    name: "Home",
-    icon: "home.svg",
-    icon_w: "home-w.svg",
-    path: "/admin",
-  },
-  {
     name: "Orders",
     icon: "orders.svg",
     icon_w: "orders-w.svg",
@@ -43,13 +37,13 @@ const pages: Array<{
     path: "/admin/store-products",
     imgW: 18,
   },
-  {
-    name: "Customers",
-    icon: "customers.svg",
-    icon_w: "customers-w.svg",
-    path: "/admin/customers",
-    imgW: 18,
-  }
+  // {
+  //   name: "Customers",
+  //   icon: "customers.svg",
+  //   icon_w: "customers-w.svg",
+  //   path: "/admin/customers",
+  //   imgW: 18,
+  // }
 ];
 
 export default function SideMenu() {

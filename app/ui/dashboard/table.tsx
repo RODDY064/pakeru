@@ -253,7 +253,7 @@ export default function Table({
           </div>
         </div>
       </div>
-      <Pagination />
+      <Pagination Refresh={reload} />
     </div>
   );
 }

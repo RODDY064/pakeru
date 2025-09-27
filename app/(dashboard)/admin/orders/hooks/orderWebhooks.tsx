@@ -40,9 +40,7 @@ export function useOrdersWebhook() {
         draft.ordersStats = computeOrdersStats(draft.unfulfilledOrders);
         draft.filteredOrders = filterOrders(
           draft.unfulfilledOrders,
-          draft.search,
-          draft.activeFilter,
-          draft.dateFilter
+          draft.OrderFilters
         );
       })
     );

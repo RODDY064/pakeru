@@ -33,8 +33,10 @@ export default function Products() {
     getCategoryNameById,
   } = useBoundStore();
 
-  const { get } = useApiClient()
-  const [currentPageProducts, setCurrentPageProducts] = useState<ProductData[]>([]);
+  const { get } = useApiClient();
+  const [currentPageProducts, setCurrentPageProducts] = useState<ProductData[]>(
+    []
+  );
   const [categoriesSelect, setCategoriesSelect] = useState<string[]>([]);
   const router = useRouter();
   const [productState, setProductState] = useState<
@@ -56,13 +58,13 @@ export default function Products() {
   ]);
 
   useEffect(() => {
-    loadStoreProducts(true,get);
+    loadStoreProducts(true, get);
     loadCategories();
   }, []);
 
-  useEffect(()=>{
-   console.log(storeProducts)
-  },[storeProducts])
+  useEffect(() => {
+    console.log(storeProducts);
+  }, [storeProducts]);
 
   const productStats = useMemo(() => getProductStats(), [getProductStats]);
 
@@ -71,33 +73,34 @@ export default function Products() {
     setCategoriesSelect(catNames);
   }, [categories]);
 
+  useEffect(() => {
+    console.log(pagination);
+  }, [pagination]);
 
-  useEffect(()=>{
-   console.log(pagination)
-  },[pagination])
+  const loadProductForPagination = async (page: number) => {
+    await loadStoreProducts(false, get);
+  };
 
   useEffect(() => {
     configure({
       dataKey: "storeProducts",
-      loadFunction: "loadStoreProducts",
+      loadFunction: loadProductForPagination,
       size: 10,
-      backendSize: 25,
-      apiClient:get
     });
   }, []);
 
   useEffect(() => {
     updateFromAPI({
-      total:storeProducts.length,
+      total: storeProducts.length,
       totalPages: storeProducts.length,
       page: 1,
     });
   }, [storeProducts]);
 
   useEffect(() => {
-    const sliceData = slice(storeProducts);
+    const sliceData = slice(filteredStoreProducts);
     setCurrentPageProducts(sliceData);
-  }, [pagination, storeProducts]);
+  }, [pagination, storeProducts, storeProductFilters,filteredStoreProducts]);
 
   const [stats, setStats] = useState([
     { label: "Product Sells Rate", value: 0 },
@@ -118,6 +121,12 @@ export default function Products() {
       { label: "Product Out of Stock", value: productStats.outOfStock ?? 0 },
     ]);
   }, [productStats]);
+
+  // filtering
+
+  useEffect(() => {
+    console.log(storeProductFilters,'store filters ');
+  }, [storeProductFilters]);
 
   const tableColumns: Column[] = [
     {
@@ -156,7 +165,7 @@ export default function Products() {
         </div>
       ),
       width: "w-[400px]",
-      style:"flex-shrink-0 flex gap-2 items-cente",
+      style: "flex-shrink-0 flex gap-2 items-cente",
       render: (product: ProductData) => (
         <div className="flex items-center relative  h-12 ">
           {product?.variants?.slice(0, 3).map((variant, index) => (
@@ -168,7 +177,8 @@ export default function Products() {
               style={{
                 left: `${index * 10}px`,
                 rotate: `-${index + 10}deg`,
-              }}>
+              }}
+            >
               {variant.images?.[0]?.url && (
                 <Image
                   src={variant.images[0].url}
@@ -179,9 +189,9 @@ export default function Products() {
               )}
             </div>
           ))}
-            <p className="pl-20 font-avenir font-[500] text-black text-md">
-                {product.name}
-              </p>
+          <p className="pl-20 font-avenir font-[500] text-black text-md">
+            {product.name}
+          </p>
         </div>
       ),
     },
@@ -233,7 +243,7 @@ export default function Products() {
                 style={{ backgroundColor: variant.colorHex }}
                 className="size-4 border border-black/15 rounded-sm "
               ></div>
-               {index !== product.variants.length - 1 && ","}
+              {index !== product.variants.length - 1 && ","}
             </div>
           ))}
         </div>
@@ -294,7 +304,7 @@ export default function Products() {
         tableName="Products"
         reload={() => loadStoreProducts(false, get)}
         columnStyle="py-4"
-        columnClick={(product)=> handleLink(product)}
+        columnClick={(product) => handleLink(product)}
         dateKey="createdAt"
       />
       <MobileTabs />
@@ -323,7 +333,7 @@ const Header = ({
               search: e.target.value,
             })
           }
-          placeholder="Search for products"
+          placeholder="Search for a product by the name"
           className="w-full h-full focus:outline-none px-2"
         />
       </div>
@@ -341,7 +351,7 @@ const Header = ({
               }
               className="appearance-none text-gray-600 focus:outline-none px-2 py-[0.8px] rounded-md font-avenir font-[500] text-sm bg-gray-200 border border-gray-500/10 pr-7"
             >
-              <option value="Clothing">All</option>
+              <option value="all">All</option>
               {categoriesSelect.map((cat, index) => (
                 <option key={index}>{cat}</option>
               ))}
@@ -434,7 +444,10 @@ const MobileTabs = () => {
       <p className="font-avenir text-lg md:text-2xl ">Tables</p>
       <div className="mt-2 flex flex-col gap-2">
         {tabs.map((tab, index) => (
-          <Link key={index} href={`/admin/store-products/mobile-table/${tab.name.toLowerCase()}`}>
+          <Link
+            key={index}
+            href={`/admin/store-products/mobile-table/${tab.name.toLowerCase()}`}
+          >
             <div className="w-full bg-white border border-black/20 py-2 px-3 rounded-xl flex items-center justify-between">
               <div className="flex  gap-1">
                 <Image
