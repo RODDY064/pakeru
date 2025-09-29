@@ -418,7 +418,6 @@ export const apiCall = async (
       ...(options.headers ?? {}), 
     },
     credentials: "include",
-    signal: AbortSignal.timeout(30000),
     ...options,
   });
 

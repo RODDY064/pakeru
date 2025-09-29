@@ -95,13 +95,6 @@ export default function Nav() {
   const { data: session, status } = useSession();
 
 
-  useEffect(() => {
-    if (session?.error === "RefreshTokenError") {
-      console.log("Refresh token expired - redirecting to login");
-      window.location.href = "/sign-in";
-    }
-  }, [session?.error]);
-
   useStoreInitialization();
 
   useEffect(() => {

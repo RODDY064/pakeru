@@ -13,7 +13,7 @@ export default function Cedis({
 }) {
   return (
     <span className={cn("flex items-center", className)}>
-      <span className="mt-[3px]">GH</span>{" "}
+      <span className="mt-[2.5px]">GH</span>{" "}
       <Image
         src="/icons/cedis.png"
         width={size ?? 13}

@@ -22,14 +22,14 @@ import Media from "@/app/ui/dashboard/media";
 import Category from "@/app/ui/dashboard/categories";
 import ColorStockAndSizes from "@/app/ui/dashboard/colorStockAndSize";
 import ProductTags from "@/app/ui/dashboard/productTags";
-import { mapVariantsToColors, ProductAPIService } from "./helpers";
+import {  mapVariantsToColors, ProductAPIService } from "./helpers";
 import DeleteModal from "./deleletModal";
 import { useApiClient } from "@/libs/useApiClient";
 import SizeType from "@/app/ui/dashboard/sizeType";
 import Instructions from "@/app/ui/dashboard/instructions";
 import StatusBadge from "@/app/ui/dashboard/statusBadge";
 
-const debugFormData = (data: ProductFormData, colors: ProductColor[]) => {
+const debugFormData = (data: ProductFormData, variants: ProductColor[]) => {
   console.log("🐛 Form submission debug:", {
     formData: {
       name: `"${data.name}" (length: ${data.name?.length})`,
@@ -43,7 +43,9 @@ const debugFormData = (data: ProductFormData, colors: ProductColor[]) => {
       tags: data.tags?.map((t) => `"${t}"`),
       tagsLength: data.tags?.length,
     },
-    colors: colors.map((color) => ({
+    productCare: `${data.productCare}`,
+    washInstructions: `${data.washInstructions[0]}`,
+    variants: variants.map((color) => ({
       name: `"${color.name}" (length: ${color.name?.length})`,
       hex: color.hex,
       stock: color.stock,
@@ -54,22 +56,22 @@ const debugFormData = (data: ProductFormData, colors: ProductColor[]) => {
     validation: {
       hasName: !!data.name?.trim(),
       hasPrice: !!data.price,
-      hasColors: colors.length > 0,
-      hasValidColors: colors.some((c) => c.name?.trim()),
-      hasSufficientImages: colors.every((c) => c.images?.length >= 3),
+      hasColors: variants.length > 0,
+      hasValidColors: variants.some((c) => c.name?.trim()),
+      hasSufficientImages: variants.every((c) => c.images?.length >= 3),
     },
   });
 };
 
 export type ProductImage = {
-  _id: number;
+  _id: string;
   url: string | ArrayBuffer;
   name: string;
   file?: File | Blob;
 };
 
 export type ProductColor = {
-  _id: number;
+  _id: string;
   name: string;
   color?: string;
   hex: string;
@@ -89,6 +91,7 @@ function ProductActionsContent() {
     setValue,
     watch,
     control,
+    getValues
   } = useForm<ProductFormData>({
     resolver: zodResolver(ProductFormSchema),
     defaultValues: {
@@ -99,7 +102,11 @@ function ProductActionsContent() {
       status: "active",
       category: "",
       tags: [],
-      colors: [],
+      variants: [],
+      sizeType: {
+        gender: "",
+        clothType: "",
+      },
     },
   });
 
@@ -112,27 +119,37 @@ function ProductActionsContent() {
 
   const { patch, post } = useApiClient();
 
-  const [colors, setColors] = useState<ProductColor[]>([]);
+  const [variants, setVariants] = useState<ProductColor[]>([]);
   const [submitError, setSubmitError] = useState<string>("");
   const [stocksError, setStocksError] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [activeColorId, setActiveColorId] = useState<number | null>(null);
+  const [activeColorId, setActiveColorId] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const [loadingProduct, setLoadingProduct] = useState<boolean>(false);
   const [editorValue, setEditorValue] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [productLoadError, setProductLoadError] = useState<string | null>(null);
-  const [originalData, setOriginalData] = useState<ProductFormData | null>(null);
+  const [originalData, setOriginalData] = useState<ProductFormData | null>(
+    null
+  );
   const [originalColors, setOriginalColors] = useState<ProductColor[] | null>(
     null
   );
-  const [productCare, setProductCare] = useState("");
+  const [care, setCare] = useState("");
   const [instruction, setInstruction] = useState("");
   const [instructions, setInstructions] = useState<string[]>([]);
+
+  const handleAddInstruction = () => {
+    if (instruction.trim()) {
+      setInstructions([...instructions, instruction.trim()]);
+      setInstruction(""); // reset input
+    }
+  };
+
   const [sizeTye, setSizeTye] = useState<{
     gender: "male" | "female";
     clothType: "pants";
@@ -161,7 +178,22 @@ function ProductActionsContent() {
           | "draft",
         category: product.category,
         tags: product.tags as string[],
-        colors: [],
+        variants: [],
+        productCare: product.productCare ?? "",
+        washInstructions: product.washInstructions ?? [],
+        sizeType: {
+          gender: product?.sizeType?.gender ?? "",
+          clothType: product?.sizeType?.clothType ?? "",
+        } as {
+          gender: "" | "male" | "female";
+          clothType:
+            | ""
+            | "t-shirts"
+            | "polo"
+            | "jeans"
+            | "pants"
+            | "cargo pants";
+        },
       };
 
       // Set form values
@@ -172,14 +204,22 @@ function ProductActionsContent() {
       setValue("status", formData.status);
       setValue("category", formData.category);
       setValue("tags", formData.tags);
+      setValue("productCare", formData.productCare);
+      setValue("washInstructions", formData.washInstructions);
+      setValue("sizeType.gender", formData.sizeType.gender);
+      setValue("sizeType.clothType", formData.sizeType?.clothType);
 
       setEditorValue(formData.description);
       setTags(formData.tags ?? []);
       setSelectedCategory(formData.category);
+      setInstructions(formData.washInstructions ?? []);
+
+
+
 
       if (product.variants && product.variants.length > 0) {
         const mappedColors = mapVariantsToColors(product.variants);
-        setColors(mappedColors);
+        setVariants(mappedColors);
         if (mappedColors.length > 0) {
           setActiveColorId(mappedColors[0]._id);
         }
@@ -263,19 +303,17 @@ function ProductActionsContent() {
   // Watch form values for real-time updates
   const watchedValues = watch();
 
-  const handleAddInstruction = () => {
-    if (!instruction.trim()) return;
-    setInstructions((prev) => [...prev, instruction.trim()]);
-    setInstruction(""); //
-  };
+  useEffect(() => {
+    setValue("washInstructions", instructions, { shouldValidate: true });
+  }, [instructions, setValue]);
 
   useEffect(() => {
     console.log(selectedProduct, "selected product");
   }, [selectedProduct]);
 
   useEffect(() => {
-    setValue("colors", colors);
-  }, [colors, setValue]);
+    setValue("variants", variants);
+  }, [variants, setValue]);
 
   useEffect(() => {
     setValue("tags", tags);
@@ -286,7 +324,7 @@ function ProductActionsContent() {
   }, [selectedCategory, setValue]);
 
   const validateForm = (data: ProductFormData): string | null => {
-    if (colors.length === 0) {
+    if (variants.length === 0) {
       return "Please add at least one color variant";
     }
 
@@ -294,7 +332,7 @@ function ProductActionsContent() {
       return "Please enter a valid price";
     }
 
-    const hasInsufficientImages = colors.some(
+    const hasInsufficientImages = variants.some(
       (color) => color.images.length < 3
     );
     if (hasInsufficientImages) {
@@ -316,8 +354,7 @@ function ProductActionsContent() {
     }
 
     setIsSubmitting(true);
-
-    debugFormData(data, colors);
+    debugFormData(data, variants);
 
     try {
       if (isEditMode && productID && originalData && originalColors) {
@@ -325,30 +362,28 @@ function ProductActionsContent() {
         const result = await ProductAPIService.updateProduct(
           productID,
           data,
-          colors,
+          variants,
           originalData,
           originalColors,
           patch
         );
 
         if (result.message === "No changes to save") {
-          // User-friendly message for no changes
           setSubmitError("No changes detected to save");
+          setIsSubmitting(false); 
           return;
         }
-
-        console.log("✅ Product updated successfully:", result);
+        console.log("Product updated successfully:", result);
       } else {
         // Create new product - send all data
         const result = await ProductAPIService.createProduct(
           data,
-          colors,
+          variants,
           post
         );
-        console.log("✅ Product created successfully:", result);
+        console.log("Product created successfully:", result);
       }
-
-      // Success - redirect
+      
       router.push("/admin/store-products");
     } catch (error) {
       console.error("💥 Submission error:", error);
@@ -380,8 +415,8 @@ function ProductActionsContent() {
   }, [errors]);
 
   useEffect(() => {
-    console.log(colors, "colors");
-  }, [colors]);
+    console.log(variants, "variants");
+  }, [variants]);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -405,13 +440,23 @@ function ProductActionsContent() {
               />
             </div>
             <div className="flex justify-between items-center w-full">
-              <div >
+              <div>
                 {productID ? (
                   <div className="flex items-center gap-3">
                     <p className="font-avenir text-xl sm:text-2xl font-bold mt-[5px]">
                       {productName}
                     </p>
-                    {selectedProduct?._id && <StatusBadge status={selectedProduct?.status as string} statuses={["active","inactive","out-of-stock","draft" ]}/>}
+                    {selectedProduct?._id && (
+                      <StatusBadge
+                        status={selectedProduct?.status as string}
+                        statuses={[
+                          "active",
+                          "inactive",
+                          "out-of-stock",
+                          "draft",
+                        ]}
+                      />
+                    )}
                   </div>
                 ) : (
                   " Add Product"
@@ -476,8 +521,8 @@ function ProductActionsContent() {
                   </div>
 
                   <Media
-                    setColors={setColors}
-                    colors={colors}
+                    setVariants={setVariants}
+                    variants={variants}
                     activeColorId={activeColorId}
                     setActiveColorId={setActiveColorId}
                   />
@@ -516,7 +561,18 @@ function ProductActionsContent() {
                       </div>
                     </div>
                   </div>
-                  <Instructions />
+                  <Instructions
+                    care={care}
+                    register={register}
+                    onCareChange={setCare}
+                    onAddInstruction={handleAddInstruction}
+                    instructionInput={instruction}
+                    instructions={instructions}
+                    onInstructionInputChange={setInstruction}
+                    onRemoveInstruction={(idx) =>
+                      setInstructions(instructions.filter((_, i) => i !== idx))
+                    }
+                  />
                 </div>
               </div>
 
@@ -574,7 +630,7 @@ function ProductActionsContent() {
                       Stock and sizes for selected color
                     </p>
                     <div className="w-full pb-4 grid grid-cols-3 gap-2">
-                      {colors.map((color) => (
+                      {variants.map((color) => (
                         <div
                           key={color._id}
                           onClick={() => setActiveColorId(color._id)}
@@ -600,23 +656,23 @@ function ProductActionsContent() {
                     </div>
 
                     {activeColorId &&
-                    colors.find((c) => c._id === activeColorId) ? (
+                     variants.find((c) => c._id === activeColorId) ? (
                       <ColorStockAndSizes
-                        colors={colors}
-                        setColors={setColors}
+                        colors={variants}
+                        setColors={setVariants}
                         activeColorId={activeColorId}
                       />
                     ) : (
                       <div className="text-center py-8 h-full">
                         <p className="text-black/50 font-avenir">
-                          {colors.length === 0
+                          {variants.length === 0
                             ? "Add a color first"
                             : "Select a color to manage stock and sizes"}
                         </p>
                       </div>
                     )}
                   </div>
-                  <SizeType />
+                  <SizeType register={register} errors={errors} watch={watch} />
                   <button
                     type="submit"
                     disabled={isSubmitting}

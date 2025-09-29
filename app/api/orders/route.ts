@@ -18,6 +18,7 @@ async function extractTokenFromRequest(request: NextRequest): Promise<string | u
 function getForwardHeaders(request: NextRequest, token?: string): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning':'true'
   };
 
   // Add authentication if token available
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
     const response = await fetch(url, {
       method: 'GET',
       headers: getForwardHeaders(request, token),
-      signal: AbortSignal.timeout(30000),
+      cache:"no-store"
     });
 
     if (!response.ok) {
@@ -82,7 +83,6 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
 
-    // console.log(data)
 
     return NextResponse.json(data, { status: 200 });
 
@@ -109,7 +109,6 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: getForwardHeaders(request, token),
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(30000), // 30s timeout
     });
 
     if (!response.ok) {

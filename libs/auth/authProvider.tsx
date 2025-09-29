@@ -8,10 +8,10 @@ interface AuthProviderProps {
 }
 
 function BackgroundAuthHandler({ children }: AuthProviderProps) {
-  const { isRefreshing, hasSession } = useBackgroundAuth();
+  const { hasSession } = useBackgroundAuth();
   
   if (typeof window !== 'undefined' && window.location.pathname.includes('/admin')) {
-    console.log("🔍 Auth Status:", { isRefreshing, hasSession });
+    console.log("🔍 Auth Status:", {  hasSession });
   }
 
   return <>{children}</>;

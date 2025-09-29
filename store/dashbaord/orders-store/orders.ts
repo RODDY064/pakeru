@@ -78,10 +78,12 @@ export type OrderFiltersTypes = {
 export type OrdersStore = {
   fulfilledOrders: OrdersData[];
   unfulfilledOrders: OrdersData[];
-  filteredOrders: OrdersData[];
+  fulfilledFilteredOrders: OrdersData[];
+  unfulfilledFilteredOrders: OrdersData[];
   userOrders: OrdersData[];
   orderInView: OrdersData | null;
   showOrderModal: boolean;
+  orderTotalSize: number;
 
   OrderFilters: OrderFiltersTypes;
 
@@ -127,6 +129,7 @@ export type OrdersStore = {
       force?: boolean;
       limit?: number;
       get?: ReturnType<typeof useApiClient>["get"];
+      page?: number;
     }
   ) => Promise<void>;
   loadOrder: (
@@ -364,28 +367,33 @@ const apiService = {
   async fetchOrders(
     type: "fulfilled" | "unfulfilled",
     get: ReturnType<typeof useApiClient>["get"],
-    limit?: number
-  ): Promise<OrdersData[]> {
+    limit?: number,
+    page?: number
+  ): Promise<{ total: number; orders: OrdersData[] }> {
     try {
       const query = new URLSearchParams();
       query.append("fulfilledStatus", type);
       if (limit) query.append("limit", limit.toString());
+      if (page) query.append("page", page.toString());
 
-      const response = await get<{ data: OrdersData[] }>(
+      const response = await get<{ data: OrdersData[]; total: number }>(
         `/orders?${query.toString()}`,
         {
           requiresAuth: true,
         }
       );
 
-      console.log(response, "order response");
+      // console.log(response, "order response");
 
       const orders = response.data;
       if (!Array.isArray(orders)) {
         throw new Error("Expected orders array from API");
       }
 
-      return transformApiOrdersToOrdersData(orders);
+      return {
+        total: response.total,
+        orders: transformApiOrdersToOrdersData(orders),
+      };
     } catch (error) {
       console.error("Failed to fetch orders:", error);
       throw error;
@@ -475,10 +483,12 @@ export const useOrdersStore: StateCreator<
 > = (set, get) => ({
   fulfilledOrders: [],
   unfulfilledOrders: [],
-  filteredOrders: [],
+  fulfilledFilteredOrders: [],
+  unfulfilledFilteredOrders: [],
   userOrders: [],
   orderInView: null,
   showOrderModal: false,
+  orderTotalSize: 0,
 
   OrderFilters: {
     search: "",
@@ -563,13 +573,13 @@ export const useOrdersStore: StateCreator<
     }
 
     const filteredOrders = filterOrders(ordersToFilter, OrderFilters);
-    const sortedOrders = sortOrdersByDate(
-      filteredOrders,
-      OrderFilters.sortDate
-    );
 
     set((state) => {
-      state.filteredOrders = sortedOrders;
+      if (OrderFilters.type === "fulfilled") {
+        state.fulfilledFilteredOrders = filteredOrders;
+      } else {
+        state.unfulfilledFilteredOrders = filteredOrders;
+      }
     });
   },
 
@@ -624,9 +634,56 @@ export const useOrdersStore: StateCreator<
     });
   },
 
-  loadOrders: async (type, options = {}) => {
+  // loadOrders: async (type, options = { force: false , page: 1 }) => {
+  //   const { setOrdersState, setOrderError } = get();
+  //   const { force = false, limit = 25, get: apiGet, page } = options;
+
+  //   if (!apiGet) {
+  //     throw new Error("API get function is required");
+  //   }
+
+  //   const currentOrders =
+  //     type === "fulfilled" ? get().fulfilledOrders : get().unfulfilledOrders;
+  //   const currentState =
+  //     type === "fulfilled" ? get().fulfilledState : get().unfulfilledState;
+
+  //   if (!force && currentState === "success" && currentOrders.length > 0 ) {
+  //     return;
+  //   }
+
+  //   setOrdersState(type, "loading");
+
+  //   try {
+  //     const { total, orders: ordersData } = await apiService.fetchOrders(
+  //       type,
+  //       apiGet,
+  //       limit,
+  //       page
+  //     );
+
+  //     set((state) => {
+  //       if (type === "fulfilled") {
+  //         state.fulfilledOrders = ordersData;
+  //       } else {
+  //         state.unfulfilledOrders = ordersData;
+  //       }
+  //       state.orderTotalSize = total;
+  //     });
+
+  //     setOrdersState(type, "success");
+  //     get().applyOrderFilters();
+  //   } catch (error) {
+  //     setOrdersState(type, "failed");
+  //     setOrderError(
+  //       type,
+  //       error instanceof Error ? error.message : `Failed to load ${type} orders`
+  //     );
+  //   }
+  // },
+
+  loadOrders: async (type, options = { force: false, page: 1 }) => {
     const { setOrdersState, setOrderError } = get();
-    const { force = false, limit = 25, get: apiGet } = options;
+    const { force = false, limit = 25, get: apiGet, page } = options;
 
     if (!apiGet) {
       throw new Error("API get function is required");
@@ -637,21 +694,49 @@ export const useOrdersStore: StateCreator<
     const currentState =
       type === "fulfilled" ? get().fulfilledState : get().unfulfilledState;
 
-    if (!force && currentState === "success" && currentOrders.length > 0) {
+    // ✅ Skip fetch only for first page if already loaded
+    if (
+      !force &&
+      page === 1 &&
+      currentState === "success" &&
+      currentOrders.length > 0
+    ) {
       return;
     }
 
     setOrdersState(type, "loading");
 
     try {
-      const ordersData = await apiService.fetchOrders(type, apiGet, limit);
+      const { total, orders: ordersData } = await apiService.fetchOrders(
+        type,
+        apiGet,
+        limit,
+        page
+      );
 
       set((state) => {
+        const existing =
+          type === "fulfilled"
+            ? state.fulfilledOrders
+            : state.unfulfilledOrders;
+
+        const merged =
+          page === 1
+            ? ordersData // ✅ fresh load
+            : [
+                ...existing,
+                ...ordersData.filter(
+                  (order) => !existing.some((o) => o._id === order._id)
+                ),
+              ]; // ✅ append + dedupe
+
         if (type === "fulfilled") {
-          state.fulfilledOrders = ordersData;
+          state.fulfilledOrders = merged;
         } else {
-          state.unfulfilledOrders = ordersData;
+          state.unfulfilledOrders = merged;
         }
+
+        state.orderTotalSize = total;
       });
 
       setOrdersState(type, "success");
@@ -664,6 +749,7 @@ export const useOrdersStore: StateCreator<
       );
     }
   },
+  
   loadOrder: async (id, options = {}) => {
     const { setSingleOrderState, setOrderError } = get();
 
@@ -762,17 +848,21 @@ export const useOrdersStore: StateCreator<
 
         set((state) => {
           // Helper function to update order in array
-            interface UpdateOrderInArray {
+          interface UpdateOrderInArray {
             (orders: OrdersData[]): boolean;
-            }
+          }
 
-            const updateOrderInArray: UpdateOrderInArray = (orders: OrdersData[]): boolean => {
-            const index: number = orders.findIndex((o: OrdersData) => o._id === orderId);
+          const updateOrderInArray: UpdateOrderInArray = (
+            orders: OrdersData[]
+          ): boolean => {
+            const index: number = orders.findIndex(
+              (o: OrdersData) => o._id === orderId
+            );
             if (index !== -1) {
               orders[index] = { ...orders[index], ...updatedOrder };
             }
             return index !== -1;
-            };
+          };
 
           // Update in both arrays first
           let foundInUnfulfilled = updateOrderInArray(state.unfulfilledOrders);
@@ -826,7 +916,6 @@ export const useOrdersStore: StateCreator<
     toast.promise(updatePromise, {
       loading: getLoadingMessage(updates),
       success: (updatedOrder) => {
-
         const orderIdentifier =
           updatedOrder?.IDTrim || generateTrimmedId(orderId);
         const toastMessage = getToastMessages(updates);

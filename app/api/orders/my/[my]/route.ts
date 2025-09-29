@@ -51,6 +51,7 @@ export async function GET(
     const response = await fetch(`${BASE_URL}/v1/orders/my`, {
       method: "GET",
       headers: getForwardHeaders(request, token),
+        cache:"no-store"
     });
 
     const data = await response.json();

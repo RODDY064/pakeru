@@ -915,7 +915,6 @@ export const useCartStore: StateCreator<
 
       // Fetch products from API with query parameters
       const response = await fetch(`/api/products?${query.toString()}`, {
-        signal: AbortSignal.timeout(10000), // 10 seconds
       });
 
       if (!response.ok) {

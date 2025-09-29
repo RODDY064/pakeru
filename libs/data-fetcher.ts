@@ -1,4 +1,5 @@
 import { CategoryType } from "@/store/category";
+import { GalleryContent, HeroContent } from "@/store/dashbaord/content-store/content";
 import { ProductData } from "@/store/dashbaord/products";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
@@ -8,7 +9,7 @@ export async function fetchProductsServer(): Promise<ProductData[]> {
     const response = await fetch(`${BASE_URL}/v1/products?limit=25`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-       next: { revalidate: 60 }, 
+      next: { revalidate: 60 },
     });
 
     const result = await response.json();
@@ -54,7 +55,7 @@ export async function fetchCategoriesServer(): Promise<CategoryType[]> {
     const response = await fetch(`${BASE_URL}/v1/categories`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-       next: { revalidate: 60 }, 
+      next: { revalidate: 60 },
     });
 
     const result = await response.json();
@@ -77,6 +78,74 @@ export async function fetchCategoriesServer(): Promise<CategoryType[]> {
   } catch (error) {
     console.error("Failed to fetch categories on server:", error);
     return [];
+  }
+}
+
+export async function fetchContent(): Promise<{ hero: HeroContent; galleries: GalleryContent } | undefined >{
+  try {
+    const response = await fetch(`${BASE_URL}/v1/landing-page`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      next: { revalidate: 86400 }, // 24 hours in seconds
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.log(response);
+      throw new Error(`Failed to fetch content: ${result.statusText}`);
+    }
+
+    // Map the data to the required types
+    const mappedData:{ hero: HeroContent; galleries: GalleryContent }   = {
+      hero: result.section1[0]
+        ? {
+            type: "hero",
+            _id: result.section1[0]._id,
+            title: result.section1[0].title,
+            description: result.section1[0].description,
+            hero: result.section1[0].hero.map((item: any) => ({
+              name: item.name as "desktop" | "tablet" | "mobile",
+              image: {
+                _id: item.image._id,
+                publicId: item.image.publicId,
+                url: item.image.url,
+              },
+            })),
+          }
+        : {
+            type: "hero",
+            title: "",
+            description: "",
+            hero: [
+              { name: "desktop", image: { _id: "", publicId: "", url: "" } },
+              { name: "tablet", image: { _id: "", publicId: "", url: "" } },
+              { name: "mobile", image: { _id: "", publicId: "", url: "" } },
+            ],
+          },
+
+      galleries: {
+        type: "gallery",
+        items: Array.isArray(result.section3)
+          ? result.section3.map((gallery: any) => ({
+              _id: gallery._id,
+              title: gallery.name,
+              image: {
+                _id: gallery.image._id,
+                publicId: gallery.image.publicId,
+                url: gallery.image.url,
+              },
+              products: gallery.productIds || [],
+            }))
+          : [],
+      },
+    };
+
+    return mappedData;
+
+  } catch (error) {
+    console.log(error);
+    return undefined;
   }
 }
 

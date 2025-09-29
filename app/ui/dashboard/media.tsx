@@ -11,7 +11,7 @@ const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg"];
 
 const ImgDiv = React.memo<{
   image: ProductImage;
-  onRemove: (id: number) => void;
+  onRemove: (id: string) => void;
 }>(({ image, onRemove }) => {
   const handleRemove = useCallback(() => {
     onRemove(image._id);
@@ -42,8 +42,8 @@ ImgDiv.displayName = "ImgDiv";
 const ColorButton = React.memo<{
   color: ProductColor;
   isActive: boolean;
-  onSelect: (id: number) => void;
-  onRemove: (id: number) => void;
+  onSelect: (id: string) => void;
+  onRemove: (id: string) => void;
 }>(({ color, isActive, onSelect, onRemove }) => {
   const handleSelect = useCallback(() => {
     onSelect(color._id);
@@ -97,16 +97,16 @@ const ColorButton = React.memo<{
 ColorButton.displayName = "ColorButton";
 
 const Media = React.memo(({
-  colors,
-  setColors,
+  variants,
+  setVariants,
   activeColorId,
   setActiveColorId,
 }: {
-  colors: ProductColor[];
-  setColors: React.Dispatch<React.SetStateAction<ProductColor[]>>;
-  activeColorId: number | null;
+  variants: ProductColor[];
+  setVariants: React.Dispatch<React.SetStateAction<ProductColor[]>>;
+  activeColorId: string | null;
   submitError?: string;
-  setActiveColorId: React.Dispatch<React.SetStateAction<number | null>>;
+  setActiveColorId: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   const [showColorPopup, setShowColorPopup] = useState(false);
   const [newColor, setNewColor] = useState({
@@ -122,8 +122,8 @@ const Media = React.memo(({
 
   // Memoized computed values
   const activeColor = useMemo(
-    () => colors.find((color) => color._id === activeColorId),
-    [colors, activeColorId]
+    () => variants.find((variant) => variant._id === activeColorId),
+    [variants, activeColorId]
   );
 
   const canAddImages = useMemo(
@@ -173,13 +173,13 @@ const Media = React.memo(({
       return;
     }
 
-    if (colors.some((color) => color.name.toLowerCase() === newColor.name.toLowerCase())) {
+    if (variants.some((variant) => variant.name.toLowerCase() === newColor.name.toLowerCase())) {
       setUploadError("Color name already exists");
       return;
     }
 
-    const newId = Date.now();
-    setColors((prev) => [
+    const newId = String(Date.now());
+    setVariants((prev) => [
       ...prev,
       {
         _id: newId,
@@ -197,16 +197,16 @@ const Media = React.memo(({
     setNewColor({ name: "", color: "#000000", hex: "#000000" });
     setShowColorPopup(false);
     setUploadError("");
-  }, [newColor, colors, setColors, setActiveColorId]);
+  }, [newColor, variants, setVariants, setActiveColorId]);
 
-  const removeColor = useCallback((id: number) => {
-    if (colors.length <= 1) {
+  const removeColor = useCallback((id: string) => {
+    if (variants.length <= 1) {
       setUploadError("Must have at least one color");
       return;
     }
 
-    setColors((prev) => {
-      const filtered = prev.filter((color) => color._id !== id);
+    setVariants((prev) => {
+      const filtered = prev.filter((variant) => variant._id !== id);
       if (activeColorId === id && filtered.length > 0) {
         setActiveColorId(filtered[0]._id);
       } else if (filtered.length === 0) {
@@ -215,9 +215,9 @@ const Media = React.memo(({
       return filtered;
     });
     setUploadError("");
-  }, [colors.length, activeColorId, setColors, setActiveColorId]);
+  }, [variants.length, activeColorId, setVariants, setActiveColorId]);
 
-  const selectColor = useCallback((id: number) => {
+  const selectColor = useCallback((id: string) => {
     setActiveColorId(id);
     setUploadError("");
   }, [setActiveColorId]);
@@ -260,13 +260,13 @@ const Media = React.memo(({
       reader.onload = (e) => {
         if (e.target?.result) {
           const newImage: ProductImage = {
-            _id: Date.now() + Math.random(),
+            _id: String(Date.now() + Math.random()),
             url: e.target.result,
             name: file.name,
             file: file,
           };
 
-          setColors((prev) =>
+          setVariants((prev) =>
             prev.map((color) =>
               color._id === activeColorId
                 ? { ...color, images: [...color.images, newImage] }
@@ -279,20 +279,20 @@ const Media = React.memo(({
     });
 
     setUploadError("");
-  }, [activeColor, activeColorId, validateFile, setColors]);
+  }, [activeColor, activeColorId, validateFile, setVariants]);
 
-  const removeImage = useCallback((imageId: number) => {
-    setColors((prev) =>
-      prev.map((color) =>
-        color._id === activeColorId
+  const removeImage = useCallback((imageId: string) => {
+    setVariants((prev) =>
+      prev.map((variant) =>
+        variant._id === activeColorId
           ? {
-              ...color,
-              images: color.images.filter((img) => img._id !== imageId),
+              ...variant,
+              images: variant.images.filter((img) => img._id !== imageId),
             }
-          : color
+          : variant
       )
     );
-  }, [activeColorId, setColors]);
+  }, [activeColorId, setVariants]);
 
   // Drag and drop handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -400,18 +400,18 @@ const Media = React.memo(({
             {showColorPopup && ColorPopupForm}
           </div>
           <div className="w-full">
-            {colors.length === 0 && (
+            {variants.length === 0 && (
               <p className="w-full text-center text-md p-2 text-black/70 font-avenir">
                 Click the plus to add color
               </p>
             )}
 
             <div className="w-[80%] mx-2 grid grid-cols-2 gap-2 pb-2">
-              {colors.map((color) => (
+              {variants.map((variant) => (
                 <ColorButton
-                  key={color._id}
-                  color={color}
-                  isActive={activeColorId === color._id}
+                  key={variant._id}
+                  color={variant}
+                  isActive={activeColorId === variant._id}
                   onSelect={selectColor}
                   onRemove={removeColor}
                 />
@@ -427,11 +427,11 @@ const Media = React.memo(({
           <div className="flex justify-between items-center">
             {/* Desktop color selector */}
             <div className="items-center gap-3 sm:flex hidden">
-              {colors.map((color) => (
+              {variants.map((variant) => (
                 <ColorButton
-                  key={color._id}
-                  color={color}
-                  isActive={activeColorId === color._id}
+                  key={variant._id}
+                  color={variant}
+                  isActive={activeColorId === variant._id}
                   onSelect={selectColor}
                   onRemove={removeColor}
                 />

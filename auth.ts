@@ -1,17 +1,20 @@
-// auth.ts - Fixed to prevent refresh loops with proper TypeScript types
+// auth.ts - Updated to support middleware refresh signin
 import NextAuth, { Session, JWT, User, Account, Profile } from "next-auth";
 import { AdapterUser } from "next-auth/adapters";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import { AuthCache } from "./libs/redis";
+import { syncAuthCookie } from "./libs/auth/auth-sync-utility";
+import { decodeAuthSyncCookie } from "./libs/signAuth";
 
 const SignInType = z.object({
   username: z.string().min(1, { message: "Username is required." }),
   password: z.string().min(1, { message: "Password is required." }),
 });
 
-// Special marker for refresh token auto-login
+// Special markers for different signin types
 const REFRESH_TOKEN_SIGNIN = "refresh_token_signin";
+const MIDDLEWARE_REFRESH_SIGNIN = "middleware_refresh_signin"; // NEW: Added middleware refresh support
 
 export class AuthService {
   private static baseUrl = `${process.env.NEXT_PUBLIC_URL}/api/auth`;
@@ -41,8 +44,11 @@ export class AuthService {
     password: string,
     sessionId?: string
   ) {
-    if (password === REFRESH_TOKEN_SIGNIN) {
-      console.log("Processing refresh token signin");
+    // Handle both refresh token signin types
+    if (password === REFRESH_TOKEN_SIGNIN || password === MIDDLEWARE_REFRESH_SIGNIN) {
+      const signinType = password === MIDDLEWARE_REFRESH_SIGNIN ? "middleware" : "client";
+      console.log(`Processing ${signinType} refresh token signin`);
+      
       try {
         const userData = JSON.parse(username);
         return {
@@ -54,10 +60,11 @@ export class AuthService {
           accessToken: userData.accessToken,
           expiresAt: this.getTokenExpiration(userData.accessToken),
           sessionId: userData.sessionId,
+          refreshType: signinType, // Track the refresh type for logging
         };
       } catch (error) {
-        console.error("Failed to parse refresh token signin data:", error);
-        throw new Error("Invalid refresh token signin data");
+        console.error(`Failed to parse ${signinType} refresh token signin data:`, error);
+        throw new Error(`Invalid ${signinType} refresh token signin data`);
       }
     }
 
@@ -124,6 +131,7 @@ declare module "next-auth" {
     accessToken: string;
     expiresAt: number;
     sessionId?: string;
+    refreshType?: string; // NEW: Track refresh type
   }
 
   interface Session {
@@ -154,6 +162,7 @@ declare module "next-auth" {
     };
     error?: string;
     lastRefresh?: number;
+    refreshType?: string; // NEW: Track refresh type in JWT
   }
 }
 
@@ -200,6 +209,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             accessToken: user.accessToken,
             expiresAt: user.expiresAt,
             sessionId: user.sessionId,
+            refreshType: user.refreshType, // Pass through refresh type
           };
         } catch (error) {
           console.error("Authorization failed:", error);
@@ -218,9 +228,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   callbacks: {
     async signIn({ user, credentials }) {
-      // Don't clear cache for refresh token signin
+      // Don't clear cache for any refresh token signin
       const isRefreshSignin =
-        (credentials as any)?.password === REFRESH_TOKEN_SIGNIN;
+        (credentials as any)?.password === REFRESH_TOKEN_SIGNIN ||
+        (credentials as any)?.password === MIDDLEWARE_REFRESH_SIGNIN;
 
       if (!isRefreshSignin) {
         const sessionId = (credentials as any)?.sessionId;
@@ -228,6 +239,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await AuthCache.clearAuthResult(sessionId);
           console.log(`Cleared Redis cache for sessionId: ${sessionId}`);
         }
+      } else {
+        // Log successful refresh signin
+        const refreshType = (user as any).refreshType || "unknown";
+        console.log(`Successful ${refreshType} refresh signin for user:`, (user as any)._id);
       }
 
       return true;
@@ -236,7 +251,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       // Initial sign in - set up token
       if (user) {
-        return {
+        const newToken = {
           accessToken: (user as any).accessToken,
           expiresAt: (user as any).expiresAt,
           sessionId: (user as any).sessionId,
@@ -248,7 +263,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             role: (user as any).role,
           },
           lastRefresh: Date.now(),
+          refreshType: (user as any).refreshType, // Track refresh type
         };
+
+        // Log successful token creation for refresh signins
+        if ((user as any).refreshType) {
+          console.log(`JWT created for ${(user as any).refreshType} refresh signin`);
+        }
+
+        return newToken;
       }
 
       // Manual update trigger (from your refresh logic)
@@ -261,16 +284,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       }
 
-      // Check if token is expired - but don't auto-refresh here
-      // Let the client-side handle refreshing to avoid loops
       const now = Date.now();
-      const expiresAt =
-        typeof token.expiresAt === "number" ? token.expiresAt : 0;
+      const expiresAt = typeof token.expiresAt === "number" ? token.expiresAt : 0;
       const timeUntilExpiry = expiresAt - now;
-      const needsRefresh = timeUntilExpiry <= 2 * 60 * 1000; // 2 minutes buffer
+      const needsRefresh = timeUntilExpiry <= 2 * 60 * 1000; 
 
       if (needsRefresh) {
-        // Only set error if token is actually expired (not just needs refresh)
         const isExpired = timeUntilExpiry <= 0;
         if (isExpired) {
           console.log("JWT callback: Token expired");
@@ -283,6 +302,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           );
         }
       }
+
+      // Sync auth cookie for all token updates
+      syncAuthCookie(token, trigger);
 
       return token;
     },
@@ -299,58 +321,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         return {
           ...session,
-          user: {
-            _id: "",
-            username: "",
-            firstname: "",
-            lastname: "",
-            role: "",
-          },
-          accessToken: "",
-          expiresAt: 0,
-          expires: new Date(0).toISOString(),
-          sessionId:
-            typeof token.sessionId === "string" ? token.sessionId : undefined,
           error: "TokenExpiredError",
         };
       }
 
-      // FIXED: Ensure user ID is properly set - fallback chain
-      const userId =
-        typeof token.user === "object" &&
-        token.user !== null &&
-        "_id" in token.user &&
-        typeof (token.user as any)._id === "string"
-          ? (token.user as any)._id
-          : (token as any).userId || "";
-      const username =
-        (typeof token.user === "object" &&
-        token.user !== null &&
-        "username" in token.user &&
-        typeof (token.user as any).username === "string"
-          ? (token.user as any).username
-          : "") ||
-        (token as any).username ||
-        "";
+      // Ensure user ID is properly set - fallback chain
+      const userId = typeof token.user === "object" && token.user !== null && "_id" in token.user && typeof (token.user as any)._id === "string" ? (token.user as any)._id : (token as any).userId || "";
+      const username = (typeof token.user === "object" && token.user !== null && "username" in token.user && typeof (token.user as any).username === "string" ? (token.user as any).username : "") || (token as any).username || "";
 
-      console.log("Session callback - User data:", {
-        tokenUserId:
-          typeof token.user === "object" &&
-          token.user !== null &&
-          "_id" in token.user
-            ? (token.user as any)._id
-            : undefined,
-        tokenUsername:
-          typeof token.user === "object" &&
-          token.user !== null &&
-          "username" in token.user
-            ? (token.user as any).username
-            : undefined,
-        finalUserId: userId,
-        finalUsername: username,
-      });
-
-      // Return normal session with proper user ID
       return {
         ...session,
         user: {
@@ -414,3 +392,55 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   debug: process.env.NODE_ENV === "development",
   secret: process.env.AUTH_SECRET,
 });
+
+
+export const manualCookieSync = async (): Promise<boolean> => {
+  try {
+    // Get current session
+    const sessionResponse = await fetch("/api/auth/session");
+    if (!sessionResponse.ok) return false;
+    
+    const session = await sessionResponse.json();
+    if (!session?.accessToken) return false;
+
+    // Check if auth-sync cookie exists and is valid
+    const authSyncCookie = document.cookie
+      .split("; ")
+      .find(row => row.startsWith("auth-sync="));
+      
+    if (!authSyncCookie) {
+      console.log("No auth-sync cookie found - may need refresh");
+      return false;
+    }
+
+    try {
+  
+      const authSyncData = decodeAuthSyncCookie(authSyncCookie);
+
+      if (Date.now() > authSyncData.exp) {
+        console.log("Auth-sync cookie expired");
+        return false;
+      }
+      
+      // Check if session and auth-sync are reasonably in sync
+      const sessionExpiry = session.expiresAt || Date.now() + (7 * 24 * 60 * 60 * 1000);
+      const timeDiff = Math.abs(sessionExpiry - authSyncData.exp);
+      
+      if (timeDiff > 10 * 60 * 1000) { 
+        console.log("Session and auth-sync are out of sync");
+        return false;
+      }
+      
+      console.log("Cookies are properly synced");
+      return true;
+      
+    } catch (error) {
+      console.warn("Could not parse auth-sync cookie:", error);
+      return false;
+    }
+    
+  } catch (error) {
+    console.error("Cookie sync check failed:", error);
+    return false;
+  }
+};

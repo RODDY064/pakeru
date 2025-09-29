@@ -6,7 +6,7 @@ import { avenir, blackMango } from "./fonts/font";
 import { ToastProvider } from "./ui/toaster";
 import { OrdersWebhookProvider } from "./(dashboard)/admin/orders/hooks/webhookProivider";
 import { StoreProvider } from "./ui/storeProvider";
-import { fetchInitialData } from "@/libs/data-fetcher";
+import { fetchContent, fetchInitialData } from "@/libs/data-fetcher";
 import { SessionProvider } from "next-auth/react";
 import { AuthProvider } from "@/libs/auth/authProvider";
 
@@ -134,27 +134,28 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-   searchParams,
+  searchParams,
 }: Readonly<{
   children: React.ReactNode;
-   searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: { [key: string]: string | string[] | undefined };
 }>) {
   const { products, categories } = await fetchInitialData();
-   const category = searchParams?.category ?? "";
+  const content = await fetchContent();
 
   return (
     <html lang="en">
       <body className={` ${avenir.variable} ${blackMango.style}  antialiased `}>
-          <AuthProvider>
-            <StoreProvider
-          initialProducts={products}
-          initialCategories={categories}>
-          <OrdersWebhookProvider>
-            <ToastProvider />
-            {children}
-          </OrdersWebhookProvider>
-        </StoreProvider>
-          </AuthProvider>
+        <AuthProvider>
+          <StoreProvider
+            Content={content}
+            initialProducts={products}
+            initialCategories={categories}>
+            <OrdersWebhookProvider>
+              <ToastProvider />
+              {children}
+            </OrdersWebhookProvider>
+          </StoreProvider>
+        </AuthProvider>
       </body>
     </html>
   );

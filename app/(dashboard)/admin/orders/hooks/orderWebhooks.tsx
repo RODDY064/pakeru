@@ -27,6 +27,7 @@ interface ConnectionState {
 
 export function useOrdersWebhook() {
   const socketRef = useRef<Socket | null>(null);
+  const isInitializedRef = useRef(false);
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
     hasJoinedRoom: false,
@@ -38,7 +39,7 @@ export function useOrdersWebhook() {
     useBoundStore.setState(
       produce((draft: any) => {
         draft.ordersStats = computeOrdersStats(draft.unfulfilledOrders);
-        draft.filteredOrders = filterOrders(
+        draft.unfulfilledFilteredOrders  = filterOrders(
           draft.unfulfilledOrders,
           draft.OrderFilters
         );
@@ -69,51 +70,85 @@ export function useOrdersWebhook() {
   const handleAdminRoomJoined = useCallback(() => {
     setConnectionState(prev => ({ ...prev, hasJoinedRoom: true }));
 
-    toast({
-      title: "Connected",
-      description: "Real-time order updates enabled",
-      variant: "default",
-    });
+    // Only show toast if this is not the initial connection
+    if (isInitializedRef.current) {
+      toast({
+        title: "Reconnected",
+        description: "Real-time order updates restored",
+        variant: "default",
+      });
+    } else {
+      // Mark as initialized after first successful connection
+      isInitializedRef.current = true;
+      console.log("Real-time order updates enabled");
+    }
   }, []);
+
+  // Track processed orders to prevent duplicate toasts
+  const processedOrdersRef = useRef<Set<string>>(new Set());
 
   const handleNewOrder = useCallback(
     (apiOrder: any) => {
       try {
         const newOrder = transformApiOrderToOrdersData(apiOrder);
+        const orderId = newOrder._id;
 
+        // Check if we've already processed this order
+        if (processedOrdersRef.current.has(orderId)) {
+          console.log(`Order ${orderId} already processed, skipping`);
+          return;
+        }
+
+        // Mark order as processed immediately
+        processedOrdersRef.current.add(orderId);
+
+        // Check if order already exists in store
+        let wasAdded = false;
+        
         // Update store atomically
         useBoundStore.setState(
           produce((draft: any) => {
-            // Prevent duplicates
+            // Double-check for duplicates in store
             const exists = draft.unfulfilledOrders.some(
-              (order: OrdersData) => order._id === newOrder._id
+              (order: OrdersData) => order._id === orderId
             );
 
             if (!exists) {
               draft.unfulfilledOrders.unshift(newOrder);
+              wasAdded = true; // Set flag outside of produce
             }
           })
         );
 
-        // Update computed state
-        updateOrdersState();
+        // Only show toast and update state if order was actually added
+        if (wasAdded) {
+          // Update computed state
+          updateOrdersState();
 
-        // Show user notification
-        toast({
-          title: (
-            <div className="flex items-center gap-2 px-2">
-              <Image
-                src="/icons/orders-w.svg"
-                width={20}
-                height={20}
-                alt="New order"
-              />
-              <span className="text-white pt-[2px]">New order placed</span>
-            </div>
-          ),
-          description: `Order ${newOrder.IDTrim} from ${newOrder.user.firstname} ${newOrder.user.lastname}`,
-          variant: "success",
-        });
+          // Show user notification
+          toast({
+            title: (
+              <div className="flex items-center gap-2 px-2">
+                <Image
+                  src="/icons/orders-w.svg"
+                  width={20}
+                  height={20}
+                  alt="New order"
+                />
+                <span className="text-white pt-[2px]">New order placed</span>
+              </div>
+            ),
+            description: `Order ${newOrder.IDTrim} from ${newOrder.user.firstname} ${newOrder.user.lastname}`,
+            variant: "success",
+          });
+        }
+
+        // Clean up old processed orders (keep only last 100 to prevent memory leaks)
+        if (processedOrdersRef.current.size > 100) {
+          const ordersArray = Array.from(processedOrdersRef.current);
+          processedOrdersRef.current = new Set(ordersArray.slice(-50));
+        }
+
       } catch (error) {
         console.error("Failed to process new order:", error);
 
@@ -194,12 +229,18 @@ export function useOrdersWebhook() {
 
   // Initialize WebSocket connection
   useEffect(() => {
+    // Prevent multiple connections
+    if (socketRef.current?.connected) {
+      return;
+    }
+
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
     const socket = io(baseUrl, {
       withCredentials: true,
       transports: ["websocket", "polling"],
-      forceNew: true,
+      forceNew: false, // Changed to false to reuse existing connection
+      autoConnect: true,
     });
 
     socketRef.current = socket;
@@ -222,25 +263,31 @@ export function useOrdersWebhook() {
 
     // Cleanup
     return () => {
-      socket.disconnect();
-      socketRef.current = null;
+      if (socketRef.current) {
+        socketRef.current.removeAllListeners();
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
       setConnectionState({ isConnected: false, hasJoinedRoom: false });
     };
-  }, [
-    handleConnection,
-    handleDisconnection,
-    handleAdminRoomJoined,
-    handleNewOrder,
-    handleOrderUpdate,
-    handleOrderCancellation,
-    handleOrderRefund,
-  ]);
+  }, []); // Empty dependency array
 
   // Public API
   return {
     isConnected: connectionState.isConnected,
     hasJoinedRoom: connectionState.hasJoinedRoom,
-    disconnect: () => socketRef.current?.disconnect(),
-    reconnect: () => socketRef.current?.connect(),
+    disconnect: () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        isInitializedRef.current = false;
+        // Clear processed orders on disconnect
+        processedOrdersRef.current.clear();
+      }
+    },
+    reconnect: () => {
+      if (socketRef.current) {
+        socketRef.current.connect();
+      }
+    },
   };
 }

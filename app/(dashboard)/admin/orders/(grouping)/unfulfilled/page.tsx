@@ -40,13 +40,13 @@ export default function Unfulfilled() {
     slice,
     pagination,
     updateOrder,
-    filteredOrders,
     setOrderTypeFilter,
+    unfulfilledFilteredOrders,
   } = useBoundStore();
 
   const orderStats = useMemo(
     () => computeOrdersStats(unfulfilledOrders),
-    [unfulfilledOrders]
+    [unfulfilledOrders,unfulfilledFilteredOrders,orderInView]
   );
   const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
 
@@ -81,12 +81,11 @@ export default function Unfulfilled() {
       total: unfulfilledOrders?.length,
       page: 1,
     });
-  }, [unfulfilledOrders]);
+  }, [unfulfilledOrders, unfulfilledFilteredOrders]);
 
   useEffect(() => {
-    const sliceData = slice(filteredOrders);
-    setCurrentOrders(sliceData);
-  }, [pagination, unfulfilledOrders, filteredOrders]);
+    setCurrentOrders(unfulfilledFilteredOrders);
+  }, [pagination, unfulfilledOrders, unfulfilledFilteredOrders]);
 
   const [renderCount, setRenderCount] = React.useState(0);
   useEffect(() => {

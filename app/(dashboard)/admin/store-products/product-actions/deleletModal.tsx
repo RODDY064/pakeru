@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ProductAPIService } from './helpers'; 
 import { useApiClient } from '@/libs/useApiClient';
+import { useRouter } from 'next/navigation';
 
 interface DeleteModalProps {
   productID: string;
@@ -21,6 +22,7 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const {  get , del} = useApiClient()
+  const router = useRouter()
 
   const isConfirmationValid = confirmationText.trim() === productName.trim();
 
@@ -45,6 +47,8 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
       
       // You might want to show a success toast here
       console.log('Product deleted successfully');
+
+      router.push("/admin/store-products")
       
     } catch (error) {
       console.error('Delete error:', error);

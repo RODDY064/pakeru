@@ -151,7 +151,6 @@ type BaseToastProps = Omit<ToastProps, "id"> & {
 
 // Main toast function with call signature
 function createToast(props: BaseToastProps) {
-  // Block toast if on restricted route
   if (shouldBlockToast(props.blockRoutes)) return;
   
   const {
@@ -208,6 +207,7 @@ export const toast = Object.assign(createToast, {
             title: string;
             description?: string;
             button?: ToastProps["button"];
+            duration?: number;
           };
       success:
         | string
@@ -216,6 +216,7 @@ export const toast = Object.assign(createToast, {
             title: string;
             description?: string;
             button?: ToastProps["button"];
+            duration?: number;
           });
       error:
         | string
@@ -224,6 +225,7 @@ export const toast = Object.assign(createToast, {
             title: string;
             description?: string;
             button?: ToastProps["button"];
+            duration?: number;
           });
       duration?: number;
       position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
@@ -240,21 +242,24 @@ export const toast = Object.assign(createToast, {
       loading,
       success,
       error,
-      duration,
+       duration: defaultDuration,
       position = "top-right",
       blockRoutes,
     } = options;
     const animationClass = getAnimationClass(position);
 
     // Wrapper to render custom Toast for each state
-    const renderCustom = (content: any, variant: ToastProps["variant"]) => {
+    const renderCustom = (content: any, variant: ToastProps["variant"],stateDuration?: number) => {
       const props = typeof content === "string" ? { title: content } : content;
+
+      const toastDuration = stateDuration ?? defaultDuration;
+
       return sonnerToast.custom(
         (id) => (
           <Toast {...props} id={id} variant={variant} position={position} />
         ),
         {
-          duration,
+          duration: toastDuration,
           position,
           unstyled: true,
           classNames: { toast: animationClass },
@@ -265,7 +270,7 @@ export const toast = Object.assign(createToast, {
     // Show loading toast using fully custom render (no Sonner default spinner)
     const loadingProps =
       typeof loading === "string" ? { title: loading } : loading;
-    const loadingId = renderCustom(loadingProps, "loading");
+    const loadingId = renderCustom(loadingProps, "loading",loadingProps.duration);
 
     try {
       const result = await promise;

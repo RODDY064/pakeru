@@ -42,8 +42,10 @@ function FulfilledContent() {
     slice,
     pagination,
     getOrdersStats,
-    filteredOrders,
     setOrderTypeFilter,
+    fulfilledFilteredOrders,
+    orderInView,
+    orderTotalSize
   } = useBoundStore();
 
   const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
@@ -65,14 +67,17 @@ function FulfilledContent() {
     await loadOrders("fulfilled", {
       get,
       force: false,
+      page
     });
   };
+
+  
 
   useEffect(() => {
     configure({
       dataKey: "fulfilledOrders",
       loadFunction: loadOrdersForPagination,
-      size: 25,
+      size: 25,  
     });
 
     setOrderTypeFilter("fulfilled");
@@ -80,7 +85,7 @@ function FulfilledContent() {
 
   const orderStats = useMemo(
     () => getOrdersStats("fulfilled"),
-    [getOrdersStats]
+    [getOrdersStats,fulfilledFilteredOrders, orderInView]
   );
 
   useEffect(() => {
@@ -95,19 +100,21 @@ function FulfilledContent() {
       },
       { label: "Cancelled", value: orderStats.cancelledOrders ?? 0 },
     ]);
-  }, [orderStats]);
+  }, [orderStats, fulfilledOrders,  fulfilledFilteredOrders]);
 
   useEffect(() => {
     updateFromAPI({
-      total: fulfilledOrders?.length,
+      total: orderTotalSize,
       page: 1,
     });
-  }, [fulfilledOrders]);
+  }, [orderTotalSize,]);
+
 
   useEffect(() => {
-    const sliceData = slice(filteredOrders);
+    const sliceData = slice(fulfilledFilteredOrders);
     setCurrentOrders(sliceData);
-  }, [pagination, fulfilledOrders, filteredOrders]);
+  }, [pagination, fulfilledOrders, fulfilledFilteredOrders]);
+  
 
   const handleSelect = useCallback(
     (order: OrdersData) => {

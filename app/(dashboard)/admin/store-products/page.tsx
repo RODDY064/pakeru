@@ -302,7 +302,7 @@ export default function Products() {
         columns={tableColumns}
         data={currentPageProducts}
         tableName="Products"
-        reload={() => loadStoreProducts(false, get)}
+        reload={() => loadStoreProducts(true, get)}
         columnStyle="py-4"
         columnClick={(product) => handleLink(product)}
         dateKey="createdAt"

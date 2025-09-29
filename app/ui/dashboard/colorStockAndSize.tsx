@@ -11,7 +11,7 @@ export default function ColorStockAndSizes ({
 }: {
   colors: ProductColor[];
   setColors: React.Dispatch<React.SetStateAction<ProductColor[]>>;
-  activeColorId: number;
+  activeColorId: string;
 })  {
   const [selectedSize, setSelectedSize] = useState("");
   const availableSizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];

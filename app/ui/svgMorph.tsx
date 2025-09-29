@@ -15,7 +15,7 @@ interface SVGMorphProps {
   render: React.ReactNode[];
   split?: boolean;
   reverse?: boolean;
-  name?: string;
+  name?: string | string[];
 }
 
 function getApplePath(x: number, y: number, w: number, h: number, r: number) {
@@ -164,7 +164,7 @@ export default function SVGMorph({
                       }`}
                     >
                       <div className="relative top-0 left-0">
-                        <p className="font-avenir text-lg capitalize">{name}</p>
+                        <p className="font-avenir text-lg capitalize px-3">{Array.isArray(name) ? name[i] : ""}</p>
                       </div>
                     </div>
                     <div className="size-12 absolute z-90 bottom-3 right-3 flex items-center justify-center">

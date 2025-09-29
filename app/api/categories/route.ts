@@ -73,7 +73,6 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: forwardHeaders,
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(30000) // 30 second timeout
     });
 
     const data = await response.json();

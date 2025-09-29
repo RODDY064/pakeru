@@ -35,7 +35,14 @@ export type ProductData = {
   isActive: boolean;
   price: number;
   comparePrice?: number;
+  washInstructions:string[],
+  productCare?:string,
   variants: ProductVariant[];
+  totalSize:number,
+  sizeType?:{
+    gender?: "male" | "female" | "unisex",
+    clothType?: "t-shirts" | "polo" | "jeans" | "pants" | "cargo pants" 
+  },
   seo?: {
     title?: string;
     description?: string;
@@ -170,6 +177,9 @@ const transformApiProduct = (apiProduct: any): ProductData => {
     tags: apiProduct.tags || [],
     comparePrice: apiProduct.comparePrice || undefined,
     variants: apiProduct.variants || [],
+    washInstructions: apiProduct.washInstructions || [],
+    productCare:apiProduct.productCare || "",
+    sizeType:apiProduct.sizeType || undefined,
     seo: {
       title: apiProduct.seo?.title || `${apiProduct.name} | Store`,
       description: apiProduct.seo?.description || apiProduct.description || "",
@@ -180,6 +190,7 @@ const transformApiProduct = (apiProduct: any): ProductData => {
     visibility: apiProduct.visibility || "public",
     mainImage: apiProduct.mainImage || apiProduct.images?.[0]?.url || "",
     images: apiProduct.images || [],
+    totalSize:apiProduct.total
   };
 };
 

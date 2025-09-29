@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import StatusBadge from "./statusBadge";
 import { useApiClient } from "@/libs/useApiClient";
 import { cn } from "@/libs/cn";
+import Cedis from "../cedis";
 
 // Core modal content component
 function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
@@ -62,6 +63,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
       setOrderModal(false);
     } catch (error) {
       console.error("Update failed:", error);
+      setOrderModal(false);
     } finally {
       setIsUpdating(false);
     }
@@ -91,6 +93,9 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
  
     await handleUpdate(orderInView._id, { deliveryStatus: newStatus });
   };
+
+
+
 
   return (
     <motion.div
@@ -158,7 +163,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                   <div className="h-full overflow-scroll pb-24">
                     <div className="px-10 py-6">
                       <div>
-                        <p className="text-black/40 text-md font-avenir font-[300]">
+                        <p className="text-black/50 text-md font-avenir font-[300]">
                           Date
                         </p>
                         <p className="font-avenir font-[500] text-lg mt-1">
@@ -174,7 +179,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                       </div>
 
                       <div className="mt-4">
-                        <p className="text-black/40 text-md font-avenir font-[300] mt-1">
+                        <p className="text-black/50 text-md font-avenir font-[300] mt-1">
                           Customer
                         </p>
                         <p className="font-avenir font-[500] text-lg">
@@ -185,6 +190,29 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                           {orderInView?.user?.email}
                         </p>
                       </div>
+                      <div className="mt-6">
+                        <p className="text-black/50 text-md font-avenir font-[300] mt-1">
+                          Payment method
+                        </p>
+                        <p className="font-avenir font-[500] text-md mt-1">
+                         Mtn Mobile Money 
+                        </p>
+                        <p className="font-avenir font-[500] text-md ">
+                         059xxxxx455 
+                        </p>
+                      </div>
+                      <div className="mt-4">
+                        <p className="text-black/50 text-md font-avenir font-[300] mt-1">
+                          Address
+                        </p>
+                        <p className="font-avenir font-[500] text-md mt-1">
+                         {orderInView?.shippingAddress?.address}, {orderInView?.shippingAddress?.town}
+                        </p>
+                        <p className="font-avenir font-[500] text-md ">
+                         {orderInView?.shippingAddress?.region}
+                        </p>
+                      </div>
+
 
                       <div className="mt-10 w-full flex flex-col gap-4">
                         <div className="flex items-center justify-between">
@@ -215,9 +243,9 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                                      "border-blue-500/50 text-blue-600 bg-blue-50 ":orderInView?.deliveryStatus === "shipped"
                                   })} >
                                   <option value="delivered">Delivered</option>
+                                  <option value="shipped">Shipped</option>
                                   <option value="pending">Pending</option>
                                   <option value="cancelled">Cancelled</option>
-                                  {/* <option value="shipped">Shipped</option> */}
                                 </select>
                                 <Image
                                   src="/icons/arrow-y.svg"
@@ -255,30 +283,30 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                         </div>
 
                         <div className="mt-4">
-                          <p className="text-black/70 text-md font-bold font-avenir">
+                          <p className="text-black/40 text-md  font-avenir">
                             SUBTOTAL
                           </p>
-                          <p className="text-black/50 text-xl font-avenir">
+                          <p className="text-black text-xl font-avenir">
                             GHS {orderInView?.total.toFixed(2)}
                           </p>
                         </div>
 
                         <div className="">
-                          <p className="text-black/70 font-bold text-md uppercase font-avenir">
+                          <p className="text-black/40 text-md uppercase font-avenir">
                             Discount
                           </p>
-                          <p className="text-black/50 text-lg font-avenir">
+                          <p className="text-black text-xl font-avenir">
                             GHS {orderInView?.discount.toFixed(2)}
                           </p>
                         </div>
 
                         <div className="mt-2">
-                          <p className="text-black text-2xl font-bold font-avenir">
+                          <p className="text-black/40 text-xl font-bold font-avenir">
                             TOTAL
                           </p>
-                          <p className="text-black/50 text-2xl font-avenir">
-                            GHS {orderInView?.total.toFixed(2)}
-                          </p>
+                          <div className=" flex items-center gap-2">
+                            <Cedis size={20} cedisStyle="opacity-100" className="text-2xl"/> <p className=" text-2xl font-avenir flex pt-[6px]">{orderInView?.total.toFixed(2)}</p>
+                          </div>
                         </div>
 
                         {orderInView?.fulfilledStatus === "unfulfilled" && (
@@ -286,8 +314,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                             type="button"
                             onClick={handleFulfill}
                             disabled={isUpdating}
-                            className="px-4 my-4 py-3 text-xl text-center bg-black text-white font-avenir font-[500] rounded-md cursor-pointer hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
+                            className="px-4 my-10 py-3 text-xl text-center bg-black text-white font-avenir font-[500] rounded-xl cursor-pointer hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed">
                             {isUpdating ? "Fulfilling..." : "Fulfill item"}
                           </button>
                         )}
@@ -301,21 +328,13 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                               </p>
                               <div className="flex items-center gap-2 mt-2">
                                 <div
-                                  onClick={() => setOrderModal(!showOrderModal)}
-                                  className="w-full h-12 bg-black/10 border hover:bg-black/5 border-black/30 rounded-xl cursor-pointer flex items-center justify-center"
-                                >
-                                  <p className="text-md font-avenir text-black">
-                                    CANCEL
+                                  className="w-full h-12 bg-black border text-white hover:bg-black/5 hover:text-black border-black/30 rounded-xl cursor-pointer flex items-center
+                                   justify-center">
+                                  <p className="text-md font-avenir ">
+                                    Print Receipt
                                   </p>
                                 </div>
-                                <div
-                                  onClick={() => setShowDeleteConfirm(true)}
-                                  className="w-full h-12 bg-red-100 hover:bg-red-50 border border-red-500 rounded-xl cursor-pointer flex items-center justify-center"
-                                >
-                                  <p className="text-md font-avenir text-red-500">
-                                    Refund Payment
-                                  </p>
-                                </div>
+                                
                               </div>
                             </div>
                           </>

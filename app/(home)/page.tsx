@@ -78,12 +78,13 @@ export default function Home() {
 
 const Images = ({ action, containerHeight }: { action: any, containerHeight:any }) => {
 
+  const { hero } = useBoundStore()
+
 
   return (
     <div
       className="w-full slider-container font-avenir bg-white"
-      style={{ height: containerHeight }}
-    >
+      style={{ height: containerHeight }}>
       <div className="slider w-full h-full">
         <div className="w-full h-full relative overflow-hidden flex flex-col">
           {/* Top Spacer - Responsive */}
@@ -94,7 +95,7 @@ const Images = ({ action, containerHeight }: { action: any, containerHeight:any 
             <div className="w-full h-full relative mt-8">
               {/* Desktop Hero */}
               <Image
-                src="/images/hero/pakeru desktop hero.webp"
+                src={hero?.hero[0].image.url as string ?? "/images/hero/pakeru desktop hero.webp"}
                 fill
                 className="object-contain object-center hidden xl:block"
                 alt="Pakeru Desktop Hero"
@@ -105,7 +106,7 @@ const Images = ({ action, containerHeight }: { action: any, containerHeight:any 
 
               {/* Tablet Hero */}
               <Image
-                src="/images/hero/pakeru tablet hero.webp"
+                src={hero?.hero[2].image.url as string?? "/images/hero/pakeru tablet hero.webp"}
                 fill
                 className="object-contain object-center hidden md:block xl:hidden"
                 alt="Pakeru Tablet Hero"
@@ -116,7 +117,7 @@ const Images = ({ action, containerHeight }: { action: any, containerHeight:any 
 
               {/* Mobile Hero */}
               <Image
-                src="/images/hero/pakeru mobile hero.webp"
+               src={hero?.hero[1].image.url as string?? "/images/hero/pakeru mobile hero.webp"}
                 fill
                 className="object-contain object-center block md:hidden"
                 alt="Pakeru Mobile Hero"
@@ -370,7 +371,7 @@ const Product = () => {
   },[products])
 
   return (
-    <div className="w-full mt-10 px-4 md:px-8 lg:mx-2">
+    <div className="w-full mt-10 px-2 md:px-8 lg:mx-2">
       <p className="text-xl font-bold font-avenir mb-6">SHOP ALL</p>
       <div
         ref={sliderRef}

@@ -8,7 +8,7 @@ export interface ProductChanges {
   colorChanges: {
     added: ProductColor[];
     updated: ProductColor[];
-    removed: number[];
+    removed: string[];
   };
   hasChanges: boolean;
 }
@@ -70,7 +70,7 @@ export class ProductChangeDetector {
     const changes = {
       added: [] as ProductColor[],
       updated: [] as ProductColor[],
-      removed: [] as number[]
+      removed: [] as string[]
     };
 
     // Find original IDs for tracking removals

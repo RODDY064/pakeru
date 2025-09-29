@@ -59,7 +59,6 @@ class ApiClient {
     const url = useBaseUrl ? `${baseUrl}/v1${endpoint}` : `/api${endpoint}`;
 
     console.log(body instanceof FormData,'body type')
-
     const isFD = isFormData(body);
     
     const headers: Record<string, string> = {
@@ -76,12 +75,9 @@ class ApiClient {
       headers.Authorization = `Bearer ${session.accessToken}`;
     }
 
-    console.log(body, 'body')
-
     const requestConfig: RequestInit = {
       ...fetchOptions,
       headers,
-      signal: AbortSignal.timeout(30000),
       body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined
     };
 
@@ -148,8 +144,6 @@ class ApiClient {
     const response = await this.makeRequest<T>(endpoint, { ...options, method: 'DELETE' });
     return response.data!;
   }
-
-  // Server-side method (for use in API routes or server components)
   async serverRequest<T>(
     endpoint: string, 
     accessToken: string,

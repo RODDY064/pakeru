@@ -12,20 +12,26 @@ export class ProductAPIService {
 
   static async createProduct(
     data: ProductFormData,
-    colors: ProductColor[],
+    variants: ProductColor[],
     post: ReturnType<typeof useApiClient>["post"]
   ): Promise<any> {
-    const createPromise = this.createProductWithFiles(data, colors, post);
+    await this.compressImagesInBatch(variants);
+
+    const createPromise = this.createProductWithFiles(data, variants, post);
 
     return toast.promise(createPromise, {
-      loading: "Creating product...",
-      success: () => ({
+      loading: {
+        title: "Creating product...",
+        description: "Please wait while we process your product",
+        duration: Infinity,
+      },
+      success: {
         title: `Product "${data.name}" created successfully`,
         description: "Your product is now available in the catalog",
-      }),
+      },
       error: (error) => ({
         title: "Failed to create product",
-        description: error.message || "Please try again",
+        description: error?.message?.message || "Please try again",
       }),
       position: "top-right",
     });
@@ -50,7 +56,7 @@ export class ProductAPIService {
       return { message: "No changes to save" };
     }
 
-    console.log("🔍 Detected changes:", changes);
+    console.log("Detected changes:", changes);
 
     const hasNewFiles = [
       ...changes.colorChanges.added,
@@ -64,21 +70,27 @@ export class ProductAPIService {
     let updatePayload: FormData | Partial<ProductFormData>;
 
     if (hasNewFiles) {
+      const colorsWithNewFiles = [
+        ...changes.colorChanges.added,
+        ...changes.colorChanges.updated,
+      ].filter((color) =>
+        color.images?.some(
+          (img) => img.file instanceof File || img.file instanceof Blob
+        )
+      );
 
+      await this.compressImagesInBatch(colorsWithNewFiles);
       updatePayload = await this.buildFormData(
         { ...changes.formChanges },
         [...changes.colorChanges.updated, ...changes.colorChanges.added],
         { partial: true }
       );
     } else {
-      updatePayload = {
-        ...changes.formChanges,
-        ...(changes.colorChanges.added.length ||
-        changes.colorChanges.updated.length ||
-        changes.colorChanges.removed.length
-          ? { colors: currentColors }
-          : {}),
-      };
+      updatePayload = this.buildJsonPayload(
+        { ...changes.formChanges },
+        currentColors,
+        { partial: true }
+      );
     }
 
     const updatePromise = patch(`/products/${productId}`, updatePayload, {
@@ -86,7 +98,11 @@ export class ProductAPIService {
     });
 
     return toast.promise(updatePromise, {
-      loading: "Updating product...",
+      loading: {
+        title: "Updating product...",
+        description: "Please wait while we process your product",
+        duration: Infinity,
+      },
       success: () => ({
         title: `Product "${currentData.name}" updated successfully`,
         description: "Changes have been saved",
@@ -97,6 +113,94 @@ export class ProductAPIService {
       }),
       position: "top-right",
     });
+  }
+
+  static detectChanges(
+    originalData: ProductFormData,
+    originalColors: ProductColor[],
+    currentData: ProductFormData,
+    currentColors: ProductColor[]
+  ) {
+    const formChanges = this.detectFormChanges(originalData, currentData);
+    const colorChanges = this.detectColorChanges(originalColors, currentColors);
+
+    const hasFormChanges = Object.keys(formChanges).length > 0;
+    const hasColorChanges =
+      colorChanges.added.length > 0 ||
+      colorChanges.updated.length > 0 ||
+      colorChanges.removed.length > 0;
+
+    console.log("🔍 Form changes detected:", hasFormChanges, formChanges);
+    console.log("🔍 Color changes detected:", hasColorChanges, colorChanges);
+
+    return {
+      formChanges,
+      colorChanges,
+      hasChanges: hasFormChanges || hasColorChanges,
+    };
+  }
+
+  static detectFormChanges(
+    originalData: ProductFormData,
+    currentData: ProductFormData
+  ): Partial<ProductFormData> {
+    const changes: Partial<ProductFormData> = {};
+
+    // Compare each field
+    for (const key in currentData) {
+      if (key === "colors") continue; // Skip colors, handled separately
+
+      const currentValue = currentData[key as keyof ProductFormData];
+      const originalValue = originalData[key as keyof ProductFormData];
+
+      // Deep comparison for objects/arrays, shallow for primitives
+      if (JSON.stringify(currentValue) !== JSON.stringify(originalValue)) {
+        (changes as any)[key] = currentValue;
+      }
+    }
+
+    return changes;
+  }
+
+  static detectColorChanges(
+    originalColors: ProductColor[],
+    currentColors: ProductColor[]
+  ): {
+    added: ProductColor[];
+    updated: ProductColor[];
+    removed: ProductColor[];
+  } {
+    const added: ProductColor[] = [];
+    const updated: ProductColor[] = [];
+    const removed: ProductColor[] = [];
+
+    currentColors.forEach((currentColor) => {
+      const originalColor = originalColors.find(
+        (oc) => oc.name === currentColor.name
+      );
+
+      if (!originalColor) {
+        // New color
+        added.push(currentColor);
+      } else if (
+        JSON.stringify(originalColor) !== JSON.stringify(currentColor)
+      ) {
+        // Color has changes
+        updated.push(currentColor);
+      }
+    });
+
+    // Find removed colors
+    originalColors.forEach((originalColor) => {
+      const stillExists = currentColors.find(
+        (cc) => cc.name === originalColor.name
+      );
+      if (!stillExists) {
+        removed.push(originalColor);
+      }
+    });
+
+    return { added, updated, removed };
   }
 
   static async deleteProduct(
@@ -118,31 +222,38 @@ export class ProductAPIService {
 
   private static async createProductWithFiles(
     data: ProductFormData,
-    colors: ProductColor[],
+    variants: ProductColor[],
     post: ReturnType<typeof useApiClient>["post"]
   ): Promise<any> {
-    const formData = await this.buildFormData(data, colors);
+    const formData = await this.buildFormData(data, variants);
     return post("/products", formData, { requiresAuth: true });
   }
 
-  // private static sanitizeFormData(data: ProductFormData): ProductFormData {
-  //   return {
-  //     name: data.name?.trim() || "",
-  //     description: data.description?.trim() || "",
-  //     price: data.price || "0",
-  //     totalNumber: data.totalNumber || "0",
-  //     status: data.status || "draft",
-  //     category: data.category?.trim() || "",
-  //     tags: Array.isArray(data.tags)
-  //       ? data.tags.filter((tag) => tag?.trim())
-  //       : [],
-  //     colors: data.colors || [],
-  //   };
-  // }
+  private static async appendImageFiles(
+    formData: FormData,
+    variants: ProductColor[]
+  ): Promise<void> {
+    for (const variant of variants) {
+      if (!variant.images?.length) continue;
+
+      for (const img of variant.images) {
+        if (img.file instanceof File || img.file instanceof Blob) {
+          const file =
+            img.file instanceof File
+              ? img.file
+              : new File([img.file], img.name || "image", {
+                  type: img.file.type,
+                });
+          const compressedFile = await this.compressImageIfNeeded(file);
+          formData.append("images", compressedFile);
+        }
+      }
+    }
+  }
 
   private static async buildFormData(
     data: Partial<ProductFormData>,
-    colors: ProductColor[],
+    variants: ProductColor[],
     options: { partial?: boolean } = {}
   ): Promise<FormData> {
     const { partial = false } = options;
@@ -159,14 +270,28 @@ export class ProductAPIService {
     appendField("description", data.description?.trim());
     appendField("status", data.status);
     appendField("category", data.category?.trim());
+    appendField("productCare", data.productCare);
 
     if (!partial || data.price !== undefined) {
       const price = this.parsePrice(data.price ?? "0");
       formData.append("price", price.toString());
     }
 
+    if (!partial || data.sizeType !== undefined) {
+      formData.append("sizeType[gender]", data.sizeType?.gender || "");
+      formData.append("sizeType[clothType]", data.sizeType?.clothType || "");
+    }
+
+    if (!partial || data.washInstructions !== undefined) {
+      (data.washInstructions || [])
+        .filter((instruction: string) => instruction?.trim())
+        .forEach((instruction: string) => {
+          formData.append("washInstructions[]", instruction.trim());
+        });
+    }
+
     if (!partial || data.totalNumber !== undefined) {
-      const colorStock = colors.reduce((sum, c) => sum + (c.stock || 0), 0);
+      const colorStock = variants.reduce((sum, c) => sum + (c.stock || 0), 0);
       const totalNumber =
         colorStock > 0 ? colorStock : this.parsePrice(data.totalNumber || "0");
       formData.append("totalNumber", totalNumber.toString());
@@ -179,50 +304,85 @@ export class ProductAPIService {
       validTags.forEach((tag) => formData.append("tags[]", tag.trim()));
     }
 
-    if (colors?.length) {
-      const variants = this.buildVariants(colors);
-      formData.append("variants", JSON.stringify(variants));
-      this.appendImageFiles(formData, colors);
+    if (variants?.length) {
+      const variantsBuild = this.buildVariants(variants);
+      formData.append("variants", JSON.stringify(variantsBuild));
+
+      await this.appendImageFiles(formData, variants);
     }
 
     return formData;
   }
+  private static buildJsonPayload(
+    data: Partial<ProductFormData>,
+    variants: ProductColor[],
+    options: { partial?: boolean } = {}
+  ): any {
+    const { partial = false } = options;
 
-  private static async processImages(
-    colors: ProductColor[]
-  ): Promise<ProductColor[]> {
-    let totalSize = 0;
+    const payload: any = {};
 
-    const processed = await Promise.all(
-      colors.map(async (color) => {
-        if (!color.images?.length) {
-          return { ...color, images: [] };
-        }
+    const appendField = (key: keyof ProductFormData, value: any) => {
+      if (partial && value === undefined) return;
+      if (value !== undefined && value !== null && value !== "") {
+        payload[key] = value;
+      }
+    };
 
-        const processedImages = await Promise.all(
-          color.images.map(async (img) => {
-            if (!(img.file instanceof File)) {
-              return img;
-            }
+    appendField("name", data.name?.trim());
+    appendField("description", data.description?.trim());
+    appendField("status", data.status);
+    appendField("category", data.category?.trim());
+    appendField("productCare", data.productCare?.trim());
 
-            const compressedFile = await this.compressImageIfNeeded(img.file);
-            totalSize += compressedFile.size;
-
-            return { ...img, file: compressedFile };
-          })
-        );
-
-        return { ...color, images: processedImages };
-      })
-    );
-
-    if (totalSize > this.MAX_TOTAL_SIZE) {
-      throw new Error(
-        "Total file size exceeds 45MB limit. Please reduce image sizes."
-      );
+    if (!partial || data.price !== undefined) {
+      payload.price = this.parsePrice(data.price ?? "0");
     }
 
-    return processed;
+    if (!partial || data.sizeType !== undefined) {
+      payload.sizeType = {
+        gender: data.sizeType?.gender || "",
+        clothType: data.sizeType?.clothType || "",
+      };
+    }
+
+    if (!partial || data.washInstructions !== undefined) {
+      payload.washInstructions = (data.washInstructions || [])
+        .filter((instruction: string) => instruction?.trim())
+        .map((instruction: string) => instruction.trim());
+    }
+
+    if (!partial || data.totalNumber !== undefined) {
+      const colorStock = variants.reduce((sum, c) => sum + (c.stock || 0), 0);
+      payload.totalNumber =
+        colorStock > 0 ? colorStock : this.parsePrice(data.totalNumber || "0");
+    }
+
+    if (!partial || data.tags !== undefined) {
+      const validTags = Array.isArray(data.tags)
+        ? data.tags.filter((tag) => tag?.trim())
+        : [];
+      if (validTags.length) {
+        payload.tags = validTags.map((tag) => tag.trim());
+      }
+    }
+
+    if (variants?.length) {
+      payload.variants = variants.map((variant) => ({
+        _id: variant._id,
+        color: variant.name?.trim(),
+        colorHex: variant.hex,
+        sizes: variant.sizes,
+        stock: variant.stock,
+        images: (variant.images || []).map((img) => ({
+          _id: img._id,
+          url: img.url,
+          name: img.name,
+        })),
+      }));
+    }
+
+    return payload;
   }
 
   private static async compressImageIfNeeded(file: File): Promise<File> {
@@ -251,42 +411,32 @@ export class ProductAPIService {
     return isNaN(parsed) ? 0 : Math.max(0, parsed);
   }
 
-  private static appendIfExists(
-    formData: FormData,
-    key: string,
-    value: any
-  ): void {
-    if (value !== undefined && value !== null && value !== "") {
-      formData.append(key, String(value));
-    }
-  }
-
-  private static buildVariants(colors: ProductColor[]): any[] {
-    if (!colors?.length) {
+  private static buildVariants(variants: ProductColor[]): any[] {
+    if (!variants?.length) {
       return [];
     }
 
-    return colors
-      .map((color) => ({
-        color: color.name?.trim() || color.color?.trim() || "Unknown Color",
-        colorHex: color.hex || "#000000",
-        sizes: color.sizes || [],
-        stock: color.stock || 0,
-        images: (color.images || [])
+    return variants
+      .map((variant) => ({
+        color: variant.name?.trim() || variant.color?.trim() || "Unknown Color",
+        colorHex: variant.hex || "#000000",
+        sizes: variant.sizes || [],
+        stock: variant.stock || 0,
+        images: (variant.images || [])
           .filter((img) => img.name?.trim())
           .map((img) => img.name.trim()),
       }))
-      .filter((variant) => variant.color !== "Unknown Color"); // Only keep valid variants
+      .filter((variant) => variant.color !== "Unknown variant");
   }
+  private static async compressImagesInBatch(
+    variants: ProductColor[]
+  ): Promise<void> {
+    let totalSize = 0;
 
-  private static appendImageFiles(
-    formData: FormData,
-    colors: ProductColor[]
-  ): void {
-    colors.forEach((color) => {
-      if (!color.images?.length) return;
+    for (const variant of variants) {
+      if (!variant.images?.length) continue;
 
-      color.images.forEach((img) => {
+      for (const img of variant.images) {
         if (img.file instanceof File || img.file instanceof Blob) {
           const file =
             img.file instanceof File
@@ -294,11 +444,20 @@ export class ProductAPIService {
               : new File([img.file], img.name || "image", {
                   type: img.file.type,
                 });
+          const compressedFile = await this.compressImageIfNeeded(file);
+          totalSize += compressedFile.size;
 
-          formData.append("images", file);
+          if (totalSize > this.MAX_TOTAL_SIZE) {
+            throw new Error(
+              `Total file size (${(totalSize / 1024 / 1024).toFixed(
+                1
+              )}MB) exceeds the ${this.MAX_TOTAL_SIZE / 1024 / 1024}MB limit`
+            );
+          }
+          img.file = compressedFile;
         }
-      });
-    });
+      }
+    }
   }
 }
 
@@ -327,7 +486,7 @@ export const mapVariantsToColors = (
       // Add images
       if (variant.images?.length) {
         const mappedImages = variant.images.map((img, imgIndex) => ({
-          _id: existingColor.images.length + imgIndex + 1,
+          _id: String(img._id ?? existingColor.images.length + imgIndex + 1),
           url: img.url,
           name:
             img.productId || `image-${existingColor.images.length + imgIndex}`,
@@ -338,7 +497,7 @@ export const mapVariantsToColors = (
     } else {
       const mappedImages: ProductImage[] = (variant.images || []).map(
         (img, imgIndex) => ({
-          _id: imgIndex + 1,
+          _id: String(img._id ?? imgIndex + 1),
           url: img.url,
           name: img.productId || `image-${imgIndex}`,
           file: undefined,
@@ -346,7 +505,7 @@ export const mapVariantsToColors = (
       );
 
       colorMap.set(colorKey, {
-        _id: colorMap.size + 1,
+        _id: String(variant._id ?? colorMap.size + 1),
         name: colorKey,
         color: colorKey,
         hex: variant.colorHex || "#000000",

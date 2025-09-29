@@ -50,12 +50,11 @@ export async function GET(
     const response = await fetch(`${BASE_URL}/v1/orders/${id}`, {
       method: "GET",
       headers: getForwardHeaders(request, token),
-      next: { revalidate: 60 }, 
+      cache:"no-store"
     });
 
     const data = await response.json();
 
- 
 
     return NextResponse.json(data.data, { status: response.status });
   } catch (error: any) {
@@ -82,8 +81,9 @@ export async function PATCH(
     const response = await fetch(`${BASE_URL}/v1/orders/${id}`, {
       method: "PATCH",
       headers: incomingHeaders,
-      body: JSON.stringify(body),
     });
+
+    console.log(response)
 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });

@@ -17,7 +17,12 @@ import {
   useStoreProductStore,
 } from "./dashbaord/products";
 import { PaginationStore, usePaginationStore } from "./dashbaord/pagination";
-import { ContentStore, useContentStore } from "./dashbaord/content-store/content";
+import {
+  ContentStore,
+  GalleryContent,
+  HeroContent,
+  useContentStore,
+} from "./dashbaord/content-store/content";
 import { NotificationStore, useNotificationStore } from "./notification";
 
 export type Store = ScrollStore &
@@ -30,7 +35,7 @@ export type Store = ScrollStore &
   GeneralStore &
   CategoryStore &
   OrdersStore &
-  StoreProductStore & 
+  StoreProductStore &
   NotificationStore &
   ContentStore &
   PaginationStore & {
@@ -328,8 +333,8 @@ export const useBoundStore = create<Store>()(
       ...useOrdersStore(set, get, store),
       ...useStoreProductStore(set, get, store),
       ...usePaginationStore(set, get, store),
-      ...useContentStore(set,get,store),
-      ...useNotificationStore(set,get,store),
+      ...useContentStore(set, get, store),
+      ...useNotificationStore(set, get, store),
       // custom state
       isServerInitialized: false,
 
@@ -357,7 +362,8 @@ export const useBoundStore = create<Store>()(
 // 🚀store initialization
 export const initializeStore = async (
   serverProducts?: ProductData[],
-  serverCategories?: CategoryType[]
+  serverCategories?: CategoryType[],
+  Content?: { hero: HeroContent; galleries: GalleryContent }
 ) => {
   if (typeof window !== "undefined") {
     try {
@@ -367,11 +373,19 @@ export const initializeStore = async (
       // Wait for rehydration to complete
       await new Promise((resolve) => setTimeout(resolve, 100));
 
+      if (Content?.hero && Content.galleries) {
+         
+        useBoundStore.getState().setHero(Content.hero)
+        useBoundStore.getState().setGalleries(Content.galleries.items)
+
+      } else {
+        await useBoundStore.getState().fetchContent();
+      }
+
       // If server data is provided, use it (this is the preferred path)
       if (serverProducts && serverCategories) {
         useBoundStore
-          .getState()
-          .initializeWithServerData(serverProducts, serverCategories);
+          .getState().initializeWithServerData(serverProducts, serverCategories);
       } else {
         // Fallback to client-side loading if no server data
         console.log(

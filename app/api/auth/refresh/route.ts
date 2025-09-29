@@ -21,28 +21,8 @@ export async function GET(request: NextRequest) {
     );
 
     const data = await response.json();
-    console.log("Backend refresh response:", response.status, data);
+    console.log("Backend refresh response:", response.status, data.msg);
     const nextResponse = NextResponse.json(data, { status: response.status });
-
-    const cookieHeader = response.headers.get("set-cookie");
-
-    // console.log(cookieHeader, 'cookie')
-
-
-    if (cookieHeader) {
-      cookieHeader.split(/,(?=\s*\w+\s*=)/).forEach((cookie) => {
-        const [nameValue, ...attributes] = cookie.split(";");
-        const [name, value] = nameValue.split("=");
-        if (name && value) {
-          nextResponse.cookies.set(name.trim(), value.trim(), {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-          });
-        }
-      });
-    }
 
     return nextResponse;
   } catch (error) {

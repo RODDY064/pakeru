@@ -121,7 +121,6 @@ export const useCategory: StateCreator<
             name: categoryData.name,
             description: categoryData.description,
           }),
-          signal: AbortSignal.timeout(10000),
         });
 
         const newCategory: CategoryType = {
@@ -187,7 +186,6 @@ export const useCategory: StateCreator<
           headers: {
             "Content-Type": "application/json",
           },
-          signal: AbortSignal.timeout(10000),
         });
 
         console.log("Category deleted:", categoryId);
