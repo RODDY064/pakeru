@@ -12,6 +12,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { boolean } from "zod";
 
 export default function Products() {
   const {
@@ -34,14 +35,11 @@ export default function Products() {
   } = useBoundStore();
 
   const { get } = useApiClient();
-  const [currentPageProducts, setCurrentPageProducts] = useState<ProductData[]>(
-    []
-  );
+  const [currentPageProducts, setCurrentPageProducts] = useState<ProductData[]>([]);
   const [categoriesSelect, setCategoriesSelect] = useState<string[]>([]);
   const router = useRouter();
-  const [productState, setProductState] = useState<
-    "idle" | "loading" | "success" | "failed"
-  >("idle");
+  const [productState, setProductState] = useState<"idle" | "loading" | "success" | "failed">("idle");
+  const [isFilterd, setIsFilterd] = useState(false)
 
   useEffect(() => {
     if (dashboardProductLoading.products || pagination.isLoading) {
@@ -63,8 +61,12 @@ export default function Products() {
   }, []);
 
   useEffect(() => {
-    console.log(storeProducts);
-  }, [storeProducts]);
+   
+    if(filteredStoreProducts.length === 0){
+      setIsFilterd(true)
+    }
+  
+  }, [filteredStoreProducts]);
 
   const productStats = useMemo(() => getProductStats(), [getProductStats]);
 
@@ -306,6 +308,7 @@ export default function Products() {
         columnStyle="py-4"
         columnClick={(product) => handleLink(product)}
         dateKey="createdAt"
+        isFilterd={isFilterd}
       />
       <MobileTabs />
     </div>

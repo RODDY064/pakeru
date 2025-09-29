@@ -5,7 +5,10 @@ import StatusBadge from "@/app/ui/dashboard/statusBadge";
 import Table from "@/app/ui/dashboard/table";
 import { formatJoinedDate } from "@/libs/functions";
 import { useApiClient } from "@/libs/useApiClient";
-import { DeliveryStatusFilter, OrdersData } from "@/store/dashbaord/orders-store/orders";
+import {
+  DeliveryStatusFilter,
+  OrdersData,
+} from "@/store/dashbaord/orders-store/orders";
 import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
@@ -45,7 +48,7 @@ function FulfilledContent() {
     setOrderTypeFilter,
     fulfilledFilteredOrders,
     orderInView,
-    orderTotalSize
+    orderTotalSize,
   } = useBoundStore();
 
   const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
@@ -63,21 +66,27 @@ function FulfilledContent() {
     initializeData();
   }, [loadOrders, loadStoreProducts]);
 
+  const [isFilterd, setIsFilterd] = useState(false);
+
+  useEffect(() => {
+    if (fulfilledFilteredOrders.length === 0) {
+      setIsFilterd(true);
+    }
+  }, [fulfilledFilteredOrders]);
+
   const loadOrdersForPagination = async (page: number) => {
     await loadOrders("fulfilled", {
       get,
       force: false,
-      page
+      page,
     });
   };
 
-  
-
   useEffect(() => {
     configure({
-      dataKey: "fulfilledOrders",
+      dataKey: "fulfilledFilteredOrders",
       loadFunction: loadOrdersForPagination,
-      size: 25,  
+      size: 25,
     });
 
     setOrderTypeFilter("fulfilled");
@@ -85,7 +94,7 @@ function FulfilledContent() {
 
   const orderStats = useMemo(
     () => getOrdersStats("fulfilled"),
-    [getOrdersStats,fulfilledFilteredOrders, orderInView]
+    [getOrdersStats, fulfilledFilteredOrders, orderInView]
   );
 
   useEffect(() => {
@@ -100,21 +109,19 @@ function FulfilledContent() {
       },
       { label: "Cancelled", value: orderStats.cancelledOrders ?? 0 },
     ]);
-  }, [orderStats, fulfilledOrders,  fulfilledFilteredOrders]);
+  }, [orderStats, fulfilledOrders, fulfilledFilteredOrders]);
 
   useEffect(() => {
     updateFromAPI({
       total: orderTotalSize,
       page: 1,
     });
-  }, [orderTotalSize,]);
-
+  }, [orderTotalSize]);
 
   useEffect(() => {
     const sliceData = slice(fulfilledFilteredOrders);
     setCurrentOrders(sliceData);
   }, [pagination, fulfilledOrders, fulfilledFilteredOrders]);
-  
 
   const handleSelect = useCallback(
     (order: OrdersData) => {
@@ -244,6 +251,7 @@ function FulfilledContent() {
         columnStyle="py-4"
         dateKey="date"
         columnClick={(order) => handleSelect(order)}
+        isFilterd={isFilterd}
       />
       <OrderModal type="fulfilled" />
     </div>

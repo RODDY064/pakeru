@@ -4,19 +4,28 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("Incoming cookies:", request.headers.get("cookie"));
+    const authHeader = request.headers.get("authorization");
+    let refreshToken: string | undefined;
+    if (authHeader?.startsWith("Bearer ")) {
+      refreshToken = authHeader.substring(7).trim();
+    }
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (refreshToken) {
+      headers["Cookie"] = `${
+        process.env.REFRESH_TOKEN_NAME ?? "refresh_token"
+      }=${refreshToken}`;
+    }
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/v1/auth/refresh`,
       {
         method: "GET",
+        headers,
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          ...(request.headers.get("cookie") && {
-            Cookie: request.headers.get("cookie")!,
-          }),
-        },
       }
     );
 

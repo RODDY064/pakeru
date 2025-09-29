@@ -1,6 +1,5 @@
 "use client";
 import { SessionProvider } from "next-auth/react";
-import { useBackgroundAuth } from "./useAuthManager";
 import { ReactNode } from "react";
 
 interface AuthProviderProps {
@@ -8,11 +7,8 @@ interface AuthProviderProps {
 }
 
 function BackgroundAuthHandler({ children }: AuthProviderProps) {
-  const { hasSession } = useBackgroundAuth();
+
   
-  if (typeof window !== 'undefined' && window.location.pathname.includes('/admin')) {
-    console.log("🔍 Auth Status:", {  hasSession });
-  }
 
   return <>{children}</>;
 }

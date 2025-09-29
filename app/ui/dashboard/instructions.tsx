@@ -3,21 +3,17 @@
 import React from "react";
 
 type InstructionsProps = {
-  care: string;
-  onCareChange: (value: string) => void;
-
   instructionInput: string;
   onInstructionInputChange: (value: string) => void;
-
   instructions: string[];
   onAddInstruction: () => void;
   onRemoveInstruction?: (index: number) => void;
   register: any;
+  errors: any;
 };
 
 export default function Instructions({
-  care,
-  onCareChange,
+  errors,
   instructionInput,
   onInstructionInputChange,
   instructions,
@@ -34,6 +30,11 @@ export default function Instructions({
           placeholder="type the product care description here"
           className="w-full border min-h-[90px] max-h-[90px] placeholder:text-black/30 border-black/10 bg-black/5 rounded-2xl mt-2 h-11 p-4 focus:outline-none focus-within:border-black/30"
         />
+        {errors.productCare && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.productCare.message}
+          </p>
+        )}
       </div>
       <div className="mt-4">
         <p className="font-avenir font-[500] text-lg">Instructions</p>
@@ -53,11 +54,18 @@ export default function Instructions({
         </div>
 
         {instructions.length === 0 ? (
-          <div className="mt-10 p-3 min-h-30 bg-blue-50 rounded-2xl border border-blue-200 flex items-center justify-center">
-            <span className="text-blue-700 font-avenir">
-              No instructions added
-            </span>
-          </div>
+          <>
+            <div className="mt-10 p-3 min-h-30 bg-blue-50 rounded-2xl border border-blue-200 flex items-center justify-center">
+              <span className="text-blue-700 font-avenir">
+                No instructions added
+              </span>
+            </div>
+            {errors.washInstructions && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.washInstructions.message}
+              </p>
+            )}
+          </>
         ) : (
           <ul className="mt-6 space-y-2">
             {instructions.map((ins, idx) => (

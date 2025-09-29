@@ -562,9 +562,8 @@ function ProductActionsContent() {
                     </div>
                   </div>
                   <Instructions
-                    care={care}
+                    errors={errors}
                     register={register}
-                    onCareChange={setCare}
                     onAddInstruction={handleAddInstruction}
                     instructionInput={instruction}
                     instructions={instructions}

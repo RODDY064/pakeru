@@ -70,6 +70,11 @@ export default function SizeType({
             <Image src="/icons/arrow.svg" width={16} height={16} alt="arrow" />
           </div>
         </div>
+        {errors?.sizeType?.clothType && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.sizeType?.clothType.message}
+          </p>
+        )}
       </div>
       <div
         className={`mt-10 p-3 bg-blue-50 rounded-2xl border border-blue-200 `}

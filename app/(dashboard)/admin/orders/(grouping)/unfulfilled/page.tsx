@@ -42,12 +42,22 @@ export default function Unfulfilled() {
     updateOrder,
     setOrderTypeFilter,
     unfulfilledFilteredOrders,
+    orderTotalSize
   } = useBoundStore();
+
+    const [isFilterd, setIsFilterd] = useState(false);
+  
+    useEffect(() => {
+      if (unfulfilledFilteredOrders.length === 0) {
+        setIsFilterd(true);
+      }
+    }, [unfulfilledFilteredOrders]);
+  
 
   const orderStats = useMemo(
     () => computeOrdersStats(unfulfilledOrders),
-    [unfulfilledOrders,unfulfilledFilteredOrders,orderInView]
-  );
+    [unfulfilledOrders,unfulfilledFilteredOrders,orderInView]);
+
   const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
 
   const unfulfilledStats = useMemo(() => {
@@ -68,7 +78,7 @@ export default function Unfulfilled() {
 
   useEffect(() => {
     configure({
-      dataKey: "unfulfilledOrders",
+      dataKey: "unfulfilledFilteredOrders",
       loadFunction: loadOrdersForPagination,
       size: 25,
     });
@@ -78,13 +88,14 @@ export default function Unfulfilled() {
 
   useEffect(() => {
     updateFromAPI({
-      total: unfulfilledOrders?.length,
+      total: orderTotalSize,
       page: 1,
     });
-  }, [unfulfilledOrders, unfulfilledFilteredOrders]);
+  }, [orderTotalSize]);
 
   useEffect(() => {
-    setCurrentOrders(unfulfilledFilteredOrders);
+    const sliceData = slice(unfulfilledFilteredOrders);
+    setCurrentOrders(sliceData);
   }, [pagination, unfulfilledOrders, unfulfilledFilteredOrders]);
 
   const [renderCount, setRenderCount] = React.useState(0);
@@ -223,6 +234,7 @@ export default function Unfulfilled() {
         columnStyle="py-4"
         dateKey="date"
         columnClick={(order) => handleSelect(order)}
+        isFilterd={isFilterd}
       />
       <OrderModal type="unfulfilled" />
     </div>

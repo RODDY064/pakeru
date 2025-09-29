@@ -304,7 +304,7 @@ const generateTrimmedId = (fullId: string): string => {
 };
 
 export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
-  const createdAt = apiOrder.createdAt ? new Date(apiOrder.createdAt) : null;
+  const createdAt = apiOrder?.createdAt ? new Date(apiOrder?.createdAt) : null;
   const deliveredAt = apiOrder.deliveryDate
     ? new Date(apiOrder.deliveryDate)
     : null;
@@ -425,13 +425,15 @@ const apiService = {
 
       console.log(updates, "updates");
 
-      const response = await patch<OrdersData[]>(
+      const response = await patch<{ data:OrdersData }>(
         `/orders/id/${orderId}`,
         updates,
         { requiresAuth: true }
       );
 
-      return transformApiOrderToOrdersData(response);
+      console.log(response.data)
+
+      return transformApiOrderToOrdersData(response.data);
     } catch (error) {
       console.error("Failed to update order:", error);
       throw error;
@@ -846,6 +848,7 @@ export const useOrdersStore: StateCreator<
           updates
         );
 
+
         set((state) => {
           // Helper function to update order in array
           interface UpdateOrderInArray {
@@ -865,8 +868,8 @@ export const useOrdersStore: StateCreator<
           };
 
           // Update in both arrays first
-          let foundInUnfulfilled = updateOrderInArray(state.unfulfilledOrders);
-          let foundInFulfilled = updateOrderInArray(state.fulfilledOrders);
+          let foundInUnfulfilled = updateOrderInArray(state.unfulfilledFilteredOrders);
+          let foundInFulfilled = updateOrderInArray(state.fulfilledFilteredOrders);
 
           // Update orderInView if it matches
           if (state.orderInView?._id === orderId) {
@@ -916,8 +919,7 @@ export const useOrdersStore: StateCreator<
     toast.promise(updatePromise, {
       loading: getLoadingMessage(updates),
       success: (updatedOrder) => {
-        const orderIdentifier =
-          updatedOrder?.IDTrim || generateTrimmedId(orderId);
+        const orderIdentifier =  updatedOrder?.IDTrim || generateTrimmedId(orderId);
         const toastMessage = getToastMessages(updates);
 
         return {

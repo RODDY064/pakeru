@@ -4,7 +4,6 @@ import { useSession, signIn } from "next-auth/react";
 import { useEffect, useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { decodeAuthSyncCookie } from "../signAuth";
-import { manualCookieSync } from "@/auth";
 
 
 // Configuration constants
@@ -74,15 +73,16 @@ const getCookie = (name: string): string | null => {
   return parts.length === 2 ? parts.pop()?.split(";").shift() || null : null;
 };
 
-const setCookie = (name: string, value: string, days: number): void => {
+export const setCookie = (name: string, value: string, days: number): void => {
   if (typeof document === "undefined") return;
   const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
   document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
 };
 
-const removeCookie = (name: string): void => {
+export const removeCookie = (name: string): void => {
   if (typeof document === "undefined") return;
   document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+  console.log(name, 'been reomve ')
 };
 
 // Network utilities
@@ -167,6 +167,12 @@ const getTokenExpiry = (token: string): number => {
 
 const needsRefresh = (expiryTime: number): boolean => Date.now() >= expiryTime - CONFIG.REFRESH_BUFFER;
 
+// Check if middleware handled the refresh
+const checkMiddlewareRefresh = (): boolean => {
+  const middlewareSuccess = getCookie("middleware-refresh-success");
+  return !!middlewareSuccess;
+};
+
 export const useBackgroundAuth = () => {
   const { data: session, status, update } = useSession();
   const router = useRouter();
@@ -178,12 +184,21 @@ export const useBackgroundAuth = () => {
   const [lastCheck, setLastCheck] = useState(0);
 
   const performAutoLogin = useCallback(async (): Promise<boolean> => {
-
-    if (!isProcessing.current || !hasValidAuthSync() || !isOnline() || hasTriedAutoLogin.current) {
-      // logger.debug("Skipping auto-login", 
-      //   { isProcessing: isProcessing.current, hasAuthSync: hasValidAuthSync(), 
-      //     isOnline: isOnline(), 
-      //     hasTried: hasTriedAutoLogin.current });
+    // Only attempt auto-login if we have valid auth sync and no valid session
+    if (
+      isProcessing.current || 
+      !hasValidAuthSync() || 
+      !isOnline() || 
+      hasTriedAutoLogin.current ||
+      status === "authenticated" // Don't auto-login if already authenticated
+    ) {
+      logger.debug("Skipping auto-login", {
+        isProcessing: isProcessing.current,
+        hasAuthSync: hasValidAuthSync(),
+        isOnline: isOnline(),
+        hasTried: hasTriedAutoLogin.current,
+        status: status
+      });
       return false;
     }
 
@@ -193,9 +208,14 @@ export const useBackgroundAuth = () => {
 
     try {
       logger.debug("Attempting auto-login via refresh");
-      const response = await fetchWithRetry( "/api/auth/refresh",
-        { method: "GET", credentials: "include", headers: { "Content-Type": "application/json", "Cache-Control": "no-cache" } }
-      );
+      const response = await fetchWithRetry("/api/auth/refresh", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache"
+        }
+      });
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
@@ -226,13 +246,19 @@ export const useBackgroundAuth = () => {
         expiresAt: getTokenExpiry(data.accessToken),
       });
 
-      const result = await signIn("credentials", { username: userPayload, password: "refresh_token_signin", redirect: false });
+      const result = await signIn("credentials", {
+        username: userPayload,
+        password: "refresh_token_signin",
+        redirect: false
+      });
+
       if (!result?.ok || result?.error) {
         logger.error("SignIn failed after refresh", result?.error);
         hasTriedAutoLogin.current = false;
         throw new Error(`SignIn failed: ${result?.error || "Unknown error"}`);
       }
 
+      // Wait for session to update
       let sessionSynced = false;
       for (let i = 0; i < 5; i++) {
         await update();
@@ -254,19 +280,22 @@ export const useBackgroundAuth = () => {
       if (isNetworkError(error)) {
         networkErrorCount.current++;
         hasTriedAutoLogin.current = false;
-      } 
+      }
       return false;
     } finally {
       isProcessing.current = false;
       clearAutoLoginFlag();
     }
-  }, [update]);
+  }, [update, status]);
 
+  // SIMPLIFIED: Only refresh if middleware hasn't handled it
   const refreshAccessToken = useCallback(async (): Promise<boolean> => {
-    if (!isProcessing.current ||
+    if (
+      isProcessing.current ||
       status !== "authenticated" ||
       !session?.accessToken ||
-      session?.error
+      session?.error ||
+      checkMiddlewareRefresh() 
     ) {
       return false;
     }
@@ -276,11 +305,15 @@ export const useBackgroundAuth = () => {
 
     isProcessing.current = true;
     try {
-      logger.debug("Refreshing access token");
-      const response = await fetchWithRetry(
-        "/api/auth/refresh",
-        { method: "GET", credentials: "include", headers: { "Content-Type": "application/json", "Cache-Control": "no-cache" } }
-      );
+      logger.debug("Client-side token refresh (middleware didn't handle)");
+      const response = await fetchWithRetry("/api/auth/refresh", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache"
+        }
+      });
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
@@ -308,10 +341,10 @@ export const useBackgroundAuth = () => {
 
       await update(updatedSession);
       networkErrorCount.current = 0;
-      logger.debug("Token refresh successful");
+      logger.debug("Client-side token refresh successful");
       return true;
     } catch (error) {
-      logger.error("Token refresh failed", error);
+      logger.error("Client-side token refresh failed", error);
       if (isNetworkError(error)) networkErrorCount.current++;
       return false;
     } finally {
@@ -322,6 +355,7 @@ export const useBackgroundAuth = () => {
   const handleMiddlewareRefreshData = useCallback(async (): Promise<boolean> => {
     const middlewareSuccess = getCookie("middleware-refresh-success");
     const autoSigninData = getCookie("auto-signin-data");
+    
     if (!middlewareSuccess || !autoSigninData) return false;
 
     try {
@@ -329,6 +363,7 @@ export const useBackgroundAuth = () => {
       const signinData = JSON.parse(autoSigninData);
       if (!signinData.user || !signinData.accessToken) throw new Error("Invalid middleware signin data");
 
+      // Clean up cookies first
       removeCookie("middleware-refresh-success");
       removeCookie("auto-signin-data");
 
@@ -395,7 +430,7 @@ export const useBackgroundAuth = () => {
 
     isProcessing.current = true;
     try {
-      // Handle middleware refresh data first
+      // Handle middleware refresh data first - this takes priority
       if (await handleMiddlewareRefreshData()) return;
 
       // Sync cookies
@@ -405,6 +440,7 @@ export const useBackgroundAuth = () => {
       const hasAuth = hasValidAuthSync();
       const needsAuth = status === "unauthenticated" || session?.error;
 
+      // Only attempt auto-login if we have auth sync but no valid session
       if (hasAuth && needsAuth && !hasTriedAutoLogin.current) {
         logger.debug("Attempting auto-login due to missing/invalid session");
         if (await performAutoLogin()) {
@@ -412,16 +448,17 @@ export const useBackgroundAuth = () => {
           router.replace(window.location.pathname);
         }
       } else if (status === "authenticated" && session?.accessToken && !session?.error) {
+        // Only refresh if middleware hasn't done it already
         const expiryTime = session.expiresAt || getTokenExpiry(session.accessToken);
-        if (needsRefresh(expiryTime)) {
-          logger.debug("Session needs refresh");
+        if (needsRefresh(expiryTime) && !checkMiddlewareRefresh()) {
+          logger.debug("Session needs refresh (client-side)");
           await refreshAccessToken();
         }
       }
     } finally {
       isProcessing.current = false;
     }
-  }, [status, session, performAutoLogin, refreshAccessToken, syncAuthCookies, router]);
+  }, [status, session, performAutoLogin, refreshAccessToken, syncAuthCookies, router, handleMiddlewareRefreshData]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -450,17 +487,6 @@ export const useBackgroundAuth = () => {
     };
   }, [handleBackgroundTasks]);
 
-  useEffect(() => {
-    const checkSync = async () => {
-      const synced = await manualCookieSync();
-      setIsSynced(synced);
-      setLastCheck(Date.now());
-    };
-
-    checkSync();
-    const interval = setInterval(checkSync, CONFIG.SYNC_CHECK_INTERVAL);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     if (status === "authenticated" && !session?.error) {

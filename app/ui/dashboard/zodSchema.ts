@@ -35,13 +35,10 @@ const ProductColorSchema = z.object({
 });
 
 export const SizeTypeSchema = z.object({
-  gender: z.enum(["male", "female", "unisex", ""], {
-    required_error: "Gender is required",
-  }),
-  clothType: z.enum(["t-shirts", "polo", "jeans", "pants", "cargo pants", ""], {
-    required_error: "Cloth type is required",
-  }),
+  gender: z.string().nonempty("Gender is required"),
+  clothType: z.string().nonempty("Cloth type is required"),
 });
+
 
 // Updated main product form schema
 export const ProductFormSchema = z
@@ -74,9 +71,7 @@ export const ProductFormSchema = z
       .array(ProductColorSchema)
       .min(1, "At least one color variant is required"),
     productCare: z.string().min(5, "Product care is required"),
-    washInstructions: z
-      .array(z.string().min(1))
-      .min(1, "At least one wash instruction is required"),
+    washInstructions: z.array(z.string().min(1)).min(1, "At least one wash instruction is required"),
     sizeType: SizeTypeSchema,
   })
   .refine(

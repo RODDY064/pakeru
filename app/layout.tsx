@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
 import "../styles/globals.css";
-import Nav from "./ui/nav";
 import { avenir, blackMango } from "./fonts/font";
 import { ToastProvider } from "./ui/toaster";
 import { OrdersWebhookProvider } from "./(dashboard)/admin/orders/hooks/webhookProivider";
 import { StoreProvider } from "./ui/storeProvider";
 import { fetchContent, fetchInitialData } from "@/libs/data-fetcher";
 import { SessionProvider } from "next-auth/react";
-import { AuthProvider } from "@/libs/auth/authProvider";
+
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://thepakeru.com"),
@@ -134,7 +132,6 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-  searchParams,
 }: Readonly<{
   children: React.ReactNode;
   searchParams: { [key: string]: string | string[] | undefined };
@@ -145,7 +142,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={` ${avenir.variable} ${blackMango.style}  antialiased `}>
-        <AuthProvider>
+        <SessionProvider>
           <StoreProvider
             Content={content}
             initialProducts={products}
@@ -155,7 +152,7 @@ export default async function RootLayout({
               {children}
             </OrdersWebhookProvider>
           </StoreProvider>
-        </AuthProvider>
+        </SessionProvider>
       </body>
     </html>
   );

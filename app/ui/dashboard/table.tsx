@@ -22,6 +22,7 @@ type tableProps = {
   columnClick?: (row: any) => void;
   columnStyle?: string;
   dateKey: string;
+  isFilterd: boolean;
 };
 
 export default function Table({
@@ -34,6 +35,7 @@ export default function Table({
   columnClick,
   columnStyle,
   dateKey,
+  isFilterd = false,
 }: tableProps) {
   const headerScrollRef = useRef<HTMLDivElement | null>(null);
   const contentScrollRef = useRef<HTMLDivElement | null>(null);
@@ -214,9 +216,31 @@ export default function Table({
             {tabelState === "success" && (
               <>
                 {data.length === 0 ? (
-                  <div className="py-10 text-center text-black/50 font-avenir w-full h-[300px] flex items-center justify-center gap-2  flex-col">
-                    No {tableName} found
-                  </div>
+                  <>
+                    {isFilterd ? (
+                      <div className="py-10 text-center text-black/50 font-avenir w-full h-[300px] flex items-center justify-center gap-2  flex-col">
+                        <div className="flex flex-col  items-center justify-center h-full text-gray-500">
+                          <Image
+                            src="/icons/search.svg"
+                            width={32}
+                            height={32}
+                            alt="search"
+                            className="mb-4 opacity-30"
+                          />
+                          <p className="text-lg font-avenir font-[400]">
+                              No {tableName.toLowerCase()}  match your filter
+                          </p>
+                          <p className="text-sm mt-1 font-avenir font-[400] text-black/30">
+                             Try adjusting the filter options
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="py-10 text-center text-black/50 font-avenir w-full h-[300px] flex items-center justify-center gap-2  flex-col">
+                        No {tableName} found
+                      </div>
+                    )}
+                  </>
                 ) : (
                   Object.entries(groupDataByMonth(data)).map(
                     ([month, rows]) => (
@@ -234,11 +258,13 @@ export default function Table({
                             className={cn(
                               "py-6 px-4 cursor-pointer flex items-center border-b border-black/15 font-avenir",
                               columnStyle
-                            )}>
+                            )}
+                          >
                             {columns.map((col, cidx) => (
                               <div
                                 key={cidx}
-                                className={`${col.width ?? "flex-1"} `}>
+                                className={`${col.width ?? "flex-1"} `}
+                              >
                                 {col.render(row)}
                               </div>
                             ))}
