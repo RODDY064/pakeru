@@ -278,7 +278,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const data = await response.json();
 
-        console.log(data)
         if (!response.ok) throw data;
 
         const expiresAt = AuthService.getTokenExpiration(data.accessToken);

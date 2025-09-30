@@ -51,7 +51,7 @@ export default function SideMenu() {
 
   return (
     <>
-      <div className="fixed md:w-[20%] xl:inline hidden xl:w-[15%] h-full  bg-[#E9E9E9] border border-black/5 px-8  pt-24">
+      <div className="fixed md:w-[25%] xl:inline hidden xl:w-[16%] h-full  bg-[#E9E9E9] border border-black/5 px-8  pt-24">
         <ul className="flex flex-col gap-1">
           {pages.map((item) => (
             <div key={item.name} className="relative w-full group">

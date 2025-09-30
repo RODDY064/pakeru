@@ -70,6 +70,11 @@ export default function MyOrderDynamic({ name }: { name: string }) {
     return `${day} ${month}`;
   }
 
+  function formatString(value: string): string {
+  const cleaned = value.replace(/[_-]/g, " ").toLowerCase().trim();
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+
 
   return (
     <div className="w-full  h-full bg-[#f2f2f2] px-4  pt-20 sm:px-12 xl:px-24 md:pt-32 pb-24 ">
@@ -161,7 +166,11 @@ export default function MyOrderDynamic({ name }: { name: string }) {
               </div>
             </div>
             <p className="font-avenir text-[15px] sm:text-[16px] xl:text-[18px] text-balance my-4">
-              Arriving at <span className="font-semibold"> {formatToDayMonth(orderInView?.deliveredAt as string)},</span>{" "}
+              Arriving at{" "}
+              <span className="font-semibold">
+                {" "}
+                {formatToDayMonth(orderInView?.deliveredAt as string)},
+              </span>{" "}
               7:00am to 8:00pm.
             </p>
             <div className="my-6 flex flex-col items-start gap-0.5 py-4 border-dotted px-4 bg-[rgb(250,250,250)] rounded-md border-[0.2px] border-black/10">
@@ -193,7 +202,10 @@ export default function MyOrderDynamic({ name }: { name: string }) {
                   BILLED TO
                 </p>
                 <p className="font-avenir text-[15px] md:text-[16px] text-black/70">
-                  Visa .... 7461
+                  {formatString(orderInView?.paymentChannel as string ?? "")}
+                </p>
+                <p className="font-avenir text-sm  text-black/70">
+                  {orderInView?.number}
                 </p>
                 <p className="font-avenir text-[15px] md:text-[16px] text-black/70">
                   {capitalize(orderInView?.user.firstname) +
@@ -311,12 +323,12 @@ const ProductSection = ({
               {size}
             </p>
           </div>
-          <Link
+          {/* <Link
             href="#"
             className="text-blue-600 font-avenir text-[13px] md:text-[16px]"
           >
             Write a Review
-          </Link>
+          </Link> */}
         </div>
       </div>
       <div className="flex  flex-col justify-end gap-1">

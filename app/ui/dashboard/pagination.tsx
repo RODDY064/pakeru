@@ -82,7 +82,7 @@ export default function Pagination({
   const pageSizeOptions = [2, 5, 7, 10, 15, 20, 25, 50];
 
   return (
-    <div className="w-full h-fit flex items-center justify-between pt-4 px-10 gap-4 border-t border-black/10">
+    <div className="w-full h-20 flex-none flex items-center justify-between  px-10 gap-4 border-t border-black/10">
       <p className="font-avenir font-[500] text-md text-black/50">
         Showing: {pagination.page}/{totalPages}{" "}
       </p>

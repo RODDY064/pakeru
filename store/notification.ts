@@ -6,16 +6,15 @@ type Notification = {
   title: string;
   content: string;
   about: "product" | "order" | "content";
-  type: "unread" | "read" ;
+  type: "unread" | "read";
 };
 
 export type NotificationStore = {
   notifactions: Notification[];
-  isNotModalOpen:boolean,
-  toggleNotModal:()=>void
+  isNotModalOpen: boolean;
+  notModalType: "notification" | "control" | null;
+  toggleNotModal: (notModalType:"notification" | "control" | null) => void;
 };
-
-
 
 export const useNotificationStore: StateCreator<
   Store,
@@ -23,11 +22,13 @@ export const useNotificationStore: StateCreator<
   [],
   NotificationStore
 > = (set, get) => ({
-  notifactions:[],
-  isNotModalOpen:false,
+  notifactions: [],
+  isNotModalOpen: false,
+  notModalType: null,
 
-  toggleNotModal: () =>
+  toggleNotModal: (notModalType) =>
     set((state) => {
       state.isNotModalOpen = !state.isNotModalOpen;
+      state.notModalType = notModalType
     }),
-})
+});

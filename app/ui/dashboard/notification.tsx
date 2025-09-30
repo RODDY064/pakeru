@@ -1,11 +1,16 @@
 "use client";
 
+import { capitalize } from "@/libs/functions";
 import { useBoundStore } from "@/store/store";
 import { AnimatePresence, cubicBezier, motion } from "motion/react";
+import { signOut, useSession } from "next-auth/react";
+import Link from "next/link";
 import React from "react";
 
 export default function Notification() {
-  const { isNotModalOpen, toggleNotModal } = useBoundStore();
+  const { isNotModalOpen, toggleNotModal, notModalType } = useBoundStore();
+  const { data: session } = useSession();
+
 
   return (
     <div
@@ -24,16 +29,33 @@ export default function Notification() {
               initial="close"
               animate="open"
               exit="close"
-              className="w-[600px] xl:w-[650px] 2xl:w-[680px] bg-white h-full"
+              className="w-[500px] xl:w-[500px] 2xl:w-[600px] bg-white h-full"
             >
               <div className="flex items-center justify-between pt-8 pb-4 px-10 border-b border-black/20">
                 <div className="flex items-center gap-4">
-                  <p className="font-avenir text-lg font-normal pt-1">
-                    Notification
-                  </p>
+                  <div className="pt-1">
+                    {notModalType === "control" && (
+                      <div className="flex items-center gap-3">
+                        <p className="font-avenir text-lg font-normal ">
+                          Dashboard
+                        </p>
+                        <Link href="/">
+                          <p className="px-4 py-2 rounded-lg bg-black text-white font-avenir text-sm">
+                            Visit Store
+                          </p>
+                        </Link>
+                      </div>
+                    )}
+                    {notModalType === "notification" && (
+                      <p className="font-avenir text-lg font-normal ">
+                        {" "}
+                        Notification
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div
-                  onClick={toggleNotModal}
+                  onClick={() => toggleNotModal(null)}
                   className="flex gap-1 cursor-pointer"
                 >
                   <div className="relative flex items-center justify-center">
@@ -43,6 +65,37 @@ export default function Notification() {
                   <p className="capitalize font-avenir font-[400] text-sm mt-1">
                     CLOSE
                   </p>
+                </div>
+              </div>
+              <div className="h-full overflow-scroll pb-24">
+                <div className="px-10 py-6">
+                  {notModalType === "control" && (
+                    <>
+                      <p className="text-black/50 text-md font-avenir font-[300]">
+                        Username
+                      </p>
+                      <p className="font-avenir font-[500] text-lg mt-2">
+                        {session?.user && (
+                          <>
+                            {capitalize(session?.user?.firstname ?? "")}{" "}
+                            {capitalize(session?.user.lastname ?? "")}
+                          </>
+                        )}
+                      </p>
+                      <p className="font-avenir font-[500]  text-black/50 decoration-dotted underline underline-offset-2 text-md">
+                        {session?.user?.username}
+                      </p>
+                     <div onClick={()=>signOut} className="flex flex-col items-center">
+                       <div className="mt-12 w-[80%] border border-black py-4 cursor-pointer bg-black/10 hover:bg-black/5 rounded-full">
+                        <p className="font-avenir text-lg  text-center">Logout</p>
+                      </div>
+                     </div>
+                    </>
+                  )}
+                  {notModalType === "notification" && (
+                    <p className="py-10 font-avenir text-lg text-black/50 decoration-dotted underline underline-offset-2  ">Notification still under work</p>
+                  )}
+                  
                 </div>
               </div>
             </motion.div>

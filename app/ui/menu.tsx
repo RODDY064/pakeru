@@ -17,6 +17,7 @@ import SearchIcon from "./searchIcon";
 import { MenuItem } from "@/store/modal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 export default function Menu() {
   const {
@@ -551,7 +552,7 @@ export default function Menu() {
             variants={list}
             key={index}
             onClick={() => handleMobileMenuClick(item.category)}
-            className="font-avenir w-fit text-lg cursor-pointer uppercase"
+            className="font-avenir w-fit text-md md:text-lg cursor-pointer uppercase"
           >
             {item.category}
             <p className="w-full h-[1px] bg-amber-600"></p>
@@ -580,6 +581,9 @@ export default function Menu() {
             <Image src="/icons/user.svg" width={16} height={16} alt="user" />
             <p className="font-avenir font-[400] text-sm mt-[8px]">ACCOUNT</p>
           </Link>
+          <div onClick={()=>signOut} className="flex flex-col  mt-12">
+            <p className=" px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">Logout</p>
+          </div>
         </motion.div>
       </motion.div>
 

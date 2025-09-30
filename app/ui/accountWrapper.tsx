@@ -9,6 +9,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useBoundStore } from "@/store/store";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { motion } from "motion/react";
+import { capitalize } from "@/libs/functions";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -40,6 +42,8 @@ export default function AccountWrapper({
   const navRef = useRef<HTMLDivElement>(null);
   const [navZ, setNavZ] = useState("z-50");
   const { data: session } = useSession();
+  const [acccountNavMobile, setAccountNavMobile] = useState(false);
+  const [isMobile , setIsMobile] = useState(false)
 
   const handlePage = (pageName: string) => {
     // if not on /account, navigate there
@@ -104,32 +108,48 @@ export default function AccountWrapper({
     }
   }, [modal, isSearching]);
 
+  function handleMobilePage(page: string) {
+    handlePage(page);
+    setAccountNavMobile(false)
+  }
+
   return (
     <AccountContext.Provider value={{ pages, handlePage }}>
       <div
         ref={navRef}
         style={{ transform: "translateY(0)" }}
-        className={`w-full h-12 md:h-20 px-2 md:px-8 fixed border-t border-b border-black/10 flex ${
-          session?.user.role !== "admin" ? "justify-between " : "justify-end"
-        } justify-between account-nav  bg-white ${navZ}`}
-      >
+        className={`w-full h-12 md:h-20 px-4 md:px-8 fixed border-t border-b border-black/10 flex ${
+          session?.user.role !== "admin" ? "justify-between " : "justify-end"} account-nav  bg-white ${navZ}`}>
         {session?.user.role !== "admin" && (
           <>
-            <div
-              onClick={() => handlePage("profile")}
-              className="h-full flex  items-center relative md:border-x border-black/10 cursor-pointer "
-            >
-              <p className="font-avenir font-[500] text-sm  md:px-6">
-                MY PROFILE {session?.user.role}
-              </p>
-              {pages[0].isActive && (
-                <div className="w-full absolute bottom-0 h-[10px] md:bg-black/10"></div>
-              )}
-            </div>
+            {isMobile ? (
+              <>
+                <div className="h-full flex  items-center relative md:border-x border-black/10 cursor-pointer ">
+                  <p className="font-avenir font-[500] text-md  md:px-6">
+                    {pages[0].isActive && "My Profile"}
+                    {pages[1].isActive && "My Bookmarks"}
+                     {pages[2].isActive && "My Orders"}
+                  </p>
+                </div>
+              </>
+            ) : (
+   
+                <div
+                  onClick={() => handlePage("profile")}
+                  className="h-full flex  items-center relative md:border-x border-black/10 cursor-pointer ">
+                  <p className="font-avenir font-[500] text-sm  md:px-6">
+                    MY PROFILE
+                  </p>
+                  {pages[0].isActive && (
+                    <div className="w-full absolute bottom-0 h-[10px] md:bg-black/10"></div>
+                  )}
+                </div>
+          
+            )}
           </>
         )}
-        <div className="flex items-center h-full">
-          <div className="md:flex hidden h-full">
+        <div className="flex items-center h-full ">
+          <div className="md:flex hidden h-full  ">
             {session?.user.role !== "admin" && (
               <>
                 <div
@@ -165,7 +185,9 @@ export default function AccountWrapper({
               </div>
             </div>
           </div>
-          <div className="px-3 md:hidden">
+          <div
+            onClick={() => setAccountNavMobile(true)}
+            className="px-3 md:hidden">
             <Image
               src="/icons/account-menu.svg"
               width={20}
@@ -187,6 +209,58 @@ export default function AccountWrapper({
       ) : (
         children
       )}
+      {/* mobile nav */}
+      <div
+        className={`w-full h-full fixed top-0 z-50 ${
+          acccountNavMobile
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
+      >
+        <motion.div
+          animate={acccountNavMobile ? { height: "100%" } : { height: "0%" }}
+          className="h-full bg-white p-14 px-10"
+        >
+          <div className="flex items-center justify-between">
+            <p className="capitalize font-avenir text-sm">ACCOUNT</p>
+
+            <div
+              onClick={() => setAccountNavMobile(false)}
+              className="flex gap-1 cursor-pointer"
+            >
+              <div className="relative flex items-center justify-center">
+                <div className="w-[16px] h-[1px] rotate-45 bg-black"></div>
+                <div className="w-[16px] h-[1px] rotate-[-45deg] bg-black absolute"></div>
+              </div>
+              <p className="capitalize font-avenir font-[400] text-sm mt-1">
+                CLOSE
+              </p>
+            </div>
+          </div>
+          <div className="mt-10">
+            {session?.user.role !== "admin" && (
+              <>
+                <div
+                  onClick={() =>  handleMobilePage("mybookmarks")}
+                  className="h-full flex  items-center relative  cursor-pointer"
+                >
+                  <p className="font-avenir font-[500] text-lg text-black/60 ">
+                    My Bookmarks
+                  </p>
+                </div>
+                <div
+                  onClick={() =>  handleMobilePage("orders")}
+                  className="h-full flex  items-center relative cursor-pointer"
+                >
+                  <p className="font-avenir font-[500] text-lg text-black/60 pt-1">
+                    My Order
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </motion.div>
+      </div>
     </AccountContext.Provider>
   );
 }

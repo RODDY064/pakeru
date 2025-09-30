@@ -43,9 +43,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
         params.set("order", orderInView.IDTrim ?? "");
         router.replace(`${window.location.pathname}?${params.toString()}`);
       }
-    } else if (orderIdTrim) {
-      loadOrder(orderIdTrim);
-    }
+    } 
   }, [orderInView, searchParams, router, setSingleOrderState, loadOrder]);
 
   const handleUpdate = async (
@@ -225,7 +223,8 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                             />
                           </div>
                         </div>
-
+                        <p>{orderInView?.fulfilledStatus}</p>
+ 
                         {type !== "unfulfilled" && (
                           <div className="flex items-center justify-between">
                             <p className="font-avenir text-lg">

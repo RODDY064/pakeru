@@ -115,12 +115,12 @@ export default function Table({
   }
 
   return (
-    <div className="mt-4 w-full h-[94%] bg-white border border-black/15 rounded-2xl overflow-hidden hidden md:block">
+    <div className="mt-4 w-full h-[96%] bg-white border border-black/15 rounded-2xl overflow-hidden flex flex-col">
       <div className="flex lg:flex-row flex-col gap-4 lg:gap-auto lg:items-center justify-between border-b border-black/15 px-4 py-4 font-avenir">
         {header}
       </div>
       {/* table  */}
-      <div className="flex flex-col h-[77%] flex-none relative">
+      <div className="flex flex-col min-h-0  flex-1 relative">
         {/* table row names */}
         <div className="absolute px-6 py-3 flex justify-between items-center w-full z-10 2xl:hidden pointer-events-none">
           <div
@@ -188,7 +188,7 @@ export default function Table({
             )}
 
             {tabelState === "loading" && (
-              <div className="w-full h-[300px] flex items-center justify-center gap-2">
+              <div className="w-full min-h-[300px] flex items-center justify-center gap-2">
                 <Image
                   src="/icons/loader.svg"
                   width={28}
@@ -201,7 +201,7 @@ export default function Table({
               </div>
             )}
             {tabelState === "failed" && (
-              <div className="w-full h-[300px] flex items-center justify-center gap-2  flex-col">
+              <div className="w-full min-h-[300px] flex items-center justify-center gap-2  flex-col">
                 <p className="font-avenir pt-[3px] text-lg  text-red-500 ">
                   Something went wrong
                 </p>

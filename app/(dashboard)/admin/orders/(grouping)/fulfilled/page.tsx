@@ -232,11 +232,11 @@ function FulfilledContent() {
   ];
 
   return (
-    <div className="overflow-hidden h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[15%] pb-36 pt-20   md:pt-24 md:pb-32 ">
+    <div className="overflow-hidden h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%] pb-36 pt-20   md:pt-24 md:pb-32 ">
       <p className="font-avenir text-xl md:text-2xl font-bold max-sm:px-3">
         Fulfilled Orders
       </p>
-      <div className="mt-4 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
+      <div className="mt-2 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
         {fulfilledStats.map((stat, idx) => (
           <StatCard key={idx} {...stat} />
         ))}

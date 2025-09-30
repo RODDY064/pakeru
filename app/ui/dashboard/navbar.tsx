@@ -35,14 +35,15 @@ export default function Navbar() {
       </div>
       <div className="flex items-center gap-2 ">
           <WebhookConnectionStatus/>
-        <div className="px-2 rounded-lg py-2  max-sm:mt-2 md:bg-white/15 relative cursor-pointer">
+        <div  onClick={()=>toggleNotModal('notification')} className="px-2 rounded-lg py-2  max-sm:mt-2 md:bg-white/15 relative cursor-pointer">
           <Image
             src="/icons/notification.svg"
             width={24}
             height={24}
             alt="notification"
           />
-          <div className="size-5 rounded-full border border-white/50 absolute top-[-10px] right-0 flex items-center justify-center">
+          <div 
+          className="size-5 rounded-full border border-white/50 absolute top-[-10px] right-0 flex items-center justify-center">
             <p className="font-avenir font-[300] text-red-500 text-xs pt-[2px]">
               3
             </p>
@@ -53,7 +54,7 @@ export default function Navbar() {
           className="px-4 py-2 bg-white/15 rounded-lg cursor-pointer hidden md:flex">
           <p className="font-avenir font-[500] text-md">Pakeru Store</p>
         </Link> */}
-        <div onClick={toggleNotModal} className="size-11 rounded-full  items-center justify-center bg-white/15 hidden md:flex cursor-pointer">
+        <div onClick={()=>toggleNotModal('control')} className="size-11 rounded-full  items-center justify-center bg-white/15 hidden md:flex cursor-pointer">
           <p className="font-avenir font-[500] text-md">MS</p>
         </div>
     

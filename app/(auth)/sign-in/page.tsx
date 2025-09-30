@@ -52,33 +52,32 @@ function SignInForm() {
 
       setSignState("loading");
 
-      const loginRes = await fetch("/api/auth/login", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: data.username,
-          password: data.password,
-        }),
-      });
+      // const loginRes = await fetch("/api/auth/login", {
+      //   method: "POST",
+      //   credentials: "include",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({
+      //     email: data.username,
+      //     password: data.password,
+      //   }),
+      // });
 
-      const logRes = await loginRes.json();
+      // const logRes = await loginRes.json();
 
-      if (!loginRes.ok) {
-        setSignState("error");
-        setErrorMessage(logRes.msg || "Invalid username or password");
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        setSignState("idle");
-        return;
-      }
+      // if (!loginRes.ok) {
+      //   setSignState("error");
+      //   setErrorMessage(logRes.msg || "Invalid username or password");
+      //   await new Promise((resolve) => setTimeout(resolve, 3000));
+      //   setSignState("idle");
+      //   return;
+      // }
 
-      const { sessionId } = logRes; // Extract sessionId from response
+      // const { sessionId } = logRes; // Extract sessionId from response
 
       const response = await signIn("credentials", {
         redirect: false,
         username: data.username,
         password: data.password,
-        sessionId, // Pass sessionId to NextAuth
       });
 
       if (!response || response.error) {

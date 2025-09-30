@@ -1,22 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-async function extractTokenFromRequest(request: NextRequest): Promise<string | undefined> {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader?.startsWith('Bearer ')) {
+async function extractTokenFromRequest(
+  request: NextRequest
+): Promise<string | undefined> {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
     return authHeader.slice(7);
   }
 
   // Fallback to cookie (for server-side requests)
   const cookieStore = await cookies();
-  const tokenCookie = cookieStore.get('accessToken');
+  const tokenCookie = cookieStore.get("accessToken");
   return tokenCookie?.value || undefined;
 }
 
-// Clean header forwarding 
-function getForwardHeaders(request: NextRequest, token?: string): Record<string, string> {
+// Clean header forwarding
+function getForwardHeaders(
+  request: NextRequest,
+  token?: string
+): Record<string, string> {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
 
   // Add authentication if token available
@@ -24,9 +29,8 @@ function getForwardHeaders(request: NextRequest, token?: string): Record<string,
     headers.Authorization = `Bearer ${token}`;
   }
 
-
-  const safeHeaders = ['user-agent', 'accept-language', 'x-forwarded-for'];
-  safeHeaders.forEach(headerName => {
+  const safeHeaders = ["user-agent", "accept-language", "x-forwarded-for"];
+  safeHeaders.forEach((headerName) => {
     const value = request.headers.get(headerName);
     if (value) headers[headerName] = value;
   });
@@ -44,17 +48,15 @@ export async function GET(
     const { id } = await params;
     const token = await extractTokenFromRequest(request);
 
-  
-    console.log(getForwardHeaders(request,token))
+    console.log(getForwardHeaders(request, token));
 
     const response = await fetch(`${BASE_URL}/v1/orders/${id}`, {
       method: "GET",
       headers: getForwardHeaders(request, token),
-      cache:"no-store"
+      cache:"no-store",
     });
 
     const data = await response.json();
-
 
     return NextResponse.json(data.data, { status: response.status });
   } catch (error: any) {
@@ -81,9 +83,9 @@ export async function PATCH(
     const response = await fetch(`${BASE_URL}/v1/orders/${id}`, {
       method: "PATCH",
       headers: incomingHeaders,
+      cache: "no-store",
+      body: JSON.stringify(body)
     });
-
-    console.log(response)
 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });

@@ -31,7 +31,6 @@ export default function Unfulfilled() {
     unfulfilledState,
     orderInView,
     setSingleOrderState,
-    loadOrder,
     setOrderInView,
     loadStoreProducts,
     storeProducts,
@@ -42,7 +41,8 @@ export default function Unfulfilled() {
     updateOrder,
     setOrderTypeFilter,
     unfulfilledFilteredOrders,
-    orderTotalSize
+    orderTotalSize,
+    applyOrderFilters
   } = useBoundStore();
 
     const [isFilterd, setIsFilterd] = useState(false);
@@ -54,9 +54,7 @@ export default function Unfulfilled() {
     }, [unfulfilledFilteredOrders]);
   
 
-  const orderStats = useMemo(
-    () => computeOrdersStats(unfulfilledOrders),
-    [unfulfilledOrders,unfulfilledFilteredOrders,orderInView]);
+  const orderStats = useMemo(() => computeOrdersStats(unfulfilledFilteredOrders),[unfulfilledOrders,unfulfilledFilteredOrders,orderInView]);
 
   const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
 
@@ -65,9 +63,8 @@ export default function Unfulfilled() {
     return [
       { label: "Total Unfulfilled", value: orderStats.totalOrders ?? 0 },
       { label: "Pending", value: orderStats.pendingOrders ?? 0 },
-      { label: "Response per order", value: 0 },
     ];
-  }, [orderStats]);
+  }, [orderStats,unfulfilledFilteredOrders]);
 
   const loadOrdersForPagination = async (page: number) => {
     await loadOrders("unfulfilled", {
@@ -101,6 +98,7 @@ export default function Unfulfilled() {
   const [renderCount, setRenderCount] = React.useState(0);
   useEffect(() => {
     setRenderCount((prev) => prev + 1);
+     applyOrderFilters()
   }, [unfulfilledOrders]);
 
   useEffect(() => {
@@ -206,20 +204,11 @@ export default function Unfulfilled() {
   );
 
   return (
-    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[15%] pb-36 pt-20   md:pt-24 md:pb-32 ">
-      <p
-        onClick={() =>
-          toast.success({
-            title: "font-avenir text-xl md:text-2xl font-bold ",
-            description:
-              "mt-4 w-full h-fit bg-white border border-black/15 sm:rounded-2xl ",
-          })
-        }
-        className="font-avenir text-xl md:text-2xl font-bold max-sm:px-3"
-      >
+    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%] pb-36 pt-20   md:pt-24 md:pb-32 ">
+      <p className="font-avenir text-xl md:text-2xl font-bold max-sm:px-3">
         Unfulfilled Orders
       </p>
-      <div className="mt-4 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
+      <div className="mt-2 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
         {unfulfilledStats.map((stat, idx) => (
           <StatCard key={idx} {...stat} />
         ))}

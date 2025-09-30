@@ -105,7 +105,6 @@ export default function Products() {
   }, [pagination, storeProducts, storeProductFilters,filteredStoreProducts]);
 
   const [stats, setStats] = useState([
-    { label: "Product Sells Rate", value: 0 },
     { label: "Total Products", value: 0 },
     { label: "Active Products", value: 0 },
     { label: "Inactive Products", value: 0 },
@@ -116,7 +115,6 @@ export default function Products() {
     if (!productStats) return;
 
     setStats([
-      { label: "Product Sells Rate", value: 0 },
       { label: "Total Products", value: productStats.total ?? 0 },
       { label: "Active Products", value: productStats.active ?? 0 },
       { label: "Inactive Products", value: productStats.inactive ?? 0 },
@@ -261,7 +259,7 @@ export default function Products() {
   };
 
   return (
-    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8 pb-36   xl:ml-[15%] pt-20  md:pt-24 md:pb-32">
+    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8 pb-36   xl:ml-[16%] pt-20  md:pt-24 md:pb-32">
       <div className="flex items-center justify-between max-sm:px-3">
         <p className="font-avenir text-xl md:text-2xl font-bold">Products</p>
         <Link
@@ -287,7 +285,7 @@ export default function Products() {
           />
         </Link>
       </div>
-      <div className="mt-4 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
+      <div className="mt-2 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
         {stats.map((stat, idx) => (
           <StatCard key={idx} {...stat} />
         ))}

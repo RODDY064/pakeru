@@ -13,7 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function Account() {
   const { pages } = useAccount();
-  const {data:session} = useSession()
+  const { data: session } = useSession();
 
   function render() {
     const activePage = pages?.find((page) => page.isActive)?.name;
@@ -32,7 +32,7 @@ export default function Account() {
   return (
     <div className="w-full min-h-dvh">
       <div className="text-black  w-full h-full bg-[#f2f2f2] px-4  pt-20 sm:px-12 lg:px-16 xl:px-24 md:pt-32 pb-24 ">
-        {render()}
+        {session?.user && <>{render()}</>}
       </div>
     </div>
   );

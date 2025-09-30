@@ -40,6 +40,8 @@ export type OrdersData = {
   };
   discount: number;
   shipmentDays?: string;
+  paymentChannel?: string;
+  number?: string;
 };
 
 export type OrdersStats = {
@@ -148,7 +150,7 @@ export type OrdersStore = {
       patch?: ReturnType<typeof useApiClient>["patch"];
       get?: ReturnType<typeof useApiClient>["get"];
     }
-  ) => Promise<OrdersData>;
+  ) => Promise<any>;
   refundOrder: (orderId: string) => Promise<void>;
   getFilteredOrders: (type: "fulfilled" | "unfulfilled") => OrdersData[];
   getOrdersStats: (type: "fulfilled" | "unfulfilled") => OrdersStats;
@@ -305,13 +307,13 @@ const generateTrimmedId = (fullId: string): string => {
 
 export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
   const createdAt = apiOrder?.createdAt ? new Date(apiOrder?.createdAt) : null;
-  const deliveredAt = apiOrder.deliveryDate
-    ? new Date(apiOrder.deliveryDate)
+  const deliveredAt = apiOrder?.deliveryDate
+    ? new Date(apiOrder?.deliveryDate)
     : null;
-  const isDeleiveredDateValid = deliveredAt && !isNaN(deliveredAt.getTime());
-  const isCreatedAtValid = createdAt && !isNaN(createdAt.getTime());
+  const isDeleiveredDateValid = deliveredAt && !isNaN(deliveredAt?.getTime());
+  const isCreatedAtValid = createdAt && !isNaN(createdAt?.getTime());
 
-  const date = isCreatedAtValid ? createdAt.toISOString().split("T")[0] : "";
+  const date = isCreatedAtValid ? createdAt?.toISOString().split("T")[0] : "";
   const time = isCreatedAtValid
     ? createdAt.toLocaleTimeString("en-US", {
         hour: "2-digit",
@@ -325,7 +327,7 @@ export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
 
   if (isDeleiveredDateValid && deliveredAt) {
     shipmentDeadline = new Date(deliveredAt);
-    shipmentDeadline.setDate(deliveredAt.getDate());
+    shipmentDeadline.setDate(deliveredAt?.getDate());
     const today = new Date();
     const msDiff = shipmentDeadline.getTime() - today.getTime();
     daysLeft = Math.ceil(msDiff / (1000 * 60 * 60 * 24));
@@ -354,6 +356,8 @@ export const transformApiOrderToOrdersData = (apiOrder: any): OrdersData => {
     },
     discount: apiOrder.discount || 0,
     shipmentDays: daysLeft > 0 ? `${daysLeft} day(s) left` : "ready to ship",
+    paymentChannel: apiOrder.paymentChannel || "",
+    number: apiOrder.number || "",
   };
 };
 
@@ -377,9 +381,11 @@ const apiService = {
       if (page) query.append("page", page.toString());
 
       const response = await get<{ data: OrdersData[]; total: number }>(
-        `/orders?${query.toString()}`,
+        `/orders?${query.toString()}&t=${Date.now()}`,
         {
           requiresAuth: true,
+           cache:"no-store",
+           next:{ revalidate:0 }
         }
       );
 
@@ -407,6 +413,7 @@ const apiService = {
     try {
       const data = await get<{ data: OrdersData }>(`/orders/id/${id}`, {
         requiresAuth: true,
+         cache:"no-store",
       });
       return transformApiOrderToOrdersData(data);
     } catch (error) {
@@ -425,15 +432,15 @@ const apiService = {
 
       console.log(updates, "updates");
 
-      const response = await patch<{ data:OrdersData }>(
-        `/orders/id/${orderId}`,
-        updates,
-        { requiresAuth: true }
+      const response = await patch<{ order:OrdersData }>(`/orders/id/${orderId}`, updates,{
+          requiresAuth: true,
+          cache:"no-cache"
+        }
       );
 
-      console.log(response.data)
+      console.log(response, 'order');
 
-      return transformApiOrderToOrdersData(response.data);
+     return transformApiOrderToOrdersData(response.order)
     } catch (error) {
       console.error("Failed to update order:", error);
       throw error;
@@ -460,6 +467,7 @@ const apiService = {
 
       const response = await get<{ data: OrdersData[] }>(endpoint, {
         requiresAuth: true,
+        cache:"no-store",
       });
 
       console.log(response, "user orders response");
@@ -696,7 +704,7 @@ export const useOrdersStore: StateCreator<
     const currentState =
       type === "fulfilled" ? get().fulfilledState : get().unfulfilledState;
 
-    // ✅ Skip fetch only for first page if already loaded
+  
     if (
       !force &&
       page === 1 &&
@@ -723,14 +731,12 @@ export const useOrdersStore: StateCreator<
             : state.unfulfilledOrders;
 
         const merged =
-          page === 1
-            ? ordersData // ✅ fresh load
-            : [
+          page === 1 ? ordersData : [
                 ...existing,
                 ...ordersData.filter(
                   (order) => !existing.some((o) => o._id === order._id)
                 ),
-              ]; // ✅ append + dedupe
+              ]; 
 
         if (type === "fulfilled") {
           state.fulfilledOrders = merged;
@@ -751,7 +757,7 @@ export const useOrdersStore: StateCreator<
       );
     }
   },
-  
+
   loadOrder: async (id, options = {}) => {
     const { setSingleOrderState, setOrderError } = get();
 
@@ -848,6 +854,7 @@ export const useOrdersStore: StateCreator<
           updates
         );
 
+        console.log(updatedOrder)
 
         set((state) => {
           // Helper function to update order in array
@@ -868,8 +875,8 @@ export const useOrdersStore: StateCreator<
           };
 
           // Update in both arrays first
-          let foundInUnfulfilled = updateOrderInArray(state.unfulfilledFilteredOrders);
-          let foundInFulfilled = updateOrderInArray(state.fulfilledFilteredOrders);
+          let foundInUnfulfilled = updateOrderInArray( state.unfulfilledOrders);
+          let foundInFulfilled = updateOrderInArray(state.fulfilledOrders);
 
           // Update orderInView if it matches
           if (state.orderInView?._id === orderId) {
@@ -903,7 +910,8 @@ export const useOrdersStore: StateCreator<
         });
 
         setSingleOrderState("success");
-        return updatedOrder;
+
+        // return updatedOrder;
       } catch (error) {
         console.error("Order update failed:", error);
         setSingleOrderState("failed");
@@ -915,11 +923,13 @@ export const useOrdersStore: StateCreator<
       }
     })();
 
+
+
     // Toast notifications
     toast.promise(updatePromise, {
       loading: getLoadingMessage(updates),
       success: (updatedOrder) => {
-        const orderIdentifier =  updatedOrder?.IDTrim || generateTrimmedId(orderId);
+        const orderIdentifier = generateTrimmedId(orderId);
         const toastMessage = getToastMessages(updates);
 
         return {
