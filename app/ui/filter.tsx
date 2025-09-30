@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/libs/cn";
+import { useApiClient } from "@/libs/useApiClient";
 import { useBoundStore } from "@/store/store";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
@@ -35,6 +36,8 @@ export default function Filter() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const { get } = useApiClient()
+
 useEffect(() => {
   setFilterCategories();
   const handleResize = () => {
@@ -68,7 +71,7 @@ useEffect(() => {
 
       const timer = setTimeout(() => {
         const queries = getFilterQueries();
-        loadProducts(true, 1, 25, queries);
+        loadProducts(false, 1, 25, queries );
       }, 100);
       
       return () => clearTimeout(timer);
@@ -109,12 +112,7 @@ const ApplyFilter = () => {
   filterState(false);
 };
 
-  const ClearAllFilters = () => {
-    clearAllSelections();
-    setPriceMin("");
-    setPriceMax("");
-    loadProducts(true, 1, 25, {});
-  };
+ 
 
   const activeFilterCount = getActiveFilterCount();
   const hasFilters = hasActiveFilters();

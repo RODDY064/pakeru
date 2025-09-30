@@ -1,5 +1,6 @@
 import NextAuth, { Session, JWT } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { z } from "zod";
 import { AuthCache } from "./libs/redis";
 
@@ -31,11 +32,7 @@ export class AuthService {
     }
   }
 
-  static async authenticate(
-    username: string,
-    password: string,
-  ) {
-
+  static async authenticate(username: string, password: string) {
     const response = await fetch(`${this.baseUrl}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -110,6 +107,94 @@ export class AuthService {
       expiresAt,
     };
   }
+
+  // New method for Google authentication
+  static async authenticateGoogle(
+    email: string,
+    firstName: string,
+    lastName: string,
+    profileId:string,
+    image?:string,
+  ) {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/auth/google`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, firstName, lastName, image, profileId }),
+      }
+    );
+
+    console.log(response.statusText, "response");
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.msg ||
+          errorData.message ||
+          `Google authentication failed: ${response.statusText}`
+      );
+    }
+
+    const setCookie = response.headers.get("set-cookie");
+    const cookieNAME = process.env.REFRESH_TOKEN_NAME ?? "refresh_token";
+    let refreshToken: string | undefined;
+    let refreshTokenExpiresAt: number | undefined;
+
+    if (setCookie) {
+      const cookies = setCookie.split(/,(?=\s*\w+=)/);
+      for (const cookie of cookies) {
+        const parts = cookie.split(";");
+        const [name, value] = parts[0].split("=");
+
+        if (name && value && name.trim() === cookieNAME) {
+          let isExpired = false;
+
+          const expiresPart = parts.find((p) =>
+            p.trim().toLowerCase().startsWith("expires=")
+          );
+          if (expiresPart) {
+            const expiresDate = new Date(expiresPart.split("=")[1].trim());
+            if (!isNaN(expiresDate.getTime())) {
+              refreshTokenExpiresAt = expiresDate.getTime();
+              if (expiresDate.getTime() < Date.now()) isExpired = true;
+            }
+          }
+
+          const maxAgePart = parts.find((p) =>
+            p.trim().toLowerCase().startsWith("max-age=")
+          );
+          if (maxAgePart) {
+            const maxAgeSeconds = parseInt(maxAgePart.split("=")[1].trim(), 10);
+            if (!isNaN(maxAgeSeconds)) {
+              refreshTokenExpiresAt = Date.now() + maxAgeSeconds * 1000;
+              if (maxAgeSeconds <= 0) isExpired = true;
+            }
+          }
+
+          if (!isExpired) {
+            refreshToken = value.trim();
+          }
+        }
+      }
+    }
+
+    const data = await response.json();
+    const expiresAt = this.getTokenExpiration(data.accessToken);
+
+    return {
+      _id: data.user._id,
+      email: data.user.email,
+      firstname: data.user.firstName || data.user.firstname || "",
+      lastname: data.user.lastName || data.user.lastname || "",
+      role: data.user.role || "user",
+      accessToken: data.accessToken,
+      refreshToken,
+      refreshTokenExpiresAt,
+      expiresAt,
+    };
+  }
 }
 
 declare module "next-auth" {
@@ -122,6 +207,7 @@ declare module "next-auth" {
     accessToken: string;
     refreshToken?: string;
     expiresAt: number;
+    refreshTokenExpiresAt?: number;
     refreshType?: string;
   }
 
@@ -160,12 +246,22 @@ declare module "next-auth" {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
+    }),
     Credentials({
       name: "credentials",
       credentials: {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
-        sessionId: { label: "Session ID", type: "text" },
       },
       async authorize(credentials) {
         try {
@@ -177,23 +273,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             throw new Error(errorMessage);
           }
 
-          const { username, password, sessionId } = credentials as {
+          const { username, password } = credentials as {
             username: string;
             password: string;
-            sessionId?: string;
           };
 
-          const user = await AuthService.authenticate(
-            username,
-            password,
-          );
+          const user = await AuthService.authenticate(username, password);
 
           if (!user) {
             throw new Error("Invalid credentials");
           }
 
-          // Ensure required fields exist and provide sensible fallbacks
-          const safeUsername = user.email ?? (user as any).username ?? user._id;
+          const safeUsername = user.email ?? user._id;
           const safeFirstname = user.firstname ?? "";
           const safeLastname = user.lastname ?? "";
           const safeRole = user.role ?? "user";
@@ -225,8 +316,47 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
 
   callbacks: {
-    async jwt({ token, user }) {
-      // 1. First-time login → store tokens
+    async signIn({ user, account }) {
+      console.log(user);
+
+      const nameParts = user.name?.split(" ") || [];
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
+      // Handle Google sign-in
+      if (account?.provider === "google") {
+        try {
+          const googleUser = await AuthService.authenticateGoogle(
+            user.email!,
+            firstName,
+            lastName,
+            user.id!,
+            user.image!,
+          );
+
+          // Attach tokens to user object for jwt callback
+          (user as any)._id = googleUser._id;
+          (user as any).username = googleUser.email;
+          (user as any).firstname = googleUser.firstname;
+          (user as any).lastname = googleUser.lastname;
+          (user as any).role = googleUser.role;
+          (user as any).accessToken = googleUser.accessToken;
+          (user as any).refreshToken = googleUser.refreshToken;
+          (user as any).refreshTokenExpiresAt =
+            googleUser.refreshTokenExpiresAt;
+          (user as any).expiresAt = googleUser.expiresAt;
+
+          return true;
+        } catch (error) {
+          console.error("Google sign-in failed:", error);
+          return false;
+        }
+      }
+      return true;
+    },
+
+    async jwt({ token, user, account }) {
+      // First-time login (both Google and Credentials)
       if (user) {
         return {
           ...token,
@@ -245,34 +375,37 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       }
 
-      // 2. Access token still valid → just return token
+      // Access token still valid
       if (
         typeof token.expiresAt === "number" &&
-        Date.now() < token.expiresAt - 5 * 60 * 1000 // refresh 5 mins before expiry
+        Date.now() < token.expiresAt - 5 * 60 * 1000
       ) {
         return token;
       }
 
-      // 3. Access token expired → try refresh
+      // Access token expired → try refresh
       if (!token.refreshToken) {
-        token.error = "RefreshTokenMissing";
+        token.error = "RefreshTokenError";
         return token;
       }
 
-      if (typeof token.refreshTokenExpiresAt === "number" && Date.now() > token.refreshTokenExpiresAt ) {
-        token.error = "RefreshTokenExpired";
+      if (
+        typeof token.refreshTokenExpiresAt === "number" &&
+        Date.now() > token.refreshTokenExpiresAt
+      ) {
+        token.error = "RefreshTokenError";
         return token;
       }
 
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/auth/refresh`,
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_URL}/api/auth/refresh`,
           {
             method: "GET",
-            headers: { 
+            headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token.refreshToken}`
-             },
-            
+              Authorization: `Bearer ${token.refreshToken}`,
+            },
           }
         );
 
@@ -293,15 +426,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return token;
       }
     },
+
     async session({ session, token }): Promise<Session> {
-      session.error = (token.error === "RefreshTokenError" || token.error === "TokenExpiredError")? token.error: undefined;
+      session.error =
+        token.error === "RefreshTokenError" ||
+        token.error === "TokenExpiredError"
+          ? token.error
+          : undefined;
       session.user = (token.user as any) ?? {};
       session.accessToken = (token.accessToken as string) ?? "";
       session.expiresAt = (token.expiresAt as number) ?? 0;
       session.refreshToken = token.refreshToken as string | undefined;
-      session.refreshTokenExpiresAt = token.refreshTokenExpiresAt as | number | undefined;
+      session.refreshTokenExpiresAt = token.refreshTokenExpiresAt as
+        | number
+        | undefined;
 
-      // console.log(session, "session");
       return session;
     },
   },
@@ -312,11 +451,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
 
   events: {
-    async signOut(event) {
-      const token = (event as { token?: JWT | null })?.token;
-      if (token?.sessionId) {
-        await AuthCache.clearAuthResult(token.sessionId);
-      }
+    async signOut() {
       try {
         await fetch(`${process.env.NEXT_PUBLIC_URL}/api/auth/logout`, {
           method: "POST",
@@ -329,7 +464,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
 
-  // Prevent debug logs in production
   debug: process.env.NODE_ENV === "development",
   secret: process.env.AUTH_SECRET,
 });

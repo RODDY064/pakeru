@@ -1,6 +1,7 @@
 import { StateCreator } from "zustand";
 import { Store } from "./store";
 import { ProductData } from "./dashbaord/products";
+import { useApiClient } from "@/libs/useApiClient";
 
 type ModalDisplay = "idle" | "cart" | "menu" | "wardrobe";
 
@@ -111,14 +112,13 @@ export const useModalStore: StateCreator<
         return;
       }
 
-      console.log(state.categories," categories")
+      console.log(state.categories, " categories");
 
       set((draft) => {
         draft.menuItems = state.categories.map((category) => {
           const categoryProducts = state.products.filter(
             (product) => product?.category === category._id
           );
-
 
           return {
             category: category.name,
@@ -128,7 +128,7 @@ export const useModalStore: StateCreator<
               { _id: "2", url: "/images/women-2.png" },
             ],
             catID: category._id,
-            menuProducts: categoryProducts, 
+            menuProducts: categoryProducts,
           };
         });
       });

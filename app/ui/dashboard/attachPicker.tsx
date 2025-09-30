@@ -147,10 +147,11 @@ const MangeTable = ({
   } = useBoundStore();
 
   const [searchTerm, setSearchTerm] = useState("");
-
+  const { get } = useApiClient()
+ 
   useEffect(() => {
     if (type === "products") {
-      loadProducts(false, 1);
+      loadProducts(false, 1,25,{});
     } else {
       loadCategories();
     }

@@ -156,6 +156,8 @@ class ApiClient {
     const response = await this.makeRequest<T>(endpoint, {
       ...options,
       requiresAuth: false,
+      cache: "no-store",
+       next: { revalidate: 0 },
       headers: {
         Authorization: `Bearer ${accessToken}`,
         ...options.headers

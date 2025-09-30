@@ -9,6 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { memo, useEffect, useState } from "react";
+import Cedis from "./cedis";
 
 interface ProductCardProps {
   type: "small" | "medium" | "large";
@@ -129,7 +130,8 @@ const ProductCard = ({
           "mb-2 md:mb-8": type === "medium" || type === "small",
         },
         cardStyle
-      )}>
+      )}
+    >
       <motion.div
         variants={cardAnimations}
         whileHover="hover"
@@ -138,7 +140,8 @@ const ProductCard = ({
         className={cn(
           "relative flex border border-black/5 rounded-sm cursor-pointer transition-shadow duration-300 hover:border hover:z-20 hover:border-black/20",
           config.container
-        )}>
+        )}
+      >
         {/* Image Container */}
         <div className="relative w-full h-full bg-[#f2f2f2]">
           {renderImageWithCustomTransforms()}
@@ -205,28 +208,30 @@ const ProductDetails = ({
 
   return (
     <div className={cn("pt-2 pb-4 px-3", containerWidth)}>
-      <div className="flex items-start justify-between">
-        <div
-          className={cn(
-            "w-[60%]",
-            textSize
-          )}
-        >
-         <p className="font-avenir  font-normal text-black/70">{productName}</p>
+      <div className="flex items-start justify-between ">
+        <div className={cn("w-[60%]", textSize)}>
+          <p className="font-avenir  font-normal text-black/70">
+            {productName}
+          </p>
         </div>
         {!hideDetails && (
           <div className="w-[30%] text-right">
-            <p
-              className={cn("font-avenir font-normal text-black/50", textSize)}
-            >
-              GHS {productData?.price?.toFixed(2) ?? "N/A"}
-            </p>
+            <div className="text-black/50 flex items-center justify-end gap-1">
+              <Cedis cedisStyle="pt-[3px]" />
+              <p
+                className={cn(
+                  "font-avenir font-normal text-black/50 pt-[6px]",
+                  textSize
+                )}>
+                {productData?.price?.toFixed(2) ?? "N/A"}
+              </p>
+            </div>
           </div>
         )}
       </div>
 
       {!hideDetails && (
-        <div className="mt-2 flex justify-between items-center">
+        <div className=" flex justify-between items-center">
           <ColorVariants
             variants={productData?.variants?.map((variant) => ({
               ...variant,
@@ -236,7 +241,7 @@ const ProductDetails = ({
             productId={productData?._id}
             updateColor={updateColor}
           />
-          <ReviewRating numReviews={productData?.numReviews ?? 0} />
+          {/* <ReviewRating numReviews={productData?.numReviews ?? 0} /> */}
         </div>
       )}
     </div>
@@ -294,7 +299,7 @@ const ReviewRating = ({ numReviews }: { numReviews: number }) => (
 
 // Refined animation variants
 const cardAnimations = {
-  initial: { scale: 1, transition: { duration: 0.1 }  },
+  initial: { scale: 1, transition: { duration: 0.1 } },
   hover: { scale: 1.02, transition: { duration: 0.3 } },
   tap: { scale: 0.98, transition: { duration: 0.1 } },
 };

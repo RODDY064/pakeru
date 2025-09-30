@@ -93,12 +93,9 @@ export default function Footer() {
                 <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Privacy Policy
                 </li>
-                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Cookie Policy
-                </li>
-                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                {/* <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Returns Policy
-                </li>
+                </li> */}
               </ul>
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { useApiClient } from "@/libs/useApiClient";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ export default function Category({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { get, post , del} = useApiClient()
 
   const { 
     loadCategories, 
@@ -30,7 +32,7 @@ export default function Category({
 
   useEffect(() => {
     loadCategories();
-  }, [loadCategories]);
+  }, []);
 
   useEffect(() => {
     console.log(selectedCategory);
@@ -57,7 +59,9 @@ export default function Category({
         name: formData.name.trim(),
         description: formData.description.trim(),
         parentCategory: formData.parentCategory || null,
-      });
+      },
+      post
+    );
       
       // Reset form and close modal
       setFormData({ name: "", description: "", parentCategory: "" });
@@ -85,7 +89,7 @@ export default function Category({
     setError(null);
 
     try {
-      await deleteCategory(categoryToDelete);
+      await deleteCategory(categoryToDelete, del);
       
       // If the deleted category was selected, reset selection
       if (selectedCategory === categoryToDelete) {
@@ -107,7 +111,6 @@ export default function Category({
   };
 
   const handleSet = (e:any)=>{
-    // find the id and set tje selSelectedCatgory as id 
     setSelectedCategory(e.target.value)
   }
 

@@ -18,6 +18,7 @@ import { MenuItem } from "@/store/modal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useApiClient } from "@/libs/useApiClient";
 
 export default function Menu() {
   const {
@@ -39,6 +40,7 @@ export default function Menu() {
 
   const [mobileActiveItem, setMobileActiveItem] = useState<string | null>(null);
   const [showMobileSubMenu, setShowMobileSubMenu] = useState(false);
+  const { get } = useApiClient()
 
   const sliderRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const prevBtnRef = useRef<HTMLButtonElement>(
@@ -545,8 +547,7 @@ export default function Menu() {
         initial="close"
         exit="close"
         key="mobile-menu"
-        className="w-[100%] h-0 relative bg-white flex-col gap-4 pt-[120px] px-12 flex md:hidden menu-mobile"
-      >
+        className="w-[100%] h-0 relative bg-white flex-col gap-4 pt-[120px] px-12 flex md:hidden menu-mobile">
         {menuItems.map((item, index) => (
           <motion.div
             variants={list}
@@ -571,16 +572,25 @@ export default function Menu() {
               height={18}
               alt="bookmark"
             />
-            <p className="font-avenir font-[400] text-sm mt-[4px]">BOOKMARK</p>
+            <p className="font-avenir font-[400] text-sm mt-[4px]">BOOKMARKS</p>
           </div>
           <Link
             onClick={() => closeModal()}
-            href="/account"
-            className="flex items-center gap-1.5 mt-3"
-          >
+            href="/account?userPage=profile"
+            className="flex items-center gap-1.5 mt-6">
             <Image src="/icons/user.svg" width={16} height={16} alt="user" />
             <p className="font-avenir font-[400] text-sm mt-[8px]">ACCOUNT</p>
           </Link>
+          <Link onClick={closeModal} href="/account?userPage=orders">
+          <div className="flex items-center gap-1 mt-2">
+            <Image
+              src="/icons/orders.svg"
+              width={18}
+              height={18}
+              alt="bookmark"
+            />
+            <p className="font-avenir font-[400] text-sm mt-[4px]">MY ORDERS</p>
+          </div></Link>
           <div onClick={()=>signOut} className="flex flex-col  mt-12">
             <p className=" px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">Logout</p>
           </div>
@@ -596,8 +606,7 @@ export default function Menu() {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white"
-          >
+            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white">
             {RenderMobileTAB(mobileActiveItem)}
           </motion.div>
         )}

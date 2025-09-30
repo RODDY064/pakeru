@@ -226,6 +226,18 @@ export default function Payment() {
               <Input
                 type="text"
                 textStyle="md:text-md"
+                placeH="055xxxxx95"
+                label="Phone number"
+                name="address"
+                image="/icons/contacts-b.svg"
+                register={register}
+                error={errors}
+              />
+            </div>        
+            <div className="mt-2">
+              <Input
+                type="text"
+                textStyle="md:text-md"
                 placeH="14 Avenue St. Street"
                 label="Address"
                 name="address"
@@ -326,7 +338,7 @@ export default function Payment() {
               </div> */}
           </div>
         </div>
-        <div className="w-full h-[200px] bg-white  border-[0.5px] border-black/20 rounded-md px-4 py-6 ">
+        <div className="w-full h-[210px] bg-white  border-[0.5px] border-black/20 rounded-md px-4 py-6 ">
           <div className="flex items-start gap-3 py-4 border-b border-black/10">
             <Image
               src="/icons/payment.svg"
@@ -348,17 +360,17 @@ export default function Payment() {
               height={24}
               alt="payment"
             />
-            <div className="">
+            <div className="mb-2">
               <p className="font-avenir font-[400] text-md ">
                 Shipping & Delivery
               </p>
               <p className="font-avenir text-sm text-black/50 my-1 ">
-                Mobile money or Credit credit
+                Shipment fees are paid by the customer and vary based on delivery distance.
               </p>
             </div>
           </div>
         </div>
-        <div className="w-full  h-[200px] bg-white  border-[0.5px] border-black/20 rounded-md px-4 py-6">
+        {/* <div className="w-full  h-[200px] bg-white  border-[0.5px] border-black/20 rounded-md px-4 py-6">
           <div>
             <p className="font-avenir font-[400] text-sm">DISCOUNT</p>
             <div className="mt-3">
@@ -380,7 +392,7 @@ export default function Payment() {
               </p>
             </div>
           </div>
-        </div>
+        </div> */}
         <button
           type="submit"
           disabled={isSubmitting}

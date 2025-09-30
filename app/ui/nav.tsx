@@ -87,12 +87,12 @@ export default function Nav() {
     filterState,
     filteritems,
     loadProducts,
-    initializeMenuItems,
     isServerInitialized,
     categories,
   } = useBoundStore();
 
   const { data: session, status } = useSession();
+  const { get } = useApiClient()
 
 
   useStoreInitialization();
@@ -111,14 +111,14 @@ export default function Nav() {
     // Only load if server initialization failed and we don't have data
     if (!isServerInitialized && (!products?.length || !categories?.length)) {
       console.log("Server initialization failed, loading data client-side...");
-      useBoundStore.getState().loadProducts?.();
+      useBoundStore.getState().loadProducts?.(false);
       useBoundStore.getState().loadCategories?.();
     }
   }, [isServerInitialized, products?.length, categories?.length]);
 
   useEffect(() => {
     if (filteritems.length > 0) {
-      loadProducts(true);
+      loadProducts();
     }
 
     const handleResize = () => {

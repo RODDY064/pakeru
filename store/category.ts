@@ -2,6 +2,7 @@ import { type StateCreator } from "zustand";
 import { Store } from "./store";
 import { apiCall } from "@/libs/functions";
 import { toast } from "@/app/ui/toaster";
+import { useApiClient } from "@/libs/useApiClient";
 
 export type CategoryType = {
   _id: string;
@@ -16,14 +17,14 @@ export type CategoryStore = {
   categories: CategoryType[];
   isCategoriesLoading: boolean;
   categoriesError: string | null;
-
   loadCategories: () => Promise<void>;
   setCategories: (categories: CategoryType[]) => void;
   clearCategoriesError: () => void;
   createCategory: (
-    category: Omit<CategoryType, "_id">
+    category: Omit<CategoryType, "_id">,
+    post: ReturnType<typeof useApiClient>["post"]
   ) => Promise<CategoryType>;
-  deleteCategory: (categoryId: string) => Promise<void>;
+  deleteCategory: (categoryId: string, del: ReturnType<typeof useApiClient>["del"]) => Promise<void>;
   getProductsWithID: (categoryId: string) => void;
   findCategories: () => void;
   getCategoryNameById: (categoryId: string) => string | null;

@@ -450,7 +450,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           </div>
 
           {/* Product details section */}
-          <div className="md:w-[50%] flex flex-col items-center pt-10  lg:pt-24 stickyDiv right-0 top-[35px]">
+          <div className="md:w-[50%]  flex flex-col items-center py-10  lg:pt-24 stickyDiv right-0 top-[35px]">
             <div className="w-full px-6 md:px-8 md:w-[90%] lg:w-[80%] xl:w-[60%]">
               <div className="flex justify-between items-center">
                 <p className="text-black/50 text-sm font-[300] font-avenir">
@@ -582,7 +582,13 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                   />
                 </div>
                 <div className="mt-8 w-full pt-10">
-                  <ProductCare />
+                  <ProductCare
+                   onToggle={() => {
+                    setTimeout(() => {
+                      ScrollTrigger.refresh();
+                    }, 300); 
+                  }}
+                   />
                 </div>
               </div>
             </div>
@@ -591,7 +597,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
       )}
 
       {/* Similar Products Section */}
-      <div className="w-full mt-24 md:my-24 relative ">
+      <div className="w-full mt-26 md:my-24 relative ">
         <p className="font-avenir font-[400] text-md px-4 md:px-12">
           SIMILAR PRODUCTS
         </p>

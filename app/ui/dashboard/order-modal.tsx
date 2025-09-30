@@ -25,7 +25,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
     updateOrder,
     singleOrderState,
     setSingleOrderState,
-    loadStoreProducts
+    loadStoreProducts,
   } = useBoundStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -43,7 +43,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
         params.set("order", orderInView.IDTrim ?? "");
         router.replace(`${window.location.pathname}?${params.toString()}`);
       }
-    } 
+    }
   }, [orderInView, searchParams, router, setSingleOrderState, loadOrder]);
 
   const handleUpdate = async (
@@ -73,9 +73,9 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
     }
   };
 
-  useEffect(()=>{
-    loadStoreProducts(false,get)
-  },[singleOrderState])
+  useEffect(() => {
+    loadStoreProducts(false, get);
+  }, [singleOrderState]);
 
   const handleDeliveryStatusChange = async (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -87,13 +87,15 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
       | "pending"
       | "cancelled"
       | "shipped";
-    console.log(newStatus) 
- 
+    console.log(newStatus);
+
     await handleUpdate(orderInView._id, { deliveryStatus: newStatus });
   };
 
-
-
+  function formatString(value: string): string {
+    const cleaned = value.replace(/[_-]/g, " ").toLowerCase().trim();
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
 
   return (
     <motion.div
@@ -193,10 +195,10 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                           Payment method
                         </p>
                         <p className="font-avenir font-[500] text-md mt-1">
-                         Mtn Mobile Money 
+                          {formatString(orderInView?.paymentChannel??"")}
                         </p>
-                        <p className="font-avenir font-[500] text-md ">
-                         059xxxxx455 
+                        <p className="font-avenir font-[500] text-sm ">
+                          {orderInView?.number}
                         </p>
                       </div>
                       <div className="mt-4">
@@ -204,13 +206,13 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                           Address
                         </p>
                         <p className="font-avenir font-[500] text-md mt-1">
-                         {orderInView?.shippingAddress?.address}, {orderInView?.shippingAddress?.town}
+                          {orderInView?.shippingAddress?.address},{" "}
+                          {orderInView?.shippingAddress?.town}
                         </p>
                         <p className="font-avenir font-[500] text-md ">
-                         {orderInView?.shippingAddress?.region}
+                          {orderInView?.shippingAddress?.region}
                         </p>
                       </div>
-
 
                       <div className="mt-10 w-full flex flex-col gap-4">
                         <div className="flex items-center justify-between">
@@ -223,8 +225,6 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                             />
                           </div>
                         </div>
-                        <p>{orderInView?.fulfilledStatus}</p>
- 
                         {type !== "unfulfilled" && (
                           <div className="flex items-center justify-between">
                             <p className="font-avenir text-lg">
@@ -236,11 +236,21 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                                   value={orderInView?.deliveryStatus.toLowerCase()}
                                   onChange={handleDeliveryStatusChange}
                                   disabled={isUpdating}
-                                  className={cn("appearance-none w-[150px] px-4 py-1 pr-8 text-sm border border-yellow-500/50 text-yellow-600 bg-yellow-50 rounded-lg focus:outline-none disabled:opacity-50",{
-                                    "border-green-500/50 text-green-600 bg-green-50 ":orderInView?.deliveryStatus === "delivered",
-                                     "border-red-500/50 text-red-600 bg-red-50 ":orderInView?.deliveryStatus === "cancelled",
-                                     "border-blue-500/50 text-blue-600 bg-blue-50 ":orderInView?.deliveryStatus === "shipped"
-                                  })} >
+                                  className={cn(
+                                    "appearance-none w-[150px] px-4 py-1 pr-8 text-sm border border-yellow-500/50 text-yellow-600 bg-yellow-50 rounded-lg focus:outline-none disabled:opacity-50",
+                                    {
+                                      "border-green-500/50 text-green-600 bg-green-50 ":
+                                        orderInView?.deliveryStatus ===
+                                        "delivered",
+                                      "border-red-500/50 text-red-600 bg-red-50 ":
+                                        orderInView?.deliveryStatus ===
+                                        "cancelled",
+                                      "border-blue-500/50 text-blue-600 bg-blue-50 ":
+                                        orderInView?.deliveryStatus ===
+                                        "shipped",
+                                    }
+                                  )}
+                                >
                                   <option value="delivered">Delivered</option>
                                   <option value="shipped">Shipped</option>
                                   <option value="pending">Pending</option>
@@ -304,7 +314,14 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                             TOTAL
                           </p>
                           <div className=" flex items-center gap-2">
-                            <Cedis size={20} cedisStyle="opacity-100" className="text-2xl"/> <p className=" text-2xl font-avenir flex pt-[6px]">{orderInView?.total.toFixed(2)}</p>
+                            <Cedis
+                              size={20}
+                              cedisStyle="opacity-100"
+                              className="text-2xl"
+                            />{" "}
+                            <p className=" text-2xl font-avenir flex pt-[6px]">
+                              {orderInView?.total.toFixed(2)}
+                            </p>
                           </div>
                         </div>
 
@@ -313,14 +330,14 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                             type="button"
                             onClick={handleFulfill}
                             disabled={isUpdating}
-                            className="px-4 my-10 py-3 text-xl text-center bg-black text-white font-avenir font-[500] rounded-xl cursor-pointer hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-4 my-10 py-3 text-xl text-center bg-black text-white font-avenir font-[500] rounded-xl cursor-pointer hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
                             {isUpdating ? "Fulfilling..." : "Fulfill item"}
                           </button>
                         )}
 
                         {type !== "unfulfilled" && (
                           <>
-
                             <div className="mt-2">
                               <p className="text-black/40 text-md font-avenir font-[300]">
                                 Actions
@@ -328,12 +345,12 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                               <div className="flex items-center gap-2 mt-2">
                                 <div
                                   className="w-full h-12 bg-black border text-white hover:bg-black/5 hover:text-black border-black/30 rounded-xl cursor-pointer flex items-center
-                                   justify-center">
+                                   justify-center"
+                                >
                                   <p className="text-md font-avenir ">
                                     Print Receipt
                                   </p>
                                 </div>
-                                
                               </div>
                             </div>
                           </>

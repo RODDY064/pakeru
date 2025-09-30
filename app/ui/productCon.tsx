@@ -14,6 +14,7 @@ export default function ProductCon() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { get } = useApiClient()
 
   useEffect(() => {
     if (products.length !== 0 && pagination > 1) {
@@ -25,7 +26,7 @@ export default function ProductCon() {
         params.delete("page");
       }
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
-      loadProducts(false, pagination);
+      loadProducts(false, pagination,25,{});
     }
   }, [pagination]);
 

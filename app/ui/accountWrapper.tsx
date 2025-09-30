@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import { AccountContext, useAccount } from "../(home)/account/account-context";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useBoundStore } from "@/store/store";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -26,11 +26,6 @@ export default function AccountWrapper({
       isActive: true,
     },
     {
-      name: "mybookmarks",
-      label: "MY BOOKMARKS",
-      isActive: false,
-    },
-    {
       name: "orders",
       label: "MY ORDERS",
       isActive: false,
@@ -38,12 +33,21 @@ export default function AccountWrapper({
   ]);
   const router = useRouter();
   const pathname = usePathname();
-  const { modal, isSearching } = useBoundStore();
+  const { modal, isSearching, modalDisplay } = useBoundStore();
   const navRef = useRef<HTMLDivElement>(null);
   const [navZ, setNavZ] = useState("z-50");
   const { data: session } = useSession();
-  const [acccountNavMobile, setAccountNavMobile] = useState(false);
-  const [isMobile , setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handlePage = (pageName: string) => {
     // if not on /account, navigate there
@@ -59,6 +63,18 @@ export default function AccountWrapper({
       }))
     );
   };
+
+  useEffect(() => {
+    const page = searchParams.get("userPage");
+
+    if (page) {
+      handlePage(page);
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.delete("userPage");
+      router.replace(`?${newParams.toString()}`);
+    }
+  }, [searchParams]);
+
 
   useGSAP(() => {
     if (!navRef.current) return;
@@ -99,19 +115,20 @@ export default function AccountWrapper({
   }, [pathname]);
 
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+
     if (modal || isSearching) {
       setNavZ("z-20");
     } else {
-      setTimeout(() => {
+      timer = setTimeout(() => {
         setNavZ("z-50");
       }, 300);
     }
-  }, [modal, isSearching]);
 
-  function handleMobilePage(page: string) {
-    handlePage(page);
-    setAccountNavMobile(false)
-  }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [modal, isSearching]);
 
   return (
     <AccountContext.Provider value={{ pages, handlePage }}>
@@ -119,32 +136,32 @@ export default function AccountWrapper({
         ref={navRef}
         style={{ transform: "translateY(0)" }}
         className={`w-full h-12 md:h-20 px-4 md:px-8 fixed border-t border-b border-black/10 flex ${
-          session?.user.role !== "admin" ? "justify-between " : "justify-end"} account-nav  bg-white ${navZ}`}>
+          session?.user.role !== "admin" ? "justify-between " : "justify-end"
+        } account-nav  bg-white ${navZ}`}
+      >
         {session?.user.role !== "admin" && (
           <>
             {isMobile ? (
               <>
                 <div className="h-full flex  items-center relative md:border-x border-black/10 cursor-pointer ">
-                  <p className="font-avenir font-[500] text-md  md:px-6">
-                    {pages[0].isActive && "My Profile"}
-                    {pages[1].isActive && "My Bookmarks"}
-                     {pages[2].isActive && "My Orders"}
+                  <p className="font-avenir font-[500] text-sm  md:px-6">
+                    {pages[0].isActive && "MY PROFILE"}
+                    {pages[1].isActive && "MY ORDERS"}
                   </p>
                 </div>
               </>
             ) : (
-   
-                <div
-                  onClick={() => handlePage("profile")}
-                  className="h-full flex  items-center relative md:border-x border-black/10 cursor-pointer ">
-                  <p className="font-avenir font-[500] text-sm  md:px-6">
-                    MY PROFILE
-                  </p>
-                  {pages[0].isActive && (
-                    <div className="w-full absolute bottom-0 h-[10px] md:bg-black/10"></div>
-                  )}
-                </div>
-          
+              <div
+                onClick={() => handlePage("profile")}
+                className="h-full flex  items-center relative md:border-x border-black/10 cursor-pointer "
+              >
+                <p className="font-avenir font-[500] text-sm  md:px-6">
+                  MY PROFILE
+                </p>
+                {pages[0].isActive && (
+                  <div className="w-full absolute bottom-0 h-[10px] md:bg-black/10"></div>
+                )}
+              </div>
             )}
           </>
         )}
@@ -153,24 +170,13 @@ export default function AccountWrapper({
             {session?.user.role !== "admin" && (
               <>
                 <div
-                  onClick={() => handlePage("mybookmarks")}
-                  className="h-full flex  items-center relative border-x border-black/10 cursor-pointer"
-                >
-                  <p className="font-avenir font-[500] text-sm px-6">
-                    MY BOOKMARKS
-                  </p>
-                  {pages[1].isActive && (
-                    <div className="w-full absolute bottom-0 h-[10px] md:bg-black/10"></div>
-                  )}
-                </div>
-                <div
                   onClick={() => handlePage("orders")}
                   className="h-full flex  items-center relative border-x border-black/10 cursor-pointer"
                 >
                   <p className="font-avenir font-[500] text-sm px-6">
                     MY ORDER
                   </p>
-                  {pages[2].isActive && (
+                  {pages[1].isActive && (
                     <div className="w-full absolute bottom-0 h-[10px] md:bg-black/10"></div>
                   )}
                 </div>
@@ -184,17 +190,6 @@ export default function AccountWrapper({
                 Sign out
               </div>
             </div>
-          </div>
-          <div
-            onClick={() => setAccountNavMobile(true)}
-            className="px-3 md:hidden">
-            <Image
-              src="/icons/account-menu.svg"
-              width={20}
-              height={20}
-              alt="menu"
-              className="cursor-pointer"
-            />
           </div>
         </div>
       </div>
@@ -210,7 +205,7 @@ export default function AccountWrapper({
         children
       )}
       {/* mobile nav */}
-      <div
+      {/* <div
         className={`w-full h-full fixed top-0 z-50 ${
           acccountNavMobile
             ? "pointer-events-auto opacity-100"
@@ -260,7 +255,7 @@ export default function AccountWrapper({
             )}
           </div>
         </motion.div>
-      </div>
+      </div> */}
     </AccountContext.Provider>
   );
 }

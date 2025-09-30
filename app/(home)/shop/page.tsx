@@ -17,6 +17,7 @@ export default function Product() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [containerHeight, setContainerHeight] = useState("100vh");
+  const { get } = useApiClient()
 
   useEffect(() => {
     const calculateHeight = () => {
@@ -41,7 +42,7 @@ export default function Product() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await loadProducts(true);
+      await loadProducts(true,1,25);
       await new Promise((res) => setTimeout(res, 500));
       router.refresh();
     } finally {

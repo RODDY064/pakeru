@@ -87,7 +87,7 @@ export type CartStore = {
     force?: boolean,
     page?: number,
     limit?: number,
-    filters?: FilterQueries
+    filters?: FilterQueries,
   ) => Promise<void>;
   refreshProducts: () => Promise<void>;
   syncCartWithProducts: () => void;
