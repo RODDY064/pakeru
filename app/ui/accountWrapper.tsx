@@ -1,7 +1,7 @@
 "use client";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import { AccountContext, useAccount } from "../(home)/account/account-context";
@@ -14,11 +14,8 @@ import { capitalize } from "@/libs/functions";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function AccountWrapper({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// Separate component that uses useSearchParams
+function AccountContent({ children }: { children: React.ReactNode }) {
   const [pages, setPages] = useState([
     {
       name: "profile",
@@ -74,7 +71,6 @@ export default function AccountWrapper({
       router.replace(`?${newParams.toString()}`);
     }
   }, [searchParams]);
-
 
   useGSAP(() => {
     if (!navRef.current) return;
@@ -204,58 +200,19 @@ export default function AccountWrapper({
       ) : (
         children
       )}
-      {/* mobile nav */}
-      {/* <div
-        className={`w-full h-full fixed top-0 z-50 ${
-          acccountNavMobile
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"
-        }`}
-      >
-        <motion.div
-          animate={acccountNavMobile ? { height: "100%" } : { height: "0%" }}
-          className="h-full bg-white p-14 px-10"
-        >
-          <div className="flex items-center justify-between">
-            <p className="capitalize font-avenir text-sm">ACCOUNT</p>
-
-            <div
-              onClick={() => setAccountNavMobile(false)}
-              className="flex gap-1 cursor-pointer"
-            >
-              <div className="relative flex items-center justify-center">
-                <div className="w-[16px] h-[1px] rotate-45 bg-black"></div>
-                <div className="w-[16px] h-[1px] rotate-[-45deg] bg-black absolute"></div>
-              </div>
-              <p className="capitalize font-avenir font-[400] text-sm mt-1">
-                CLOSE
-              </p>
-            </div>
-          </div>
-          <div className="mt-10">
-            {session?.user.role !== "admin" && (
-              <>
-                <div
-                  onClick={() =>  handleMobilePage("mybookmarks")}
-                  className="h-full flex  items-center relative  cursor-pointer"
-                >
-                  <p className="font-avenir font-[500] text-lg text-black/60 ">
-                    My Bookmarks
-                  </p>
-                </div>
-                <div
-                  onClick={() =>  handleMobilePage("orders")}
-                  className="h-full flex  items-center relative cursor-pointer"
-                >
-                  <p className="font-avenir font-[500] text-lg text-black/60 pt-1">
-                    My Order
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        </motion.div>
-      </div> */}
     </AccountContext.Provider>
+  );
+}
+
+
+export default function AccountWrapper({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AccountContent>{children}</AccountContent>
+    </Suspense>
   );
 }

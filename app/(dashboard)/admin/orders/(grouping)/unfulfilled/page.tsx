@@ -13,7 +13,7 @@ import {
 import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter} from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useOrdersWebhook } from "../../hooks/orderWebhooks";
 import { useApiClient } from "@/libs/useApiClient";
