@@ -21,7 +21,7 @@ export default function Contents() {
                   className="w-full h-[400px] sm:h-[500px] md:h-[700px] bg-black/5 mt-4 border border-dashed border-black/30 flex items-center justify-center rounded-[36px] cursor-pointer relative overflow-hidden"
                 >
                   <Image
-                    src={hero.hero[0].image.url as string}
+                    src={hero.hero[0].image.url as string ?? "/images/image-fallback.png"}
                     fill
                     className="object-cover"
                     alt={hero.title + " " + "hero"}
@@ -75,7 +75,7 @@ export default function Contents() {
                   {galleries[0]?.image.url ? (
                     <>
                       <Image
-                        src={galleries[0]?.image?.url as string}
+                        src={galleries[0]?.image?.url as string?? "/images/image-fallback.png"}
                         fill
                         sizes="100vw"
                         className="object-cover"
@@ -121,7 +121,7 @@ export default function Contents() {
                     {galleries[1]?.image.url ? (
                       <>
                         <Image
-                          src={galleries[1]?.image?.url as string}
+                          src={galleries[1]?.image?.url as string??"/images/image-fallback.png"}
                           fill
                           sizes="100vw"
                           className="object-cover"
@@ -167,7 +167,7 @@ export default function Contents() {
                     {galleries[2]?.image.url ? (
                       <>
                         <Image
-                          src={galleries[2]?.image?.url as string}
+                          src={galleries[2]?.image?.url as string??"/images/image-fallback.png"}
                           fill
                           sizes="100vw"
                           className="object-cover"
@@ -210,7 +210,7 @@ export default function Contents() {
                   {galleries[3]?.image.url ? (
                     <>
                       <Image
-                        src={galleries[3]?.image?.url as string}
+                        src={galleries[3]?.image?.url as string??"/images/image-fallback.png"}
                         fill
                         sizes="100vw"
                         className="object-cover"
@@ -253,7 +253,7 @@ export default function Contents() {
                     {galleries[4]?.image.url ? (
                       <>
                         <Image
-                          src={galleries[4]?.image?.url as string}
+                          src={galleries[4]?.image?.url as string??"/images/image-fallback.png"}
                           fill
                           sizes="100vw"
                           className="object-cover"
@@ -294,7 +294,7 @@ export default function Contents() {
                     {galleries[5]?.image.url ? (
                       <>
                         <Image
-                          src={galleries[5]?.image?.url as string}
+                          src={galleries[5]?.image?.url as string??"/images/image-fallback.png"}
                           fill
                           sizes="100vw"
                           className="object-cover"
@@ -336,7 +336,7 @@ export default function Contents() {
                 {galleries[5]?.image.url ? (
                       <>
                         <Image
-                          src={galleries[6]?.image?.url as string}
+                          src={galleries[6]?.image?.url as string?? "/images/image-fallback.png"}
                           fill
                           sizes="100vw"
                           className="object-cover"

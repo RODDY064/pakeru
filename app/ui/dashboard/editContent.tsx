@@ -295,7 +295,7 @@ export default function EditContent() {
           {hasImage ? (
             <>
               <Image
-                src={item.image.url as string}
+                src={item.image.url as string??"/images/image-fallback.png"}
                 fill
                 alt={`${deviceType} hero image`}
                 className="object-contain bg-white"

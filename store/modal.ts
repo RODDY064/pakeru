@@ -8,11 +8,11 @@ type ModalDisplay = "idle" | "cart" | "menu" | "wardrobe";
 export type MenuItem = {
   category: string;
   isActive: boolean;
-  images: {
+  image: {
     _id: string;
     url: string;
-    publicUrl?: string;
-  }[];
+    publicId?: string;
+  };
   catID?: string | null;
   menuProducts: ProductData[];
 };
@@ -123,10 +123,7 @@ export const useModalStore: StateCreator<
           return {
             category: category.name,
             isActive: false,
-            images: [
-              { _id: "1", url: "/images/women-2.png" },
-              { _id: "2", url: "/images/women-2.png" },
-            ],
+            image: category.image,
             catID: category._id,
             menuProducts: categoryProducts,
           };

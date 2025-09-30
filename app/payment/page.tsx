@@ -42,9 +42,9 @@ type UserDetailsForm = z.infer<typeof userDetailsSchema>;
 export default function Payment() {
   const { cartItems, getCartStats, userData } = useBoundStore();
   const { accessToken } = useAuth();
-  const { data: session } = useSession()
+  const { data: session } = useSession();
 
-  const { processPayment,isProcessing } = usePaymentProcessing();
+  const { processPayment, isProcessing } = usePaymentProcessing();
   const [error, setError] = useState<string>("");
 
   const router = useRouter();
@@ -116,7 +116,8 @@ export default function Payment() {
           },
           error: (err: any) => ({
             title: "Payment Failed",
-            description:  err.message + "Please check your details and try again.",
+            description:
+              err.message + "Please check your details and try again.",
           }),
           position: "top-right",
         }
@@ -233,7 +234,7 @@ export default function Payment() {
                 register={register}
                 error={errors}
               />
-            </div>        
+            </div>
             <div className="mt-2">
               <Input
                 type="text"
@@ -365,7 +366,8 @@ export default function Payment() {
                 Shipping & Delivery
               </p>
               <p className="font-avenir text-sm text-black/50 my-1 ">
-                Shipment fees are paid by the customer and vary based on delivery distance.
+                Shipment fees are paid by the customer and vary based on
+                delivery distance.
               </p>
             </div>
           </div>
@@ -425,7 +427,7 @@ const PaymentCard = ({ cart }: { cart: CartItemType }) => {
     <div className="py-4 border-b border-black/10 flex items-end gap-3">
       <div className="w-[30%] md:w-[20%] h-20 lg:h-20 rounded relative overflow-hidden">
         <Image
-          src={cart?.mainImage.url}
+          src={cart?.mainImage.url ?? "/images/image-fallback.png"}
           fill
           className="object-cover"
           alt={cart?.name}

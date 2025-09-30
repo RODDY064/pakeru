@@ -40,7 +40,7 @@ export default function Menu() {
 
   const [mobileActiveItem, setMobileActiveItem] = useState<string | null>(null);
   const [showMobileSubMenu, setShowMobileSubMenu] = useState(false);
-  const { get } = useApiClient()
+  const { get } = useApiClient();
 
   const sliderRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const prevBtnRef = useRef<HTMLButtonElement>(
@@ -131,7 +131,7 @@ export default function Menu() {
 
   const handlePush = (category: string) => {
     router.push(`/shop?category=${category.toLocaleLowerCase()}`);
-    closeModal()
+    closeModal();
   };
 
   const MenuRender = React.memo(({ data }: { data: MenuItem }) => {
@@ -143,142 +143,145 @@ export default function Menu() {
     return (
       <div className="w-full h-full">
         <div className="w-full flex">
-          {data.images.map((image, index) => (
-            <div
-              onClick={() => handlePush(data.category)}
-              key={`${image._id}-img-${index}`}
-              className={cn("h-fit cursor-pointer", {
-                "w-[50%] border-r border-black/20": data.images.length === 2,
-                "w-[33.33%] border-r border-black/20": data.images.length === 3,
-                "w-[25%] border-r border-black/20": data.images.length === 4,
-                "w-full": data.images.length === 1,
-              })}
-            >
-              <div className="w-full min-h-[300px] xl:h-[350px] relative overflow-hidden border-b border-black/20">
-                <Image
-                  src={image.url}
-                  fill
-                  alt={image._id}
-                  className="object-cover"
-                  priority
-                />
-              </div>
-              <p className="text-center font-avenir font-[400] my-3 text-sm uppercase">
-                {data.category.toLocaleUpperCase()}
-              </p>
+          <div
+            onClick={() => handlePush(data.category)}
+            key={`${data?.image?._id}-img-${data.category}`}
+            className={cn("h-fit cursor-pointer w-full")}
+          >
+            <div className="w-full min-h-[300px] xl:h-[350px] relative overflow-hidden border-b border-black/20">
+              <Image
+                src={data?.image?.url??"/images/image-fallback.png"}
+                fill
+                alt={data.category}
+                className="object-contain"
+                priority
+              />
             </div>
-          ))}
+            <p className="text-center font-avenir font-[400] my-3 text-sm uppercase">
+              {data.category.toLocaleUpperCase()}
+            </p>
+          </div>
         </div>
 
         <div className="border-t border-black/20">
-          <p className="font-avenir font-[400] text-lg text-black/30 p-6 pb-2">
+          <p className="font-avenir font-[400] text-lg text-black/50 p-6 pb-2">
             TRENDING
           </p>
-          <div className="w-full pl-6">
-            {/* Fixed slider - removed conflicting layout animation */}
-            <AnimatePresence mode="wait">
-              <div
-                ref={sliderRef}
-                className="w-full py-2 px-4 grid grid-flow-col auto-cols-[minmax(300,2fr)] md:auto-cols-[minmax(100,270px)]  pr-20 nav-slider "
-              >
-                <motion.div
-                  key={`${data.category}-products-${contentKey}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex gap-3 w-full relative "
-                >
-                  {memoizedProducts.map((product, index) => (
+          {data.menuProducts.length === 0 ? (
+            <div className="w-full min-h-[300px] flex items-center justify-center">
+              <p className="font-avenir text-black/40 text-lg">No product available</p>
+
+            </div>
+          ) : (
+            <>
+              <div className="w-full pl-6">
+                {/* Fixed slider - removed conflicting layout animation */}
+                <AnimatePresence mode="wait">
+                  <div
+                    ref={sliderRef}
+                    className="w-full py-2 px-4 grid grid-flow-col auto-cols-[minmax(300,2fr)] md:auto-cols-[minmax(100,270px)]  pr-20 nav-slider "
+                  >
                     <motion.div
-                      className="w-full"
-                      key={`${product._id}-${
-                        product.selectedColor || "default"
-                      }-${index}`}
+                      key={`${data.category}-products-${contentKey}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex gap-3 w-full relative "
                     >
-                      <ProductCard
-                        type="small"
-                        productData={product}
-                        cardRef={index === 0 ? cardRef : undefined}
-                        hideDetails={true}
-                      />
+                      {memoizedProducts.map((product, index) => (
+                        <motion.div
+                          className="w-full"
+                          key={`${product._id}-${
+                            product.selectedColor || "default"
+                          }-${index}`}
+                        >
+                          <ProductCard
+                            type="small"
+                            productData={product}
+                            cardRef={index === 0 ? cardRef : undefined}
+                            hideDetails={true}
+                          />
+                        </motion.div>
+                      ))}
                     </motion.div>
-                  ))}
-                </motion.div>
-              </div>
-            </AnimatePresence>
-            <div className="flex flex-col items-center">
-              <div className="w-[80%] md:w-full my-2 flex flex-wrap items-center justify-center gap-1 md:gap-3">
-                {Array.from({ length: totalPages }, (_, i) => (
+                  </div>
+                </AnimatePresence>
+                <div className="flex flex-col items-center">
+                  <div className="w-[80%] md:w-full my-2 flex flex-wrap items-center justify-center gap-1 md:gap-3">
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => goToPage(i)}
+                        className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full ${
+                          i === currentPage ? "bg-black " : "bg-black/20"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Navigation buttons */}
+                <div className="hidden md:flex items-center  justify-center gap-6 md:gap-12">
                   <button
-                    key={i}
-                    onClick={() => goToPage(i)}
-                    className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full ${
-                      i === currentPage ? "bg-black " : "bg-black/20"
-                    }`}
-                  />
-                ))}
+                    ref={prevBtnRef}
+                    aria-label="Scroll left"
+                    className={cn(
+                      "size-10 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev transition-all duration-200",
+                      {
+                        visible: !isStart,
+                      }
+                    )}
+                  >
+                    <Image
+                      src="/icons/arrow.svg"
+                      width={18}
+                      height={18}
+                      alt="arrow"
+                      priority
+                      className="rotate-90 group-hover/a:hidden transition-all duration-200"
+                    />
+                    <Image
+                      src="/icons/arrow-w.svg"
+                      width={18}
+                      height={18}
+                      alt="arrow"
+                      priority
+                      className="hidden rotate-90 group-hover/a:flex transition-all duration-200"
+                    />
+                  </button>
+
+                  <button
+                    ref={nextBtnRef}
+                    aria-label="Scroll right"
+                    className={cn(
+                      "size-10 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next transition-all duration-200",
+                      {
+                        visible: !isEnd,
+                      }
+                    )}
+                  >
+                    <Image
+                      src="/icons/arrow.svg"
+                      width={18}
+                      height={18}
+                      alt="arrow"
+                      priority
+                      className="rotate-270 group-hover/w:hidden transition-all duration-200"
+                    />
+                    <Image
+                      src="/icons/arrow-w.svg"
+                      width={18}
+                      height={18}
+                      alt="arrow"
+                      priority
+                      className="hidden rotate-270 group-hover/w:flex transition-all duration-200"
+                    />
+                  </button>
+                </div>
               </div>
-            </div>
-
-            {/* Navigation buttons */}
-            <div className="hidden md:flex items-center  justify-center gap-6 md:gap-12">
-              <button
-                ref={prevBtnRef}
-                aria-label="Scroll left"
-                className={cn(
-                  "size-10 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev transition-all duration-200",
-                  {
-                    visible: !isStart,
-                  }
-                )}>
-                <Image
-                  src="/icons/arrow.svg"
-                  width={18}
-                  height={18}
-                  alt="arrow"
-                  priority
-                  className="rotate-90 group-hover/a:hidden transition-all duration-200"
-                />
-                <Image
-                  src="/icons/arrow-w.svg"
-                  width={18}
-                  height={18}
-                  alt="arrow"
-                  priority
-                  className="hidden rotate-90 group-hover/a:flex transition-all duration-200"
-                />
-              </button>
-
-              <button
-                ref={nextBtnRef}
-                aria-label="Scroll right"
-                className={cn(
-                  "size-10 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next transition-all duration-200",
-                  {
-                    visible: !isEnd,
-                  }
-                )}
-              >
-                <Image
-                  src="/icons/arrow.svg"
-                  width={18}
-                  height={18}
-                  alt="arrow"
-                  priority
-                  className="rotate-270 group-hover/w:hidden transition-all duration-200"
-                />
-                <Image
-                  src="/icons/arrow-w.svg"
-                  width={18}
-                  height={18}
-                  alt="arrow"
-                  priority
-                  className="hidden rotate-270 group-hover/w:flex transition-all duration-200"
-                />
-              </button>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
     );
@@ -313,35 +316,27 @@ export default function Menu() {
       >
         {/* Mobile Images Grid */}
         <div className="w-full flex">
-          {data.images.map((image, index) => (
-            <div
-              key={`mobile-${data.category}-img-${index}`}
-              className={cn("h-fit cursor-pointer", {
-                "w-1/2": data.images.length === 2,
-                "w-1/3": data.images.length === 3,
-                "w-1/4": data.images.length === 4,
-                "w-full": data.images.length === 1,
-              })}
-            >
-              <div className="w-full h-[200px] relative border border-black/20">
-                <Image
-                  src={image.url}
-                  fill
-                  className="object-cover"
-                  alt={image._id}
-                />
-              </div>
-              <div className="w-full border-b border-x border-black/20 py-2">
-                <p className="text-center font-avenir font-[400] text-sm">
-                  {data.category.toUpperCase()}
-                </p>
-              </div>
+          <div
+            key={`mobile-${data.category}-img`}
+            className={cn("w-full h-fit cursor-pointer")}>
+            <div className="w-full h-[200px]  relative border border-black/20">
+              <Image
+                src={data?.image?.url?? "/images/image-fallback.png"}
+                fill
+                className="object-contain"
+                alt={data?.category}
+              />
             </div>
-          ))}
+            <div className="w-full border-b border-x border-black/20 py-2">
+              <p className="text-center font-avenir font-[400] text-sm">
+                {data?.category.toUpperCase()}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Mobile Trending Section */}
-        <div className="mt-6 px-4">
+        <div className="mt-10 md:mt-6 px-4">
           <p className="font-avenir font-[400] text-lg text-black/30 mb-4">
             TRENDING
           </p>
@@ -372,58 +367,6 @@ export default function Menu() {
               </motion.div>
             </AnimatePresence>
           </div>
-
-          {/* Navigation Buttons */}
-          {/* <div className="flex items-center  justify-center gap-6">
-            <button
-              aria-label="Scroll left"
-              className={cn(
-                "size-8 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev transition-all duration-200",
-                {}
-              )}
-            >
-              <Image
-                src="/icons/arrow.svg"
-                width={14}
-                height={14}
-                alt="arrow"
-                priority
-                className="rotate-90 group-hover/a:hidden transition-all duration-200"
-              />
-              <Image
-                src="/icons/arrow-w.svg"
-                width={14}
-                height={14}
-                alt="arrow"
-                priority
-                className="hidden rotate-90 group-hover/a:flex transition-all duration-200"
-              />
-            </button>
-            <button
-              aria-label="Scroll right"
-              className={cn(
-                "size-8 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next transition-all duration-200",
-                {}
-              )}
-            >
-              <Image
-                src="/icons/arrow.svg"
-                width={14}
-                height={14}
-                alt="arrow"
-                priority
-                className="rotate-270 group-hover/w:hidden transition-all duration-200"
-              />
-              <Image
-                src="/icons/arrow-w.svg"
-                width={14}
-                height={14}
-                alt="arrow"
-                priority
-                className="hidden rotate-270 group-hover/w:flex transition-all duration-200"
-              />
-            </button>
-          </div> */}
         </div>
       </motion.div>
     );
@@ -498,15 +441,22 @@ export default function Menu() {
                     />
                   </motion.div>
                 ))}
-                <motion.div 
-                animate={{ opacity:1, y:0}}
-                initial={{ opacity:0, y:20}}
-                transition={{ type:"tween", delay:0.5}}
-                className="mt-6">
-                    <Link onClick={closeModal} href="/about-us">
-                    <p className="font-avenir my-2 uppercase text-md cursor-pointer hover:text-black text-blue-600">ABOUT US</p></Link>
-                   <Link onClick={closeModal} href="/faqs">
-                    <p className="font-avenir uppercase text-md cursor-pointer  hover:text-black  text-blue-600">FAQs</p></Link>
+                <motion.div
+                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  transition={{ type: "tween", delay: 0.5 }}
+                  className="mt-6"
+                >
+                  <Link onClick={closeModal} href="/about-us">
+                    <p className="font-avenir my-2 uppercase text-md cursor-pointer hover:text-black text-blue-600">
+                      ABOUT US
+                    </p>
+                  </Link>
+                  <Link onClick={closeModal} href="/faqs">
+                    <p className="font-avenir uppercase text-md cursor-pointer  hover:text-black  text-blue-600">
+                      FAQs
+                    </p>
+                  </Link>
                 </motion.div>
               </>
             )}
@@ -547,7 +497,8 @@ export default function Menu() {
         initial="close"
         exit="close"
         key="mobile-menu"
-        className="w-[100%] h-0 relative bg-white flex-col gap-4 pt-[120px] px-12 flex md:hidden menu-mobile">
+        className="w-[100%] h-0 relative bg-white flex-col gap-4 pt-[120px] px-12 flex md:hidden menu-mobile"
+      >
         {menuItems.map((item, index) => (
           <motion.div
             variants={list}
@@ -577,22 +528,28 @@ export default function Menu() {
           <Link
             onClick={() => closeModal()}
             href="/account?userPage=profile"
-            className="flex items-center gap-1.5 mt-6">
+            className="flex items-center gap-1.5 mt-6"
+          >
             <Image src="/icons/user.svg" width={16} height={16} alt="user" />
             <p className="font-avenir font-[400] text-sm mt-[8px]">ACCOUNT</p>
           </Link>
           <Link onClick={closeModal} href="/account?userPage=orders">
-          <div className="flex items-center gap-1 mt-2">
-            <Image
-              src="/icons/orders.svg"
-              width={18}
-              height={18}
-              alt="bookmark"
-            />
-            <p className="font-avenir font-[400] text-sm mt-[4px]">MY ORDERS</p>
-          </div></Link>
-          <div onClick={()=>signOut} className="flex flex-col  mt-12">
-            <p className=" px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">Logout</p>
+            <div className="flex items-center gap-1 mt-2">
+              <Image
+                src="/icons/orders.svg"
+                width={18}
+                height={18}
+                alt="bookmark"
+              />
+              <p className="font-avenir font-[400] text-sm mt-[4px]">
+                MY ORDERS
+              </p>
+            </div>
+          </Link>
+          <div onClick={() => signOut} className="flex flex-col  mt-12">
+            <p className=" px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
+              Logout
+            </p>
           </div>
         </motion.div>
       </motion.div>
@@ -606,7 +563,8 @@ export default function Menu() {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white">
+            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white"
+          >
             {RenderMobileTAB(mobileActiveItem)}
           </motion.div>
         )}

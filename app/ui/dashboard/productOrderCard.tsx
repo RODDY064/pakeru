@@ -23,7 +23,7 @@ export default function ProductOrderCard({
     <div className="w-full h-[450px] bg-black/5 rounded-[20px] flex gap-2 flex-col border border-dashed  border-black/60 p-2">
       <div className="w-full h-[85%]  border border-black/30 rounded-2xl relative overflow-hidden">
         <Image
-          src={variant?.images[0]?.url as string??"/images/hero-2.png"}
+          src={variant?.images[0]?.url as string??"/images/image-fallback.png"}
           fill
            alt={`${product?.name} - ${variant?.color}`}
           className="object-cover"

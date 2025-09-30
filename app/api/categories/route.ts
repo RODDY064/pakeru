@@ -1,14 +1,53 @@
 // app/api/categories/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
+async function extractToken(request: NextRequest): Promise<string | null> {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.slice(7);
+  }
+  return null;
+}
+
+// Helper function to prepare headers
+function getForwardHeaders(
+  request: NextRequest,
+  token?: string | null
+): Record<string, string> {
+  const headers: Record<string, string> = {};
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const safeHeaders = [
+    "user-agent",
+    "accept-language",
+    "x-forwarded-for",
+    "x-real-ip",
+  ];
+  safeHeaders.forEach((headerName) => {
+    const value = request.headers.get(headerName);
+    if (value) headers[headerName] = value;
+  });
+
+  return headers;
+}
+
+async function handleBackendResponse(response: Response) {
+  const data = await response.json();
+  if (!response.ok) {
+    console.error(`Backend error ${response.status}:`, data);
+  }
+
+  return { data, status: response.status };
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-
-    const queryString = searchParams.toString();
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories${
-      queryString ? `?${queryString}` : ""
-    }`;
+    const url = `${BASE_URL}/v1/categories`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -18,9 +57,10 @@ export async function GET(request: NextRequest) {
       cache: "no-store",
     });
 
-    const data = await response.json();
-    return new NextResponse(JSON.stringify(data), {
-      status: response.status,
+    const { data, status } = await handleBackendResponse(response);
+
+    return NextResponse.json(data, {
+      status,
       headers: {
         "Content-Type": "application/json",
         "Cache-Control":
@@ -30,8 +70,14 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
+    console.error("Categories GET error:", error);
+
     return NextResponse.json(
-      { error: "Categories fetch failed", message: error.message },
+      {
+        error: "Categories fetch failed",
+        message: error.message,
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      },
       { status: 500 }
     );
   }
@@ -39,38 +85,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-
-    const authHeader = request.headers.get("authorization");
-
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json(
-        {
-          error: "Authorization header missing or invalid",
-          code: "TOKEN_REQUIRED",
-        },
-        { status: 401 }
-      );
-    }
-
-    // Forward all relevant headers to backend
-    const forwardHeaders: Record<string, string> = {
-      "Content-Type": "application/json",
-      Authorization: authHeader,
-    };
-
-    // Add other important headers if present
-    const userAgent = request.headers.get("user-agent");
-    const clientIP =
-      request.headers.get("x-forwarded-for") ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
-
-    if (userAgent) forwardHeaders["User-Agent"] = userAgent;
-    if (clientIP) forwardHeaders["X-Forwarded-For"] = clientIP;
-
-    const backendUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    if (!backendUrl) {
+    if (!BASE_URL) {
       console.error("NEXT_PUBLIC_BASE_URL not configured");
       return NextResponse.json(
         { error: "Server configuration error" },
@@ -78,39 +93,77 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`Forwarding order request to: ${backendUrl}/v1/orders`);
-
-    const response = await fetch(`${backendUrl}/v1/orders`, {
-      method: "POST",
-      headers: forwardHeaders,
-      body: JSON.stringify(body),
-      cache: "no-store",
-    });
-
-    const data = await response.json();
-
-    // Log response for debugging
-    if (!response.ok) {
-      console.error(`Backend responded with ${response.status}:`, data);
-    } else {
-      console.log(
-        "Order created successfully:",
-        data.orderId || "ID not provided"
+    // Extract and validate token
+    const token = await extractToken(request);
+    if (!token) {
+      return NextResponse.json(
+        {
+          error: "Authorization required",
+          message: "Bearer token missing or invalid",
+          code: "TOKEN_REQUIRED",
+        },
+        { status: 401 }
       );
     }
 
-    return new NextResponse(JSON.stringify(data), {
-      status: response.status,
+    // Parse request body (FormData for file upload)
+    let formData;
+    try {
+      formData = await request.formData();
+      console.log("Category POST FormData received");
+    } catch (parseError) {
+      return NextResponse.json(
+        { error: "Invalid form data in request body" },
+        { status: 400 }
+      );
+    }
+
+    // Validate required fields
+    const name = formData.get("name");
+    if (!name) {
+      return NextResponse.json(
+        { error: "Category name is required" },
+        { status: 400 }
+      );
+    }
+
+    const url = `${BASE_URL}/v1/categories`;
+
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+    };
+
+    const safeHeaders = ["user-agent", "x-forwarded-for", "x-real-ip"];
+    safeHeaders.forEach((headerName) => {
+      const value = request.headers.get(headerName);
+      if (value) headers[headerName] = value;
+    });
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: formData,
+      cache: "no-store",
+    });
+
+    const { data, status } = await handleBackendResponse(response);
+
+    if (response.ok) {
+      console.log("Category created successfully");
+    }
+
+    return NextResponse.json(data, {
+      status,
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control":
-          "no-store, no-cache, must-revalidate, proxy-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
       },
     });
   } catch (error: any) {
-    console.error("Orders API route error:", error);
+    console.error("Categories POST error:", error);
 
     if (error.name === "AbortError") {
       return NextResponse.json(
@@ -128,10 +181,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: "Order processing failed",
+        error: "Category creation failed",
         message: error.message || "Unknown error occurred",
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
       },
       { status: 500 }
     );
   }
 }
+

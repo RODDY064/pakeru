@@ -86,7 +86,7 @@ export async function fetchContent(): Promise<{ hero: HeroContent; galleries: Ga
     const response = await fetch(`${BASE_URL}/v1/landing-page`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      next: { revalidate: 86400 }, // 24 hours in seconds
+      // next: { revalidate: 86400 }, // 24 hours in seconds
     });
 
     const result = await response.json();

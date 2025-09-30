@@ -44,7 +44,7 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
       <div className="w-full md:w-[50%] h-[150px] max-sm:gap-3 md:h-auto  flex flex-none p-2">
         <div className="w-[50%] md:w-full h-full bg-[#f2f2f2] relative">
           <Image
-            src={cartData?.mainImage.url}
+            src={cartData?.mainImage.url??"/images/image-fallback.png"}
             fill
             className="object-cover"
             alt="hero"

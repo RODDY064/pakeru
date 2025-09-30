@@ -27,7 +27,7 @@ const ImgDiv = React.memo<{
         <div className="w-[60%] h-[1px] bg-black rotate-[-45deg]"></div>
       </div>
       <Image
-        src={typeof image?.url === "string" ? image.url : "/images/hero-2.png"}
+        src={typeof image?.url === "string" ? image.url : "/images/image-fallback.png"}
         fill
         alt={image.name}
         className="object-cover transition-transform duration-200"

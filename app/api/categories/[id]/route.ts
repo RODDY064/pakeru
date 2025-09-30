@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ categoryId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { categoryId } = await params;
+    const { id:categoryId } = await params;
+    console.log(categoryId)
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories/${categoryId}`;
 
     const incomingHeaders: Record<string, string> = {};

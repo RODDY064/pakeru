@@ -60,7 +60,7 @@ export default function BagCard({
       <div className="flex gap-3 items-start">
         <div className="w-[120px] flex-none md:w-[200px] h-[120px] md:h-[220px] rounded-[1px] overflow-hidden mt-[4px] relative border-[0.5px] border-black/10">
           <Image
-            src={cartData.variants[0].images[0].url}
+            src={cartData.variants[0].images[0].url??"/images/image-fallback.png"}
             fill
             className="object-cover"
             alt="image"

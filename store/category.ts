@@ -11,6 +11,11 @@ export type CategoryType = {
   parentCategory: string | null;
   createdAt?: Date;
   updatedAt?: Date;
+  image:{
+    _id:string,
+    publicId:string,
+    url:string
+  }
 };
 
 export type CategoryStore = {
@@ -21,10 +26,13 @@ export type CategoryStore = {
   setCategories: (categories: CategoryType[]) => void;
   clearCategoriesError: () => void;
   createCategory: (
-    category: Omit<CategoryType, "_id">,
+    category: any,
     post: ReturnType<typeof useApiClient>["post"]
   ) => Promise<CategoryType>;
-  deleteCategory: (categoryId: string, del: ReturnType<typeof useApiClient>["del"]) => Promise<void>;
+  deleteCategory: (
+    categoryId: string,
+    del: ReturnType<typeof useApiClient>["del"]
+  ) => Promise<void>;
   getProductsWithID: (categoryId: string) => void;
   findCategories: () => void;
   getCategoryNameById: (categoryId: string) => string | null;
@@ -93,6 +101,7 @@ export const useCategory: StateCreator<
         parentCategory: item.parentCategory,
         createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
         updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
+        image: item.image ?? ""
       }));
 
       // Use the setter method
@@ -108,7 +117,7 @@ export const useCategory: StateCreator<
     }
   },
   // Updated createCategory with toast
-  createCategory: async (categoryData: Omit<CategoryType, "_id">) => {
+  createCategory: async (categoryData: any, post) => {
     const createPromise = (async () => {
       set((state) => {
         state.isCategoriesLoading = true;
@@ -116,21 +125,18 @@ export const useCategory: StateCreator<
       });
 
       try {
-        const response = await apiCall("/categories", {
-          method: "POST",
-          body: JSON.stringify({
-            name: categoryData.name,
-            description: categoryData.description,
-          }),
+        const response = await post<CategoryType>("/categories", categoryData, {
+          requiresAuth: true,
         });
 
         const newCategory: CategoryType = {
-          _id: response.data._id,
-          name: response.data.name,
-          description: response.data.description,
-          parentCategory: response.data.parentCategory,
-          createdAt: new Date(response.data.createdAt),
-          updatedAt: new Date(response.data.updatedAt),
+          _id: response?._id,
+          name: response?.name,
+          description: response?.description,
+          parentCategory: response?.parentCategory,
+          createdAt: response?.createdAt? new Date(response.createdAt) : undefined,
+          updatedAt: response?.updatedAt ? new Date(response?.updatedAt): undefined,
+          image: response.image ?? ""
         };
 
         set((state) => {
@@ -154,7 +160,10 @@ export const useCategory: StateCreator<
     })();
 
     return toast.promise(createPromise, {
-      loading: "Creating category...",
+      loading: {
+        title: "Creating category...",
+        duration: Infinity,
+      },
       success: (newCategory) => ({
         title: `Category "${newCategory.name}" created successfully`,
       }),
@@ -163,8 +172,9 @@ export const useCategory: StateCreator<
   },
 
   // Updated deleteCategory with toast
-  deleteCategory: async (categoryId: string) => {
-    const categoryToDelete = get().getCategoryById(categoryId);
+  deleteCategory: async (categoryId: string, del) => {
+
+    console.log(categoryId)
 
     const deletePromise = (async () => {
       set((state) => {
@@ -173,20 +183,9 @@ export const useCategory: StateCreator<
       });
 
       try {
-        // Check if category has children
-        const childCategories = get().getChildCategories(categoryId);
-        if (childCategories.length > 0) {
-          throw new Error(
-            "Cannot delete category with child categories. Please delete child categories first."
-          );
-        }
-
-        const response = await apiCall(`/categories/${categoryId}`, {
-          method: "DELETE",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
+      
+        const response = await del(`/categories/${categoryId}`, {
+          requiresAuth: true,
         });
 
         console.log("Category deleted:", categoryId);
@@ -213,8 +212,13 @@ export const useCategory: StateCreator<
       }
     })();
 
+    const categoryToDelete = get().getCategoryById(categoryId);
+
     await toast.promise(deletePromise, {
-      loading: "Deleting category...",
+      loading: {
+        title:"Deleting category...",
+        duration:Infinity
+      },
       success: () => ({
         title: `Category "${
           categoryToDelete?.name || "Unknown"
@@ -239,7 +243,9 @@ export const useCategory: StateCreator<
     return category ? category.name : null;
   },
   getCartIdByName: (name) => {
-    const category = get().categories.find((c) => c.name.toLowerCase() === name.toLowerCase());
+    const category = get().categories.find(
+      (c) => c.name.toLowerCase() === name.toLowerCase()
+    );
     return category ? category._id : null;
   },
 
