@@ -26,7 +26,7 @@ export type HeroContent = {
 
 export type GalleryItem = {
   _id?: string;
-  title: string;
+  name: string;
   image: ImageData;
   products: string[];
 };
@@ -99,7 +99,7 @@ const createEmptyImage = (): ImageData => ({
 
 const createEmptyGalleryItem = (): GalleryItem => ({
   _id: uuidv4(),
-  title: "",
+  name: "",
   image: createEmptyImage(),
   products: [],
 });

@@ -132,11 +132,11 @@ const Images = ({ action, containerHeight }: { action: any, containerHeight:any 
           <div className="w-full flex-shrink-0 flex flex-col items-center justify-center pb-10 relative ">
             <div className="w-full flex flex-col gap-3 items-center px-4">
               <p className="text-black font-avenir font-medium text-[13px] md:text-[16px] lg:text-[18px] text-center leading-8">
-                Made for you to
+               {hero?.title}
               </p>
 
-              <h1 className="text-black font-avenir font-bold text-[20px] md:text-[24px] lg:text-[28px] xl:text-[32px] leading-4 text-center">
-                DEFY THE NORM
+              <h1 className="text-black font-avenir uppercase  font-bold text-[20px] md:text-[24px] lg:text-[28px] xl:text-[32px] leading-4 text-center">
+                {hero?.description}
               </h1>
 
               <div className="">

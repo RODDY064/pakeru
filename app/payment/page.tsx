@@ -17,6 +17,7 @@ import { toast } from "../ui/toaster";
 import { usePaymentProcessing } from "@/libs/paymentFunc";
 import { useAuth } from "@/libs/useAuth";
 import { useSession } from "next-auth/react";
+import Cedis from "../ui/cedis";
 
 const userDetailsSchema = z.object({
   useremail: z.string().email("Please enter a valid email address"),
@@ -34,6 +35,12 @@ const userDetailsSchema = z.object({
     .min(1, "Address is required")
     .min(5, "Please provide a detailed address"),
   town: z.string().min(1, "Town is required"),
+  phoneNumber: z
+    .string()
+    .min(1, "Phone number is required")
+    .regex(/^[0-9]+$/, "Phone number must contain only digits")
+    .min(10, "Phone number must be at least 10 digits")
+    .max(15, "Phone number must not exceed 15 digits"),
   landmark: z.string().optional(),
 });
 
@@ -103,6 +110,7 @@ export default function Payment() {
       });
       return;
     }
+
 
     // Process payment with toast feedback
     try {
@@ -229,7 +237,7 @@ export default function Payment() {
                 textStyle="md:text-md"
                 placeH="055xxxxx95"
                 label="Phone number"
-                name="address"
+                name="phoneNumber"
                 image="/icons/contacts-b.svg"
                 register={register}
                 error={errors}
@@ -296,8 +304,7 @@ export default function Payment() {
           disabled={isSubmitting}
           className="bg-black text-white py-4 font-avenir font-[500] text-lg cursor-pointer mt-6 md:block hidden rounded-md disabled:bg-gray-100 disabled:text-black
             disabled:border-black/10 disabled:border
-           disabled:cursor-not-allowed transition-colors"
-        >
+           disabled:cursor-not-allowed transition-colors">
           {isSubmitting ? (
             <div className="flex items-center gap-2 justify-center">
               <Image
@@ -329,9 +336,12 @@ export default function Payment() {
           <div className="mt-10">
             <div className="w-full flex items-center justify-between">
               <p className="font-avenir font-[400] text-sm">TOTAL</p>
-              <p className="font-avenir font-[400] text-sm">
-                GHS {cartStat?.totalPrice.toFixed(2)}
-              </p>
+              <div className="flex gap-0.5 items-center  text-sm  ">
+                <Cedis cedisStyle="pt-[3px] opacity-80" className="pt-[3px]"/>
+                <p className=" font-avenir font-[400]  text-sm   pt-[7px]">
+                  {cartStat?.totalPrice?.toFixed(2)}
+                </p>
+              </div>
             </div>
             {/* <div className="w-full flex items-center justify-between mt-1 text-black/50">
                 <p className="font-avenir font-[400] text-sm">SHIPPING</p>
@@ -435,9 +445,12 @@ const PaymentCard = ({ cart }: { cart: CartItemType }) => {
       </div>
       <div>
         <p className="font-avenir font-[400] text-sm uppercase">{cart?.name}</p>
-        <p className="font-avenir  font-[400]  text-sm text-black/50  ">
-          GHS {cart?.price}
-        </p>
+        <div className="flex gap-0.5 items-center  text-sm text-black/50">
+          <Cedis cedisStyle="pt-[4px] opacity-40" />
+          <p className=" font-avenir font-[400]  text-sm text-black/50  pt-[7px]">
+            {cart?.price}
+          </p>
+        </div>
         <p className="font-avenir  font-[400]  text-xs text-black/50   mt-2">
           QUANTITY: {cart?.quantity}
         </p>

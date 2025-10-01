@@ -339,7 +339,7 @@ export const useBoundStore = create<Store>()(
       isServerInitialized: false,
 
       // initialization logic
-      initializeWithServerData: (products, categories) => {
+      initializeWithServerData: (products:ProductData[], categories:CategoryType[]) => {
         if (get().isServerInitialized) return;
 
         set((state) => {

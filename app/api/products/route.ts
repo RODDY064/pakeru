@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
     });
 
     const data = await response.json();
+
+    // console.log(data,'products')
+
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {
     return NextResponse.json(
@@ -59,21 +62,21 @@ export async function POST(request: NextRequest) {
 
     // Copy all fields from original FormData
     for (const [key, value] of formData.entries()) {
-      console.log(`FormData entry: ${key} =`, value);
+      // console.log(`FormData entry: ${key} =`, value);
       newFormData.append(key, value);
     }
 
-    // Remove content-type header to let fetch set the correct boundary
     delete incomingHeaders["content-type"];
 
     const response = await fetch(targetUrl, {
       method: "POST",
       headers: incomingHeaders,
       body: newFormData,
+      cache:"no-store"
     });
 
-    console.log("Response status:", response.status);
-    console.log("Response ok:", response.ok);
+    // console.log("Response status:", response.status);
+    // console.log("Response ok:", response.ok);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -87,17 +90,8 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {
-    console.error("Full error object:", error);
-    console.error("Error name:", error.name);
-    console.error("Error message:", error.message);
-    console.error("Error cause:", error.cause);
-    console.error("Error stack:", error.stack);
 
     let errorMessage = error.message;
-    // if (error.cause) {
-    //   errorMessage += ` (Cause: ${error.cause.message || error.cause})`;
-    // }
-
     return NextResponse.json(
       {
         error: "Product creation failed",

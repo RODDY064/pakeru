@@ -27,6 +27,8 @@ export const useSearch: StateCreator<
       if (word.trim() === "") {
         state.searchProduct = [];
       } else {
+        
+        get().loadProducts(true,1,25,{ name:word })
         const allProducts = get().products || [];
         state.searchProduct = allProducts.filter((product) => {
           const searchTerm = word.toLowerCase();

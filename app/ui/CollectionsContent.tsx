@@ -1,8 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, use } from "react";
 import ProductCard from "./product-card";
+import { useSearchParams } from "next/navigation";
+import { ProductData } from "@/store/dashbaord/products";
+import { useBoundStore } from "@/store/store";
+import { GalleryItem } from "@/store/dashbaord/content-store/content";
+import Cedis from "./cedis";
+import Link from "next/link";
 
 // Utility to debounce functions
 interface DebounceFunction<T extends (...args: any[]) => void> {
@@ -24,9 +30,50 @@ const debounce: Debounce = (func, wait) => {
   };
 };
 
-export default function CollectionsContent() {
+export default function CollectionsContent({ id }: { id: string }) {
   const [containerHeight, setContainerHeight] = useState("100vh");
   const [cardType, setCardType] = useState<"small" | "medium">("small");
+  const [productsLink, setProductsLink] = useState<ProductData[]>([]);
+  const [activeGallery, setActiveGallery] = useState<GalleryItem>();
+  const { galleries, products, loadProducts } = useBoundStore();
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [productLinkIds, setProductLinkIds] = useState<string[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+
+    checkDesktop();
+    window.addEventListener("resize", checkDesktop);
+
+    return () => window.removeEventListener("resize", checkDesktop);
+  }, []);
+
+  useEffect(() => {
+    const run = async () => {
+      const galleryFind = galleries?.find((item) => item._id === id);
+      if (galleryFind) {
+        setActiveGallery(galleryFind);
+        setProductLinkIds(galleryFind.products);
+
+        // Set loading state
+        setIsLoadingProducts(true);
+        await loadProducts(true, 1, 25, {
+          products: galleryFind.products,
+        });
+        setIsLoadingProducts(false);
+      }
+    };
+    run();
+  }, [id, galleries]);
+
+  useEffect(() => {
+    if (productLinkIds && !isLoadingProducts) {
+      setProductsLink(products);
+    }
+  }, [products, productLinkIds, isLoadingProducts]);
 
   // Calculate container height
   const calculateHeight = useCallback(
@@ -65,23 +112,19 @@ export default function CollectionsContent() {
 
   return (
     <>
-      <div
-        className="w-full pt-36 md:pb-24 pb-10 relative "
-        style={{ height: containerHeight }}
-      >
+      <div className="w-full pt-36  px-4  xl:px-8 relative ">
         <div className="w-full h-full flex lg:flex-row   flex-col ">
-          <div className="w-full flex-shrink-0 h-full lg:w-[60%] relative">
-            <h1 className="text-black font-avenir uppercase text-2xl font-semibold tracking-wide">
-              Collections
+          <div className="w-full flex-shrink-0 h-full lg:w-[55%] relative">
+            <h1 className="text-black font-avenir uppercase text-xl font-semibold tracking-wide">
+              {activeGallery?.name}
             </h1>
-            <p className="w-full sm:w-[70%] mt-4 font-avenir text-black/50 font-[500] text-md text-balance">
-              Louis Vuitton’s collection of sunglasses for men offers designs to
-              flatter every face. From the classic LV Match and modern aviator
-              shapes to the fashion-forward.
-            </p>
-            <div className="mt-4 w-full relative h-full">
+            <p className="w-full sm:w-[70%] mt-4 font-avenir text-black/50 font-[500] text-md text-balance"></p>
+            <div
+              style={{ height: containerHeight }}
+              className="mt-4 w-full relative h-full bg-amber-100"
+            >
               <Image
-                src="/bentos/bento.webp"
+                src={activeGallery?.image.url ?? "/images/image-fallback.png"}
                 fill
                 sizes="100vw"
                 alt="collection"
@@ -90,33 +133,72 @@ export default function CollectionsContent() {
               />
             </div>
           </div>
-          <div className="w-full  mt-6 md:mt-0 hidden lg:flex lg:w-[40%] flex-shrink-0 ">
-            <div className="w-full lg:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-              {[1, 2, 3, 4].map((item) => (
-                <CollectionCard key={item} />
-              ))}
+          <div className="w-full  mt-6 md:mt-0 hidden lg:block lg:w-[45%] flex-shrink-0 ">
+            <div className="w-full flex justify-end">
+              <div className="w-full flex flex-wrap items-start gap-4">
+                {isLoadingProducts ? (
+                  <div className="w-full min-h-[400px] flex flex-col items-center justify-center">
+                    <Image
+                      src="/icons/loader.svg"
+                      width={36}
+                      height={36}
+                      alt="loading icon"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    {productsLink?.slice(0, 4).map((item) => (
+                      <CollectionCard key={item._id} data={item} />
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="mt-36 md:mt-12 w-full  flex flex-col items-center text-black  home-main  transition-all">
-        <div className="w-full grid  md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out">
-          {[1, 2, 3, 5].map((item) => (
-            <div key={item}></div>
-            // <ProductCard key={item} type="large" />
-          ))}
+      {isLoadingProducts ? (
+        <div className="w-full min-h-[400px] flex flex-col items-center justify-center">
+          <Image
+            src="/icons/loader.svg"
+            width={36}
+            height={36}
+            alt="loading icon"
+          />
         </div>
-      </div>
+      ) : (
+        <>
+          {isDesktop
+            ? productsLink.length > 5
+            : productsLink.length > 0 && (
+                <div className="mt-12 px-4 xl:px-8 w-full  flex flex-col items-center text-black  home-main  transition-all">
+                  <p className="w-full font-avenir text-lg">Products</p>
+                  <div className="w-full flex flex-wrap  gap-6 mt-10">
+                    {(isDesktop ? productsLink.slice(4) : productsLink).map(
+                      (item) => (
+                        <ProductCard
+                          key={item._id}
+                          type="medium"
+                          productData={item}
+                        />
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+        </>
+      )}
     </>
   );
 }
 
-const CollectionCard = () => {
+const CollectionCard = ({ data }: { data: ProductData  }) => {
   return (
-    <div className="w-full h-full ">
+    <Link href={`/shop/${data._id}`}>
+    <div className="lg:w-[200px] xl:w-[300px]  lg:h-[250px] xl:h-[320px] 2xl:h-[350px] ">
       <div className="w-full h-[90%] relative lex border border-black/10 rounded-sm cursor-pointer transition-shadow duration-300 hover:border hover:z-20 hover:border-black/20">
         <Image
-          src="/images/hero-2.png"
+          src={data.mainImage.url ?? "/images/image-fallback.png"}
           fill
           sizes="100vw"
           alt="collection"
@@ -126,15 +208,17 @@ const CollectionCard = () => {
       </div>
       <div className="w-full h-[10%] pt-3 px-[2px]">
         <div className="flex items-start justify-between">
-          <div className="w-[60%] font-avenir font-normal text-black/70">
-            T-A Polo
+          <div className="w-[60%] font-avenir font-normal text-black/70 pt-[4px]">
+            {data.name}
           </div>
 
-          <div className="w-[30%] flex justify-end ">
-            <p className="font-avenir font-normal text-black/50">GHS N/A</p>
+          <div className="w-[30%] flex items-center justify-end text-black/50 gap-0.5 ">
+            <Cedis cedisStyle="opacity-40 pt-[4px]"/>
+            <p className="font-avenir font-normal text-black/50 pt-[7px]">{data.price}</p>
           </div>
         </div>
       </div>
     </div>
+    </Link>
   );
 };

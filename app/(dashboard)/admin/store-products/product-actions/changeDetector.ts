@@ -2,7 +2,6 @@
 
 import { ProductColor, ProductFormData } from "@/app/ui/dashboard/zodSchema";
 
-
 export interface ProductChanges {
   formChanges: Partial<ProductFormData>;
   colorChanges: {
@@ -21,19 +20,31 @@ export class ProductChangeDetector {
     if (a === b) return true;
     if (!a || !b) return a === b;
     if (typeof a !== typeof b) return false;
-    
+
     if (Array.isArray(a)) {
       if (!Array.isArray(b) || a.length !== b.length) return false;
+
+      // For arrays where order doesn’t matter (tags/sizes), compare as sets
+      if (
+        a.every((x) => typeof x === "string") &&
+        b.every((x) => typeof x === "string")
+      ) {
+        return (
+          new Set(a).size === new Set(b).size &&
+          [...new Set(a)].every((val) => b.includes(val))
+        );
+      }
+
       return a.every((item, index) => this.deepEqual(item, b[index]));
     }
-    
-    if (typeof a === 'object') {
+
+    if (typeof a === "object") {
       const keysA = Object.keys(a);
       const keysB = Object.keys(b);
       if (keysA.length !== keysB.length) return false;
-      return keysA.every(key => this.deepEqual(a[key], b[key]));
+      return keysA.every((key) => this.deepEqual(a[key], b[key]));
     }
-    
+
     return false;
   }
 
@@ -41,17 +52,26 @@ export class ProductChangeDetector {
    * Detect changes in form data
    */
   static detectFormChanges(
-    original: ProductFormData, 
+    original: ProductFormData,
     current: ProductFormData
   ): Partial<ProductFormData> {
+
     const changes: Partial<ProductFormData> = {};
-    
+
     const fieldsToCheck: (keyof ProductFormData)[] = [
-      'name', 'description', 'price', 'totalNumber', 
-      'status', 'category', 'tags'
+      "name",
+      "description",
+      "price",
+      "totalNumber",
+      "status",
+      "category",
+      "tags",
+      "productCare",
+      "washInstructions",
+      "sizeType",
     ];
 
-    fieldsToCheck.forEach(field => {
+    fieldsToCheck.forEach((field) => {
       if (!this.deepEqual(original[field], current[field])) {
         changes[field] = current[field] as any;
       }
@@ -64,28 +84,30 @@ export class ProductChangeDetector {
    * Detect changes in color variants
    */
   static detectColorChanges(
-    originalColors: ProductColor[], 
+    originalColors: ProductColor[],
     currentColors: ProductColor[]
   ) {
     const changes = {
       added: [] as ProductColor[],
       updated: [] as ProductColor[],
-      removed: [] as string[]
+      removed: [] as string[],
     };
 
     // Find original IDs for tracking removals
-    const originalIds = new Set(originalColors.map(c => c._id));
-    const currentIds = new Set(currentColors.map(c => c._id));
+    const originalIds = new Set(originalColors.map((c) => c._id));
+    const currentIds = new Set(currentColors.map((c) => c._id));
 
     // Detect removed colors
     changes.removed = originalColors
-      .filter(color => !currentIds.has(color._id))
-      .map(color => color._id);
+      .filter((color) => !currentIds.has(color._id))
+      .map((color) => color._id);
 
     // Detect added and updated colors
-    currentColors.forEach(currentColor => {
-      const originalColor = originalColors.find(c => c._id === currentColor._id);
-      
+    currentColors.forEach((currentColor) => {
+      const originalColor = originalColors.find(
+        (c) => c._id === currentColor._id
+      );
+
       if (!originalColor) {
         // New color
         changes.added.push(currentColor);
@@ -107,18 +129,20 @@ export class ProductChangeDetector {
     currentData: ProductFormData,
     currentColors: ProductColor[]
   ): ProductChanges {
+
     const formChanges = this.detectFormChanges(originalData, currentData);
     const colorChanges = this.detectColorChanges(originalColors, currentColors);
-    
+
     const hasFormChanges = Object.keys(formChanges).length > 0;
-    const hasColorChanges = colorChanges.added.length > 0 || 
-                           colorChanges.updated.length > 0 || 
-                           colorChanges.removed.length > 0;
+    const hasColorChanges =
+      colorChanges.added.length > 0 ||
+      colorChanges.updated.length > 0 ||
+      colorChanges.removed.length > 0;
 
     return {
       formChanges,
       colorChanges,
-      hasChanges: hasFormChanges || hasColorChanges
+      hasChanges: hasFormChanges || hasColorChanges,
     };
   }
 }

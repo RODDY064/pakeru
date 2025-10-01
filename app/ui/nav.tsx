@@ -118,7 +118,7 @@ export default function Nav() {
 
   useEffect(() => {
     if (filteritems.length > 0) {
-      loadProducts();
+      loadProducts(true);
     }
 
     const handleResize = () => {

@@ -4,7 +4,7 @@ import { cn } from "@/libs/cn";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useBoundStore } from "@/store/store";
 import ProductCard from "@/app/ui/product-card";
@@ -12,6 +12,7 @@ import { useGsapSlider } from "@/libs/gsapScroll";
 import { ProductData } from "@/store/dashbaord/products";
 import SizeGuild from "./size-guild";
 import ProductCare from "./productCare";
+import Cedis from "./cedis";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -194,64 +195,63 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   }, [isMobile]);
 
   useGSAP(() => {
-  if (isMobile) return;
+    if (isMobile) return;
 
-  const sticky = document.querySelector(".stickyDiv") as HTMLElement;
-  const trigger = document.querySelector(".triggerDiv") as HTMLElement;
-  
-  if (!sticky || !trigger) return;
+    const sticky = document.querySelector(".stickyDiv") as HTMLElement;
+    const trigger = document.querySelector(".triggerDiv") as HTMLElement;
 
-  // Store original position
-  const originalPosition = sticky.style.position;
-  const originalTop = sticky.style.top;
-  
-  ScrollTrigger.create({
-    trigger: trigger,
-    start: "top 8%",
-    end: "bottom bottom",
-    onUpdate: (self) => {
-      const progress = self.progress;
-      const triggerRect = trigger.getBoundingClientRect();
-      const stickyHeight = sticky.offsetHeight;
-      const triggerHeight = trigger.offsetHeight;
-      
-      if (progress === 0) {
-        // Reset to original position
-        sticky.style.position = originalPosition;
-        sticky.style.top = originalTop;
-        sticky.style.transform = 'none';
-      } else if (triggerRect.bottom > stickyHeight) {
-        // Pin at top
-        sticky.style.position = 'fixed';
-        sticky.style.top = '35px';
-        sticky.style.transform = 'none';
-      } else {
-        // Pin at bottom of trigger
-        sticky.style.position = 'absolute';
-        sticky.style.top = `${triggerHeight - stickyHeight}px`;
-        sticky.style.transform = 'none';
-      }
-    },
-    onLeave: () => {
-      // Ensure proper cleanup when leaving trigger area
-      sticky.style.position = 'absolute';
-      sticky.style.top = `${trigger.offsetHeight - sticky.offsetHeight}px`;
-    },
-    onEnterBack: () => {
-      // Smooth re-entry
-      sticky.style.position = 'fixed';
-      sticky.style.top = '35px';
-    }
-  });
+    if (!sticky || !trigger) return;
 
-  // Cleanup function
-  return () => {
-    sticky.style.position = originalPosition;
-    sticky.style.top = originalTop;
-    sticky.style.transform = 'none';
-  };
+    // Store original position
+    const originalPosition = sticky.style.position;
+    const originalTop = sticky.style.top;
 
-}, [colorActive, productData, isMobile]);
+    ScrollTrigger.create({
+      trigger: trigger,
+      start: "top 8%",
+      end: "bottom bottom",
+      onUpdate: (self) => {
+        const progress = self.progress;
+        const triggerRect = trigger.getBoundingClientRect();
+        const stickyHeight = sticky.offsetHeight;
+        const triggerHeight = trigger.offsetHeight;
+
+        if (progress === 0) {
+          // Reset to original position
+          sticky.style.position = originalPosition;
+          sticky.style.top = originalTop;
+          sticky.style.transform = "none";
+        } else if (triggerRect.bottom > stickyHeight) {
+          // Pin at top
+          sticky.style.position = "fixed";
+          sticky.style.top = "35px";
+          sticky.style.transform = "none";
+        } else {
+          // Pin at bottom of trigger
+          sticky.style.position = "absolute";
+          sticky.style.top = `${triggerHeight - stickyHeight}px`;
+          sticky.style.transform = "none";
+        }
+      },
+      onLeave: () => {
+        // Ensure proper cleanup when leaving trigger area
+        sticky.style.position = "absolute";
+        sticky.style.top = `${trigger.offsetHeight - sticky.offsetHeight}px`;
+      },
+      onEnterBack: () => {
+        // Smooth re-entry
+        sticky.style.position = "fixed";
+        sticky.style.top = "35px";
+      },
+    });
+
+    // Cleanup function
+    return () => {
+      sticky.style.position = originalPosition;
+      sticky.style.top = originalTop;
+      sticky.style.transform = "none";
+    };
+  }, [colorActive, productData, isMobile]);
 
   // buttons ref
   const prevBtnRef = useRef<HTMLButtonElement>(
@@ -329,9 +329,12 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     return images;
   };
 
-  const currentImages =
-    productData?.variants.find((variant) => variant._id === colorActive._id)
-      ?.images || [];
+  const currentImages = useMemo(() => {
+    return (
+      productData?.variants.find((variant) => variant._id === colorActive._id)
+        ?.images || []
+    );
+  }, [productData, colorActive?._id]);
 
   return (
     <div className="w-full  flex flex-col items-center text-black bg-white min-h-screen ">
@@ -354,8 +357,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
       {cartState === "success" && (
         <div className="w-full min-h-screen flex flex-col md:flex-row  pinCon">
           <div className="w-full md:w-[50%] relative triggerDiv">
-            <div
-              className="w-full flex flex-row md:flex-col relative overflow-x-auto md:overflow-x-hidden">
+            <div className="w-full flex flex-row md:flex-col relative overflow-x-auto md:overflow-x-hidden">
               {currentImages.map((img, index) => (
                 <div
                   key={index}
@@ -366,7 +368,8 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                   onClick={() => handleImageClick(index)}
                   onTouchStart={(e) => handleImageTouchStart(e, index)}
                   onTouchMove={(e) => handleImageTouchMove(e, index)}
-                  onTouchEnd={handleImageTouchEnd}>
+                  onTouchEnd={handleImageTouchEnd}
+                >
                   <div className="w-[110%] h-[110%] absolute overflow-hidden">
                     <Image
                       src={img.url}
@@ -480,9 +483,12 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                 <p className="font-avenir font-[400] text-lg">
                   {productData?.name.toLocaleUpperCase()}
                 </p>
-                <p className="text-black/50 font-avenir font-[400] text-md">
-                  GHS {productData?.price}
-                </p>
+                <div className="text-black/50 flex gap-0.5 items-center">
+                  <Cedis cedisStyle="pt-[4px]" />
+                  <p className="text-black/50 font-avenir font-[400] text-md pt-[7px]">
+                    {productData?.price}
+                  </p>
+                </div>
                 <div
                   className="my-4 font-avenir text-lg responsive-description"
                   dangerouslySetInnerHTML={{
@@ -583,12 +589,14 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                 </div>
                 <div className="mt-8 w-full pt-10">
                   <ProductCare
-                   onToggle={() => {
-                    setTimeout(() => {
-                      ScrollTrigger.refresh();
-                    }, 300); 
-                  }}
-                   />
+                    care={productData?.productCare}
+                    instructions={productData?.washInstructions}
+                    onToggle={() => {
+                      setTimeout(() => {
+                        ScrollTrigger.refresh();
+                      }, 300);
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -601,12 +609,12 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
         <p className="font-avenir font-[400] text-md px-4 md:px-12">
           SIMILAR PRODUCTS
         </p>
-        <div className="mt-4 px-10 pb-16">
-          <div className="w-full flex items-center justify-center">
+        <div className="mt-4 px-4 md:px-10 pb-16">
+          <div className="w-full flex ">
             <div
               ref={imageDivSim}
               className={cn(
-                "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] py-4 md:px-4 md:auto-cols-[minmax(26rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none",
+                "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] py-4 px-4 md:auto-cols-[minmax(26rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none",
                 {
                   "auto-cols-[minmax(100%,1fr)]":
                     cartState === "loading" || cartState === "error",
@@ -633,7 +641,9 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                   {(productData
                     ? products
                         .filter(
-                          (prod) => prod.category === productData.category
+                          (prod) =>
+                            prod.category === productData.category &&
+                            prod._id !== productData._id 
                         )
                         .slice(0, 10)
                     : []
@@ -650,73 +660,90 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
               )}
             </div>
           </div>
-          <div className="flex flex-col items-center mb-4">
-            <div className="w-[80%] md:w-full mb-4 flex flex-wrap items-center justify-center gap-1 md:gap-3">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goToPage(i)}
-                  className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full ${
-                    i === currentPage ? "bg-black w-8" : "bg-black/20"
-                  }`}
-                />
-              ))}
+          {(productData
+            ? products
+                .filter(
+                  (prod) =>
+                    prod.category === productData.category &&
+                    prod._id !== productData._id
+                )
+                .slice(0, 10)
+            : []
+          ).length === 0 ? (
+            <div className="w-full h-24 flex flex-col items-center justify-end">
+              <p className="font-avenir text-black/50 text-lg md:text-xl">No similiar products found</p>
             </div>
-          </div>
-          {cartState === "success" && (
-            <div className="md:flex items-center justify-center gap-6 md:gap-12 hidden mt-2">
-              <button
-                ref={prevBtnRef}
-                aria-label="Scroll left"
-                className={cn(
-                  "size-10 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev",
-                  {
-                    visible: !isStart,
-                  }
-                )}
-              >
-                <Image
-                  src="/icons/arrow.svg"
-                  width={18}
-                  height={18}
-                  alt="arrow"
-                  className="rotate-90 group-hover/a:hidden"
-                />
-                <Image
-                  src="/icons/arrow-w.svg"
-                  width={18}
-                  height={18}
-                  alt="arrow"
-                  className="hidden rotate-90 group-hover/a:flex"
-                />
-              </button>
+          ) : (
+            <>
+              <div className="flex flex-col items-center mb-4">
+                <div className="w-[80%] md:w-full mb-4 flex flex-wrap items-center justify-center gap-1 md:gap-3">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => goToPage(i)}
+                      className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full ${
+                        i === currentPage ? "bg-black w-8" : "bg-black/20"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+              {cartState === "success" && (
+                <div className="md:flex items-center justify-center gap-6 md:gap-12 hidden mt-2">
+                  <button
+                    ref={prevBtnRef}
+                    aria-label="Scroll left"
+                    className={cn(
+                      "size-10 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev",
+                      {
+                        visible: !isStart,
+                      }
+                    )}
+                  >
+                    <Image
+                      src="/icons/arrow.svg"
+                      width={18}
+                      height={18}
+                      alt="arrow"
+                      className="rotate-90 group-hover/a:hidden"
+                    />
+                    <Image
+                      src="/icons/arrow-w.svg"
+                      width={18}
+                      height={18}
+                      alt="arrow"
+                      className="hidden rotate-90 group-hover/a:flex"
+                    />
+                  </button>
 
-              <button
-                ref={nextBtnRef}
-                aria-label="Scroll right"
-                className={cn(
-                  "size-10 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next",
-                  {
-                    visible: !isEnd,
-                  }
-                )}
-              >
-                <Image
-                  src="/icons/arrow.svg"
-                  width={20}
-                  height={20}
-                  alt="arrow"
-                  className="rotate-270 group-hover/w:hidden"
-                />
-                <Image
-                  src="/icons/arrow-w.svg"
-                  width={20}
-                  height={20}
-                  alt="arrow"
-                  className="hidden rotate-270 group-hover/w:flex"
-                />
-              </button>
-            </div>
+                  <button
+                    ref={nextBtnRef}
+                    aria-label="Scroll right"
+                    className={cn(
+                      "size-10 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next",
+                      {
+                        visible: !isEnd,
+                      }
+                    )}
+                  >
+                    <Image
+                      src="/icons/arrow.svg"
+                      width={20}
+                      height={20}
+                      alt="arrow"
+                      className="rotate-270 group-hover/w:hidden"
+                    />
+                    <Image
+                      src="/icons/arrow-w.svg"
+                      width={20}
+                      height={20}
+                      alt="arrow"
+                      className="hidden rotate-270 group-hover/w:flex"
+                    />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

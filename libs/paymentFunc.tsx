@@ -12,6 +12,7 @@ export interface PaymentData {
   town: string;
   region: string;
   landmark?: string;
+  phoneNumber:string
 }
 
 interface PaymentResponse {
@@ -30,6 +31,7 @@ interface PaymentPayload {
     town: string;
     region: string;
     landmark: string;
+    phoneNumber:string
   };
   items: {
     numOfItems: number;
@@ -67,6 +69,7 @@ export const usePaymentProcessing = () => {
     if (!data.address.trim()) errors.push("Address is required");
     if (!data.town.trim()) errors.push("Town is required");  
     if (!data.region.trim()) errors.push("Region is required");
+    if (!data.phoneNumber.trim()) errors.push("Region is required");
 
     // Validate cart
     if (!cartItems.length) errors.push("Cart is empty");
@@ -105,7 +108,8 @@ export const usePaymentProcessing = () => {
         address: data.address.trim(),
         town: data.town.trim(),
         region: data.region.trim(),
-        landmark: data.landmark?.trim() || ''
+        landmark: data.landmark?.trim() || '',
+        phoneNumber:data.phoneNumber.trim() || ''
       },
       items: {
         numOfItems: cartItems.length,

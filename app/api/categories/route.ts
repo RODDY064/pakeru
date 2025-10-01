@@ -39,7 +39,7 @@ function getForwardHeaders(
 async function handleBackendResponse(response: Response) {
   const data = await response.json();
   if (!response.ok) {
-    console.error(`Backend error ${response.status}:`, data);
+    // console.error(`Backend error ${response.status}:`, data);
   }
 
   return { data, status: response.status };
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("Categories GET error:", error);
+    // console.error("Categories GET error:", error);
 
     return NextResponse.json(
       {
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     if (!BASE_URL) {
-      console.error("NEXT_PUBLIC_BASE_URL not configured");
+      // console.error("NEXT_PUBLIC_BASE_URL not configured");
       return NextResponse.json(
         { error: "Server configuration error" },
         { status: 500 }
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     let formData;
     try {
       formData = await request.formData();
-      console.log("Category POST FormData received");
+      // console.log("Category POST FormData received");
     } catch (parseError) {
       return NextResponse.json(
         { error: "Invalid form data in request body" },

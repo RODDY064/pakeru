@@ -164,8 +164,8 @@ export default function Menu() {
         </div>
 
         <div className="border-t border-black/20">
-          <p className="font-avenir font-[400] text-lg text-black/50 p-6 pb-2">
-            TRENDING
+          <p className="font-avenir font-[400] text-sm text-black/50 p-6 pb-2">
+            PRODUCTS
           </p>
           {data.menuProducts.length === 0 ? (
             <div className="w-full min-h-[300px] flex items-center justify-center">
@@ -337,8 +337,8 @@ export default function Menu() {
 
         {/* Mobile Trending Section */}
         <div className="mt-10 md:mt-6 px-4">
-          <p className="font-avenir font-[400] text-lg text-black/30 mb-4">
-            TRENDING
+          <p className="font-avenir font-[400] text-sm text-black/30 mb-4">
+            PRODUCTS
           </p>
 
           {/* Mobile Product Slider */}
@@ -546,7 +546,7 @@ export default function Menu() {
               </p>
             </div>
           </Link>
-          <div onClick={() => signOut} className="flex flex-col  mt-12">
+          <div onClick={async() => await signOut()} className="flex flex-col  mt-12">
             <p className=" px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
               Logout
             </p>

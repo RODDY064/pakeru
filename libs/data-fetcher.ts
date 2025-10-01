@@ -1,5 +1,8 @@
 import { CategoryType } from "@/store/category";
-import { GalleryContent, HeroContent } from "@/store/dashbaord/content-store/content";
+import {
+  GalleryContent,
+  HeroContent,
+} from "@/store/dashbaord/content-store/content";
 import { ProductData } from "@/store/dashbaord/products";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
@@ -81,12 +84,15 @@ export async function fetchCategoriesServer(): Promise<CategoryType[]> {
   }
 }
 
-export async function fetchContent(): Promise<{ hero: HeroContent; galleries: GalleryContent } | undefined >{
+export async function fetchContent(): Promise<
+  { hero: HeroContent; galleries: GalleryContent } | undefined
+> {
   try {
     const response = await fetch(`${BASE_URL}/v1/landing-page`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      // next: { revalidate: 86400 }, // 24 hours in seconds
+      cache: "no-store",
+      next: { revalidate: 0 }, // 24 hours in seconds
     });
 
     const result = await response.json();
@@ -97,7 +103,7 @@ export async function fetchContent(): Promise<{ hero: HeroContent; galleries: Ga
     }
 
     // Map the data to the required types
-    const mappedData:{ hero: HeroContent; galleries: GalleryContent }   = {
+    const mappedData: { hero: HeroContent; galleries: GalleryContent } = {
       hero: result.section1[0]
         ? {
             type: "hero",
@@ -129,7 +135,7 @@ export async function fetchContent(): Promise<{ hero: HeroContent; galleries: Ga
         items: Array.isArray(result.section3)
           ? result.section3.map((gallery: any) => ({
               _id: gallery._id,
-              title: gallery.name,
+              name: gallery.name,
               image: {
                 _id: gallery.image._id,
                 publicId: gallery.image.publicId,
@@ -142,7 +148,6 @@ export async function fetchContent(): Promise<{ hero: HeroContent; galleries: Ga
     };
 
     return mappedData;
-
   } catch (error) {
     console.log(error);
     return undefined;

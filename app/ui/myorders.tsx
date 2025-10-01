@@ -32,7 +32,7 @@ export default function MyOrders() {
       <p className="font-avenir text-xl md:text-3xl  font-semibold ">
         What's coming up
       </p>
-      <div className="mt-10 flex flex-col max-sm:items-center lg:flex-row gap-4">
+      <div className="mt-10 flex flex-col gap-4">
         {(userOrdersState === "loading" || userOrdersState === "idle") && (
           <div className="w-full mt-16 flex flex-col items-center">
             <Image
@@ -60,25 +60,51 @@ export default function MyOrders() {
         )}
         {userOrdersState === "success" && (
           <>
-            {userOrders.length === 0 ? (
-              <div className="w-full mt-16 flex flex-col items-center">
-                <p className="font-avenir text-2xl text-black/50 text-balance">
-                  You've not ordered anything.
-                </p>
-                <div className="mt-4">
-                  <Button
-                    word="GO TO SHOP"
-                    action={() => router.push("/product")}
-                  />
+            <div className="full">
+              {userOrders.length === 0 ? (
+                <div className="w-full mt-16 flex flex-col items-center">
+                  <p className="font-avenir text-2xl text-black/50 text-balance">
+                    You've not ordered anything.
+                  </p>
+                  <div className="mt-4">
+                    <Button
+                      word="GO TO SHOP"
+                      action={() => router.push("/product")}
+                    />
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="w-full flex flex-wrap gap-4">
-                {userOrders.map((order) => (
-                  <MyOrderCard type="arriving" key={order._id} order={order} />
-                ))}
-              </div>
-            )}
+              ) : (
+                <>
+                  <div className="w-full flex flex-wrap gap-4">
+                    {userOrders
+                      .filter((ord) => ord.deliveryStatus !== "delivered")
+                      .map((order) => (
+                        <MyOrderCard
+                          type="arriving"
+                          key={order._id}
+                          order={order}
+                        />
+                      ))}
+                  </div>
+                  <div className="mt-24">
+                    <p className="font-avenir text-xl md:text-3xl text-black/50  font-semibold ">
+                     Order  History
+                    </p>
+                    <div className="w-full flex flex-wrap gap-4 mt-4">
+                      {userOrders
+                        .filter((ord) => ord.deliveryStatus === "delivered")
+                        .map((order) => (
+                          <MyOrderCard
+                            type="arriving"
+                            key={order._id}
+                            order={order}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -150,7 +176,7 @@ const MyOrderCard = ({
                   <div className="w-[6px] h-[1px] bg-white absolute"></div>
                 </div>
                 <p className="font-avenir text-[12px] text-white pt-[1px]">
-                  {order.items.products.length-1}
+                  {order.items.products.length - 1}
                 </p>
               </div>
             )}
@@ -165,16 +191,21 @@ const MyOrderCard = ({
           <div
             className={`flex rounded-full border px-2 gap-1.5 ${
               deliveryStyles[normalizeStatus(order.deliveryStatus)]
-            }`}>
+            }`}
+          >
             <Image
-              src={`/icons/shipping-${order.deliveryStatus.slice(0,1).toLocaleLowerCase()}.svg`}
+              src={`/icons/shipping-${order.deliveryStatus
+                .slice(0, 1)
+                .toLocaleLowerCase()}.svg`}
               width={24}
               height={24}
               alt={order.paymentStatus}
               className="sm:flex hidden"
             />
             <Image
-              src={`/icons/shipping-${order.deliveryStatus.slice(0,1).toLocaleLowerCase()}.svg`}
+              src={`/icons/shipping-${order.deliveryStatus
+                .slice(0, 1)
+                .toLocaleLowerCase()}.svg`}
               width={16}
               height={16}
               alt={order.paymentStatus}
@@ -186,14 +217,25 @@ const MyOrderCard = ({
           </div>
         </div>
         <div>
-          <p className="font-avenir text-[15px] sm:text-[16px] xl:text-[18px] text-balance">
-            Arriving at{" "}
-            <span className="font-semibold">
-              {" "}
-              {formatToDayMonth(order.deliveredAt)},
-            </span>{" "}
-            7:00am to 8:00pm.
-          </p>
+          {order.deliveryStatus === "delivered" ? (
+            <>
+              <p className="font-avenir text-[15px] sm:text-[16px] xl:text-[18px] text-balance font-semibold">
+                Delivered
+              </p>
+              <p className="font-avenir text-[15px] sm:text-[16px] xl:text-[18px] text-balance font-semibold">
+                {formatToDayMonth(order.deliveredAt)}
+              </p>
+            </>
+          ) : (
+            <p className="font-avenir text-[15px] sm:text-[16px] xl:text-[18px] text-balance">
+              Arriving at{" "}
+              <span className="font-semibold">
+                {" "}
+                {formatToDayMonth(order.deliveredAt)},
+              </span>{" "}
+              7:00am to 8:00pm.
+            </p>
+          )}
           <div className="mt-1 md:mt-4 ">
             <div className="border-y-[0.5px] border-black/10 w-full flex justify-end ">
               <p className="p-2 font-avenir  text-[12px] md:text-[15px] text-black/70 font-semibold ">

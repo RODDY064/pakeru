@@ -18,12 +18,16 @@ export async function POST(request: Request) {
 
   const result = await backendResponse.json();
 
+  console.log(result)
+
   const cookieHeader = backendResponse.headers.get("set-cookie");
 
   const response = NextResponse.json(
-    { ...result, sessionId },
+    { ...result  },
     { status: backendResponse.status }
   );
+
+
 
   if (cookieHeader) {
     cookieHeader.split(/,(?=\s*\w+\s*=)/).forEach((cookie) => {

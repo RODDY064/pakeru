@@ -140,6 +140,7 @@ export function useOrdersWebhook() {
             ),
             description: `Order ${newOrder.IDTrim} from ${newOrder.user.firstname} ${newOrder.user.lastname}`,
             variant: "success",
+            allowRoutesOnly:['/admin/*']
           });
         }
 

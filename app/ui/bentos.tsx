@@ -21,9 +21,12 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full  relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src={galleries[0]?.image?.url as string ?? "/images/image-fallback.png"}
+                    src={
+                      (galleries[0]?.image?.url as string) ??
+                      "/images/image-fallback.png"
+                    }
                     fill
-                    alt={galleries[0]?.title}
+                    alt={galleries[0]?.name}
                     className="object-cover "
                   />
                 </div>,
@@ -31,7 +34,8 @@ export default function Bentos() {
               rounded={64}
               items={1}
               className="px-2 absolute"
-              name={galleries[0]?.title}
+              name={galleries[0]?.name}
+              id={galleries[0]._id as string}
             />
           </div>
           <div className="w-full  h-[200px] xl:h-[270px]   items-center justify-center">
@@ -40,18 +44,24 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src={(galleries[1]?.image?.url as string) ?? "/images/image-fallback.png"}
+                    src={
+                      (galleries[1]?.image?.url as string) ??
+                      "/images/image-fallback.png"
+                    }
                     fill
-                    alt={galleries[1]?.title}
+                    alt={galleries[1]?.name}
                     className="object-cover"
                     sizes="100vw"
                   />
                 </div>,
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src={(galleries[2]?.image?.url as string) ?? "/images/image-fallback.png"}
+                    src={
+                      (galleries[2]?.image?.url as string) ??
+                      "/images/image-fallback.png"
+                    }
                     fill
-                    alt={galleries[2]?.title}
+                    alt={galleries[2]?.name}
                     className="object-cover"
                     sizes="100vw"
                   />
@@ -61,7 +71,8 @@ export default function Bentos() {
               items={2}
               className="w-full h-full mt-2"
               gap={16}
-              name={[galleries[1]?.title, galleries[2]?.title]}
+              name={[galleries[1]?.name, galleries[2]?.name]}
+              id={[galleries[1]?._id as string, galleries[2]?._id as string]}
             />
           </div>
           <div className="w-full  h-[200px] xl:h-[300px]   items-center justify-center">
@@ -71,9 +82,12 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src={(galleries[3]?.image?.url as string) ?? "/images/image-fallback.png"}
+                    src={
+                      (galleries[3]?.image?.url as string) ??
+                      "/images/image-fallback.png"
+                    }
                     fill
-                    alt={galleries[3]?.title}
+                    alt={galleries[3]?.name}
                     className="object-cover"
                     sizes="100vw"
                   />
@@ -83,7 +97,8 @@ export default function Bentos() {
               reverse={true}
               className="w-full h-full mt-3"
               gap={16}
-              name={galleries[3]?.title}
+              name={galleries[3]?.name}
+              id={galleries[3]?._id as string}
             />
           </div>
         </div>
@@ -97,18 +112,24 @@ export default function Bentos() {
                 render={[
                   <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                     <Image
-                      src={(galleries[4]?.image?.url as string) ?? "/images/image-fallback.png"}
+                      src={
+                        (galleries[4]?.image?.url as string) ??
+                        "/images/image-fallback.png"
+                      }
                       fill
-                      alt={galleries[4]?.title}
+                      alt={galleries[4]?.name}
                       className="object-cover"
                       sizes="100vw"
                     />
                   </div>,
                   <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                     <Image
-                      src={(galleries[5]?.image?.url as string) ?? "/images/image-fallback.png"}
+                      src={
+                        (galleries[5]?.image?.url as string) ??
+                        "/images/image-fallback.png"
+                      }
                       fill
-                      alt={galleries[5]?.title}
+                      alt={galleries[5]?.name}
                       className="object-cover"
                       sizes="100vw"
                     />
@@ -117,7 +138,8 @@ export default function Bentos() {
                 items={2}
                 className="w-full h-full "
                 gap={16}
-                 name={[galleries[4]?.title, galleries[5]?.title]}
+                name={[galleries[4]?.name, galleries[5]?.name]}
+                id={[galleries[4]?._id as string, galleries[5]?._id as string]}
               />
             </div>
           </div>
@@ -126,9 +148,12 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src={(galleries[6]?.image?.url as string) ?? "/images/image-fallback.png"}
+                    src={
+                      (galleries[6]?.image?.url as string) ??
+                      "/images/image-fallback.png"
+                    }
                     fill
-                    alt={galleries[6]?.title}
+                    alt={galleries[6]?.name}
                     className="object-cover"
                     sizes="100vw"
                   />
@@ -139,7 +164,8 @@ export default function Bentos() {
               split={splits}
               direction="column"
               className="px-0 mx-3"
-              name={galleries[6]?.title}
+              name={galleries[6]?.name}
+              id={galleries[6]?._id as string}
             />
           </div>
         </div>
@@ -149,9 +175,12 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src={(galleries[7]?.image?.url as string) ?? "/images/image-fallback.png"}
+                    src={
+                      (galleries[7]?.image?.url as string) ??
+                      "/images/image-fallback.png"
+                    }
                     fill
-                    alt={galleries[7]?.title}
+                    alt={galleries[7]?.name}
                     className="object-cover"
                     sizes="100vw"
                   />
@@ -160,7 +189,8 @@ export default function Bentos() {
               rounded={64}
               items={1}
               className="px-2"
-               name={galleries[7]?.title}
+              name={galleries[7]?.name}
+              id={galleries[7]?._id as string}
             />
           </div>
           <div className="w-full  h-[200px] xl:h-[270px]   items-center justify-center">
@@ -169,18 +199,24 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                     src={(galleries[8]?.image?.url as string) ?? "/images/image-fallback.png"}
+                    src={
+                      (galleries[8]?.image?.url as string) ??
+                      "/images/image-fallback.png"
+                    }
                     fill
-                    alt={galleries[8]?.title}
+                    alt={galleries[8]?.name}
                     className="object-cover"
                     sizes="100vw"
                   />
                 </div>,
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                    src={(galleries[9]?.image?.url as string) ?? "/images/image-fallback.png"}
-                      fill
-                      alt={galleries[9]?.title}
+                    src={
+                      (galleries[9]?.image?.url as string) ??
+                      "/images/image-fallback.png"
+                    }
+                    fill
+                    alt={galleries[9]?.name}
                     className="object-cover"
                     sizes="100vw"
                   />
@@ -190,7 +226,8 @@ export default function Bentos() {
               split={splits}
               className="w-full h-full mt-2"
               gap={16}
-              name={[galleries[8]?.title, galleries[9]?.title]}
+              name={[galleries[8]?.name, galleries[9]?.name]}
+              id={[galleries[8]?._id as string, galleries[9]?._id as string]}
             />
           </div>
           <div className="w-full  h-[200px] xl:h-[300px]   items-center justify-center">
@@ -202,9 +239,12 @@ export default function Bentos() {
               render={[
                 <div className="text-black w-full h-full relative overflow-hidden rounded-[64px] p-6">
                   <Image
-                     src={(galleries[10]?.image?.url as string) ?? "/images/image-fallback.png"}
+                    src={
+                      (galleries[10]?.image?.url as string) ??
+                      "/images/image-fallback.png"
+                    }
                     fill
-                    alt={galleries[10]?.title}
+                    alt={galleries[10]?.name}
                     className="object-cover"
                     sizes="100vw"
                   />
@@ -212,7 +252,8 @@ export default function Bentos() {
               ]}
               className="w-full h-full mt-3"
               gap={16}
-              name={galleries[10]?.title}
+              name={galleries[10]?.name}
+              id={galleries[1]?._id as string}
             />
           </div>
         </div>

@@ -151,6 +151,8 @@ interface FilterQueries {
   category?: string[];
   sort_by?: string;
   price?: string;
+  products?:string[],
+  name?:string
 }
 
 const sortMapping: { [key: string]: string } = {
@@ -869,6 +871,8 @@ export const useCartStore: StateCreator<
       const query = new URLSearchParams();
       state.loadCategories();
 
+      query.append("status","active")
+
       if (page && page !== 1) {
         query.append("page", page.toString());
       }
@@ -878,9 +882,18 @@ export const useCartStore: StateCreator<
 
       // Add filter parameters
       if (filters) {
+
+        if(filters.name){
+          query.append("name", filters.name)
+        }
+
         // Category filter - join multiple categories with comma
         if (filters?.category && filters.category.length > 0) {
           query.append("category", filters.category.join(","));
+        }
+
+        if(filters.products && filters.products.length > 0){
+          query.append("id", filters.products.join(","));
         }
 
         // Sort filter - convert to API format
@@ -915,6 +928,7 @@ export const useCartStore: StateCreator<
 
       // Fetch products from API with query parameters
       const response = await fetch(`/api/products?${query.toString()}`, {
+        cache:"no-cache"
       });
 
       if (!response.ok) {

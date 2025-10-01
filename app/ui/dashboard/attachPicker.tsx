@@ -6,8 +6,10 @@ import React, { useEffect, useState } from "react";
 
 export default function AttachPicker({
   type,
+  productsLink
 }: {
   type: "products" | "categories";
+  productsLink?:string[]
 }) {
   const [manageTable, setManageTabel] = useState(false);
 
@@ -40,101 +42,20 @@ export default function AttachPicker({
         </div>
       </div>
       {manageTable && (
-        <MangeTable type={type} setManageTabel={setManageTabel} />
+        <MangeTable type={type} setManageTabel={setManageTabel} productsLinked={productsLink} />
       )}
     </>
   );
 }
 
-// const MangeTable = ({
-//   type,
-//   setManageTabel,
-// }: {
-//   type: "products" | "categories";
-//   setManageTabel: React.Dispatch<React.SetStateAction<boolean>>;
-// }) => {
-//   const { loadProducts, products, cartState,isCategoriesLoading, loadCategories  } = useBoundStore();
-//   const { get } = useApiClient();
-  
-
-//   useEffect(() => {
-//     loadProducts(false, 1);
-//   }, []);
-
-//   return (
-//     <div className="fixed top-0 left-0 bg-black/90 z-90 w-full h-full flex flex-col items-center justify-center">
-//       <div className="w-[40%] h-[50vh] bg-white p-10 rounded-4xl">
-//         <div className="flex items-center justify-between">
-//           <p className="font-avenir text-lg font-semibold">
-//             Manage {type === "products" ? "Product" : "Category"}
-//           </p>
-//           <div
-//             onClick={() => setManageTabel(false)}
-//             className="flex gap-1 items-center cursor-pointer"
-//           >
-//             <div className="relative flex items-center justify-center">
-//               <div className="w-[16px] h-[1px] bg-black/60 rotate-45"></div>
-//               <div className="w-[16px] h-[1px] bg-black/60 rotate-[-45deg] absolute"></div>
-//             </div>
-//             <p className="font-avenir text-sm pt-1 text-black/60">CLOSE</p>
-//           </div>
-//         </div>
-//         <div className="mt-4 h-[70%]">
-//           <input
-//             placeholder={`Search for ${type}`}
-//             className="w-full h-12 border border-black/20 p-3 px-4 font-avenir rounded-xl mt-2 focus:outline-none"
-//           />
-//           <div className="w-full   mt-6 h-full  border-t-[2px] border-black/20">
-//             {(cartState === "loading" || cartState === "idle") && (
-//               <>
-//                 <div className="w-full h-24 flex items-center justify-center pt-6">
-//                   <Image
-//                     src="/icons/loader.svg"
-//                     width={24}
-//                     height={24}
-//                     alt="laoding icon"
-//                   />
-//                 </div>
-//               </>
-//             )}
-//             {cartState === "success" && (
-//               <>
-//                 <div className="w-full h-[85%] overflow-auto  mt-6 border rounded-2xl border-black/20">
-//                   {products.map((product,index) => (
-//                     <div key={product._id} className={`flex  justify-between ${index === products.length -1 ? "":"border-b border-black/20"}`}>
-//                       <div className="flex">
-//                         <div className="p-3 px-6 border-r border-black/30">
-//                           <p className="font-avenir text-md">{index + 1}</p>
-//                         </div>
-//                         <div className="p-3   px-6 items-center gap-3 flex">
-//                           <div className="size-10 rounded-md relative border border-black/20 overflow-hidden">
-//                             <Image src={product.mainImage.url} fill className="object-cover" sizes="100vw" alt={product.name}/>
-//                           </div>
-//                           <p className="font-avenir text-md">{product.name}</p>
-//                         </div>
-//                       </div>
-//                       <div className="p-3 px-6 border-l border-black/30 flex items-center justify-center">
-//                         <div className="size-5 border cursor-pointer rounded-full p-[2px]">
-//                           <div className="size-full rounded-full bg-black"></div>
-//                         </div>
-//                       </div>
-//                     </div>
-//                   ))}
-//                 </div>
-//               </>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
 
 const MangeTable = ({
   type,
   setManageTabel,
+  productsLinked
 }: {
   type: "products" | "categories";
+  productsLinked?:string[]
   setManageTabel: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const {
@@ -170,7 +91,7 @@ const MangeTable = ({
   );
 
   return (
-    <div className="fixed top-0 left-0 bg-black/90 z-90 w-full h-full flex flex-col items-center justify-center">
+    <div className="fixed top-0 left-0 bg-black/90 z-90 w-full h-full right-0 flex flex-col items-center justify-center">
       <div className="w-[40%] h-[50vh] bg-white p-10 rounded-4xl">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -239,7 +160,7 @@ const MangeTable = ({
                       </div>
                       <div className="p-3 px-6 border-l border-black/30 flex items-center justify-center">
                         <div className="size-5 border cursor-pointer rounded-full p-[2px]">
-                          <div className="size-full rounded-full bg-black"></div>
+                         {productsLinked?.includes(item._id) && <div className="size-full rounded-full bg-black"></div>}
                         </div>
                       </div>
                     </div>

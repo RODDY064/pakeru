@@ -180,7 +180,7 @@ function AccountContent({ children }: { children: React.ReactNode }) {
             )}
             <div className="h-full flex px-10 items-center relative border-r border-black/10">
               <div
-                onClick={() => signOut()}
+                onClick={async() => await signOut()}
                 className="py-2 px-8 bg-black text-white rounded cursor-pointer"
               >
                 Sign out

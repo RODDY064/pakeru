@@ -4,6 +4,7 @@ import { CartItemType } from "@/store/cart";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
+import Cedis from "./cedis";
 
 export default function CartCard({ cartData }: { cartData: CartItemType }) {
   const {
@@ -44,7 +45,7 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
       <div className="w-full md:w-[50%] h-[150px] max-sm:gap-3 md:h-auto  flex flex-none p-2">
         <div className="w-[50%] md:w-full h-full bg-[#f2f2f2] relative">
           <Image
-            src={cartData?.mainImage.url??"/images/image-fallback.png"}
+            src={cartData?.mainImage.url ?? "/images/image-fallback.png"}
             fill
             className="object-cover"
             alt="hero"
@@ -57,9 +58,16 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
           <p className="mt-2 mb-1 font-avenir font-[400] text-sm md:text-md">
             {cartData?.name.toLocaleUpperCase()}
           </p>
-          <p className="font-avenir text-md font-[400] text-[16px] md:text-md text-black/50  ">
+          {/* <p className="font-avenir text-md font-[400] text-[16px] md:text-md text-black/50  ">
             GHS {cartData?.price}
-          </p>
+          </p> */}
+          <div className="flex gap-0.5 items-center text-black/50">
+            <Cedis cedisStyle="pt-[4px] opacity-50" className="text-[16px] md:text-md  " />
+            <p className=" font-avenir font-[400] text-[16px] md:text-md text-black/50  pt-[7px]">
+              {cartData?.price}
+            </p>
+          </div>
+       
         </div>
       </div>
       <div className="w-[1px] h-full bg-black/10 ml-1 hidden md:flex"></div>
@@ -70,9 +78,12 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
             <p className="mt-2 mb-1 font-avenir font-[400] text-md">
               {cartData?.name.toLocaleUpperCase()}
             </p>
-            <p className="font-avenir text-md font-[400] text-[16px] md:text-md text-black/50  ">
-              GHS {cartData?.price}
+            <div className="flex gap-0.5 items-center text-black/50">
+            <Cedis cedisStyle="pt-[4px] opacity-50" className="text-[16px] md:text-md  " />
+            <p className=" font-avenir font-[400] text-[16px] md:text-md text-black/50  pt-[7px]">
+              {cartData?.price}
             </p>
+          </div>
           </div>
           <div className="w-full flex flex-col lg:flex-row gap-1  mt-2 lg:items-end ">
             <p
@@ -149,8 +160,8 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
           </div>
         </div>
         <div className="w-full flex border-t border-black/10">
-          <div className="w-full h-12 flex items-center justify-center border-r border-black/10 cursor-pointer gap-1.5">
-            <div onClick={() => addBookmark(cartData)} className="mt-[3.2px]">
+          <div onClick={() => addBookmark(cartData)} className="w-full h-12 flex items-center justify-center border-r border-black/10 cursor-pointer gap-1.5">
+            <div  className="mt-[3.2px]">
               <p className="text-sm font-[400] font-avenir">BOOKMARK</p>
             </div>
             <Image

@@ -27,6 +27,7 @@ export type OrdersData = {
     landmark?: string;
     region: string;
     town: string;
+    phoneNumber:string
   };
   items: {
     numOfItems: number;
@@ -438,7 +439,7 @@ const apiService = {
         }
       );
 
-      console.log(response, 'order');
+      // console.log(response, 'order');
 
      return transformApiOrderToOrdersData(response.order)
     } catch (error) {
@@ -927,7 +928,11 @@ export const useOrdersStore: StateCreator<
 
     // Toast notifications
     toast.promise(updatePromise, {
-      loading: getLoadingMessage(updates),
+      loading: {
+        title:getLoadingMessage(updates).title,
+        description:getLoadingMessage(updates).description,
+        duration:Infinity
+      },
       success: (updatedOrder) => {
         const orderIdentifier = generateTrimmedId(orderId);
         const toastMessage = getToastMessages(updates);

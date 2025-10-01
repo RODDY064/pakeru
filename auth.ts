@@ -101,6 +101,7 @@ export class AuthService {
       firstname: data.user.firstName,
       lastname: data.user.lastName,
       role: data.user.role || "user",
+      image:data.user.rofilePictureUrl,
       accessToken: data.accessToken,
       refreshToken,
       refreshTokenExpiresAt,
@@ -113,8 +114,8 @@ export class AuthService {
     email: string,
     firstName: string,
     lastName: string,
-    profileId:string,
-    image?:string,
+    profileId: string,
+    image?: string
   ) {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/v1/auth/google`,
@@ -126,7 +127,7 @@ export class AuthService {
       }
     );
 
-    console.log(response.statusText, "response");
+    // console.log(response.statusText, "response");
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -193,6 +194,7 @@ export class AuthService {
       refreshToken,
       refreshTokenExpiresAt,
       expiresAt,
+      image:data.user.image
     };
   }
 }
@@ -209,6 +211,7 @@ declare module "next-auth" {
     expiresAt: number;
     refreshTokenExpiresAt?: number;
     refreshType?: string;
+    image?:string
   }
 
   interface Session {
@@ -218,6 +221,7 @@ declare module "next-auth" {
       firstname: string;
       lastname: string;
       role: string;
+       image?:string
     };
     accessToken: string;
     refreshToken?: string;
@@ -239,6 +243,7 @@ declare module "next-auth" {
       firstname: string;
       lastname: string;
       role: string;
+       image?:string
     };
     error?: "RefreshTokenError" | "TokenExpiredError";
   }
@@ -258,7 +263,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
     Credentials({
-      name: "credentials",
+      name: "Credentials",
       credentials: {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
@@ -267,10 +272,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           const result = SignInType.safeParse(credentials);
           if (!result.success) {
-            const errorMessage = result.error.errors
-              .map((err) => err.message)
-              .join(", ");
-            throw new Error(errorMessage);
+            throw new Error(
+              result.error.errors.map((e) => e.message).join(", ")
+            );
           }
 
           const { username, password } = credentials as {
@@ -279,32 +283,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           };
 
           const user = await AuthService.authenticate(username, password);
-
-          if (!user) {
-            throw new Error("Invalid credentials");
-          }
-
-          const safeUsername = user.email ?? user._id;
-          const safeFirstname = user.firstname ?? "";
-          const safeLastname = user.lastname ?? "";
-          const safeRole = user.role ?? "user";
-
+          if (!user) return null;
           return {
             _id: user._id,
-            username: safeUsername,
-            firstname: safeFirstname,
-            lastname: safeLastname,
-            role: safeRole,
+            username: user.email ?? user._id,
+            firstname: user.firstname ?? "",
+            lastname: user.lastname ?? "",
+            role: user.role ?? "user",
             accessToken: user.accessToken,
             expiresAt: user.expiresAt,
             refreshToken: user.refreshToken,
             refreshTokenExpiresAt: user.refreshTokenExpiresAt,
           };
-        } catch (error) {
-          console.error("Authorization failed:", error);
-          throw new Error(
-            error instanceof Error ? error.message : "Authentication failed"
-          );
+        } catch (err) {
+          console.error("Authorization failed:", err);
+          return null; 
         }
       },
     }),
@@ -313,6 +306,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: "/sign-in",
     signOut: "/sign-in",
+    error: "/sign-in"
   },
 
   callbacks: {
@@ -331,7 +325,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             firstName,
             lastName,
             user.id!,
-            user.image!,
+            user.image!
           );
 
           // Attach tokens to user object for jwt callback
@@ -345,6 +339,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           (user as any).refreshTokenExpiresAt =
             googleUser.refreshTokenExpiresAt;
           (user as any).expiresAt = googleUser.expiresAt;
+          (user as any).profilePictureUrl = googleUser.image
 
           return true;
         } catch (error) {
@@ -428,18 +423,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
 
     async session({ session, token }): Promise<Session> {
-      session.error =
-        token.error === "RefreshTokenError" ||
-        token.error === "TokenExpiredError"
-          ? token.error
-          : undefined;
+      session.error = token.error === "RefreshTokenError" || token.error === "TokenExpiredError" ? token.error : undefined;
       session.user = (token.user as any) ?? {};
       session.accessToken = (token.accessToken as string) ?? "";
       session.expiresAt = (token.expiresAt as number) ?? 0;
       session.refreshToken = token.refreshToken as string | undefined;
-      session.refreshTokenExpiresAt = token.refreshTokenExpiresAt as
-        | number
-        | undefined;
+      session.refreshTokenExpiresAt = token.refreshTokenExpiresAt as | number | undefined;
 
       return session;
     },

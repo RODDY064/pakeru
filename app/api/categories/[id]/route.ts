@@ -7,7 +7,7 @@ export async function DELETE(
 ) {
   try {
     const { id:categoryId } = await params;
-    console.log(categoryId)
+    // console.log(categoryId)
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories/${categoryId}`;
 
     const incomingHeaders: Record<string, string> = {};

@@ -34,6 +34,7 @@ async function makeApiRequest(
     method,
     headers,
     body,
+    cache:"no-store"
   });
 
   let data: any;

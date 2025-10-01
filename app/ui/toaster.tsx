@@ -8,14 +8,14 @@ import { usePathname } from "next/navigation";
 let blockedRoutes: string[] = [];
 
 function shouldBlockToast(customBlockedRoutes?: string[]): boolean {
-  if (typeof window === 'undefined') return false;
-  
+  if (typeof window === "undefined") return false;
+
   const currentPath = window.location.pathname;
   const routesToCheck = customBlockedRoutes || blockedRoutes;
-  
-  return routesToCheck.some(route => {
+
+  return routesToCheck.some((route) => {
     // Support exact match and wildcard patterns
-    if (route.endsWith('*')) {
+    if (route.endsWith("*")) {
       return currentPath.startsWith(route.slice(0, -1));
     }
     return currentPath === route;
@@ -73,15 +73,19 @@ function Toast(props: ToastProps & { position?: string }) {
       className={`
         ${animationClass}  font-avenir inline-block self-start rounded-[26px] shadow-lg 
         ${variantStyles[variant]} w-full md:max-w-[370px] border-[0.5px]
-        items-center px-3 transition-all duration-300 ${description ? "py-3 px-4" : "py-2"}
+        items-center px-3 transition-all duration-300 ${
+          description ? "py-3 px-4" : "py-2"
+        }
         toast-item
       `}
-      onClick={() => sonnerToast.dismiss(id)}>
+      onClick={() => sonnerToast.dismiss(id)}
+    >
       <div
         className={`flex flex-1  ${
           description ? "items-start" : " items-center"
         }`}
-        onClick={(e) => e.stopPropagation()}>
+        onClick={(e) => e.stopPropagation()}
+      >
         {variant === "loading" && (
           <div className="mr-1.5">
             <Image
@@ -147,12 +151,33 @@ type BaseToastProps = Omit<ToastProps, "id"> & {
   duration?: number;
   position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   blockRoutes?: string[];
+  allowRoutesOnly?: string[];
 };
+
+function getCurrentPath() {
+  return window.location.pathname; // or use router if in Next.js
+}
+
+function shouldAllowToast(allowRoutesOnly?: string[]): boolean {
+  if (typeof window === "undefined") return true;
+  if (!allowRoutesOnly || allowRoutesOnly.length === 0) return true; 
+
+  const currentPath = window.location.pathname;
+
+  return allowRoutesOnly.some((route) => {
+    if (route.endsWith("*")) {
+      return currentPath.startsWith(route.slice(0, -1));
+    }
+    return currentPath === route;
+  });
+}
 
 // Main toast function with call signature
 function createToast(props: BaseToastProps) {
+
   if (shouldBlockToast(props.blockRoutes)) return;
-  
+  if (!shouldAllowToast(props.allowRoutesOnly)) return;
+
   const {
     variant = "default",
     duration,
@@ -237,19 +262,23 @@ export const toast = Object.assign(createToast, {
       // Still execute the promise but without UI feedback
       return promise;
     }
-    
+
     const {
       loading,
       success,
       error,
-       duration: defaultDuration,
+      duration: defaultDuration,
       position = "top-right",
       blockRoutes,
     } = options;
     const animationClass = getAnimationClass(position);
 
     // Wrapper to render custom Toast for each state
-    const renderCustom = (content: any, variant: ToastProps["variant"],stateDuration?: number) => {
+    const renderCustom = (
+      content: any,
+      variant: ToastProps["variant"],
+      stateDuration?: number
+    ) => {
       const props = typeof content === "string" ? { title: content } : content;
 
       const toastDuration = stateDuration ?? defaultDuration;
@@ -270,7 +299,11 @@ export const toast = Object.assign(createToast, {
     // Show loading toast using fully custom render (no Sonner default spinner)
     const loadingProps =
       typeof loading === "string" ? { title: loading } : loading;
-    const loadingId = renderCustom(loadingProps, "loading",loadingProps.duration);
+    const loadingId = renderCustom(
+      loadingProps,
+      "loading",
+      loadingProps.duration
+    );
 
     try {
       const result = await promise;
@@ -337,26 +370,26 @@ export const toast = Object.assign(createToast, {
   // Utility methods
   dismiss: (id?: string | number) => sonnerToast.dismiss(id),
   dismissAll: () => sonnerToast.dismiss(),
-  
+
   // Route management - clean API for controlling toast visibility
   setBlockedRoutes: (routes: string[]) => {
     blockedRoutes = routes;
   },
-  
+
   addBlockedRoute: (route: string) => {
     if (!blockedRoutes.includes(route)) {
       blockedRoutes.push(route);
     }
   },
-  
+
   removeBlockedRoute: (route: string) => {
-    blockedRoutes = blockedRoutes.filter(r => r !== route);
+    blockedRoutes = blockedRoutes.filter((r) => r !== route);
   },
-  
+
   clearBlockedRoutes: () => {
     blockedRoutes = [];
   },
-  
+
   getBlockedRoutes: () => [...blockedRoutes],
 });
 

@@ -25,7 +25,6 @@ type SignUpSchema = z.infer<typeof signUp>;
 export default function SigUp() {
   const [signUpState, setSignState] = useState<"loading" | "idle" | "submitted"| "error">("idle")
   const { setUser  } = useBoundStore()
-  const [errorMessage, setErrorMessage] = useState(null)
   const {
     register,
     handleSubmit,

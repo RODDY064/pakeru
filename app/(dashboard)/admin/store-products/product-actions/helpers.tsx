@@ -45,6 +45,9 @@ export class ProductAPIService {
     originalColors: ProductColor[],
     patch: ReturnType<typeof useApiClient>["patch"]
   ): Promise<any> {
+
+    console.log(productId,'id')
+
     const changes = ProductChangeDetector.detectChanges(
       originalData,
       originalColors,
@@ -52,11 +55,12 @@ export class ProductAPIService {
       currentColors
     );
 
+
     if (!changes.hasChanges) {
       return { message: "No changes to save" };
     }
 
-    console.log("Detected changes:", changes);
+    console.log("Detected changes:", changes.formChanges);
 
     const hasNewFiles = [
       ...changes.colorChanges.added,
@@ -92,6 +96,8 @@ export class ProductAPIService {
         { partial: true }
       );
     }
+
+    console.log(updatePayload,'update payload')
 
     const updatePromise = patch(`/products/${productId}`, updatePayload, {
       requiresAuth: true,

@@ -2,6 +2,7 @@
 
 import Button from "@/app/ui/button";
 import CartCard from "@/app/ui/cartCard";
+import Cedis from "@/app/ui/cedis";
 import Icon from "@/app/ui/Icon";
 import { cn } from "@/libs/cn";
 import { handleNavigation } from "@/libs/navigate";
@@ -17,19 +18,19 @@ export default function YourCart() {
   const { isMobile, cartItems, setRouteChange, getCartStats } = useBoundStore();
   const totalRef = useRef<HTMLDivElement>(null);
   const cartDiv = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
-  const router = useRouter()
-  const [cartStat,setCartStat] = useState({
-    totalPrice:0,
-    totalItems:0
-  })
+  const router = useRouter();
+  const [cartStat, setCartStat] = useState({
+    totalPrice: 0,
+    totalItems: 0,
+  });
 
-  const handleLink = (e:any)=>{
-     handleNavigation(e, "/shop", router, setRouteChange, 200)
-  }
+  const handleLink = (e: any) => {
+    handleNavigation(e, "/shop", router, setRouteChange, 200);
+  };
 
-  const handlePayment = (e:any)=>{
-     handleNavigation(e, "/payment", router, setRouteChange, 200)
-  }
+  const handlePayment = (e: any) => {
+    handleNavigation(e, "/payment", router, setRouteChange, 200);
+  };
 
   useGSAP(() => {
     if (isMobile) return;
@@ -51,15 +52,14 @@ export default function YourCart() {
     });
   });
 
-  useEffect(()=>{
-   const { totalItems, totalPrice} = getCartStats()
+  useEffect(() => {
+    const { totalItems, totalPrice } = getCartStats();
 
-   setCartStat({
-    totalItems,
-    totalPrice
-   })
-
-  },[getCartStats,cartItems])
+    setCartStat({
+      totalItems,
+      totalPrice,
+    });
+  }, [getCartStats, cartItems]);
 
   return (
     <div className="w-full min-h-screen flex flex-col items-center text-black ">
@@ -80,7 +80,10 @@ export default function YourCart() {
                   </p>
                 </div>
               </div>
-              <p onClick={handleLink} className="hidden md:flex md:text-sm font-[300] underline underline-offset-3 cursor-pointer">
+              <p
+                onClick={handleLink}
+                className="hidden md:flex md:text-sm font-[300] underline underline-offset-3 cursor-pointer"
+              >
                 CONTINUE SHOPPING
               </p>
             </div>
@@ -89,7 +92,10 @@ export default function YourCart() {
               <>
                 <div className="mt-4">
                   {cartItems?.map((cart) => (
-                    <CartCard key={cart._id + cart.selectedColor} cartData={cart} />
+                    <CartCard
+                      key={cart._id + cart.selectedColor}
+                      cartData={cart}
+                    />
                   ))}
                 </div>
               </>
@@ -127,29 +133,45 @@ export default function YourCart() {
         >
           <div className="w-full">
             <div className="w-full flex items-center justify-between">
-              <p className="font-avenir font-[400] text-md">SUBTOTAL</p>
-              <p className="font-avenir font-[400] text-md">GHS {cartStat.totalPrice.toFixed(2)}</p>
+              <p className="font-avenir font-[400] text-md pt-[5px]">SUBTOTAL</p>
+              <div className="flex gap-0.5 items-center">
+                <Cedis cedisStyle="pt-[4px] opacity-90" />
+                <p className=" font-avenir font-[400] text-md pt-[7px]">
+                  {cartStat?.totalPrice}
+                </p>
+              </div>
             </div>
             <div className="w-full flex items-center justify-between mt-1 text-black/50">
-              <p className="font-avenir font-[400] text-md">DISCOUNT</p>
-              <p className="font-avenir font-[400] text-md">GHS 0.00</p>
+              <p className="font-avenir font-[400] text-md pt-[5px]">DISCOUNT</p>
+              <div className="flex gap-0.5 items-center">
+                <Cedis cedisStyle="pt-[4px] opacity-50" />
+                <p className=" font-avenir text-black/50 font-[400] text-md pt-[6px]">
+                  0.00
+                </p>
+              </div>
             </div>
             <p className="text-sm md:text-sm font-avenir font-[300] md:font-[400] my-2 text-black/50">
               Shipping will be calculated base on your address.
             </p>
             <div className="w-full flex items-center justify-between my-6">
-              <p className="font-avenir font-[400] text-md">TOTAL</p>
-              <p className="font-avenir font-[400] text-md">GHS {cartStat.totalPrice.toFixed(2)}</p>
+              <p className="font-avenir font-[400] text-md pt-[5px]">TOTAL</p>
+              <div className="flex gap-0.5 items-center">
+                <Cedis cedisStyle="pt-[3px] opacity-90" />
+                <p className=" font-avenir font-[400] text-md pt-[7px]">
+                  {cartStat?.totalPrice}
+                </p>
+              </div>
             </div>
             <Link href="/payment">
-            <div  className="mt-4 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black   border border-black/20  group/add cursor-pointer transition-all">
-              <p className="font-avenir font-[400] text-sm pt-[4px] text-white ">
-                PROCEED TO CHECHOUT
-              </p>
-            </div></Link>
+              <div className="mt-4 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black   border border-black/20  group/add cursor-pointer transition-all">
+                <p className="font-avenir font-[400] text-sm pt-[4px] text-white ">
+                  PROCEED TO CHECHOUT
+                </p>
+              </div>
+            </Link>
             <div className="px-3 py-4 rounded-md bg-gray-100 my-4">
               <p className="text-sm font-avenir text-black/60 font-[400]">
-                By selecting any Express Payment option, you confirm that you
+                By selecting Procced to checkout button, you confirm that you
                 have read, understood and accepted our{" "}
                 <span className="underline underline-offset-4 cursor-pointer">
                   Terms and Conditions
@@ -167,7 +189,7 @@ export default function YourCart() {
                 <div className="">
                   <p className="font-avenir font-[400] text-md ">Payment</p>
                   <p className="font-avenir text-sm text-black/50 my-1 ">
-                    Mobile money or Credit credit
+                    Mobile money or Credit card
                   </p>
                 </div>
               </div>
@@ -183,7 +205,7 @@ export default function YourCart() {
                     Shipping & Delivery
                   </p>
                   <p className="font-avenir text-sm text-black/50 my-1 ">
-                    Mobile money or Credit credit
+                    Shipment fees are paid by the customer and vary based on delivery distance.
                   </p>
                 </div>
               </div>

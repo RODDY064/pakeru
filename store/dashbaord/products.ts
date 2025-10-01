@@ -159,7 +159,6 @@ export type StoreProductStore = {
 // Transform API product to local format
 const transformApiProduct = (apiProduct: any): ProductData => {
   const now = new Date();
-
   return {
     _id: apiProduct._id,
     name: apiProduct.name || "Untitled Product",
@@ -331,7 +330,10 @@ export const useStoreProductStore: StateCreator<
       console.log(query.toString(), "Query parameters");
 
       const result = await apiGet<{ data: ProductData[]; total?: number }>(
-        `/products?${query.toString()}`
+        `/products?${query.toString()}`,
+        {
+          cache:"no-store"
+        }
       );
 
       if (!result || !Array.isArray(result.data)) {
@@ -391,7 +393,9 @@ export const useStoreProductStore: StateCreator<
       }
 
       // Fetch single product from API
-      const result = await apiCall(`/products/${id}`, {}, true);
+      const result = await apiCall(`/products/${id}`, {
+        cache:"no-store"
+      }, true);
 
       const product = transformApiProduct(result.data || result);
 
@@ -452,15 +456,6 @@ export const useStoreProductStore: StateCreator<
     // Start with all products
     let filtered = [...storeProducts];
 
-    // Debug: Log some sample products to understand the data structure
-    if (storeProducts.length > 0) {
-      console.log("Sample product:", {
-        name: storeProducts[0].name,
-        category: storeProducts[0].category,
-        status: storeProducts[0].status,
-        totalNumber: storeProducts[0].totalNumber,
-      });
-    }
 
     // Apply status filter
     if (storeProductFilters.status && storeProductFilters.status !== "all") {

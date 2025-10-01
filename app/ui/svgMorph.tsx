@@ -2,6 +2,7 @@
 import React, { useRef, useLayoutEffect, useState } from "react";
 import { cn } from "@/libs/cn";
 import Image from "next/image";
+import Link from "next/link";
 
 interface SVGMorphProps {
   rounded?: number;
@@ -16,6 +17,7 @@ interface SVGMorphProps {
   split?: boolean;
   reverse?: boolean;
   name?: string | string[];
+  id: string | string[];
 }
 
 function getApplePath(x: number, y: number, w: number, h: number, r: number) {
@@ -47,6 +49,7 @@ export default function SVGMorph({
   split = false,
   reverse = false,
   name,
+  id,
 }: SVGMorphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -73,7 +76,9 @@ export default function SVGMorph({
   const boxWidth =
     direction === "row" ? (size.width - totalGap) / activeItems : size.width;
   const boxHeight =
-    direction === "column" ? (size.height - totalGap) / activeItems : size.height;
+    direction === "column"
+      ? (size.height - totalGap) / activeItems
+      : size.height;
 
   // Define paths
   const oneBlobPath = getApplePath(
@@ -124,14 +129,16 @@ export default function SVGMorph({
               <p className="font-avenir text-lg capitalize">{name}</p>
             </div>
             <div className="size-12 absolute z-9 bottom-6 right-8 flex items-center justify-center">
-              <div className="size-10 bg-black/5 rounded-full cursor-pointer flex items-center justify-center">
-                <Image
-                  src="/icons/bag.svg"
-                  width={24}
-                  height={24}
-                  alt="shopping bag"
-                />
-              </div>
+              <Link href={`/collections/${id}`}>
+                <div className="size-10 bg-black/5 rounded-full cursor-pointer flex items-center justify-center">
+                  <Image
+                    src="/icons/bag.svg"
+                    width={24}
+                    height={24}
+                    alt="shopping bag"
+                  />
+                </div>
+              </Link>
             </div>
           </div>
           {render[0]}
@@ -155,7 +162,11 @@ export default function SVGMorph({
                   height: boxHeight,
                 }}
               >
-                <div className={cn("w-full h-full flex flex-col items-center justify-center")}>
+                <div
+                  className={cn(
+                    "w-full h-full flex flex-col items-center justify-center"
+                  )}
+                >
                   {render[i]}
                   <div className="text-center absolute z-20 bottom-1.5 w-full h-full right-1.5 rounded-4xl flex items-center justify-center">
                     <div
@@ -164,18 +175,22 @@ export default function SVGMorph({
                       }`}
                     >
                       <div className="relative top-0 left-0">
-                        <p className="font-avenir text-lg capitalize px-3">{Array.isArray(name) ? name[i] : ""}</p>
+                        <p className="font-avenir text-lg capitalize px-3">
+                          {Array.isArray(name) ? name[i] : ""}
+                        </p>
                       </div>
                     </div>
                     <div className="size-12 absolute z-90 bottom-3 right-3 flex items-center justify-center">
-                      <div className="size-10 bg-black/5 rounded-full cursor-pointer flex items-center justify-center">
-                        <Image
-                          src="/icons/bag.svg"
-                          width={24}
-                          height={24}
-                          alt="shopping bag"
-                        />
-                      </div>
+                      <Link href={`/collections/${Array.isArray(id) ? id[i] : ""}`}>
+                        <div className="size-10 bg-black/5 rounded-full cursor-pointer flex items-center justify-center">
+                          <Image
+                            src="/icons/bag.svg"
+                            width={24}
+                            height={24}
+                            alt="shopping bag"
+                          />
+                        </div>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -211,10 +226,7 @@ export default function SVGMorph({
         </defs>
 
         {[...Array(split && !reverse ? activeItems : 1)].map((_, i) => (
-          <g
-            key={i}
-            filter="url(#goo)"
-          >
+          <g key={i} filter="url(#goo)">
             <path
               ref={(el) => {
                 pathRefs.current[i] = el;

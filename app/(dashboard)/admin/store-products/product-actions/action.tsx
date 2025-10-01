@@ -164,7 +164,7 @@ function ProductActionsContent() {
 
   const populateFormWithProduct = useCallback(
     (product: ProductData) => {
-      console.log("🔧 Populating form with product:", product._id);
+      // console.log("🔧 Populating form with product:", product._id);
 
       const formData: ProductFormData = {
         name: product.name,
@@ -241,7 +241,7 @@ function ProductActionsContent() {
       return;
     }
 
-    console.log("🚀 Starting product fetch for ID:", productID);
+    // console.log("🚀 Starting product fetch for ID:", productID);
     setLoadingProduct(true);
     setProductLoadError(null);
     setIsInitialized(false);
@@ -253,7 +253,7 @@ function ProductActionsContent() {
           console.log("📡 Loading product from store...");
           await loadStoreProduct(productID);
         } else {
-          console.log("✅ Product already available:", selectedProduct._id);
+          // console.log("✅ Product already available:", selectedProduct._id);
           populateFormWithProduct(selectedProduct);
           setLoadingProduct(false);
         }
@@ -275,7 +275,7 @@ function ProductActionsContent() {
     }
 
     if (selectedProduct._id === productID) {
-      console.log("📦 Product loaded from store:", selectedProduct._id);
+      // console.log("📦 Product loaded from store:", selectedProduct._id);
       populateFormWithProduct(selectedProduct);
       setLoadingProduct(false);
     }
@@ -306,10 +306,6 @@ function ProductActionsContent() {
   useEffect(() => {
     setValue("washInstructions", instructions, { shouldValidate: true });
   }, [instructions, setValue]);
-
-  useEffect(() => {
-    console.log(selectedProduct, "selected product");
-  }, [selectedProduct]);
 
   useEffect(() => {
     setValue("variants", variants);
@@ -354,10 +350,13 @@ function ProductActionsContent() {
     }
 
     setIsSubmitting(true);
-    debugFormData(data, variants);
+    // debugFormData(data, variants);
 
     try {
       if (isEditMode && productID && originalData && originalColors) {
+        
+        // console.log(isEditMode,'editable')
+
         // Update existing product - send only changes
         const result = await ProductAPIService.updateProduct(
           productID,
@@ -373,7 +372,7 @@ function ProductActionsContent() {
           setIsSubmitting(false); 
           return;
         }
-        console.log("Product updated successfully:", result);
+        // console.log("Product updated successfully:", result);
       } else {
         // Create new product - send all data
         const result = await ProductAPIService.createProduct(
@@ -381,7 +380,7 @@ function ProductActionsContent() {
           variants,
           post
         );
-        console.log("Product created successfully:", result);
+        // console.log("Product created successfully:", result);
       }
       
       router.push("/admin/store-products");
@@ -410,13 +409,6 @@ function ProductActionsContent() {
     router.push("/admin/store-products");
   };
 
-  useEffect(() => {
-    console.log(errors);
-  }, [errors]);
-
-  useEffect(() => {
-    console.log(variants, "variants");
-  }, [variants]);
 
   useEffect(() => {
     if (!isEditMode) {

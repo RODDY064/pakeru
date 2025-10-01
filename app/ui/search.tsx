@@ -3,25 +3,61 @@ import { cn } from "@/libs/cn";
 import { useBoundStore } from "@/store/store";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Icon from "./Icon";
 import ProductCard from "./product-card";
 
 export default function Search() {
-  const { isSearching, toggleSearch, search, setNavSearch, searchProduct } =
+  const { isSearching, toggleSearch, search, setNavSearch, searchProduct, cartState } =
     useBoundStore();
+  const [localSearch, setLocalSearch] = useState("");
 
- useEffect(() => {
-  const timeout = setTimeout(() => {
-    const modal = document.querySelector(".searchModal") as HTMLElement | null;
-    if (modal) {
-      modal.style.visibility = "visible";
+  // Debounce function
+  const debounceSearch = useCallback( 
+    (() => {
+      let timeout: NodeJS.Timeout;
+      return (value: string) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          setNavSearch(value);
+        }, 300); // 300ms delay
+      };
+    })(),
+    [setNavSearch]
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalSearch(value);
+    debounceSearch(value);
+  };
+
+  const handleClearSearch = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLocalSearch("");
+    setNavSearch("");
+  };
+
+  // Reset local search when modal closes
+  useEffect(() => {
+    if (!isSearching) {
+      setLocalSearch("");
     }
-  }, 200); 
+  }, [isSearching]);
+  
 
-  return () => clearTimeout(timeout); 
-}, []);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const modal = document.querySelector(
+        ".searchModal"
+      ) as HTMLElement | null;
+      if (modal) {
+        modal.style.visibility = "visible";
+      }
+    }, 200);
 
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     const searchParent = document.querySelector(".searchParent");
@@ -105,13 +141,14 @@ export default function Search() {
     <AnimatePresence>
       <motion.div
         variants={overlayVariants}
-        transition={{ ease:"easeInOut" }}
+        transition={{ ease: "easeInOut" }}
         animate={isSearching ? "visible" : "hide"}
         initial={{ height: "0%", opacity: 0 }}
         exit="hide"
         className={`fixed top-0 z-[99] w-full bg-white flex flex-col searchModal invisible items-center opacity-0 h-0 left-0 font-avenir overflow-hidden ${
           isSearching ? "pointer-events-auto" : "pointer-events-none"
-        }`}>
+        }`}
+      >
         <div className="w-full flex items-center flex-none justify-between px-4 md:px-24">
           <div className="hidden md:flex" />
           <motion.div variants={logoVariants}>
@@ -151,27 +188,17 @@ export default function Search() {
             <motion.input
               variants={inputVariants}
               id="search-input"
-              value={search}
-              onChange={(e) => setNavSearch(e.target.value)}
+               value={localSearch}
+               onChange={handleSearchChange}
               className="w-full flex-none focus:outline-none text-md mt-1.5 placeholder:mt-2"
               placeholder="Search for a product"
               autoFocus
             />
-            {search && (
+            {localSearch && (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setNavSearch("");
-                }}
+                onClick={handleClearSearch}
                 className="mr-4 p-1 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <Image
-                  src="/icons/close.svg"
-                  width={16}
-                  height={16}
-                  alt="clear"
-                />
-              </button>
+              ></button>
             )}
           </motion.div>
 
@@ -192,9 +219,13 @@ export default function Search() {
           className="w-full h-full searchParent  border-black/10 mt-6 items-center justify-center flex"
         >
           <div
-            className={cn("w-[90%] xl:w-[80%] h-full pt-5 pb-72 px-2  gap-6  grid md:grid-cols-2 lg:grid-cols-3  overflow-y-scroll searchCon",{
-              "flex items-center justify-center": searchProduct.length === 0 
-            })}>
+            className={cn(
+              "w-[90%] xl:w-[80%] h-full pt-5 pb-72 px-2  gap-6  grid md:grid-cols-2 lg:grid-cols-3  overflow-y-scroll searchCon",
+              {
+                "flex items-center justify-center": searchProduct.length === 0,
+              }
+            )}
+          >
             {renderSearchContent()}
           </div>
         </motion.div>
@@ -228,11 +259,9 @@ const overlayVariants = {
     transition: {
       height: {
         duration: 0.5,
-        
       },
       opacity: {
         duration: 0.2,
-        
       },
       staggerChildren: 0.045,
       staggerDirection: -1,
@@ -255,7 +284,6 @@ const logoVariants = {
     scale: 0.9,
     transition: {
       duration: 0.1,
-      
     },
   },
 };
@@ -274,7 +302,6 @@ const searchContainerVariants = {
     y: 20,
     transition: {
       duration: 0.2,
-      
     },
   },
 };
@@ -295,7 +322,6 @@ const searchBoxVariants = {
     y: 10,
     transition: {
       duration: 0.2,
-      
     },
   },
 };
@@ -315,7 +341,6 @@ const searchIconVariants = {
     rotate: -90,
     transition: {
       duration: 0.15,
-      
     },
   },
 };
@@ -334,7 +359,6 @@ const inputVariants = {
     x: 10,
     transition: {
       duration: 0.15,
-      
     },
   },
 };
@@ -350,7 +374,6 @@ const closeVariants = {
     opacity: 0,
     transition: {
       duration: 0.15,
-      
     },
   },
 };
@@ -369,7 +392,6 @@ const searchParentVariants = {
     y: 20,
     transition: {
       duration: 0.2,
-      
     },
   },
 };
