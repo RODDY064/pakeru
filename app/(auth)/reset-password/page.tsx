@@ -3,10 +3,11 @@ import Input from "@/app/ui/input";
 import Submit from "@/app/ui/submit";
 import { toast } from "@/app/ui/toaster";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useSearchParams, useRouter } from "next/navigation";
 import { z } from "zod";
+import Image from "next/image";
 
 const resetPasswordSchema = z
   .object({
@@ -25,7 +26,19 @@ const resetPasswordSchema = z
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
+
 export default function ResetPassword() {
+  return (
+    <Suspense fallback={<div className="w-full min-h-[300px] flex flex-col items-center justify-center">
+      <Image src="/icons/loader.svg" width={32} height={32} alt="loading icon"/>
+    </div>}>
+     <ResetPasswordContent/>
+    </Suspense>
+  )
+}
+
+
+function ResetPasswordContent() {
   const [formState, setFormState] = useState<
     "loading" | "idle" | "submitted" | "error"
   >("idle");

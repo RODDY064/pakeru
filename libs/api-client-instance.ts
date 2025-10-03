@@ -77,8 +77,7 @@ class ApiClient {
 
     const requestConfig: RequestInit = {
       ...fetchOptions,
-      cache: "no-store",   
-      next: { revalidate: 0 },      
+      cache: "no-store",        
       headers,
       body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined
     };
@@ -157,7 +156,6 @@ class ApiClient {
       ...options,
       requiresAuth: false,
       cache: "no-store",
-       next: { revalidate: 0 },
       headers: {
         Authorization: `Bearer ${accessToken}`,
         ...options.headers

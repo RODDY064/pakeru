@@ -92,7 +92,7 @@ export async function fetchContent(): Promise<
       method: "GET",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
-      next: { revalidate: 0 }, // 24 hours in seconds
+      // next: { revalidate: 0 }, // 24 hours in seconds
     });
 
     const result = await response.json();
