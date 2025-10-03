@@ -13,7 +13,7 @@ type FilterItem = {
   view: boolean;
   selected: (string | number | PriceRange)[];
   multiSelect: boolean;
-  type?: 'category' | 'sort' | 'price' | 'text'; 
+  type?: "category" | "sort" | "price" | "text" | "createdat";
 };
 
 // Filter queries interface for API calls
@@ -21,6 +21,7 @@ export interface FilterQueries {
   category?: string[];
   sort_by?: string;
   price?: string;
+  createdAt?: string;
   [key: string]: any;
 }
 
@@ -28,31 +29,35 @@ export type FilterStore = {
   filter: boolean;
   filterState: (filt: boolean) => void;
   filteritems: FilterItem[];
-  currentFilters: FilterQueries | null; 
-  
+  currentFilters: FilterQueries | null;
+
   // Selection functions
   toggleSelection: (name: string, value: string | number) => void;
   setSelection: (name: string, value: string | number | PriceRange) => void;
   clearSelection: (name: string) => void;
   clearAllSelections: () => void;
-  
+
   // View functions
   setFilterView: (name: string) => void;
   closeAllFilterViews: () => void;
-  
+
   // Price functions
   setPriceRange: (min?: number, max?: number) => void;
-  
+
   // Query functions
   getFilterQueries: () => FilterQueries;
-  applyFiltersToURL: (searchParams: URLSearchParams, pathname: string, router: any) => void;
+  applyFiltersToURL: (
+    searchParams: URLSearchParams,
+    pathname: string,
+    router: any
+  ) => void;
   loadFiltersFromURL: (searchParams: URLSearchParams) => void;
-  
+
   // Utility functions
   hasActiveFilters: () => boolean;
   getActiveFilterCount: () => number;
   resetFilters: () => void;
-  
+
   // Category management
   addCategory: (category: string) => void;
   removeCategory: (category: string) => void;
@@ -64,9 +69,9 @@ export type FilterStore = {
 const sortMapping: { [key: string]: string } = {
   "price: low to high": "price",
   "price: high to low": "-price",
-  "newest": "-createdAt,price",
-  "rating": "-averageRating,numReviews,stock,-createdAt,price",
-  "oldest": "createdAt,price",
+  newest: "-createdAt,price",
+  rating: "-averageRating,numReviews,stock,-createdAt,price",
+  oldest: "createdAt,price",
   "name: a to z": "name,price",
   "name: z to a": "-name,price",
   "most popular": "-numReviews,averageRating,price",
@@ -81,9 +86,9 @@ export const useFilterStore: StateCreator<
 > = (set, get) => ({
   filter: false,
   currentFilters: null,
-  
+
   filterState: (filt) => set({ filter: filt }),
-  
+
   filteritems: [
     {
       name: "Category",
@@ -91,20 +96,15 @@ export const useFilterStore: StateCreator<
       view: false,
       selected: [],
       multiSelect: true,
-      type: 'category',
+      type: "category",
     },
     {
       name: "sort by",
-      content: [
-        "price: low to high",
-        "price: high to low",
-        "newest",
-        "rating",
-      ],
+      content: ["price: low to high", "price: high to low", "newest", "rating"],
       view: false,
       selected: [],
       multiSelect: false,
-      type: 'sort',
+      type: "sort",
     },
     // {
     //   name: "price",
@@ -122,7 +122,7 @@ export const useFilterStore: StateCreator<
       if (!item) return state;
 
       let newSelected: (string | number | PriceRange)[];
-      
+
       if (item.multiSelect) {
         // For categories, value is the name, but we store the ID
         if (name.toLowerCase() === "category") {
@@ -156,7 +156,7 @@ export const useFilterStore: StateCreator<
       if (!item) return state;
 
       let newSelected: (string | number | PriceRange)[];
-      
+
       if (item.multiSelect) {
         if (name.toLowerCase() === "category") {
           const category = state.categories.find(
@@ -218,7 +218,7 @@ export const useFilterStore: StateCreator<
 
       return {
         filteritems: state.filteritems.map((item) =>
-          item.name === "price" 
+          item.name === "price"
             ? { ...item, selected: [priceRange], content: priceRange }
             : item
         ),
@@ -233,25 +233,32 @@ export const useFilterStore: StateCreator<
       if (item.selected.length === 0) return;
 
       switch (item.name.toLowerCase()) {
-        case 'category':
+        case "category":
           queries.category = item.selected as string[]; // Store category IDs
           break;
-          
-        case 'sort by':
+
+        case "sort by":
           const sortValue = item.selected[0] as string;
-          const apiSortFormat = sortMapping[sortValue.toLowerCase()] || sortValue;
+          const apiSortFormat =
+            sortMapping[sortValue.toLowerCase()] || sortValue;
           queries.sort_by = apiSortFormat;
           break;
-          
-        case 'price':
+
+        case "price":
           const priceRange = item.selected[0] as PriceRange;
-          if (priceRange && (priceRange.min !== undefined || priceRange.max !== undefined)) {
-            queries.price = `${priceRange.min ?? 0}-${priceRange.max ?? ''}`;
+          if (
+            priceRange &&
+            (priceRange.min !== undefined || priceRange.max !== undefined)
+          ) {
+            queries.price = `${priceRange.min ?? 0}-${priceRange.max ?? ""}`;
           }
           break;
-          
+        case "createdat":
+          queries.createdAt = item.selected[0] as string;
+          break;
+
         default:
-          queries[item.name.toLowerCase().replace(/\s+/g, '_')] = item.selected;
+          queries[item.name.toLowerCase().replace(/\s+/g, "_")] = item.selected;
       }
     });
 
@@ -264,13 +271,14 @@ export const useFilterStore: StateCreator<
     const queries = state.getFilterQueries();
 
     // Clear existing filter params
-    params.delete('category');
-    params.delete('sort');
-    params.delete('price');
+    params.delete("category");
+    params.delete("sort");
+    params.delete("price");
+    params.delete("createdAt"); 
 
     // Add new filter params
     Object.entries(queries).forEach(([key, value]) => {
-      if (key === 'category' && Array.isArray(value) && value.length > 0) {
+      if (key === "category" && Array.isArray(value) && value.length > 0) {
         // Map category IDs to names for URL
         const categoryNames = value
           .map((id) => {
@@ -279,10 +287,10 @@ export const useFilterStore: StateCreator<
           })
           .filter((name): name is string => name !== null);
         if (categoryNames.length > 0) {
-          params.set('category', categoryNames.join(','));
+          params.set("category", categoryNames.join(","));
         }
-      } else if (value && typeof value === 'string') {
-        params.set(key === 'sort_by' ? 'sort' : key, value);
+      } else if (value && typeof value === "string") {
+        params.set(key === "sort_by" ? "sort" : key, value);
       }
     });
 
@@ -296,18 +304,20 @@ export const useFilterStore: StateCreator<
   loadFiltersFromURL: (searchParams) => {
     const state = get();
     const params = new URLSearchParams(searchParams.toString());
-    
+
+    console.log(params.get("createdAt"), 'created at')
+
     set((state) => {
       const updatedItems = state.filteritems.map((item) => {
         const itemCopy: FilterItem = { ...item, selected: [] };
 
         switch (item.name.toLowerCase()) {
-          case 'category':
-            const categoryParam = params.get('category');
+          case "category":
+            const categoryParam = params.get("category");
             if (categoryParam) {
               // Map category names from URL to IDs
               const categoryIds = categoryParam
-                .split(',')
+                .split(",")
                 .map((name) => {
                   const category = state.categories.find(
                     (cat) => cat.name.toLowerCase() === name.toLowerCase()
@@ -318,28 +328,37 @@ export const useFilterStore: StateCreator<
               itemCopy.selected = categoryIds;
             }
             break;
-            
-          case 'sort by':
-            const sortParam = params.get('sort');
+
+          case "sort by":
+            const sortParam = params.get("sort");
             if (sortParam) {
               const userFriendlySort = Object.keys(sortMapping).find(
-                key => sortMapping[key] === sortParam
+                (key) => sortMapping[key] === sortParam
               );
               if (userFriendlySort) {
                 itemCopy.selected = [userFriendlySort];
               }
             }
             break;
-            
-          case 'price':
-            const priceParam = params.get('price');
+
+          case "price":
+            const priceParam = params.get("price");
             if (priceParam) {
-              const [min, max] = priceParam.split('-').map(p => p ? parseInt(p) : undefined);
+              const [min, max] = priceParam
+                .split("-")
+                .map((p) => (p ? parseInt(p) : undefined));
               const priceRange: PriceRange = {};
               if (min !== undefined) priceRange.min = min;
               if (max !== undefined) priceRange.max = max;
               itemCopy.selected = [priceRange];
               itemCopy.content = priceRange;
+            }
+            break;
+          case "createdat": 
+            const createdAtParam = params.get("createdAt");
+            console.log(createdAtParam)
+            if (createdAtParam) {
+              itemCopy.selected = [createdAtParam];
             }
             break;
         }
@@ -369,7 +388,7 @@ export const useFilterStore: StateCreator<
         ...item,
         selected: [],
         view: false,
-        content: item.type === 'price' ? { min: 0, max: 10000 } : item.content,
+        content: item.type === "price" ? { min: 0, max: 10000 } : item.content,
       })),
       currentFilters: null,
     }));
@@ -388,10 +407,10 @@ export const useFilterStore: StateCreator<
     set((state) => ({
       filteritems: state.filteritems.map((item) =>
         item.name === "Category" && Array.isArray(item.content)
-          ? { 
-              ...item, 
+          ? {
+              ...item,
               content: item.content.filter((c) => c !== category),
-              selected: item.selected.filter((s) => s !== category)
+              selected: item.selected.filter((s) => s !== category),
             }
           : item
       ),
@@ -409,7 +428,7 @@ export const useFilterStore: StateCreator<
   setFilterCategories: async () => {
     const state = get();
     try {
-      await state.loadCategories(); 
+      await state.loadCategories();
       set((state) => ({
         filteritems: state.filteritems.map((item) =>
           item.name === "Category" && Array.isArray(item.content)
@@ -420,5 +439,5 @@ export const useFilterStore: StateCreator<
     } catch (error) {
       console.error("Failed to load filter categories:", error);
     }
-  }
+  },
 });

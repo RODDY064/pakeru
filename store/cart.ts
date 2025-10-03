@@ -153,6 +153,7 @@ interface FilterQueries {
   price?: string;
   products?:string[],
   name?:string
+  createdAt?:string
 }
 
 const sortMapping: { [key: string]: string } = {
@@ -885,6 +886,10 @@ export const useCartStore: StateCreator<
 
         if(filters.name){
           query.append("name", filters.name)
+        }
+
+        if(filters.createdAt){
+          query.append("createdAt", filters.createdAt)
         }
 
         // Category filter - join multiple categories with comma

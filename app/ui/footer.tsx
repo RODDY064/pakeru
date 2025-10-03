@@ -46,14 +46,16 @@ export default function Footer() {
     <div className="w-full h-fit px-2 sm:px-4 md:px-8 text-black bg-b py-12 relative">
       <div className="w-full h-full border-t-2 border-t-black/5 pt-10 flex flex-col xl:flex-row xl:justify-between">
         <div className="flex xl:w-[40%]">
-          <div className="ml-4 font-avenir grid items-stretch justify-between grid-cols-1 sm:grid-cols-2 gap-10 xl:gap-12 md:grid-cols-3 w-full mt-6">
+          <div className="ml-4 font-avenir grid items-stretch justify-between grid-cols-2 sm:grid-cols-2  md:gap-10 xl:gap-12 md:grid-cols-3 w-full mt-6">
             {/* Shopping Links */}
             <div className="text-black/70">
               <p className="text-sm md:text-md font-[400] font-avenir">SHOP</p>
               <ul className="mt-3 list-disc ml-4 flex flex-col gap-3">
+               <Link href="shop?createdAt=newest">
                 <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   New Arrivals
                 </li>
+               </Link>
                 <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Best Sellers
                 </li>

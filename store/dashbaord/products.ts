@@ -319,6 +319,7 @@ export const useStoreProductStore: StateCreator<
         typeof window !== "undefined" ? window.location.search : ""
       );
       const page = urlParams.get("page");
+      const createdAt = urlParams.get("createdAt")
 
       const query = new URLSearchParams();
       if (page && page !== "1") {
@@ -326,6 +327,10 @@ export const useStoreProductStore: StateCreator<
       }
       if (limit) {
         query.append("limit", limit.toString());
+      }
+
+      if(createdAt){
+        query.append("createdAt", createdAt)
       }
 
       console.log(query.toString(), "Query parameters");
