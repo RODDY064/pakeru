@@ -16,9 +16,8 @@ export default function SizeType({
   errors: any;
   watch: any;
 }) {
-
-  const gender =   watch("sizeType.gender")
-  const clothType = watch("sizeType.clothType")
+  const gender = watch("sizeType.gender");
+  const clothType = watch("sizeType.clothType");
 
   return (
     <div className="w-full h-auto flex-1 bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-6 py-8 relative overflow-hidden">
@@ -59,11 +58,19 @@ export default function SizeType({
             className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl"
           >
             <option value="">Select cloth type</option>
-            <option value="t-shirts">T-Shirts</option>
+            <option value="men-shirts">Men Shirts</option>
+            <option value="men-t-shirts">Men T-shirts</option>
             <option value="polo">Polo</option>
-            <option value="jeans">Jeans</option>
-            <option value="pants">Pants</option>
-            <option value="cargo pants">Cargo Pants</option>
+            <option value="men-jeans">Men Jeans</option>
+            <option value="men-pants">Men Pants</option>
+            <option value="men-cargo-pants">Men Cargo Pants</option>
+            <option value="men-cargo-shorts">Men Cargo Shorts</option>
+            <option value="men-baggy-jeans">Men Baggy Jeans</option>
+            <option value="crop-top-short-sleeve">Crop Top Short Sleeve</option>
+            <option value="crop-top-long-sleeve">Crop Top Long Sleeve</option>
+            <option value="pleated-skirt">Pleated Skirt</option>
+            <option value="women-baggy-jeans">Women Baggy Jeans</option>
+            <option value="women-cargo-pants">Women Cargo Pants</option>
           </select>
 
           <div className="absolute right-3">
@@ -82,7 +89,7 @@ export default function SizeType({
         <div className="flex justify-between text-sm">
           <span className="text-blue-700 font-aveni">Gender:</span>
           <span className="font-medium text-blue-800 font-aveni">
-            {capitalize(gender)?? "not choosen"}
+            {capitalize(gender) ?? "not choosen"}
           </span>
         </div>
         <div className="flex justify-between text-sm mt-1">

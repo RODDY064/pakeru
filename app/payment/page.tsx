@@ -194,7 +194,7 @@ export default function Payment() {
               image="/icons/email.svg"
               register={register}
               error={errors}
-              disbale={true}
+              disabled={true}
             />
             <div className="w-full flex items-center justify-between mt-4 gap-2">
               <div className="w-1/2">
@@ -207,7 +207,7 @@ export default function Payment() {
                   image="/icons/user.svg"
                   register={register}
                   error={errors}
-                  disbale={true}
+                  disabled={true}
                 />
               </div>
               <div className="w-1/2">
@@ -220,7 +220,7 @@ export default function Payment() {
                   image="/icons/user.svg"
                   register={register}
                   error={errors}
-                  disbale={true}
+                  disabled={true}
                 />
               </div>
             </div>

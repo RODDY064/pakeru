@@ -4,6 +4,7 @@ import { produce } from "immer";
 import { apiCall } from "@/libs/functions";
 import { ProductAPIService } from "@/app/(dashboard)/admin/store-products/product-actions/helpers";
 import { useApiClient } from "@/libs/useApiClient";
+import { ClothTypeName } from "@/libs/sizeguilde";
 
 //variant structure
 export type ProductVariant = {
@@ -41,7 +42,7 @@ export type ProductData = {
   totalSize:number,
   sizeType?:{
     gender?: "male" | "female" | "unisex",
-    clothType?: "t-shirts" | "polo" | "jeans" | "pants" | "cargo pants" 
+    clothType?: ClothTypeName
   },
   seo?: {
     title?: string;

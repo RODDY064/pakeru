@@ -28,7 +28,6 @@ function getForwardHeaders(
 ): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "ngrok-skip-browser-warning": "true",
   };
 
   // Add authentication if token available

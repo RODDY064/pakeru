@@ -71,7 +71,7 @@ export default function Category({
       const img = new window.Image();
       img.onload = () => {
         // Validate dimensions - must be exactly 1024x1024
-        if (img.width < 1024 || img.height < 1024) {
+        if (img.width === 1024 || img.height === 1024) {
           setError("Image must be exactly 1024 x 1024 pixels");
           setFormData((prev) => ({ ...prev, image: null }));
           setImagePreview(null);

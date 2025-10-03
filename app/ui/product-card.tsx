@@ -264,18 +264,13 @@ const ColorVariants = ({
     {variants?.map((variant) => (
       <button
         key={variant.color}
-        onClick={() => updateColor(productId, variant.color)}
+
         className={cn(
-          "size-4 md:size-3.5 rounded-full p-0.5 hover:border border-black/50 transition-all duration-200",
-          {
-            "border-2 md:border-[1.5px] border-black":
-              variant._id === selectedColor,
-          }
+          "size-4 md:size-3.5 rounded-full p-0.5 border-2 md:border-[1.5px] border-black cursor-pointer transition-all duration-200",   
         )}
-        aria-label={`Select color ${variant.color}`}
-      >
+        aria-label={`Select color ${variant.color}`}>
         <div
-          className="w-full h-full rounded-full"
+          className="w-full h-full rounded-full border-[0.5px] border-black"
           style={{ backgroundColor: variant.colorHex }}
         />
       </button>

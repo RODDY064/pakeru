@@ -82,21 +82,21 @@ export default function Pagination({
   const pageSizeOptions = [2, 5, 7, 10, 15, 20, 25, 50];
 
   return (
-    <div className="w-full h-20 flex-none flex items-center justify-between  px-10 gap-4 border-t border-black/10">
-      <p className="font-avenir font-[500] text-md text-black/50">
+    <div className="w-full h-16 flex-none flex items-center justify-between  px-10 gap-4 border-t border-black/10">
+      <p className="font-avenir font-[500] text-sm text-black/50">
         Showing: {pagination.page}/{totalPages}{" "}
       </p>
 
       <div className="flex items-center gap-4 ">
         <div
           onClick={Refresh}
-          className="h-12 px-6 bg-blue-50 border border-blue-600 cursor-pointer items-center flex rounded-xl justify-center "
+          className="h-10 px-2 bg-blue-50 border border-blue-600 cursor-pointer items-center flex rounded-lg justify-center "
         >
-          <p className="px-6 font-avenir font-[500] text-[#083f9d] ">Refresh</p>
+          <p className="px-6 font-avenir font-[500] text-sm text-[#083f9d] ">Refresh</p>
         </div>
         {showPageSize && (
-          <div className="h-12 border border-black/15 items-center flex rounded-xl">
-            <p className="px-6 font-avenir font-[500] text-md text-black/50">
+          <div className="h-10 border border-black/15 items-center flex rounded-lg">
+            <p className="px-2 font-avenir font-[500] text-sm text-black/70">
               Page Size
             </p>
             <div className="px-3 pl-4 border-l border-black/15 h-full flex items-center justify-center">
@@ -104,7 +104,7 @@ export default function Pagination({
                 <select
                   value={pagination.size}
                   onChange={(e) => setSize(Number(e.target.value))}
-                  className="font-avenir font-[500] text-md appearance-none h-full focus:outline-none cursor-pointer"
+                  className="font-avenir font-[500] text-sm appearance-none h-full focus:outline-none cursor-pointer"
                 >
                   {pageSizeOptions.map((size) => (
                     <option key={size} value={size}>
@@ -123,19 +123,19 @@ export default function Pagination({
             </div>
           </div>
         )}
-        <div className="h-12 border  border-black/15 flex overflow-hidden rounded-xl items-center justify-center cursor-pointer">
+        <div className="h-10 border  border-black/15 flex overflow-hidden rounded-xl items-center justify-center cursor-pointer">
           <div
             onClick={prev}
             className="flex items-center  hover:bg-black/10  justify-center px-4 gap-2 border-r h-full border-black/15"
           >
             <Image
               src="/icons/arrow.svg"
-              width={13}
-              height={16}
+              width={12}
+              height={12}
               alt="arrow"
               className="opacity-50 rotate-90"
             />
-            <p className="text-black/70 font-avenir font-[500] text-md">
+            <p className="text-black/70 font-avenir font-[500] text-sm">
               Previous
             </p>
           </div>
@@ -146,7 +146,7 @@ export default function Pagination({
                   return (
                     <div
                       key={`ellipsis-${index}`}
-                      className="h-7.5 rounded-md flex items-center justify-center"
+                      className="h-6 rounded-[6px] flex items-center justify-center"
                     >
                       <Image
                         src="/icons/dots.svg"
@@ -164,12 +164,12 @@ export default function Pagination({
                 return (
                   <button
                     key={page}
-                    className={`size-7.5 rounded-md border border-black/25 flex items-center justify-center transition-all cursor-pointer  ${
+                    className={`size-6 rounded-[6px] border border-black/25 flex items-center justify-center transition-all cursor-pointer  ${
                       isCurrentPage ? "bg-black/30 " : "bg-black/5 "
                     }`}
                     onClick={() => handlePageClick(page)}
                   >
-                    <p className="font-avenir text-sm font-[500]">{page}</p>
+                    <p className="font-avenir text-[13px] font-[500]">{page}</p>
                   </button>
                 );
               })}
@@ -179,11 +179,11 @@ export default function Pagination({
             onClick={next}
             className="flex hover:bg-black/10 h-full items-center justify-center px-4 border-l border-black/15 gap-2"
           >
-            <p>Next</p>
+            <p className="text-black/70 font-avenir font-[500] text-sm">Next</p>
             <Image
               src="/icons/arrow.svg"
-              width={13}
-              height={16}
+              width={12}
+              height={12}
               alt="arrow"
               className="opacity-50 rotate-270"
             />

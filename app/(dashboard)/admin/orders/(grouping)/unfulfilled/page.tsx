@@ -204,8 +204,8 @@ export default function Unfulfilled() {
   );
 
   return (
-    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%] pb-36 pt-20   md:pt-24 md:pb-32 ">
-      <p className="font-avenir text-xl md:text-2xl font-bold max-sm:px-3">
+    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%] pt-22 pb-24  ">
+      <p className="font-avenir text-xl font-bold max-sm:px-3">
         Unfulfilled Orders
       </p>
       <div className="mt-2 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
@@ -247,7 +247,7 @@ const Header = () => {
 
   return (
     <>
-      <div className="px-2 w-[50%] lg:w-[30%] py-2 bg-black/10 rounded-xl border-black/15 border flex gap-1 items-center">
+      <div className="px-2 w-[50%] lg:w-[30%] py-[6px] bg-black/10 rounded-xl border-black/15 border flex gap-1 items-center">
         <Image
           src="/icons/search.svg"
           width={16}
@@ -259,7 +259,7 @@ const Header = () => {
           value={OrderFilters.search}
           onChange={(e) => setOrderSearch(e.target.value)}
           placeholder="Search  (by ID, customer name, or email) "
-          className="w-full h-full focus:outline-none px-2 text-md font-avenir "
+          className="w-full h-full focus:outline-none px-2 text-sm font-avenir "
         />
       </div>
       <div className="flex items-center gap-2">

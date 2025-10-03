@@ -141,14 +141,13 @@ export default function Menu() {
     );
 
     return (
-      <div className="w-full h-full">
+      <div className="w-full h-full ">
         <div className="w-full flex">
           <div
             onClick={() => handlePush(data.category)}
             key={`${data?.image?._id}-img-${data.category}`}
-            className={cn("h-fit cursor-pointer w-full")}
-          >
-            <div className="w-full min-h-[300px] xl:h-[350px] relative overflow-hidden border-b border-black/20">
+            className={cn("h-fit cursor-pointer w-full")}>
+            <div className="w-full h-[35vh] relative overflow-hidden border-b border-black/20">
               <Image
                 src={data?.image?.url??"/images/image-fallback.png"}
                 fill
@@ -308,12 +307,11 @@ export default function Menu() {
 
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 20 }} 
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
-        className="w-full bg-white"
-      >
+        className="w-full bg-white">
         {/* Mobile Images Grid */}
         <div className="w-full flex">
           <div
@@ -392,7 +390,7 @@ export default function Menu() {
     }, 270);
   };
   return (
-    <AnimatePresence>
+    <AnimatePresence >
       {/* Desktop */}
       <motion.div
         variants={container}
@@ -400,8 +398,7 @@ export default function Menu() {
         initial="close"
         exit="close"
         key="desktop-menu"
-        className="md:w-[35%] xl:w-[30%] h-full bg-white flex-col gap-4 relative z-20 menu-desktop hidden md:flex flex-none"
-      >
+        className="md:w-[35%] xl:w-[30%] h-full bg-white flex-col gap-4 relative z-20 menu-desktop hidden md:flex flex-none">
         <div className="w-full h-full flex flex-none">
           <div className="w-full flex flex-none flex-col gap-6 pt-[120px] px-9">
             {menuItems?.length === 0 ? (
@@ -497,9 +494,9 @@ export default function Menu() {
         initial="close"
         exit="close"
         key="mobile-menu"
-        className="w-[100%] h-0 relative bg-white flex-col gap-4 pt-[120px] px-12 flex md:hidden menu-mobile"
-      >
-        {menuItems.map((item, index) => (
+        className="w-[100%] overflow-hidden pb-10 relative bg-white flex-col  pt-[90px] px-12 flex md:hidden menu-mobile">
+        <div className="flex flex-col gap-4 overflow-auto pt-[30px]">
+          {menuItems.map((item, index) => (
           <motion.div
             variants={list}
             key={index}
@@ -552,6 +549,7 @@ export default function Menu() {
             </p>
           </div>
         </motion.div>
+        </div>
       </motion.div>
 
       {/* mobile nav */}

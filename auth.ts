@@ -311,7 +311,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   callbacks: {
     async signIn({ user, account }) {
-      console.log(user);
+      // console.log(user);
 
       const nameParts = user.name?.split(" ") || [];
       const firstName = nameParts[0] || "";

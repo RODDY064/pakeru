@@ -235,7 +235,7 @@ export default function MyOrderDynamic({ name }: { name: string }) {
               <p className="font-avenir text-md">Product's</p>
             </div>
             <div className="my-4 flex flex-col">
-              {orderInView?.items?.products.map((ordeProd) => (
+              {orderInView?.items?.products?.map((ordeProd) => (
                 <ProductSection
                   key={ordeProd._id}
                   product={ordeProd.product}
@@ -316,15 +316,15 @@ const ProductSection = ({
       <div className="flex items-end gap-3">
         <div className="size-[70px] md:size-[120px] relative rounded-xl overflow-hidden bg-[#f3f3f3]">
           <Image
-            src={variant?.images[0].url as string}
+            src={variant?.images[0]?.url as string}
             fill
-            alt={product.name}
+            alt={product?.name??"product"}
             className="object-cover"
           />
         </div>
         <div className="flex-col flex gap-0.5 md:gap-1">
           <p className="font-avenir font-semibold text-[13px] md:text-[20px] capitalize">
-            {product.name}
+            {product?.name??""}
           </p>
           <div className="flex items-center gap-1.5">
             <p className="uppercase font-avenir text-[13px] md:text-[15px] pt-[3px]">
@@ -349,7 +349,7 @@ const ProductSection = ({
         </p>
         <p className="font-avenir text-[13px]  md:text-[18px] flex items-center gap-1 ">
           <Cedis cedisStyle="opacity-70" size={16} />
-          <span className="mt-[3px]">{product.price}</span>
+          <span className="mt-[3px]">{product?.price}</span>
         </p>
       </div>
     </div>

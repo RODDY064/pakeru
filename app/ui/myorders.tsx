@@ -159,15 +159,15 @@ const MyOrderCard = ({
         <div className="w-full h-full bg-[#f2f2f2] rounded-xl overflow-hidden border border-black/5">
           <div className="w-full h-[80%]  relative overflow-hidden">
             <Image
-              src={variant?.images[0].url as string}
+              src={variant?.images[0].url as string??"/images/image-fallback.png"}
               fill
-              alt={order.items.products[0].product.name}
+              alt={order.items?.products[0]?.product?.name}
               className="object-cover"
             />
           </div>
           <div className="flex-1 self-stretch p-1.5 sm:p-3  flex justify-between">
             <p className="font-avenir text-[12px] sm:text-[16px]">
-              {order?.items?.products[0]?.product.name}
+              {order?.items?.products[0]?.product?.name}
             </p>
             {order.items.products.length > 1 && (
               <div className="rounded-full size-6 sm:size-9 flex gap-0.5 items-center justify-center bg-black right-2 bottom-2">
@@ -176,7 +176,7 @@ const MyOrderCard = ({
                   <div className="w-[6px] h-[1px] bg-white absolute"></div>
                 </div>
                 <p className="font-avenir text-[12px] text-white pt-[1px]">
-                  {order.items.products.length - 1}
+                  {order.items?.products?.length - 1}
                 </p>
               </div>
             )}
@@ -190,11 +190,11 @@ const MyOrderCard = ({
           </p>
           <div
             className={`flex rounded-full border px-2 gap-1.5 ${
-              deliveryStyles[normalizeStatus(order.deliveryStatus)]
+              deliveryStyles[normalizeStatus(order?.deliveryStatus)]
             }`}
           >
             <Image
-              src={`/icons/shipping-${order.deliveryStatus
+              src={`/icons/shipping-${order?.deliveryStatus
                 .slice(0, 1)
                 .toLocaleLowerCase()}.svg`}
               width={24}
@@ -203,16 +203,16 @@ const MyOrderCard = ({
               className="sm:flex hidden"
             />
             <Image
-              src={`/icons/shipping-${order.deliveryStatus
+              src={`/icons/shipping-${order?.deliveryStatus
                 .slice(0, 1)
                 .toLocaleLowerCase()}.svg`}
               width={16}
               height={16}
-              alt={order.paymentStatus}
+              alt={order?.paymentStatus}
               className=" sm:hidden"
             />
             <p className="font-avenir text-[13px] pt-[3.5px]">
-              {capitalize(order.deliveryStatus)}
+              {capitalize(order?.deliveryStatus)}
             </p>
           </div>
         </div>
@@ -223,7 +223,7 @@ const MyOrderCard = ({
                 Delivered
               </p>
               <p className="font-avenir text-[15px] sm:text-[16px] xl:text-[18px] text-balance font-semibold">
-                {formatToDayMonth(order.deliveredAt)}
+                {formatToDayMonth(order?.deliveredAt)}
               </p>
             </>
           ) : (
@@ -231,7 +231,7 @@ const MyOrderCard = ({
               Arriving at{" "}
               <span className="font-semibold">
                 {" "}
-                {formatToDayMonth(order.deliveredAt)},
+                {formatToDayMonth(order?.deliveredAt)},
               </span>{" "}
               7:00am to 8:00pm.
             </p>
@@ -243,11 +243,11 @@ const MyOrderCard = ({
               </p>
               <div className="w-[1px] self-stretch bg-black/10 sm:mx-2" />
               <p className="p-2 font-avenir text-[12px] md:text-[15px]  text-black/70 font-semibold ">
-                GHS {order.total}
+                GHS {order?.total}
               </p>
             </div>
           </div>
-          <Link href={`/account/myorder/${order.IDTrim}?id=${order._id}`}>
+          <Link href={`/account/myorder/${order?.IDTrim}?id=${order._id}`}>
             <p className="mt-2 sm:mt-4 sm:text-[15px] text-[12px] font-avenir text-blue-600 cursor-pointer underline-offset-1 underline decoration-dotted">
               View detials
             </p>

@@ -14,14 +14,14 @@ export default  function StatCard({ label, value, highlight }: StatCardProps) {
   return (
     <div
       className={cn(
-        "w-full flex items-start border-r max-sm:border-t border-black/10 py-2.5 px-4 lg:px-5 xl:px-10 flex-col last:border-r-0",
+        "w-full flex py-3  border-r max-sm:border-t items-center gap-1 border-black/10  px-5  last:border-r-0",
         { "col-span-2": highlight }
       )}>
       <p className="font-avenir font-[500] text-sm md:text-md md:mt-[2px] text-black/60">
-        {label}
+        {label} :
       </p>
-      <div className="w-full border-[0.5px] border-dashed border-black/50 mt-1" />
-      <p className="font-avenir font-semibold md:text-xl mx-1 mt-2 text-black/70">
+      <div className="pt-[5px]" />
+      <p className="font-avenir font-semibold text-sm  mx-1  text-black/70">
         {value} {label === "Product Sells Rate" ? "%" : ""}
       </p>
     </div>

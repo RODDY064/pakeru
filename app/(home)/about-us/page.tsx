@@ -46,15 +46,16 @@ export default function AboutUs() {
             <div className="w-full h-full rounded-2xl p-4 md:p-8 relative top-0 ">
               <Link href="mailto:pakeru@gmail.com">
                 <p className="font-avenir text-blue-600 underline decoration-dotted underline-offset-2 cursor-pointer text-lg">
-                  Pakeru@gmail.com
+                  Pakeru25@gmail.com
                 </p>
               </Link>
               <p className="font-avenir text-black mt-2 underline decoration-dotted underline-offset-2 cursor-pointer text-lg">
-                +233 5999 69735
+                +233 55 698-6761
               </p>
               <p className="font-avenir text-black mt-3  text-lg">
-                Kumasi, KNUST
+                Asokore Mampong,
               </p>
+              <p className="font-avenir text-black   text-lg">Ashanti</p>
             </div>
           </div>
         </div>

@@ -26,7 +26,7 @@ export async function PATCH(
     
     const { id } = await params;
 
-    console.log(body)
+    // console.log(body)
 
     const response = await fetch(`${BACKEND_URL}/v1/landing-page/hero/${id}`, {
       method: "PATCH",

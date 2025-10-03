@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useLayoutEffect, useState } from "react";
+import React, { useRef, useLayoutEffect, useState, useEffect } from "react";
 import { cn } from "@/libs/cn";
 import Image from "next/image";
 import Link from "next/link";
@@ -110,6 +110,10 @@ export default function SVGMorph({
   // Determine which path to use based on split and reverse props
   const pathToUse = split && !reverse ? multiBlobPaths : [oneBlobPath];
 
+
+
+
+
   return (
     <div
       style={{ minHeight: "100px", minWidth: "100px" }}
@@ -129,7 +133,7 @@ export default function SVGMorph({
               <p className="font-avenir text-lg capitalize">{name}</p>
             </div>
             <div className="size-12 absolute z-9 bottom-6 right-8 flex items-center justify-center">
-              <Link href={`/collections/${id}`}>
+              <Link href={`/collections/${id??""}`}>
                 <div className="size-10 bg-black/5 rounded-full cursor-pointer flex items-center justify-center">
                   <Image
                     src="/icons/bag.svg"

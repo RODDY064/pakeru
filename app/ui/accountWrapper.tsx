@@ -180,7 +180,7 @@ function AccountContent({ children }: { children: React.ReactNode }) {
             )}
             <div className="h-full flex px-10 items-center relative border-r border-black/10">
               <div
-                onClick={async() => await signOut()}
+                onClick={async () => await signOut()}
                 className="py-2 px-8 bg-black text-white rounded cursor-pointer"
               >
                 Sign out
@@ -204,14 +204,23 @@ function AccountContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-
 export default function AccountWrapper({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="w-full min-h-[300px] flex flex-col items-center justify-center">
+          <Image
+            src="/icons/loader.svg"
+            width={32}
+            height={32}
+            alt="loading icon"
+          />
+        </div>
+      }>
       <AccountContent>{children}</AccountContent>
     </Suspense>
   );

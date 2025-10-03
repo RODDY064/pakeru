@@ -46,7 +46,7 @@ export async function PATCH(
       );
     }
 
-    console.log(data)
+    // console.log(data)
 
     return NextResponse.json({ data }, { status: 200 });
   } catch (error: any) {

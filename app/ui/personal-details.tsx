@@ -9,13 +9,12 @@ import { useBoundStore } from "@/store/store";
 import { capitalize } from "@/libs/functions";
 import { useSession } from "next-auth/react";
 import { useApiClient } from "@/libs/useApiClient";
+import Link from "next/link";
 
 export default function PersonalDetails() {
   const { data: session } = useSession();
   const { register } = useForm();
   const { get } = useApiClient();
-
-
 
   return (
     <div className="w-full flex flex-col md:flex-row gap-6 items-center justify-center ">
@@ -34,7 +33,11 @@ export default function PersonalDetails() {
           </p>
         </div>
         <div className="my-2 mt-4 flex gap-3 items-end">
-          <Avatar firstname={session?.user.firstname} lastname={session?.user.lastname} userId={session?.user._id as string} />
+          <Avatar
+            firstname={session?.user.firstname}
+            lastname={session?.user.lastname}
+            userId={session?.user._id as string}
+          />
           <div className="md:w-[50%]  md:mb-2 flex justify-between ">
             <div className="">
               <p className="font-avenir text-[15px] md:text-xl font-medium ">
@@ -63,38 +66,12 @@ export default function PersonalDetails() {
           </div>
         </div> */}
         <div className="my-10">
-          <div className="flex items-center justify-between">
-            <p className="font-avenir font-[500] text-[15px] md:text-sm  text-black/50">
-              Passowrd
-            </p>
-            <div className="py-2 px-3  bg-black text-white text-[13px] md:text-sm md:mt-2 cursor-pointer">
-              Change password
-            </div>
-          </div>
-          <div className="mt-10 md:w-[75%]">
-            <Input
-              placeH="Enter your old password"
-              type="password"
-              image="/icons/password.svg"
-              imageW={16}
-              imageH={16}
-              name="password"
-              textStyle="md:text-md text-[16px] "
-              register={register}
-              label="Old Password"
-            />
-            <Input
-              placeH="Enter your old password"
-              type="password"
-              image="/icons/password.svg"
-              textStyle="md:text-md text-[16px] "
-              imageW={16}
-              imageH={16}
-              name="password"
-              style="mt-4"
-              register={register}
-              label="New Password"
-            />
+          <div className="flex items-center justify-center w-full">
+            <Link href="/change-password">
+              <div className="py-3 px-4  bg-black text-white text-md font-avenir rounded-md md:mt-2 cursor-pointer">
+                Change password
+              </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -102,36 +79,34 @@ export default function PersonalDetails() {
   );
 }
 
-
-  const avatarColors = [
-    { bg: "bg-red-100", text: "text-red-500", border: "border-red-500" },
-    { bg: "bg-blue-100", text: "text-blue-500", border: "border-blue-500" },
-    { bg: "bg-green-100", text: "text-green-500", border: "border-green-500" },
-    {
-      bg: "bg-yellow-100",
-      text: "text-yellow-500",
-      border: "border-yellow-500",
-    },
-    {
-      bg: "bg-purple-100",
-      text: "text-purple-500",
-      border: "border-purple-500",
-    },
-    { bg: "bg-pink-100", text: "text-pink-500", border: "border-pink-500" },
-    {
-      bg: "bg-indigo-100",
-      text: "text-indigo-500",
-      border: "border-indigo-500",
-    },
-    {
-      bg: "bg-orange-100",
-      text: "text-orange-500",
-      border: "border-orange-500",
-    },
-    { bg: "bg-teal-100", text: "text-teal-500", border: "border-teal-500" },
-    { bg: "bg-amber-100", text: "text-amber-500", border: "border-amber-500" },
-  ];
-
+const avatarColors = [
+  { bg: "bg-red-100", text: "text-red-500", border: "border-red-500" },
+  { bg: "bg-blue-100", text: "text-blue-500", border: "border-blue-500" },
+  { bg: "bg-green-100", text: "text-green-500", border: "border-green-500" },
+  {
+    bg: "bg-yellow-100",
+    text: "text-yellow-500",
+    border: "border-yellow-500",
+  },
+  {
+    bg: "bg-purple-100",
+    text: "text-purple-500",
+    border: "border-purple-500",
+  },
+  { bg: "bg-pink-100", text: "text-pink-500", border: "border-pink-500" },
+  {
+    bg: "bg-indigo-100",
+    text: "text-indigo-500",
+    border: "border-indigo-500",
+  },
+  {
+    bg: "bg-orange-100",
+    text: "text-orange-500",
+    border: "border-orange-500",
+  },
+  { bg: "bg-teal-100", text: "text-teal-500", border: "border-teal-500" },
+  { bg: "bg-amber-100", text: "text-amber-500", border: "border-amber-500" },
+];
 
 function Avatar({
   firstname,
@@ -156,7 +131,10 @@ function Avatar({
       const randomColor =
         avatarColors[Math.floor(Math.random() * avatarColors.length)];
       setColor(randomColor);
-      localStorage.setItem(`avatarColor:${userId}`, JSON.stringify(randomColor));
+      localStorage.setItem(
+        `avatarColor:${userId}`,
+        JSON.stringify(randomColor)
+      );
     }
   }, [userId]);
 

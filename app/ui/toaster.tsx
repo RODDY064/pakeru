@@ -96,7 +96,7 @@ function Toast(props: ToastProps & { position?: string }) {
             />
           </div>
         )}
-        <div className={`w-full ${description ? "mt-[2px]" : ""}`}>
+        <div className={`w-full ${description ? "mt-[2px] p-2" : ""}`}>
           {typeof title === "string" ? (
             <p
               className={`text-sm font-medium ${
@@ -105,8 +105,7 @@ function Toast(props: ToastProps & { position?: string }) {
                 variant === "info"
                   ? "text-gray-900"
                   : "text-white"
-              }`}
-            >
+              }`}>
               {title}
             </p>
           ) : (
@@ -120,8 +119,7 @@ function Toast(props: ToastProps & { position?: string }) {
                 variant === "info"
                   ? "text-gray-700"
                   : "text-white/80"
-              }`}
-            >
+              }`}>
               {description}
             </p>
           )}
@@ -136,8 +134,7 @@ function Toast(props: ToastProps & { position?: string }) {
               focus:ring-2 focus:ring-offset-2 focus:outline-none
               ${buttonStyles[variant]}
             `}
-            onClick={handleButtonClick}
-          >
+            onClick={handleButtonClick}>
             {button.label}
           </button>
         </div>

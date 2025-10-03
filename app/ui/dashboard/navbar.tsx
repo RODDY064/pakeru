@@ -16,11 +16,11 @@ export default function Navbar() {
 
   return (
    <>
-    <div className="w-full fixed z-[99] py-2 md:py-4 px-2 md:px-8 bg-black text-white font-avenir font-[500] flex items-center justify-between">
+    <div className="w-full fixed z-[99] py-0.5 md:py-4 px-2 md:px-8 bg-black text-white font-avenir font-[500] flex items-center justify-between">
       <div>
         <Image
           src="/icons/text-logo-w.svg"
-          width={90}
+          width={70}
           height={24}
           alt="pakeru logo"
           className="hidden md:flex"
@@ -38,8 +38,8 @@ export default function Navbar() {
         <div  onClick={()=>toggleNotModal('notification')} className="px-2 rounded-lg py-2  max-sm:mt-2 md:bg-white/15 relative cursor-pointer">
           <Image
             src="/icons/notification.svg"
-            width={24}
-            height={24}
+            width={16}
+            height={16}
             alt="notification"
           />
           <div 
@@ -54,8 +54,8 @@ export default function Navbar() {
           className="px-4 py-2 bg-white/15 rounded-lg cursor-pointer hidden md:flex">
           <p className="font-avenir font-[500] text-md">Pakeru Store</p>
         </Link> */}
-        <div onClick={()=>toggleNotModal('control')} className="size-11 rounded-full  items-center justify-center bg-white/15 hidden md:flex cursor-pointer">
-          <p className="font-avenir font-[500] text-md">MS</p>
+        <div onClick={()=>toggleNotModal('control')} className="size-10 rounded-full  items-center justify-center bg-white/15 hidden md:flex cursor-pointer">
+          <p className="font-avenir font-[500] text-sm">MS</p>
         </div>
     
       </div>

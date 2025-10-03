@@ -22,7 +22,7 @@ import Media from "@/app/ui/dashboard/media";
 import Category from "@/app/ui/dashboard/categories";
 import ColorStockAndSizes from "@/app/ui/dashboard/colorStockAndSize";
 import ProductTags from "@/app/ui/dashboard/productTags";
-import {  mapVariantsToColors, ProductAPIService } from "./helpers";
+import { mapVariantsToColors, ProductAPIService } from "./helpers";
 import DeleteModal from "./deleletModal";
 import { useApiClient } from "@/libs/useApiClient";
 import SizeType from "@/app/ui/dashboard/sizeType";
@@ -91,7 +91,7 @@ function ProductActionsContent() {
     setValue,
     watch,
     control,
-    getValues
+    getValues,
   } = useForm<ProductFormData>({
     resolver: zodResolver(ProductFormSchema),
     defaultValues: {
@@ -133,13 +133,10 @@ function ProductActionsContent() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [productLoadError, setProductLoadError] = useState<string | null>(null);
-  const [originalData, setOriginalData] = useState<ProductFormData | null>(
-    null
-  );
-  const [originalColors, setOriginalColors] = useState<ProductColor[] | null>(
-    null
-  );
-  const [care, setCare] = useState("");
+  const [originalData, setOriginalData] = useState<ProductFormData | null>(null);
+  const [originalColors, setOriginalColors] = useState<ProductColor[] | null>(null);
+  const [aboutToSubmit,setAboutToSubmit] = useState(false)
+
   const [instruction, setInstruction] = useState("");
   const [instructions, setInstructions] = useState<string[]>([]);
 
@@ -149,14 +146,6 @@ function ProductActionsContent() {
       setInstruction(""); // reset input
     }
   };
-
-  const [sizeTye, setSizeTye] = useState<{
-    gender: "male" | "female";
-    clothType: "pants";
-  }>({
-    gender: "male",
-    clothType: "pants",
-  });
 
   const productID = searchParams.get("productID");
   const productName = searchParams.get("productName");
@@ -213,9 +202,6 @@ function ProductActionsContent() {
       setTags(formData.tags ?? []);
       setSelectedCategory(formData.category);
       setInstructions(formData.washInstructions ?? []);
-
-
-
 
       if (product.variants && product.variants.length > 0) {
         const mappedColors = mapVariantsToColors(product.variants);
@@ -338,6 +324,11 @@ function ProductActionsContent() {
     return null;
   };
 
+  useEffect(() => {
+    console.log(submitError, "sumit eroror");
+    console.log();
+  }, [submitError]);
+
   const onSubmit = async (data: ProductFormData) => {
     setSubmitError("");
     setStocksError("");
@@ -352,9 +343,9 @@ function ProductActionsContent() {
     setIsSubmitting(true);
     // debugFormData(data, variants);
 
+
     try {
       if (isEditMode && productID && originalData && originalColors) {
-        
         // console.log(isEditMode,'editable')
 
         // Update existing product - send only changes
@@ -369,7 +360,8 @@ function ProductActionsContent() {
 
         if (result.message === "No changes to save") {
           setSubmitError("No changes detected to save");
-          setIsSubmitting(false); 
+          setIsSubmitting(false);
+          setAboutToSubmit(false)
           return;
         }
         // console.log("Product updated successfully:", result);
@@ -382,7 +374,7 @@ function ProductActionsContent() {
         );
         // console.log("Product created successfully:", result);
       }
-      
+
       router.push("/admin/store-products");
     } catch (error) {
       console.error("💥 Submission error:", error);
@@ -401,14 +393,31 @@ function ProductActionsContent() {
       }
     } finally {
       setIsSubmitting(false);
+      setAboutToSubmit(false)
     }
   };
+
+  useEffect(() => {
+    if (variants) {
+      const totalStock = variants.reduce(
+        (sum, variant) => sum + variant.stock,
+        0
+      );
+
+      if (totalStock > 0) {
+        setValue("totalNumber", String(totalStock));
+      }
+    }
+  }, [variants, setValue, watch]);
+
+  useEffect(()=>{
+   console.log(aboutToSubmit)
+  },[aboutToSubmit])
 
   const handelBack = () => {
     setSelectedProduct(null);
     router.push("/admin/store-products");
   };
-
 
   useEffect(() => {
     if (!isEditMode) {
@@ -451,7 +460,9 @@ function ProductActionsContent() {
                     )}
                   </div>
                 ) : (
-                  " Add Product"
+                  <p className="font-avenir text-xl sm:text-2xl font-bold mt-[5px]">
+                    Add Product
+                  </p>
                 )}
               </div>
               {productID && (
@@ -517,6 +528,7 @@ function ProductActionsContent() {
                     variants={variants}
                     activeColorId={activeColorId}
                     setActiveColorId={setActiveColorId}
+                    aboutToSubmit={aboutToSubmit}
                   />
 
                   <div className="min-h-36 mt-4 bg-white border border-black/20 rounded-[32px]">
@@ -647,19 +659,21 @@ function ProductActionsContent() {
                     </div>
 
                     {activeColorId &&
-                     variants.find((c) => c._id === activeColorId) ? (
+                    variants.find((c) => c._id === activeColorId) ? (
                       <ColorStockAndSizes
                         colors={variants}
                         setColors={setVariants}
                         activeColorId={activeColorId}
+                        aboutToSubmit={aboutToSubmit}
                       />
                     ) : (
-                      <div className="text-center py-8 h-full">
+                      <div className="text-center py-8 h-full flex flex-col justify-between">
                         <p className="text-black/50 font-avenir">
                           {variants.length === 0
                             ? "Add a color first"
                             : "Select a color to manage stock and sizes"}
                         </p>
+                       {aboutToSubmit && variants.length === 0 && <p className="pb-3 font-avenir text-red-500">No variant's added</p>}
                       </div>
                     )}
                   </div>
@@ -667,6 +681,7 @@ function ProductActionsContent() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
+                    onClick={()=>setAboutToSubmit(true)}
                     className="mt-2 w-full p-4 md:p-6 md:h-35 rounded-2xl md:rounded-[26px] cursor-pointer flex items-center justify-center bg-black"
                   >
                     <p className="text-white font-avenir font-black text-xl md:text-4xl">

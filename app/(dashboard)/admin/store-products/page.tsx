@@ -131,14 +131,14 @@ export default function Products() {
   const tableColumns: Column[] = [
     {
       label: (
-        <div className="w-[70px] flex gap-2 cursor-pointer flex-shrink-0">
-          <Checkbox action={() => {}} active={false} />
+        <div className="w-[20px] flex gap-2 cursor-pointer flex-shrink-0">
+       
         </div>
       ),
-      width: "w-[70px]",
+      width: "w-[20px]",
       render: (product: any) => (
-        <div className="w-[70px] flex gap-2 cursor-pointer flex-shrink-0">
-          <Checkbox action={() => {}} active={false} />
+        <div className="w-[20px] flex gap-2 cursor-pointer flex-shrink-0">
+    
         </div>
       ),
     },
@@ -259,12 +259,12 @@ export default function Products() {
   };
 
   return (
-    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8 pb-36   xl:ml-[16%] pt-20  md:pt-24 md:pb-32">
+    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%]  pt-22 pb-26 ">
       <div className="flex items-center justify-between max-sm:px-3">
-        <p className="font-avenir text-xl md:text-2xl font-bold">Products</p>
+        <p className="font-avenir text-xl font-bold">Products</p>
         <Link
           href="/admin/store-products/product-actions"
-          className="p-1.5 sm:px-3  md:py-2  bg-black flex items-center gap-2 cursor-pointer rounded-full md:rounded-lg"
+          className="p-1.5 sm:px-3   bg-black flex items-center gap-2 cursor-pointer rounded-xl"
         >
           <p className="font-avenir text-sm font-[500] text-white mt-[3px] sm:flex hidden">
             Create Product
@@ -285,7 +285,7 @@ export default function Products() {
           />
         </Link>
       </div>
-      <div className="mt-2 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
+      <div className="mt-2 w-full h-fit bg-white border border-black/15 sm:rounded-2xl  flex md:px-4">
         {stats.map((stat, idx) => (
           <StatCard key={idx} {...stat} />
         ))}
@@ -324,7 +324,7 @@ const Header = ({
 }) => {
   return (
     <>
-      <div className="px-2 w-[50%] py-2 bg-black/10 rounded-xl border-black/15 border flex gap-1 items-center">
+      <div className="px-2 w-[50%] py-[6px] bg-black/10 rounded-xl  border-black/15 border flex gap-1 items-center">
         <Image src="/icons/search.svg" width={16} height={16} alt="search" />
         <input
           value={storeProductFilters.search ?? ""}
@@ -335,7 +335,7 @@ const Header = ({
             })
           }
           placeholder="Search for a product by the name"
-          className="w-full h-full focus:outline-none px-2"
+          className="w-full h-full focus:outline-none px-2 text-sm"
         />
       </div>
       <div className="flex items-center justify-center gap-4">

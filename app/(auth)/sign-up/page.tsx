@@ -10,6 +10,7 @@ import Image from "next/image";
 import Submit from "@/app/ui/submit";
 import { useRouter } from "next/navigation";
 import { useBoundStore } from "@/store/store";
+import { signIn } from "next-auth/react";
 
 const signUp = z.object({
   firstname: z.string().min(1, { message: "First name is required." }),
@@ -42,7 +43,7 @@ const onSubmit: SubmitHandler<SignUpSchema> = async (data) => {
     const parseResult = signUp.safeParse(data);
     if (!parseResult.success) {
       setSignState('error');
-      console.log(parseResult.error);
+      // console.log(parseResult.error);
 
       await new Promise((resolve) => setTimeout(resolve, 3000));
       setSignState('idle');
@@ -108,10 +109,10 @@ const onSubmit: SubmitHandler<SignUpSchema> = async (data) => {
 
   return (
     <div className="flex flex-col items-center pt-16 md:py-24 font-avenir">
-      <h1 className="text-3xl md:text-4xl font-avenir font-bold">
+      <h1 className="text-2xl md:text-4xl font-avenir font-bold">
         Create Account
       </h1>
-      <p className="font-avenir text-md md:text-lg font-medium my-3 text-center text-gray-700 px-5">
+      <p className="font-avenir text-md md:text-lg font-medium mb-3 text-balance text-center text-gray-700 px-5">
         Enter your details below to create your account.
       </p>
       <div className=" w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%] bg-black/10 h-11 mt-6  flex items-center justify-center rounded">
@@ -175,7 +176,7 @@ const onSubmit: SubmitHandler<SignUpSchema> = async (data) => {
         <Submit type={signUpState} submitType="sign-up"  />
         <div className="my-2">
           <Link
-            href="/forgetten-password"
+            href="/sign-in"
             className="cursor-pointer text-blue-500 hover:text-black">
             Already have an account? Sign in
           </Link>
@@ -185,7 +186,7 @@ const onSubmit: SubmitHandler<SignUpSchema> = async (data) => {
           <p className="text-sm text-black/30">or</p>
           <div className="w-full h-[1px] bg-black/20"></div>
         </div>
-        <div className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black  text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
+        <div  onClick={()=>signIn('google')} className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black  text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
           <Image src="/icons/google.svg" width={16} height={16} alt="google"/>
           <p className="">Google</p>
         </div>

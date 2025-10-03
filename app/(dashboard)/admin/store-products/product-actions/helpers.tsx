@@ -213,7 +213,7 @@ export class ProductAPIService {
     productId: string,
     del: ReturnType<typeof useApiClient>["del"]
   ): Promise<any> {
-    const deletePromise = del(`/products/${productId}`, { requiresAuth: true });
+    const deletePromise = del(`/products/${productId}`, { requiresAuth: true, cache:"no-store" });
 
     return toast.promise(deletePromise, {
       loading: "Deleting product...",

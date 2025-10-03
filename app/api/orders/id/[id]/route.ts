@@ -48,7 +48,7 @@ export async function GET(
     const { id } = await params;
     const token = await extractTokenFromRequest(request);
 
-    console.log(getForwardHeaders(request, token));
+    // console.log(getForwardHeaders(request, token));
 
     const response = await fetch(`${BASE_URL}/v1/orders/${id}`, {
       method: "GET",

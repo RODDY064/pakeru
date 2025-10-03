@@ -1,5 +1,4 @@
 "use client";
-
 import { cn } from "@/libs/cn";
 import Image from "next/image";
 import React from "react";
@@ -11,9 +10,9 @@ export default function Submit({
   errorMessage
 }: {
   type: "loading" | "idle" | "submitted" | "error" | "unverified";
-  submitType?: "otp" | "sign-in" | "sign-up"| "in-touch";
-  subStyle?:String,
-  errorMessage?:string | null
+  submitType?: "otp" | "sign-in" | "sign-up" | "in-touch" | "forgot-password" | "reset-password" | "change-password";
+  subStyle?: String,
+  errorMessage?: string | null
 }) {
   const getButtonText = () => {
     switch (submitType) {
@@ -23,8 +22,14 @@ export default function Submit({
         return "Sign In";
       case "sign-up":
         return "Create Account";
-      case "in-touch" :
-        return "Submit"
+      case "in-touch":
+        return "Submit";
+      case "forgot-password":
+        return "Send Reset Link";
+      case "reset-password":
+        return "Reset Password";
+      case "change-password":
+        return "Change Password";
       default:
         return "Submit";
     }
@@ -38,6 +43,12 @@ export default function Submit({
         return "Signing in...";
       case "sign-up":
         return "Creating account...";
+      case "forgot-password":
+        return "Sending reset link...";
+      case "reset-password":
+        return "Resetting password...";
+      case "change-password":
+        return "Changing password...";
       default:
         return "Processing...";
     }
@@ -51,6 +62,12 @@ export default function Submit({
         return "Signed in successfully!";
       case "sign-up":
         return "Account created successfully!";
+      case "forgot-password":
+        return "Reset link sent to your email!";
+      case "reset-password":
+        return "Password reset successfully!";
+      case "change-password":
+        return "Password changed successfully!";
       default:
         return "Success!";
     }
@@ -67,8 +84,7 @@ export default function Submit({
           "border-green-400 bg-green-400 cursor-not-allowed text-white": type === "submitted",
           "border-red-500 bg-red-500 cursor-not-allowed text-white": type === "error",
           "border-yellow-500 bg-yellow-500 text-white": type === "unverified"
-          
-        },subStyle
+        }, subStyle
       )}>
       {type === "idle" && (
         <input
@@ -77,25 +93,22 @@ export default function Submit({
           className="w-full h-full cursor-pointer font-avenir"
         />
       )}
-
       {type === "loading" && (
         <div className="flex gap-3 items-center justify-center">
           <Image src="/icons/loader.svg" width={20} height={20} alt="loader" />
           <p className="text-sm font-avenir text-black/50">{getLoadingText()}</p>
         </div>
       )}
-
       {type === "submitted" && (
         <div className="flex gap-3 items-center justify-center">
           <Image src="/icons/tick.svg" width={24} height={20} alt="tick" />
           <p className="text-sm font-avenir text-white">{getSuccessText()}</p>
         </div>
       )}
-
       {(type === "error" || type === "unverified") && (
         <div className="flex gap-3 items-center justify-center">
           <Image src="/icons/cancel-w.svg" width={14} height={14} alt="cancel" />
-          <p className="text-sm font-avenir text-white">{errorMessage?? "Something went wrong. Try again"}</p>
+          <p className="text-sm font-avenir text-white">{errorMessage ?? "Something went wrong. Try again"}</p>
         </div>
       )}
     </div>

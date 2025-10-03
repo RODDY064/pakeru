@@ -21,9 +21,6 @@ export default function OTP() {
 
   const router = useRouter();
 
-  useEffect(() => {
-    console.log(userData);
-  }, [userData]);
 
   // Timer effect for countdown
   useEffect(() => {
@@ -112,7 +109,7 @@ export default function OTP() {
       return;
     }
 
-    console.log(userData?.email, userData?.userType);
+    // console.log(userData?.email, userData?.userType);
 
     setOState("loading");
 
@@ -136,7 +133,7 @@ export default function OTP() {
           throw new Error("OTP verification failed");
         }
 
-        console.log("OTP submitted:", otpValue);
+        // console.log("OTP submitted:", otpValue);
 
         const response = await res.json();
         setOState("submitted");
@@ -178,7 +175,7 @@ export default function OTP() {
       }
 
       const response = await res.json();
-      console.log("Resend OTP response:", response);
+      // console.log("Resend OTP response:", response);
 
       setCounter(300);
       setIsResendDisabled(true);

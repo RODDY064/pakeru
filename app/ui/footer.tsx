@@ -29,6 +29,12 @@ const socailMedia = [
     size: 34,
     href: "https://snapchat.com/t/2roHlINV",
   },
+  {
+    name:"facebook",
+    icon:"facebook.svg",
+    size:30,
+    href:"https://www.facebook.com/share/1FGrwyBGT6/?mibextid=wwXIfr"
+  }
 ];
 
 export default function Footer() {
@@ -64,7 +70,7 @@ export default function Footer() {
               </p>
               <ul className="mt-3 list-disc ml-4 flex flex-col gap-2">
                 <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Shipping & Returns
+                  Shippment
                 </li>
                 <Link href="/account">
                   <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
@@ -90,9 +96,11 @@ export default function Footer() {
                     About us
                   </li>
                 </Link>
-                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Privacy Policy
-                </li>
+                <Link href="/policy">
+                  <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                    Privacy Policy
+                  </li>
+                </Link>
                 {/* <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Returns Policy
                 </li> */}
@@ -107,15 +115,16 @@ export default function Footer() {
             </p>
             <div className="my-4 mt-2 w-full flex gap-2">
               <Link href="mailto:pakeru@gmail.com" className="w-full">
-              <div className="w-[70%] h-12 bg-black flex gap-2 items-center justify-center rounded-md cursor-pointer">
-                <Image
-                  src="/icons/contacts.svg"
-                  width={24}
-                  height={24}
-                  alt="contacts"
-                />
-                <p className="text-white font-avenir pt-[3px]">Email Us</p>
-              </div></Link>
+                <div className="w-[70%] h-12 bg-black flex gap-2 items-center justify-center rounded-md cursor-pointer">
+                  <Image
+                    src="/icons/contacts.svg"
+                    width={24}
+                    height={24}
+                    alt="contacts"
+                  />
+                  <p className="text-white font-avenir pt-[3px]">Email Us</p>
+                </div>
+              </Link>
             </div>
           </div>
           <div className="flex flex-col md:flex-row justify-between md:items-center">

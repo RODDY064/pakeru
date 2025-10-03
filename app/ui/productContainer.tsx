@@ -13,6 +13,7 @@ import { ProductData } from "@/store/dashbaord/products";
 import SizeGuild from "./size-guild";
 import ProductCare from "./productCare";
 import Cedis from "./cedis";
+import { ClothTypeName } from "@/libs/sizeguilde";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -165,6 +166,8 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   };
 
   useEffect(() => {
+    console.log(imageDiv, "image div");
+
     if (!imageDiv.current) return;
 
     const el = imageDiv.current;
@@ -336,6 +339,11 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     );
   }, [productData, colorActive?._id]);
 
+  function toEnumClothType(value: string): ClothTypeName | undefined {
+    const formatted = value.replace(/-/g, " ").toUpperCase();
+    return ClothTypeName[formatted as keyof typeof ClothTypeName];
+  }
+
   return (
     <div className="w-full  flex flex-col items-center text-black bg-white min-h-screen ">
       <div className="pt-20 md:pt-16">
@@ -357,7 +365,15 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
       {cartState === "success" && (
         <div className="w-full min-h-screen flex flex-col md:flex-row  pinCon">
           <div className="w-full md:w-[50%] relative triggerDiv">
-            <div className="w-full flex flex-row md:flex-col relative overflow-x-auto md:overflow-x-hidden">
+            <div
+              ref={imageDiv}
+              onScroll={isMobile ? handleMobileScroll : undefined}
+              className="w-full flex flex-row md:flex-col relative overflow-x-auto md:overflow-x-hidden"
+              style={{
+                scrollSnapType: isMobile ? "x mandatory" : "none",
+                scrollBehavior: "smooth",
+              }}
+            >
               {currentImages.map((img, index) => (
                 <div
                   key={index}
@@ -643,7 +659,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                         .filter(
                           (prod) =>
                             prod.category === productData.category &&
-                            prod._id !== productData._id 
+                            prod._id !== productData._id
                         )
                         .slice(0, 10)
                     : []
@@ -671,7 +687,9 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
             : []
           ).length === 0 ? (
             <div className="w-full h-24 flex flex-col items-center justify-end">
-              <p className="font-avenir text-black/50 text-lg md:text-xl">No similiar products found</p>
+              <p className="font-avenir text-black/50 text-lg md:text-xl">
+                No similiar products found
+              </p>
             </div>
           ) : (
             <>
@@ -747,7 +765,13 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           )}
         </div>
       </div>
-      <SizeGuild gender="women" type="skirts" />
+      <SizeGuild
+        clothType={
+          productData?.sizeType?.clothType
+            ? toEnumClothType(productData.sizeType.clothType) ?? ClothTypeName.MenTshirts
+            : ClothTypeName.MenTshirts
+        }
+      />
 
       {/* Pinch Zoom Modal */}
       {pinchZoom.show && (
@@ -840,7 +864,7 @@ const PinchZoom = ({
   if (!show) return null;
 
   return (
-    <div className="fixed top-0 left-0 bg-white z-[90] w-full h-full p-6 md:p-10 text-black font-avenir">
+    <div className="fixed top-0 left-0  bg-white z-[99] w-full h-full p-6 md:p-10 text-black font-avenir">
       <div className="flex flex-col items-center ">
         <div className="w-full md:w-[80%] flex items-center justify-between pt-2">
           <p className="font-[400] text-lg">{title.toUpperCase()}</p>
@@ -873,7 +897,7 @@ const PinchZoom = ({
           <Image
             src={images[currentIndex].url}
             fill
-            className="object-cover max-w-xl mx-auto bg-[#f2f2f2] pointer-events-none"
+            className="object-cover max-w-lg mx-auto bg-[#f2f2f2] pointer-events-none"
             alt={title}
             priority
           />

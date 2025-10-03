@@ -151,10 +151,10 @@ function SignInForm() {
 export default function SignIn() {
   return (
     <div className="flex flex-col items-center pt-16 md:pt-24 font-avenir">
-      <h1 className="text-3xl md:text-4xl font-avenir font-bold">
+      <h1 className="text-2xl md:text-4xl font-avenir font-bold">
         Welcome Back
       </h1>
-      <p className="font-avenir text-md md:text-lg font-medium my-3">
+      <p className="font-avenir text-md md:text-lg font-medium text-balance mb-3">
         Please sign-in with your credentials
       </p>
       <div className="w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%] bg-black/10 h-11 mt-6 flex items-center justify-center rounded">

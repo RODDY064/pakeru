@@ -1,20 +1,21 @@
+import { ProductColor } from "@/app/(dashboard)/admin/store-products/product-actions/action";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
 
-import { ProductColor } from '@/app/(dashboard)/admin/store-products/product-actions/action';
-import Image from 'next/image';
-import React, { useState } from 'react'
-
-
-export default function ColorStockAndSizes ({
+export default function ColorStockAndSizes({
   colors,
   setColors,
   activeColorId,
+  aboutToSubmit,
 }: {
   colors: ProductColor[];
   setColors: React.Dispatch<React.SetStateAction<ProductColor[]>>;
   activeColorId: string;
-})  {
+  aboutToSubmit: boolean;
+}) {
   const [selectedSize, setSelectedSize] = useState("");
   const availableSizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+  const [stocksError, setStocksError] = useState<string[]>([]);
 
   const activeColor = colors.find((c) => c._id === activeColorId);
 
@@ -55,6 +56,27 @@ export default function ColorStockAndSizes ({
     );
   };
 
+  useEffect(() => {
+    if (aboutToSubmit && colors) {
+      const errors: string[] = [];
+
+      colors.forEach((variant) => {
+        if (
+          (!variant.sizes || variant.sizes.length === 0) &&
+          variant.stock <= 0
+        ) {
+          errors.push(`Variant ${variant.name} has no sizes and no stock`);
+        } else if (!variant.sizes || variant.sizes.length === 0) {
+          errors.push(`Variant ${variant.name} has no sizes`);
+        } else if (variant.stock <= 0) {
+          errors.push(`Variant ${variant.name} has no stock`);
+        }
+      });
+
+      setStocksError(errors); // store array, not string
+    }
+  }, [aboutToSubmit, colors]);
+
   return (
     <div className="space-y-4">
       {/* Color Info Display */}
@@ -81,7 +103,8 @@ export default function ColorStockAndSizes ({
           <select
             value={selectedSize}
             onChange={(e) => setSelectedSize(e.target.value)}
-            className="w-full appearance-none focus:outline-none px-2">
+            className="w-full appearance-none focus:outline-none px-2"
+          >
             <option value="">Select size to add</option>
             {availableSizes
               .filter((size) => !activeColor.sizes.includes(size))
@@ -146,6 +169,14 @@ export default function ColorStockAndSizes ({
           </div>
         </div>
       </div>
+      <div className="flex flex-col items-center w-full py-2">
+        {stocksError &&
+          stocksError.map((err, idx) => (
+            <p key={idx} className="font-avenir text-red-500 text-sm">
+              {err}
+            </p>
+          ))}
+      </div>
     </div>
   );
-};
+}

@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     );
 
     const data = await response.json();
-    console.log("Backend refresh response:", response.status, data.msg);
+    // console.log("Backend refresh response:", response.status, data.msg);
     const nextResponse = NextResponse.json(data, { status: response.status });
 
     return nextResponse;

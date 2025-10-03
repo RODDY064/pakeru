@@ -115,22 +115,22 @@ export default function Table({
   }
 
   return (
-    <div className="mt-4 w-full h-[96%] bg-white border border-black/15 rounded-2xl overflow-hidden flex flex-col">
-      <div className="flex lg:flex-row flex-col gap-4 lg:gap-auto lg:items-center justify-between border-b border-black/15 px-4 py-4 font-avenir">
+    <div className="mt-4 w-full h-[98%] bg-white border border-black/15 rounded-2xl overflow-hidden flex flex-col">
+      <div className="flex lg:flex-row flex-col gap-4 lg:gap-auto lg:items-center justify-between border-b border-black/15 px-4 py-3 font-avenir">
         {header}
       </div>
       {/* table  */}
       <div className="flex flex-col min-h-0  flex-1 relative">
         {/* table row names */}
-        <div className="absolute px-6 py-3 flex justify-between items-center w-full z-10 2xl:hidden pointer-events-none">
+        <div className=" px-6 bg-[#f2f2f2]   py-2 border-b border-black/30 flex justify-between items-center w-full z-10 2xl:hidden pointer-events-none">
           <div
             onClick={() => scrollTable("left")}
             className="cursor-pointer pointer-events-auto"
           >
             <Image
               src="/icons/double-arrow.svg"
-              width={24}
-              height={24}
+              width={16}
+              height={16}
               alt="double-arrow-left"
               className="rotate-180"
             />
@@ -141,19 +141,17 @@ export default function Table({
           >
             <Image
               src="/icons/double-arrow.svg"
-              width={24}
-              height={24}
+              width={16}
+              height={16}
               alt="double-arrow-right"
             />
           </div>
         </div>
-        <div className="w-full min-h-32 2xl:min-h-10 pb-6 xl:py-4 bg-[#f2f2f2] border-b border-black/10 flex flex-col justify-end">
-          <div className="w-full h-[1px] bg-black/30 my-4 2xl:hidden" />
+        <div className="w-full   py-3 bg-[#f2f2f2] border-b border-black/10 flex flex-col justify-end">
           <div
             ref={headerScrollRef}
             onScroll={handleHeaderScroll}
-            className="overflow-x-auto scrollbar-hide px-4 scroll-table"
-          >
+            className="overflow-x-auto scrollbar-hide px-4 scroll-table text-md">
             <div className="flex min-w-fit">
               {columns.map((col, idx) => (
                 <div
@@ -246,7 +244,7 @@ export default function Table({
                     ([month, rows]) => (
                       <React.Fragment key={month}>
                         <div className="bg-[#f9f9f9] sticky top-0 z-50 py-3 text-center px-4 border-b border-black/10">
-                          <p className="font-avenir text-md font-[300] text-black/70">
+                          <p className="font-avenir text-sm font-[300] text-black/70">
                             {month}
                           </p>
                         </div>

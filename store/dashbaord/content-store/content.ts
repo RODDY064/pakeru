@@ -91,6 +91,10 @@ const createEmptyHero = (): HeroContent => ({
   ],
 });
 
+function removeDashes(str: string): string {
+  return str.replace(/-/g, "");
+}
+
 const createEmptyImage = (): ImageData => ({
   _id: undefined,
   publicId: undefined,
@@ -98,7 +102,7 @@ const createEmptyImage = (): ImageData => ({
 });
 
 const createEmptyGalleryItem = (): GalleryItem => ({
-  _id: uuidv4(),
+  _id: "",
   name: "",
   image: createEmptyImage(),
   products: [],
