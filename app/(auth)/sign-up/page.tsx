@@ -108,7 +108,7 @@ const onSubmit: SubmitHandler<SignUpSchema> = async (data) => {
 
 
   return (
-    <div className="flex flex-col items-center pt-16 md:py-24 font-avenir">
+    <div className="flex flex-col items-center py-16 md:py-24 font-avenir">
       <h1 className="text-2xl md:text-4xl font-avenir font-bold">
         Create Account
       </h1>

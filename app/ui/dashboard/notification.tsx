@@ -85,7 +85,7 @@ export default function Notification() {
                       <p className="font-avenir font-[500]  text-black/50 decoration-dotted underline underline-offset-2 text-md">
                         {session?.user?.username}
                       </p>
-                     <div onClick={async()=> await signOut()} className="flex flex-col items-center">
+                     <div onClick={async()=> await signOut({ callbackUrl:"/sign-in"})} className="flex flex-col items-center">
                        <div className="mt-12 w-[80%] border border-black py-4 cursor-pointer bg-black/10 hover:bg-black/5 rounded-full">
                         <p className="font-avenir text-lg  text-center">Logout</p>
                       </div>

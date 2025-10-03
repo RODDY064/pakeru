@@ -543,7 +543,7 @@ export default function Menu() {
               </p>
             </div>
           </Link>
-          <div onClick={async() => await signOut()} className="flex flex-col  mt-12">
+          <div onClick={async() => await signOut({ callbackUrl:"/sign-in"})} className="flex flex-col  mt-12">
             <p className=" px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
               Logout
             </p>

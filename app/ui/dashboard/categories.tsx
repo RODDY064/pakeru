@@ -420,14 +420,13 @@ export default function Category({
                   categories?.map((cat, index) => (
                     <div
                       key={index}
-                      className={`w-full h-12 flex items-center justify-between ${
+                      className={`w-full min-h-12 p-2 flex items-center justify-between ${
                         index % 2 === 0 ? "bg-black/10" : "bg-transparent"
-                      }`}
-                    >
+                      }`}>
                       <div className="flex-1 px-4">
                         <p className="font-medium">{cat.name}</p>
                         {cat.description && (
-                          <p className="text-xs text-black/60">
+                          <p className="text-xs text-black/60 mt-1">
                             {cat.description}
                           </p>
                         )}
