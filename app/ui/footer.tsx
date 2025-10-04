@@ -46,7 +46,7 @@ export default function Footer() {
     <div className="w-full h-fit px-2 sm:px-4 md:px-8 text-black bg-b py-12 relative">
       <div className="w-full h-full border-t-2 border-t-black/5 pt-10 flex flex-col xl:flex-row xl:justify-between">
         <div className="flex xl:w-[40%]">
-          <div className="ml-4 font-avenir grid items-stretch justify-between grid-cols-2 sm:grid-cols-2  md:gap-10 xl:gap-12 md:grid-cols-3 w-full mt-6">
+          <div className="ml-4 font-avenir grid items-stretch justify-between grid-cols-2 sm:grid-cols-2 gap-6  md:gap-10 xl:gap-12 md:grid-cols-3 w-full mt-6">
             {/* Shopping Links */}
             <div className="text-black/70">
               <p className="text-sm md:text-md font-[400] font-avenir">SHOP</p>
@@ -116,7 +116,7 @@ export default function Footer() {
               GET IN TOUCH
             </p>
             <div className="my-4 mt-2 w-full flex gap-2">
-              <Link href="mailto:pakeru@gmail.com" className="w-full">
+              <Link href="mailto:pakeru@25gmail.com" className="w-full">
                 <div className="w-[70%] h-12 bg-black flex gap-2 items-center justify-center rounded-md cursor-pointer">
                   <Image
                     src="/icons/contacts.svg"

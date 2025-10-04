@@ -11,11 +11,11 @@ export type CategoryType = {
   parentCategory: string | null;
   createdAt?: Date;
   updatedAt?: Date;
-  image:{
-    _id:string,
-    publicId:string,
-    url:string
-  }
+  image: {
+    _id: string;
+    publicId: string;
+    url: string;
+  };
 };
 
 export type CategoryStore = {
@@ -29,9 +29,10 @@ export type CategoryStore = {
     category: any,
     post: ReturnType<typeof useApiClient>["post"]
   ) => Promise<CategoryType>;
-  deleteCategory: (
+  updateCategory: (
     categoryId: string,
-    del: ReturnType<typeof useApiClient>["del"]
+    formData: FormData,
+    patch: ReturnType<typeof useApiClient>["patch"]
   ) => Promise<void>;
   getProductsWithID: (categoryId: string) => void;
   findCategories: () => void;
@@ -90,6 +91,8 @@ export const useCategory: StateCreator<
 
       const result = response;
 
+      console.log(result, "cat results");
+
       if (!result || !Array.isArray(result.data)) {
         throw new Error("Invalid categories response format");
       }
@@ -97,11 +100,11 @@ export const useCategory: StateCreator<
       const categories: CategoryType[] = result.data.map((item: any) => ({
         _id: item._id,
         name: item.name,
-        description: item.description,
-        parentCategory: item.parentCategory,
+        description: item.description ?? "",
+        parentCategory: item.parentCategory ?? "",
         createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
         updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
-        image: item.image ?? ""
+        image: item.image ?? "",
       }));
 
       // Use the setter method
@@ -134,9 +137,13 @@ export const useCategory: StateCreator<
           name: response?.name,
           description: response?.description,
           parentCategory: response?.parentCategory,
-          createdAt: response?.createdAt? new Date(response.createdAt) : undefined,
-          updatedAt: response?.updatedAt ? new Date(response?.updatedAt): undefined,
-          image: response.image ?? ""
+          createdAt: response?.createdAt
+            ? new Date(response.createdAt)
+            : undefined,
+          updatedAt: response?.updatedAt
+            ? new Date(response?.updatedAt)
+            : undefined,
+          image: response.image ?? "",
         };
 
         set((state) => {
@@ -172,59 +179,62 @@ export const useCategory: StateCreator<
   },
 
   // Updated deleteCategory with toast
-  deleteCategory: async (categoryId: string, del) => {
+  updateCategory: async (categoryId: string, body, patch) => {
+    console.log("Updating category:", categoryId);
+    
+    if(!patch){
+      throw new Error("Api patch is required")
+    }
 
-    console.log(categoryId)
-
-    const deletePromise = (async () => {
+    const updatePromise = (async () => {
       set((state) => {
         state.isCategoriesLoading = true;
         state.error = null;
       });
 
       try {
-      
-        const response = await del(`/categories/${categoryId}`, {
+        // Call your PATCH endpoint
+        const response = await patch<{ data:CategoryType }>(`/categories/${categoryId}`, body, {
           requiresAuth: true,
         });
 
-        console.log("Category deleted:", categoryId);
+        console.log("Category updated:", response);
 
+        // Update state with the new category data
         set((state) => {
-          state.categories = state.categories.filter(
-            (cat) => cat._id !== categoryId
+          state.categories = state.categories.map((cat) =>
+            cat._id === categoryId ? { ...cat, ...response.data } : cat
           );
           state.isCategoriesLoading = false;
           state.error = null;
         });
 
-        return;
       } catch (error) {
-        console.error("Failed to delete category:", error);
+        console.error("Failed to update category:", error);
         set((state) => {
           state.isCategoriesLoading = false;
           state.error =
             error instanceof Error
               ? error.message
-              : "Failed to delete category";
+              : "Failed to update category";
         });
         throw error;
       }
     })();
 
-    const categoryToDelete = get().getCategoryById(categoryId);
+    const categoryToUpdate = get().getCategoryById(categoryId);
 
-    await toast.promise(deletePromise, {
+    await toast.promise(updatePromise, {
       loading: {
-        title:"Deleting category...",
-        duration:Infinity
+        title: "Updating category...",
+        duration: Infinity,
       },
       success: () => ({
         title: `Category "${
-          categoryToDelete?.name || "Unknown"
-        }" deleted successfully`,
+          categoryToUpdate?.name || "Unknown"
+        }" updated successfully`,
       }),
-      error: "Failed to delete category. Please try again.",
+      error: "Failed to update category. Please try again.",
     });
   },
 

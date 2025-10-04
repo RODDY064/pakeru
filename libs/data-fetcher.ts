@@ -72,7 +72,7 @@ export async function fetchCategoriesServer(): Promise<CategoryType[]> {
       _id: item._id,
       name: item.name,
       description: item.description,
-      parentCategory: item.parentCategory,
+      parentCategory: item?.parentCategory,
       createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
       updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
     }));

@@ -132,7 +132,7 @@ export default function YourCart() {
           className="md:w-[35%] lg:w-[30%] pt-12 px-6 md:px-3 lg:px-10 w-full flex flex-col items-center totalDiv"
         >
           <div className="w-full">
-            <div className="w-full flex items-center justify-between">
+            {/* <div className="w-full flex items-center justify-between">
               <p className="font-avenir font-[400] text-md pt-[5px]">SUBTOTAL</p>
               <div className="flex gap-0.5 items-center">
                 <Cedis cedisStyle="pt-[4px] opacity-90" />
@@ -152,7 +152,7 @@ export default function YourCart() {
             </div>
             <p className="text-sm md:text-sm font-avenir font-[300] md:font-[400] my-2 text-black/50">
               Shipping will be calculated base on your address.
-            </p>
+            </p> */}
             <div className="w-full flex items-center justify-between my-6">
               <p className="font-avenir font-[400] text-md pt-[5px]">TOTAL</p>
               <div className="flex gap-0.5 items-center">
@@ -173,7 +173,7 @@ export default function YourCart() {
               <p className="text-sm font-avenir text-black/60 font-[400]">
                 By selecting Procced to checkout button, you confirm that you
                 have read, understood and accepted our{" "}
-                <span className="underline underline-offset-4 cursor-pointer">
+                <span className="underline text-blue-600 underline-offset-4 cursor-pointer">
                   Terms and Conditions
                 </span>
               </p>

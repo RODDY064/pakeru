@@ -15,23 +15,26 @@ export default function ProductCare({
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const productCareData = useMemo(
-    () => [
-      {
-        title: "Product Care",
-        description: care || "No product care information available.",
-      },
-      {
-        title: "Wash Instructions",
-        description:
-          instructions && instructions.length > 0
-            ? instructions
-            : ["No wash instructions available."],
-      },
-    ],
-    [care, instructions]
-  );
-  
+ const productCareData = useMemo(() => {
+  const cleanInstructions =
+    instructions && instructions.length > 0
+      ? instructions.map((instr) =>
+          instr.replace(/^[•\s]+/, "").trim() 
+        )
+      : ["No wash instructions available."];
+
+  return [
+    {
+      title: "Product Care",
+      description: care || "No product care information available.",
+    },
+    {
+      title: "Wash Instructions",
+      description: cleanInstructions,
+    },
+  ];
+}, [care, instructions]);
+
 
   const handleToggle = () => {
     setIsExpanded(!isExpanded);

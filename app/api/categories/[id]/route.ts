@@ -1,30 +1,36 @@
-// app/api/categories/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-export async function DELETE(
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id:categoryId } = await params;
-    // console.log(categoryId)
+    const { id: categoryId } = await params;
+
+    const formData = await request.formData();
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories/${categoryId}`;
 
+    console.log(formData.get("name"));
+
     const incomingHeaders: Record<string, string> = {};
+    const allowedHeaders = ["authorization", "cookie"];
     request.headers.forEach((value, key) => {
-      incomingHeaders[key] = value;
+      if (allowedHeaders.includes(key.toLowerCase())) {
+        incomingHeaders[key] = value;
+      }
     });
 
     const response = await fetch(url, {
-      method: "DELETE",
+      method: "PATCH",
       headers: incomingHeaders,
+      body: formData,
     });
 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {
     return NextResponse.json(
-      { error: "Category deletion failed", message: error.message },
+      { error: "Category update failed", message: error.message },
       { status: 500 }
     );
   }

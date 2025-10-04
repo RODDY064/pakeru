@@ -291,7 +291,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                           ))}
                         </div>
 
-                        <div className="mt-4">
+                        {/* <div className="mt-4">
                           <p className="text-black/40 text-md  font-avenir">
                             SUBTOTAL
                           </p>
@@ -307,9 +307,9 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                           <p className="text-black text-xl font-avenir">
                             GHS {orderInView?.discount.toFixed(2)}
                           </p>
-                        </div>
+                        </div> */}
 
-                        <div className="mt-2">
+                        <div className="mt-10">
                           <p className="text-black/40 text-xl font-bold font-avenir">
                             TOTAL
                           </p>

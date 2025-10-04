@@ -29,15 +29,15 @@ gsap.registerPlugin(ScrollTrigger);
 
 const ads = [
   {
-    ad: "EASY RETURN POLICY | FIND OUT MORE",
+    ad: "BUILT ON PRECISION",
     link: "/",
   },
   {
-    ad: "FREE SHIPPING ON ORDERS OVER $50",
+    ad: "STRINGS  STYLES, SUBSTANCE",
     link: "/",
   },
   {
-    ad: "SIGN UP FOR 10% OFF YOUR FIRST ORDER",
+    ad: "IN PERSUIT OF PERFECT FIT",
     link: "/",
   },
 ];

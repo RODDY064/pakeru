@@ -244,7 +244,7 @@ export default function MyOrderDynamic({ name }: { name: string }) {
                   variantID={ordeProd.variantID}
                 />
               ))}
-              <div className="  pt-3 border-black/20 flex justify-end">
+              {/* <div className="  pt-3 border-black/20 flex justify-end">
                 <p className="font-avenir text-[12px] md:text-[15px]  text-black/40 flex items-center gap-1">
                   <span className="mt-[2px]">SUBTOTAL: </span>
                   <span className="text-black/60 text-[13px] md:text-[16px] flex items-center  gap-0.5">
@@ -254,8 +254,8 @@ export default function MyOrderDynamic({ name }: { name: string }) {
                     </span>
                   </span>
                 </p>
-              </div>
-              <div className="border-b-[0.5px] pb-3 border-black/20 flex justify-end">
+              </div> */}
+              {/* <div className="border-b-[0.5px] pb-3 border-black/20 flex justify-end">
                 <p className="font-avenir text-[13px] md:text-[15px] text-black/40 flex items-center gap-1">
                   <span className="mt-[2px]">DISCOUNT: </span>
                   <span className="text-black/60 text-[13px] md:text-[16px] flex items-center  gap-0.5">
@@ -265,7 +265,7 @@ export default function MyOrderDynamic({ name }: { name: string }) {
                     </span>
                   </span>
                 </p>
-              </div>
+              </div> */}
               <div className="border-b-[0.5px]  border-black/20 flex gap-2 justify-end">
                 <p className="font-avenir text-[15px] md:text-[18px] text-black/80 py-3 mt-[4px]">
                   TOTAL

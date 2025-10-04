@@ -768,7 +768,8 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
       <SizeGuild
         clothType={
           productData?.sizeType?.clothType
-            ? toEnumClothType(productData.sizeType.clothType) ?? ClothTypeName.MenTshirts
+            ? toEnumClothType(productData.sizeType.clothType) ??
+              ClothTypeName.MenTshirts
             : ClothTypeName.MenTshirts
         }
       />
@@ -864,7 +865,8 @@ const PinchZoom = ({
   if (!show) return null;
 
   return (
-    <div className="fixed top-0 left-0  bg-white z-[99] w-full h-full p-6 md:p-10 text-black font-avenir">
+    <div
+      className="fixed top-0 left-0 bottom-0 bg-white z-[999] w-full flex-1 inset-0   p-6 md:p-10 text-black font-avenir">
       <div className="flex flex-col items-center ">
         <div className="w-full md:w-[80%] flex items-center justify-between pt-2">
           <p className="font-[400] text-lg">{title.toUpperCase()}</p>

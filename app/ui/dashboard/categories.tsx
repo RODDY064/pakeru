@@ -1,7 +1,14 @@
 import { useApiClient } from "@/libs/useApiClient";
 import { useBoundStore } from "@/store/store";
+import { motion } from "motion/react";
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 export default function Category({
   selectedCategory,
@@ -13,6 +20,10 @@ export default function Category({
   const [showForm, setShowForm] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [selectedParentCategory, setSelectedParentCategory] = useState("");
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -23,13 +34,14 @@ export default function Category({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const { get, post, del } = useApiClient();
+  const {  post, patch } = useApiClient();
+  const [addNewParentCategory, setAddNewParentCategory] = useState(false);
 
   const {
     loadCategories,
     categories,
     createCategory,
-    deleteCategory,
+    updateCategory,
     isCategoriesLoading,
   } = useBoundStore();
 
@@ -37,9 +49,22 @@ export default function Category({
     loadCategories();
   }, []);
 
-  useEffect(() => {
-    console.log(selectedCategory);
-  }, [selectedCategory]);
+  const parentCategories = useMemo(() => {
+    const uniqueParents = new Set<string>();
+    categories.forEach((cat) => {
+      if (cat.parentCategory) {
+        uniqueParents.add(cat.parentCategory);
+      }
+    });
+    return Array.from(uniqueParents);
+  }, [categories]);
+
+  const subcategories = useMemo(() => {
+    if (!selectedParentCategory) return categories;
+    return categories.filter(
+      (cat) => cat.parentCategory === selectedParentCategory
+    );
+  }, [categories, selectedParentCategory]);
 
   // Handle image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,11 +92,13 @@ export default function Category({
 
     // Create preview and validate dimensions
     const reader = new FileReader();
+
     reader.onloadend = () => {
       const img = new window.Image();
       img.onload = () => {
+        console.log(img.width, img.height);
         // Validate dimensions - must be exactly 1024x1024
-        if (img.width === 1024 || img.height === 1024) {
+        if (img.width !== 1024 || img.height !== 1024) {
           setError("Image must be exactly 1024 x 1024 pixels");
           setFormData((prev) => ({ ...prev, image: null }));
           setImagePreview(null);
@@ -97,7 +124,6 @@ export default function Category({
     reader.readAsDataURL(file);
   };
 
-
   // Handle adding a new category
   const handleRemoveImage = () => {
     setFormData((prev) => ({ ...prev, image: null }));
@@ -108,14 +134,20 @@ export default function Category({
   };
 
   // Handle adding a new category
-  const handleAddCategory = async () => {
+   const handleSubmitCategory = async () => {
     if (!formData.name.trim()) {
-      setError("Category name is required");
+      setError("Subcategory name is required");
       return;
     }
 
-    // Check if category already exists
+    if (!addNewParentCategory && !formData.parentCategory) {
+      setError("Please select a parent category or create a new one");
+      return;
+    }
+
+    // Check if category already exists (only when creating new)
     if (
+      !editingCategoryId &&
       categories.find(
         (cat) => cat.name.toLowerCase() === formData.name.toLowerCase().trim()
       )
@@ -132,73 +164,66 @@ export default function Category({
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name.trim());
       formDataToSend.append("description", formData.description.trim());
+      
+      // Use the parent category from the form
       if (formData.parentCategory) {
         formDataToSend.append("parentCategory", formData.parentCategory);
       }
+      
       if (formData.image) {
         formDataToSend.append("image", formData.image);
       }
 
-      const newCategory = await createCategory(formDataToSend, post);
-
-      // Reset form and close modal
-      setFormData({
-        name: "",
-        description: "",
-        parentCategory: "",
-        image: null,
-      });
-      setImagePreview(null);
-      setShowForm(false);
-
-      // Optionally select the newly created category
-      setSelectedCategory(newCategory._id);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to create category"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle delete category
-  const handleDeleteCategory = async (categoryId: string) => {
-    setCategoryToDelete(categoryId);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!categoryToDelete) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      await deleteCategory(categoryToDelete, del);
-
-      // If the deleted category was selected, reset selection
-      if (selectedCategory === categoryToDelete) {
-        setSelectedCategory("");
+      if (editingCategoryId) {
+        // Update existing category
+        await updateCategory(editingCategoryId, formDataToSend, patch);
+      } else {
+        // Create new category
+        const newCategory = await createCategory(formDataToSend, post);
+        setSelectedCategory(newCategory._id);
       }
 
-      setShowDeleteModal(false);
-      setCategoryToDelete(null);
+      // Reset form and close modal
+      resetForm();
+      setShowForm(false);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to delete category"
+        err instanceof Error ? err.message : `Failed to ${editingCategoryId ? 'update' : 'create'} category`
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const cancelDelete = () => {
-    setShowDeleteModal(false);
-    setCategoryToDelete(null);
+  const handleEditCategory = (categoryId: string) => {
+    const categoryToEdit = categories.find((cat) => cat._id === categoryId);
+    if (!categoryToEdit) return;
+
+    // Load category data into form
+    setEditingCategoryId(categoryId);
+    setFormData({
+      name: categoryToEdit.name,
+      description: categoryToEdit.description || "",
+      parentCategory: categoryToEdit.parentCategory || "",
+      image: null, // Don't load existing image as File
+    });
+
+    if (categoryToEdit.image && categoryToEdit.image.url) {
+      setImagePreview(categoryToEdit.image.url);
+    }
+
+    // Determine if parent category is custom or from list
+    if (
+      categoryToEdit.parentCategory &&
+      !parentCategories.includes(categoryToEdit.parentCategory)
+    ) {
+      setAddNewParentCategory(true);
+    }
+
+    setShowForm(true);
   };
 
-  const resetForm = () => {
+    const resetForm = () => {
     setFormData({
       name: "",
       description: "",
@@ -207,63 +232,109 @@ export default function Category({
     });
     setImagePreview(null);
     setError(null);
+    setAddNewParentCategory(false);
+    setEditingCategoryId(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
-  useEffect(() => {
-    console.log(selectedCategory);
-  }, [selectedCategory]);
 
   return (
     <>
       <div>
-        <div className="flex justify-between items-center">
-          <p className="font-avenir font-[500] text-lg">Category</p>
-          <div className="flex items-center gap-2 relative">
-            <p className="font-avenir font-[500] text-sm hidden lg:flex">
-              Add Category
-            </p>
-            <div
-              onClick={() => setShowForm((prev) => !prev)}
-              className="size-6 bg-black rounded-full flex items-center justify-center cursor-pointer"
+        <div>
+          <div className="flex justify-between items-center">
+            <p className="font-avenir font-[500] text-lg">Category</p>
+            <div className="flex items-center gap-2 relative">
+              <p className="font-avenir font-[500] text-sm hidden lg:flex">
+                Add Category
+              </p>
+              <div
+                onClick={() => setShowForm((prev) => !prev)}
+                className="size-6 bg-black rounded-full flex items-center justify-center cursor-pointer"
+              >
+                <Image
+                  src="/icons/plus-w.svg"
+                  width={16}
+                  height={16}
+                  alt="plus"
+                />
+              </div>
+            </div>
+          </div>
+
+          <p className="font-avenir font-[500] text-sm pt-3 pb-2">
+            Parent Category
+          </p>
+
+          <div className="relative  flex items-center">
+            <select
+              value={selectedParentCategory}
+              onChange={(e) => {
+                setSelectedParentCategory(e.target.value);
+                setSelectedCategory("");
+              }}
+              className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl"
             >
+              <option value="">Select parent category</option>
+              {parentCategories.map((parent, index) => (
+                <option key={index} value={parent}>
+                  {parent}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-3">
               <Image
-                src="/icons/plus-w.svg"
+                src="/icons/arrow.svg"
                 width={16}
                 height={16}
-                alt="plus"
+                alt="arrow"
               />
             </div>
           </div>
         </div>
-
-        <div className="relative mt-2 flex items-center">
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl"
-          >
-            <option value="">Select category</option>
-            {categories?.map((cat, index) => (
-              <option key={index} value={cat._id}>
-                {cat.name}
+        <div>
+          <div className="flex justify-between items-center pt-3 pb-2">
+            <p className="font-avenir font-[500] text-sm">Sub-category</p>
+          </div>
+          <div className="relative flex items-center">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              disabled={!selectedParentCategory}
+              className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl"
+            >
+              <option value="">
+                {selectedParentCategory
+                  ? "Select subcategory"
+                  : "Select parent category first"}
               </option>
-            ))}
-          </select>
-          <div className="absolute right-3">
-            <Image src="/icons/arrow.svg" width={16} height={16} alt="arrow" />
+              {subcategories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-3">
+              <Image
+                src="/icons/arrow.svg"
+                width={16}
+                height={16}
+                alt="arrow"
+              />
+            </div>
           </div>
         </div>
       </div>
-
       {/* Add Category Modal */}
       {showForm && (
         <div className="fixed overflow-auto pb-24 z-20 w-full h-full bg-black/80 top-0 left-0 flex flex-col items-center pt-24 font-avenir">
           <div className="w-[60%] xl:w-[40%] h-fit bg-white p-10 rounded-2xl">
             <div className="flex items-center justify-between">
-              <p className="font-avenir text-lg font-semibold">Add Category</p>
+              <p className="font-avenir text-lg font-semibold">
+                {editingCategoryId ? "Edit Category" : "Add Category"}
+              </p>
               <div
                 onClick={() => {
                   setShowForm(false);
@@ -279,7 +350,7 @@ export default function Category({
               </div>
             </div>
 
-             {error && (
+            {error && (
               <div className="mt-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-3xl text-sm">
                 {error}
               </div>
@@ -320,7 +391,6 @@ export default function Category({
                         width={20}
                         height={20}
                         alt="Remove"
-                       
                       />
                     </button>
                   </>
@@ -347,15 +417,63 @@ export default function Category({
                 )}
               </div>
               <div>
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Parent Category
+                  </label>
+                  <p
+                    onClick={() =>
+                      setAddNewParentCategory(!addNewParentCategory)
+                    }
+                    className="text-sm font-avenir text-blue-600 cursor-pointer hover:underline"
+                  >
+                    {addNewParentCategory ? "Select existing" : "Add new"}
+                  </p>
+                </div>
+                {addNewParentCategory ? (
+                  <input
+                    value={formData.parentCategory}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        parentCategory: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter parent category name (e.g., Male, Female)"
+                    className="w-full border placeholder:text-black/30 text-md border-black/10 bg-black/5 rounded-lg h-12 px-3 focus:outline-none focus-within:border-black/30"
+                    disabled={isLoading}
+                  />
+                ) : (
+                  <select
+                    value={formData.parentCategory}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        parentCategory: e.target.value,
+                      }))
+                    }
+                    className="w-full h-12 font-avenir p-2 px-3 appearance-none border text-sm border-black/20 focus:outline-none focus:border-black/50 rounded-xl"
+                    disabled={isLoading}
+                  >
+                    <option value="">Select parent category</option>
+                    {parentCategories.map((parent, index) => (
+                      <option key={index} value={parent}>
+                        {parent}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category Name
+                  Subcategory Name
                 </label>
                 <input
                   value={formData.name}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, name: e.target.value }))
                   }
-                  placeholder="Enter category name"
+                  placeholder="Enter subcategory name"
                   className="w-full border placeholder:text-black/30 text-md border-black/10 bg-black/5 rounded-lg h-12 px-3 focus:outline-none focus-within:border-black/30"
                   disabled={isLoading}
                 />
@@ -375,7 +493,7 @@ export default function Category({
                   }
                   placeholder="Enter category description"
                   rows={3}
-                  className="w-full border placeholder:text-black/30 text-md border-black/10 bg-black/5 rounded-lg px-3 py-2 focus:outline-none focus-within:border-black/30"
+                  className="w-full border placeholder:text-black/30  text-md border-black/10 bg-black/5 rounded-lg px-3 py-2 focus:outline-none focus-within:border-black/30"
                   disabled={isLoading}
                 />
               </div>
@@ -384,27 +502,31 @@ export default function Category({
             {/* Action Buttons */}
             <div className="flex gap-2 mt-6">
               <button
-                onClick={() => {
-                  setShowForm(false);
-                  setFormData({
-                    name: "",
-                    description: "",
-                    parentCategory: "",
-                    image: null as File | null,
-                  });
-                  setError(null);
-                }}
+                onClick={resetForm}
                 disabled={isLoading}
                 className="flex-1 px-4 py-2 border border-black/20 rounded-lg cursor-pointer hover:bg-black/5 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
-                onClick={handleAddCategory}
-                disabled={isLoading || !formData.name.trim()}
+                type="button"
+                onClick={handleSubmitCategory}
+                disabled={
+                  isLoading ||
+                  !formData.name.trim() ||
+                  (!addNewParentCategory &&
+                    !formData.parentCategory &&
+                    !formData.image)
+                }
                 className="flex-1 px-4 py-2 bg-black text-white rounded-lg cursor-pointer hover:bg-black/80 transition-colors disabled:opacity-50 flex items-center justify-center"
               >
-                {isLoading ? "Adding..." : "Add Category"}
+                {isLoading
+                  ? editingCategoryId
+                    ? "Updating..."
+                    : "Adding..."
+                  : editingCategoryId
+                  ? "Update Category"
+                  : "Add Category"}
               </button>
             </div>
 
@@ -417,68 +539,51 @@ export default function Category({
                     No categories found
                   </div>
                 ) : (
-                  categories?.map((cat, index) => (
-                    <div
-                      key={index}
-                      className={`w-full min-h-12 p-2 flex items-center justify-between ${
-                        index % 2 === 0 ? "bg-black/10" : "bg-transparent"
-                      }`}>
-                      <div className="flex-1 px-4">
-                        <p className="font-medium">{cat.name}</p>
-                        {cat.description && (
-                          <p className="text-xs text-black/60 mt-1">
-                            {cat.description}
-                          </p>
-                        )}
+                  <div>
+                    {parentCategories.map((parent, parentIndex) => (
+                      <div
+                        key={parentIndex}
+                        className="border-b border-black/10 last:border-b-0"
+                      >
+                        <div className="flex items-center justify-between py-3 px-4 border-b border-black/20 font-medium">
+                          <p className="font-avenir">{parent}</p>
+                        </div>
+                        {categories
+                          .filter((cat) => cat.parentCategory === parent)
+                          .map((cat, index) => (
+                            <div
+                              key={cat._id}
+                              className={`w-full min-h-12 p-2 pl-8 flex items-center justify-between hover:bg-black/5 transition-colors ${
+                                index % 2 === 0
+                                  ? "bg-black/10"
+                                  : " bg-transparent"
+                              }`}
+                            >
+                              <div className="flex-1 px-4">
+                                <p className="font-medium">{cat.name}</p>
+                                {cat.description && (
+                                  <p className="text-xs text-black/60 mt-1">
+                                    {cat.description}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="px-4 border-l border-black/20 h-full flex items-center justify-center">
+                                <Image
+                                  src="/icons/edit-cat.svg"
+                                  width={20}
+                                  height={20}
+                                  alt="delete"
+                                  className="cursor-pointer hover:opacity-70 transition-opacity"
+                                  onClick={() => handleEditCategory(cat._id)}
+                                />
+                              </div>
+                            </div>
+                          ))}
                       </div>
-                      <div className="px-4 border-l border-black/20 h-full flex items-center justify-center">
-                        <Image
-                          src="/icons/delete.svg"
-                          width={20}
-                          height={20}
-                          alt="delete"
-                          className="cursor-pointer hover:opacity-70 transition-opacity"
-                          onClick={() => handleDeleteCategory(cat._id)}
-                        />
-                      </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed z-30 w-full h-full bg-black/80 top-0 left-0 flex items-center justify-center font-avenir">
-          <div className="w-[400px] bg-white p-6 rounded-2xl">
-            <h3 className="text-lg font-semibold mb-4">Delete Category</h3>
-            <p className="text-black/70 mb-6">
-              Are you sure you want to delete this category? This action cannot
-              be undone.
-            </p>
-            {error && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-            <div className="flex gap-3">
-              <button
-                onClick={cancelDelete}
-                disabled={isLoading}
-                className="flex-1 px-4 py-2 border border-black/20 rounded-lg cursor-pointer hover:bg-black/5 transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                disabled={isLoading}
-                className="flex-1 px-4 py-2 border border-red-500 bg-red-100 text-red-500 rounded-lg hover:bg-red-200 cursor-pointer transition-colors disabled:opacity-50"
-              >
-                {isLoading ? "Deleting..." : "Delete"}
-              </button>
             </div>
           </div>
         </div>

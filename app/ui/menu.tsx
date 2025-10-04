@@ -67,7 +67,6 @@ export default function Menu() {
     speed: 0.5,
   });
 
-  // Memoize active item to prevent unnecessary re-renders
   const activeMenuItem = useMemo(
     () => menuItems.find((item) => item.isActive),
     [menuItems]
@@ -78,29 +77,62 @@ export default function Menu() {
       await initializeMenuItems();
     };
     fetchMenuItems();
-  }, []);
+  }, [initializeMenuItems]);
 
-  useEffect(() => {
-    if (menuItems && menuItems.length > 0) {
-      console.log("Menu loaded, reinitializing slider");
-      reinitialize();
-    }
+  const groupedMenuItems = useMemo(() => {
+    const groups: Record<string, MenuItem[]> = {};
+    const ungrouped: MenuItem[] = [];
+
+    menuItems.forEach((item) => {
+      if (item.parentCategory) {
+        const parent = item.parentCategory;
+        if (!groups[parent]) {
+          groups[parent] = [];
+        }
+        groups[parent].push(item);
+      } else {
+        ungrouped.push(item);
+      }
+    });
+
+    return { groups, ungrouped };
   }, [menuItems]);
 
-  // Stable transition handler
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+
+  // Initialize first group as open
+  useEffect(() => {
+    const groupKeys = Object.keys(groupedMenuItems.groups);
+    if (groupKeys.length > 0 && openGroups.size === 0) {
+      setOpenGroups(new Set([groupKeys[0]]));
+    }
+  }, [groupedMenuItems.groups]);
+
+  const toggleGroup = useCallback((parent: string) => {
+    console.log("Toggling group:", parent);
+    setOpenGroups((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(parent)) {
+        newSet.delete(parent);
+      } else {
+        newSet.add(parent);
+      }
+      console.log("New openGroups:", Array.from(newSet));
+      return newSet;
+    });
+  }, []);
+
   const handleItemTransition = useCallback(
     (newActiveTitle: string | null) => {
       if (newActiveTitle !== currentActiveItem) {
         if (currentActiveItem !== null && newActiveTitle !== null) {
-          // Smooth transition between items
           setIsTransitioning(true);
           setTimeout(() => {
             setCurrentActiveItem(newActiveTitle);
-            setContentKey((prev) => prev + 1); // Force content refresh
+            setContentKey((prev) => prev + 1);
             setIsTransitioning(false);
-          }, 150); // Shorter transition time
+          }, 150);
         } else {
-          // Direct update for first time or closing
           setCurrentActiveItem(newActiveTitle);
           setContentKey((prev) => prev + 1);
           setIsTransitioning(false);
@@ -112,7 +144,6 @@ export default function Menu() {
 
   const handleMobileMenuClick = useCallback(
     (itemTitle: string) => {
-      console.log(itemTitle);
       if (mobileActiveItem === itemTitle) {
         setMobileActiveItem(null);
         setShowMobileSubMenu(false);
@@ -146,10 +177,11 @@ export default function Menu() {
           <div
             onClick={() => handlePush(data.category)}
             key={`${data?.image?._id}-img-${data.category}`}
-            className={cn("h-fit cursor-pointer w-full")}>
+            className={cn("h-fit cursor-pointer w-full")}
+          >
             <div className="w-full h-[35vh] relative overflow-hidden border-b border-black/20">
               <Image
-                src={data?.image?.url??"/images/image-fallback.png"}
+                src={data?.image?.url ?? "/images/image-fallback.png"}
                 fill
                 alt={data.category}
                 className="object-contain"
@@ -168,13 +200,13 @@ export default function Menu() {
           </p>
           {data.menuProducts.length === 0 ? (
             <div className="w-full min-h-[300px] flex items-center justify-center">
-              <p className="font-avenir text-black/40 text-lg">No product available</p>
-
+              <p className="font-avenir text-black/40 text-lg">
+                No product available
+              </p>
             </div>
           ) : (
             <>
               <div className="w-full pl-6">
-                {/* Fixed slider - removed conflicting layout animation */}
                 <AnimatePresence mode="wait">
                   <div
                     ref={sliderRef}
@@ -220,7 +252,6 @@ export default function Menu() {
                   </div>
                 </div>
 
-                {/* Navigation buttons */}
                 <div className="hidden md:flex items-center  justify-center gap-6 md:gap-12">
                   <button
                     ref={prevBtnRef}
@@ -288,7 +319,6 @@ export default function Menu() {
 
   MenuRender.displayName = "MenuRender";
 
-  // Simplified render function
   const RenderTAB = useCallback(
     (activeTitle: string) => {
       const activeMenuItem = menuItems.find(
@@ -307,19 +337,20 @@ export default function Menu() {
 
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }} 
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
-        className="w-full bg-white">
-        {/* Mobile Images Grid */}
+        className="w-full bg-white"
+      >
         <div className="w-full flex">
           <div
             key={`mobile-${data.category}-img`}
-            className={cn("w-full h-fit cursor-pointer")}>
+            className={cn("w-full h-fit cursor-pointer")}
+          >
             <div className="w-full h-[200px]  relative border border-black/20">
               <Image
-                src={data?.image?.url?? "/images/image-fallback.png"}
+                src={data?.image?.url ?? "/images/image-fallback.png"}
                 fill
                 className="object-contain"
                 alt={data?.category}
@@ -333,13 +364,11 @@ export default function Menu() {
           </div>
         </div>
 
-        {/* Mobile Trending Section */}
         <div className="mt-10 md:mt-6 px-4">
           <p className="font-avenir font-[400] text-sm text-black/30 mb-4">
             PRODUCTS
           </p>
 
-          {/* Mobile Product Slider */}
           <div className="w-full flex gap-3 overflow-hidden nav-slider">
             <AnimatePresence mode="wait">
               <motion.div
@@ -384,13 +413,13 @@ export default function Menu() {
 
   const handleClick = () => {
     openModal("idle");
-
     setTimeout(() => {
       openModal("wardrobe");
     }, 270);
   };
+
   return (
-    <AnimatePresence >
+    <AnimatePresence>
       {/* Desktop */}
       <motion.div
         variants={container}
@@ -398,9 +427,10 @@ export default function Menu() {
         initial="close"
         exit="close"
         key="desktop-menu"
-        className="md:w-[35%] xl:w-[30%] h-full bg-white flex-col gap-4 relative z-20 menu-desktop hidden md:flex flex-none">
+        className="md:w-[35%] xl:w-[30%] h-full bg-white flex-col gap-4 relative z-20 menu-desktop hidden md:flex flex-none"
+      >
         <div className="w-full h-full flex flex-none">
-          <div className="w-full flex flex-none flex-col gap-6 pt-[120px] px-9">
+          <div className="w-full flex flex-none flex-col gap-1 pt-[120px] px-9 overflow-y-auto">
             {menuItems?.length === 0 ? (
               <div className="w-full min-h-[300px] flex items-center justify-center">
                 <div className="flex items-center gap-0">
@@ -414,43 +444,124 @@ export default function Menu() {
               </div>
             ) : (
               <>
-                {menuItems.map((item, index) => (
-                  <motion.div
-                    variants={list}
-                    onClick={() => toggleMenuItem(item.category)}
-                    key={`menu-${item.category}-${index}`}
-                    className={cn(
-                      "font-avenir w-fit text-md hover:text-black/60 cursor-pointer relative text-black z-20 transition-colors duration-200",
-                      {
-                        "text-black/30": item.isActive,
-                      }
-                    )}
-                  >
-                    <p className="font-avenir uppercase">{item.category}</p>
-                    <motion.div
-                      className="w-full h-[1px]"
-                      animate={{
-                        backgroundColor: item.isActive
-                          ? "#d97706"
-                          : "rgba(0,0,0,0.2)",
-                      }}
-                      transition={{ duration: 0.2 }}
-                    />
-                  </motion.div>
-                ))}
+                {/* Render grouped items */}
+                {Object.entries(groupedMenuItems.groups).map(
+                  ([parent, items]) => {
+                    const isOpen = openGroups.has(parent);
+
+                    return (
+                      <motion.div
+                        key={parent}
+                        variants={list}
+                        className="w-full overflow-hidden border-b border-black/10 last:border-b-0"
+                      >
+                        {/* Parent Header */}
+                        <div
+                          onClick={() => toggleGroup(parent)}
+                          className="flex items-center justify-between cursor-pointer py-3 hover:opacity-70 transition-opacity"
+                        >
+                          <p className="font-avenir uppercase font-bold text-sm">
+                            {parent}
+                          </p>
+                          <motion.div
+                            animate={{ rotate: isOpen ? 0 : -90 }}
+                            transition={{ duration: 0.3, ease: easingShow }}
+                          >
+                            <Image
+                              src="/icons/arrow.svg"
+                              width={16}
+                              height={16}
+                              alt="arrow"
+                            />
+                          </motion.div>
+                        </div>
+
+                        {/* Collapsible Content */}
+                        <motion.div
+                          initial="closed"
+                          animate={isOpen ? "open" : "closed"}
+                          variants={accordionContainer}
+                          className="overflow-hidden"
+                        >
+                          <motion.div
+                            className="pl-6 pb-3"
+                            variants={accordionContent}
+                          >
+                            {items.map((item, index) => (
+                              <div
+                                key={`menu-${item.category}-${index}`}
+                                className={cn(
+                                  "font-avenir w-fit text-md hover:text-black/60 cursor-pointer relative text-black z-20 transition-colors duration-200 mb-3",
+                                  {
+                                    "text-black/30": item.isActive,
+                                  }
+                                )}
+                                onClick={() => toggleMenuItem(item.category)}
+                              >
+                                <p className="font-avenir uppercase">
+                                  {item.category}
+                                </p>
+                                <motion.div
+                                  className="w-full h-[1px]"
+                                  animate={{
+                                    backgroundColor: item.isActive
+                                      ? "#d97706"
+                                      : "rgba(0,0,0,0.2)",
+                                  }}
+                                  transition={{ duration: 0.2 }}
+                                />
+                              </div>
+                            ))}
+                          </motion.div>
+                        </motion.div>
+                      </motion.div>
+                    );
+                  }
+                )}
+
+                {/* Render ungrouped items without parent header and no padding */}
+                {groupedMenuItems.ungrouped.length > 0 && (
+                  <div className="w-full flex flex-col gap-3 py-3">
+                    {groupedMenuItems.ungrouped.map((item, index) => (
+                      <motion.div
+                        variants={list}
+                        onClick={() => toggleMenuItem(item.category)}
+                        key={`ungrouped-${item.category}-${index}`}
+                        className={cn(
+                          "font-avenir w-fit text-md hover:text-black/60 cursor-pointer relative text-black z-20 transition-colors duration-200",
+                          {
+                            "text-black/30": item.isActive,
+                          }
+                        )}
+                      >
+                        <p className="font-avenir uppercase">{item.category}</p>
+                        <motion.div
+                          className="w-full h-[1px]"
+                          animate={{
+                            backgroundColor: item.isActive
+                              ? "#d97706"
+                              : "rgba(0,0,0,0.2)",
+                          }}
+                          transition={{ duration: 0.2 }}
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+
                 <motion.div
                   animate={{ opacity: 1, y: 0 }}
                   initial={{ opacity: 0, y: 20 }}
                   transition={{ type: "tween", delay: 0.5 }}
-                  className="mt-6"
+                  className="mt-6 pb-6"
                 >
                   <Link onClick={closeModal} href="/about-us">
-                    <p className="font-avenir my-2 uppercase text-md cursor-pointer hover:text-black text-blue-600">
+                    <p className="font-avenir uppercase text-md cursor-pointer hover:text-black text-blue-600">
                       ABOUT US
                     </p>
                   </Link>
                   <Link onClick={closeModal} href="/faqs">
-                    <p className="font-avenir uppercase text-md cursor-pointer  hover:text-black  text-blue-600">
+                    <p className="font-avenir uppercase text-md cursor-pointer hover:text-black text-blue-600">
                       FAQs
                     </p>
                   </Link>
@@ -494,61 +605,129 @@ export default function Menu() {
         initial="close"
         exit="close"
         key="mobile-menu"
-        className="w-[100%] overflow-hidden pb-10 relative bg-white flex-col  pt-[90px] px-12 flex md:hidden menu-mobile">
-        <div className="flex flex-col gap-4 overflow-auto pt-[30px]">
-          {menuItems.map((item, index) => (
-          <motion.div
-            variants={list}
-            key={index}
-            onClick={() => handleMobileMenuClick(item.category)}
-            className="font-avenir w-fit text-md md:text-lg cursor-pointer uppercase"
-          >
-            {item.category}
-            <p className="w-full h-[1px] bg-amber-600"></p>
-          </motion.div>
-        ))}
-        <motion.div variants={list}>
-          <SearchIcon style="ml-0 mt-10" />
-          <div onClick={handleClick} className="flex items-center gap-1 mt-4">
-            <Image
-              src={
-                bookMarks.length > 0
-                  ? "/icons/bookmark2.svg"
-                  : "/icons/bookmark.svg"
-              }
-              width={18}
-              height={18}
-              alt="bookmark"
-            />
-            <p className="font-avenir font-[400] text-sm mt-[4px]">BOOKMARKS</p>
-          </div>
-          <Link
-            onClick={() => closeModal()}
-            href="/account?userPage=profile"
-            className="flex items-center gap-1.5 mt-6"
-          >
-            <Image src="/icons/user.svg" width={16} height={16} alt="user" />
-            <p className="font-avenir font-[400] text-sm mt-[8px]">ACCOUNT</p>
-          </Link>
-          <Link onClick={closeModal} href="/account?userPage=orders">
-            <div className="flex items-center gap-1 mt-2">
+        className="w-[100%]  pb-10 relative bg-white flex-col pt-[90px] px-12 flex md:hidden menu-mobile" >
+        <div className="flex flex-col gap-2 overflow-auto py-[30px]">
+          {/* Render grouped items for mobile */}
+          {Object.entries(groupedMenuItems.groups).map(([parent, items]) => {
+            const isOpen = openGroups.has(parent);
+
+            return (
+              <motion.div
+                key={`mobile-${parent}`}
+                variants={list}
+                className="w-full o border-b border-black/10 last:border-b-0"
+              >
+                {/* Parent Header */}
+                <div
+                  onClick={() => toggleGroup(parent)}
+                  className="flex items-center justify-between cursor-pointer py-3 hover:opacity-70 transition-opacity"
+                >
+                  <p className="font-avenir uppercase font-bold text-md">
+                    {parent}
+                  </p>
+                  <motion.div
+                    animate={{ rotate: isOpen ? 0 : -90 }}
+                    transition={{ duration: 0.3, ease: easingShow }}
+                  >
+                    <Image
+                      src="/icons/arrow.svg"
+                      width={16}
+                      height={16}
+                      alt="arrow"
+                    />
+                  </motion.div>
+                </div>
+
+                {/* Collapsible Content */}
+                <motion.div
+                  layout
+                  initial={false}
+                  animate={{ opacity: isOpen ? 1 : 0 }}
+                  transition={{ duration: 0.3, ease: easingShow }}
+                  className={cn("overflow-hidden", isOpen ? "pb-3" : "pb-0")} >
+                  {isOpen && (
+                    <div className="pl-4">
+                      {items.map((item, index) => (
+                        <div
+                          key={`mobile-menu-${item.category}-${index}`}
+                          onClick={() => handleMobileMenuClick(item.category)}
+                          className="font-avenir w-fit text-md cursor-pointer uppercase mb-3" >
+                          {item.category}
+                          <p className="w-full h-[1px] bg-amber-600"></p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              </motion.div>
+            );
+          })}
+
+          {/* Render ungrouped items for mobile without parent header and no padding */}
+          {groupedMenuItems.ungrouped.length > 0 && (
+            <div className="w-full flex flex-col gap-3 py-2">
+              {groupedMenuItems.ungrouped.map((item, index) => (
+                <motion.div
+                  variants={list}
+                  initial={false}
+                  key={`mobile-ungrouped-${item.category}-${index}`}
+                  onClick={() => handleMobileMenuClick(item.category)}
+                  className="font-avenir w-fit text-md cursor-pointer uppercase"
+                >
+                  {item.category}
+                  <p className="w-full h-[1px] bg-amber-600"></p>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          <motion.div variants={list}>
+            <SearchIcon style="ml-0 mt-10" />
+            <div onClick={handleClick} className="flex items-center gap-1 mt-4">
               <Image
-                src="/icons/orders.svg"
+                src={
+                  bookMarks.length > 0
+                    ? "/icons/bookmark2.svg"
+                    : "/icons/bookmark.svg"
+                }
                 width={18}
                 height={18}
                 alt="bookmark"
               />
               <p className="font-avenir font-[400] text-sm mt-[4px]">
-                MY ORDERS
+                BOOKMARKS
               </p>
             </div>
-          </Link>
-          <div onClick={async() => await signOut({ callbackUrl:"/sign-in"})} className="flex flex-col  mt-12">
-            <p className=" px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
-              Logout
-            </p>
-          </div>
-        </motion.div>
+            <Link
+              onClick={() => closeModal()}
+              href="/account?userPage=profile"
+              className="flex items-center gap-1.5 mt-6"
+            >
+              <Image src="/icons/user.svg" width={16} height={16} alt="user" />
+              <p className="font-avenir font-[400] text-sm mt-[8px]">ACCOUNT</p>
+            </Link>
+            <Link onClick={closeModal} href="/account?userPage=orders">
+              <div className="flex items-center gap-1 mt-2">
+                <Image
+                  src="/icons/orders.svg"
+                  width={18}
+                  height={18}
+                  alt="bookmark"
+                />
+                <p className="font-avenir font-[400] text-sm mt-[4px]">
+                  MY ORDERS
+                </p>
+              </div>
+            </Link>
+            <div
+              onClick={async () => await signOut({ callbackUrl: "/sign-in" })}
+              className="flex flex-col mt-12"
+            >
+              <p className="px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
+                Logout
+              </p>
+            </div>
+          </motion.div>
         </div>
       </motion.div>
 
@@ -666,7 +845,6 @@ const menuChild = {
   },
 };
 
-// Improved content fade with shorter transitions
 const contentFade = {
   visible: {
     opacity: 1,
@@ -682,6 +860,40 @@ const contentFade = {
     transition: {
       duration: 0.15,
       ease: easingShow,
+    },
+  },
+};
+
+// Accordion animation variants - centralized
+const accordionContainer = {
+  open: {
+    maxHeight: 600,
+    transition: {
+      duration: 0.3,
+      ease: easingShow,
+    },
+  },
+  closed: {
+    maxHeight: 0,
+    transition: {
+      duration: 0.3,
+      ease: easingShow,
+    },
+  },
+};
+
+const accordionContent = {
+  open: {
+    opacity: 1,
+    transition: {
+      duration: 0.2,
+      delay: 0.1,
+    },
+  },
+  closed: {
+    opacity: 0,
+    transition: {
+      duration: 0.15,
     },
   },
 };

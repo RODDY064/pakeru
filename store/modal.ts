@@ -7,6 +7,7 @@ type ModalDisplay = "idle" | "cart" | "menu" | "wardrobe";
 
 export type MenuItem = {
   category: string;
+  parentCategory?: string;
   isActive: boolean;
   image: {
     _id: string;
@@ -112,8 +113,6 @@ export const useModalStore: StateCreator<
         return;
       }
 
-      console.log(state.categories, " categories");
-
       set((draft) => {
         draft.menuItems = state.categories.map((category) => {
           const categoryProducts = state.products.filter(
@@ -122,6 +121,7 @@ export const useModalStore: StateCreator<
 
           return {
             category: category.name,
+            parentCategory: category.parentCategory ?? "",
             isActive: false,
             image: category.image,
             catID: category._id,

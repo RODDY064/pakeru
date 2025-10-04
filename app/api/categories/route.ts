@@ -57,17 +57,10 @@ export async function GET(request: NextRequest) {
       cache: "no-store",
     });
 
-    const { data, status } = await handleBackendResponse(response);
 
+    const { data, status } = await handleBackendResponse(response)
     return NextResponse.json(data, {
       status,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control":
-          "no-store, no-cache, must-revalidate, proxy-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
     });
   } catch (error: any) {
     // console.error("Categories GET error:", error);
@@ -76,7 +69,6 @@ export async function GET(request: NextRequest) {
       {
         error: "Categories fetch failed",
         message: error.message,
-        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
       },
       { status: 500 }
     );
@@ -120,6 +112,10 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     const name = formData.get("name");
+    const parentCat = formData.get("parentCategory");
+
+    console.log(parentCat,'parent category')
+
     if (!name) {
       return NextResponse.json(
         { error: "Category name is required" },
@@ -146,6 +142,7 @@ export async function POST(request: NextRequest) {
       body: formData,
       cache: "no-store",
     });
+
 
     const { data, status } = await handleBackendResponse(response);
 
