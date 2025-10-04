@@ -553,8 +553,7 @@ export default function Menu() {
                   animate={{ opacity: 1, y: 0 }}
                   initial={{ opacity: 0, y: 20 }}
                   transition={{ type: "tween", delay: 0.5 }}
-                  className="mt-6 pb-6"
-                >
+                  className="mt-6 pb-6">
                   <Link onClick={closeModal} href="/about-us">
                     <p className="font-avenir uppercase text-md cursor-pointer hover:text-black text-blue-600">
                       ABOUT US
@@ -606,7 +605,7 @@ export default function Menu() {
         exit="close"
         key="mobile-menu"
         className="w-[100%]  pb-10 relative bg-white flex-col pt-[90px] px-12 flex md:hidden menu-mobile" >
-        <div className="flex flex-col gap-2 overflow-auto py-[30px]">
+        <div className="flex flex-col gap-2 overflow-auto nav-slider py-[30px]">
           {/* Render grouped items for mobile */}
           {Object.entries(groupedMenuItems.groups).map(([parent, items]) => {
             const isOpen = openGroups.has(parent);

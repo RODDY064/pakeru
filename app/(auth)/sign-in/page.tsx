@@ -139,7 +139,7 @@ function SignInForm() {
         <div className="w-full h-[1px] bg-black/20"></div>
       </div>
       <div 
-      onClick={()=>signIn('google')}
+      onClick={()=>signIn('google',{ callbackUrl:"/"})}
       className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
         <Image src="/icons/google.svg" width={16} height={16} alt="google" />
         <p>Google</p>

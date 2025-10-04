@@ -1,77 +1,137 @@
 // app/sitemap.ts
-import type { MetadataRoute } from 'next';
+import type { MetadataRoute } from "next";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://thepakeru.com';
-  const currentDate = new Date(); // Use today's date
+const BASE_URL = "https://thepakeru.com";
 
-  return [
+type ProductData = {
+  _id: string;
+  updatedAt?: string;
+  createdAt?: string;
+};
+
+type GalleryData = {
+  _id: string;
+  name: string;
+};
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const currentDate = new Date();
+
+  const [products, galleries] = await Promise.all([
+    fetchProductsServer(),
+    fetchCollectionsServer(),
+  ]);
+
+  // Map product URLs
+  const productUrls: MetadataRoute.Sitemap = products.map((product) => ({
+    url: `${BASE_URL}/products/${product._id}`,
+    lastModified: product.updatedAt
+      ? new Date(product.updatedAt)
+      : new Date(product.createdAt || currentDate),
+    changeFrequency: "weekly",
+    priority: 0.8,
+  }));
+
+  // Map gallery/collection URLs
+  const galleryUrls: MetadataRoute.Sitemap = galleries.map((gallery) => ({
+    url: `${BASE_URL}/collections/${gallery._id}`,
+    lastModified: currentDate,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
+  // Static pages
+  const staticUrls: MetadataRoute.Sitemap = [
     {
-      url: `${baseUrl}/`,
+      url: `${BASE_URL}/`,
       lastModified: currentDate,
-      changeFrequency: 'daily', // Homepage updates frequently for e-commerce promotions
+      changeFrequency: "daily",
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/about`,
+      url: `${BASE_URL}/about`,
       lastModified: currentDate,
-      changeFrequency: 'monthly',
+      changeFrequency: "monthly",
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/shop`,
+      url: `${BASE_URL}/shop`,
       lastModified: currentDate,
-      changeFrequency: 'daily', // Shop page for new arrivals
+      changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/collections/graphic-tees`,
+      url: `${BASE_URL}/policy`,
       lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/collections/urban-outerwear`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/collections/street-accessories`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/collections/limited-edition`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/collections/unisex-clothing`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: currentDate,
-      changeFrequency: 'monthly',
+      changeFrequency: "monthly",
       priority: 0.6,
     },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly', // For fashion tips, news
-      priority: 0.6,
-    },
-    // Add dynamic product pages here if fetching from API/DB, e.g.:
-    // products.map((product) => ({
-    //   url: `${baseUrl}/products/${product.slug}`,
-    //   lastModified: product.updatedAt,
-    //   changeFrequency: 'weekly',
-    //   priority: 0.8,
-    // })),
   ];
+
+  return [...staticUrls, ...galleryUrls, ...productUrls];
+}
+
+async function fetchProductsServer(): Promise<ProductData[]> {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products?limit=25`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        next: { revalidate: 3600 }, 
+      }
+    );
+
+    if (!response.ok) {
+      console.error(`❌ Failed to fetch products: ${response.status}`);
+      return [];
+    }
+
+    const result = await response.json();
+
+    if (!result || !Array.isArray(result.data)) {
+      console.error("❌ Invalid product response format:", result);
+      return [];
+    }
+
+    return result.data.map((product: any) => ({
+      _id: product._id,
+      updatedAt: product.updatedAt,
+      createdAt: product.createdAt,
+    }));
+  } catch (error) {
+    console.error("⚠️ Error fetching products for sitemap:", error);
+    return [];
+  }
+}
+
+async function fetchCollectionsServer(): Promise<GalleryData[]> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/landing-page`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      console.error(`❌ Failed to fetch collections: ${response.status}`);
+      return [];
+    }
+
+    const result = await response.json();
+
+    // Make sure section3 exists and is an array
+    if (!Array.isArray(result?.section3)) {
+      console.error("❌ Invalid collection data structure:", result);
+      return [];
+    }
+
+    return result.section3.map((gallery: any) => ({
+      _id: gallery._id,
+      name: gallery.name,
+    }));
+  } catch (error) {
+    console.error("⚠️ Error fetching collections for sitemap:", error);
+    return [];
+  }
 }
