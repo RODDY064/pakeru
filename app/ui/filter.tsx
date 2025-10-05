@@ -36,88 +36,106 @@ export default function Filter() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const { get } = useApiClient()
+  const { get } = useApiClient();
 
-useEffect(() => {
-  setFilterCategories();
-  const handleResize = () => {
-    setIsMobile(window.innerWidth < 1000);
+  useEffect(() => {
+    setFilterCategories();
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1000);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const newHeights: { [key: string]: number } = {};
+    filteritems.forEach((filt) => {
+      const el = contentRefs.current[filt.name];
+      if (el) {
+        newHeights[filt.name] = el.scrollHeight + 10;
+      }
+    });
+    setHeights(newHeights);
+  }, [filteritems]);
+
+  useEffect(() => {
+    if (!isInitialized) {
+      loadFiltersFromURL(searchParams);
+      const hasParams = Array.from(searchParams.keys()).some(
+        (key) => key !== "page" && searchParams.get(key)
+      );
+
+      if (hasParams) {
+        const timer = setTimeout(() => {
+          const queries = getFilterQueries();
+          loadProducts(false, 1, 25, queries);
+        }, 100);
+
+        return () => clearTimeout(timer);
+      }
+
+      setIsInitialized(true);
+    }
+  }, [
+    searchParams,
+    loadFiltersFromURL,
+    getFilterQueries,
+    loadProducts,
+    isInitialized,
+  ]);
+
+  // Subsequent updates: sync URL when filters change
+  useEffect(() => {
+    if (isInitialized) {
+      applyFiltersToURL(searchParams, pathname, router);
+    }
+  }, [
+    filteritems,
+    applyFiltersToURL,
+    pathname,
+    router,
+    searchParams,
+    isInitialized,
+  ]);
+
+  const handlePriceChange = (type: "min" | "max", value: string) => {
+    if (type === "min") {
+      setPriceMin(value);
+    } else {
+      setPriceMax(value);
+    }
+
+    const min =
+      type === "min"
+        ? value
+          ? parseInt(value)
+          : undefined
+        : priceMin
+        ? parseInt(priceMin)
+        : undefined;
+
+    const max =
+      type === "max"
+        ? value
+          ? parseInt(value)
+          : undefined
+        : priceMax
+        ? parseInt(priceMax)
+        : undefined;
+
+    setPriceRange(min, max);
   };
-  
-  window.addEventListener("resize", handleResize);
-  handleResize();
-  return () => window.removeEventListener("resize", handleResize);
-}, []);
 
-useEffect(() => {
-  const newHeights: { [key: string]: number } = {};
-  filteritems.forEach((filt) => {
-    const el = contentRefs.current[filt.name];
-    if (el) {
-      newHeights[filt.name] = el.scrollHeight + 10;
-    }
-  });
-  setHeights(newHeights);
-}, [filteritems]);
-
-useEffect(() => {
-  if (!isInitialized) {
-    loadFiltersFromURL(searchParams);
-    const hasParams = Array.from(searchParams.keys()).some(key => 
-      key !== 'page' && searchParams.get(key)
-    );
-    
-    if (hasParams) {
-
-      const timer = setTimeout(() => {
-        const queries = getFilterQueries();
-        loadProducts(false, 1, 25, queries );
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-    
-    setIsInitialized(true);
-  }
-}, [searchParams, loadFiltersFromURL, getFilterQueries, loadProducts, isInitialized]);
-
-// Subsequent updates: sync URL when filters change
-useEffect(() => {
-  if (isInitialized) {
-    applyFiltersToURL(searchParams, pathname, router);
-  }
-}, [filteritems, applyFiltersToURL, pathname, router, searchParams, isInitialized]);
-
-const handlePriceChange = (type: "min" | "max", value: string) => {
-  if (type === "min") {
-    setPriceMin(value);
-  } else {
-    setPriceMax(value);
-  }
-
-  const min = type === "min" 
-    ? (value ? parseInt(value) : undefined)
-    : (priceMin ? parseInt(priceMin) : undefined);
-    
-  const max = type === "max" 
-    ? (value ? parseInt(value) : undefined)
-    : (priceMax ? parseInt(priceMax) : undefined);
-    
-  setPriceRange(min, max);
-};
-
-const ApplyFilter = () => {
-  const queries = getFilterQueries();
-  loadProducts(true, 1, 25, queries);
-  filterState(false);
-};
-
- 
+  const ApplyFilter = () => {
+    const queries = getFilterQueries();
+    loadProducts(true, 1, 25, queries);
+    filterState(false);
+  };
 
   const activeFilterCount = getActiveFilterCount();
   const hasFilters = hasActiveFilters();
-
-
 
   const renderPriceInputs = (isMobileView: boolean = false) => (
     <div className="flex flex-col gap-3 font-avenir">
@@ -171,8 +189,7 @@ const ApplyFilter = () => {
                 transition={{ ease: "easeInOut" }}
                 className={cn(
                   "font-avenir text-black md:flex flex-col bg-black/70 h-full  border-black overflow-hidden"
-                )}
-              >
+                )}>
                 <motion.div className="w-full h-full z-50   bg-white border-r-[0.5px] relative">
                   <motion.div className="w-full h-full flex-none overflow-hidden   p-10 items-start">
                     <div className="flex items-center justify-between mb-6">
@@ -206,8 +223,7 @@ const ApplyFilter = () => {
                             filt.view ? { height: "auto" } : { height: 50 }
                           }
                           key={filt.name}
-                          className="overflow-hidden border-b border-dashed"
-                        >
+                          className="overflow-hidden border-b border-dashed">
                           <div className="py-4">
                             <div className="w-full flex justify-between items-center">
                               <div className="flex items-center gap-2">
@@ -325,7 +341,7 @@ const ApplyFilter = () => {
               <motion.div
                 variants={mfiltButton}
                 transition={{ ease: "easeInOut" }}
-                className="w-screen pb-2 bg-white flex items-center justify-center z-20 mobile-nav-filt"
+                className="w-screen pb-2 bg-white flex items-center justify-center z-50 mobile-nav-filt"
               >
                 <motion.div
                   variants={mFiltTextB}
@@ -338,7 +354,7 @@ const ApplyFilter = () => {
                   >
                     <div
                       onClick={() => filterState(!filter)}
-                      className="fixed bottom-6 flex  py-2  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1"
+                      className="fixed bottom-4 flex  py-2  px-5 rounded-full tex-sm bg-black text-white cursor-pointer font-avenir items-center justify-center gap-1"
                     >
                       <p>Filter</p>
                       <Image
@@ -429,7 +445,8 @@ const ApplyFilter = () => {
                                             toggleSelection(filt.name, item)
                                           }
                                           key={index}
-                                          className="flex gap-2 items-center cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
+                                          className="flex gap-2 items-center cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                                        >
                                           <div className="size-3.5 border rounded-full p-[1px] flex items-center justify-center">
                                             <motion.div
                                               animate={
@@ -475,7 +492,7 @@ const ApplyFilter = () => {
 // Improved animation variants
 const Parent = {
   show: {
-    width: "400px",
+    width: "600px",
     transition: { duration: 0.3 },
   },
   hide: {
@@ -507,7 +524,8 @@ const mobileParent = {
 const mfiltButton = {
   show: {
     height: "75%",
-    alignItems: "start",
+    alignItems: "flex-start",
+    backgroundColor: "white",
     paddingTop: 16,
     transition: {
       duration: 0.3,
@@ -516,6 +534,8 @@ const mfiltButton = {
   },
   hide: {
     height: "auto",
+    alignItems: "flex-start", 
+    backgroundColor: "transparent",
     paddingTop: 8,
     transition: {
       duration: 0.2,

@@ -103,8 +103,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
       transition={{ type: "tween" }}
       className={`fixed left-0 top-0 z-[99] w-full h-full hidden md:block ${
         showOrderModal ? "pointer-events-auto" : "pointer-events-none"
-      }`}
-    >
+      }`}>
       <AnimatePresence>
         {showOrderModal && (
           <>
@@ -338,7 +337,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
 
                         {type !== "unfulfilled" && (
                           <>
-                            <div className="mt-2">
+                            {/* <div className="mt-2">
                               <p className="text-black/40 text-md font-avenir font-[300]">
                                 Actions
                               </p>
@@ -352,7 +351,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                                   </p>
                                 </div>
                               </div>
-                            </div>
+                            </div> */}
                           </>
                         )}
                       </div>

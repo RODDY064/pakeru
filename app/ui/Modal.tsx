@@ -23,8 +23,7 @@ export default function Modal() {
           className={cn(
             "fixed top-0 right-0 w-full h-full z-50",
             "pointer-events-auto"
-          )}
-        >
+          )}>
           <motion.div
             variants={overlay}
             className="absolute w-full h-full bg-black/95"

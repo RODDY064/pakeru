@@ -1,0 +1,101 @@
+import { NextRequest, NextResponse } from "next/server";
+
+
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+
+    // Forward query parameters
+    const queryString = searchParams.toString();
+    console.log(queryString);
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/cloth-types`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache:"no-store"
+    });
+
+    const data = await response.json();
+
+    // console.log(data,'products')
+
+    return NextResponse.json(data, { status: response.status });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: "Cloth type fetch failed", message: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+
+    const targetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/cloth-types`;
+
+    const incomingHeaders: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      const excludedHeaders = [
+        "content-length",
+        "content-encoding",
+        "transfer-encoding",
+        "host",
+        "connection",
+        "upgrade",
+        "expect",
+      ];
+
+      if (!excludedHeaders.includes(key.toLowerCase())) {
+        incomingHeaders[key] = value;
+      }
+    });
+
+    // Recreate FormData to avoid corruption
+    const newFormData = new FormData();
+
+    // Copy all fields from original FormData
+    for (const [key, value] of formData.entries()) {
+      // console.log(`FormData entry: ${key} =`, value);
+      newFormData.append(key, value);
+    }
+
+    delete incomingHeaders["content-type"];
+
+    const response = await fetch(targetUrl, {
+      method: "POST",
+      headers: incomingHeaders,
+      body: newFormData,
+      cache:"no-store"
+    });
+
+    // console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log("Error response:", errorText);
+      return NextResponse.json(
+        { error: "External API error", message: errorText },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error: any) {
+
+    let errorMessage = error.message;
+    return NextResponse.json(
+      {
+        error: "Cloth type creation failed",
+        message: errorMessage,
+      },
+      { status: 500 }
+    );
+  }
+}

@@ -139,6 +139,7 @@ export default async function RootLayout({
   const { products, categories } = await fetchInitialData();
   const content = await fetchContent();
 
+
   return (
     <html lang="en">
       <body className={` ${avenir.variable} ${blackMango.style}  antialiased `}>

@@ -6,7 +6,7 @@ import gsap from "gsap";
 import Image from "next/image";
 import Button from "../ui/button";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { Draggable } from "gsap/Draggable";
 import { InertiaPlugin } from "gsap/InertiaPlugin";
@@ -36,28 +36,13 @@ export default function Home() {
   }, [scrollAmount]);
 
 
-  useEffect(() => {
-    const calculateHeight = () => {
-      // Use actual viewport height for consistency across platforms
-      const actualVH = window.innerHeight;
-      setContainerHeight(`${actualVH}px`);
+  useLayoutEffect(() => {
+  const actualVH = window.innerHeight;
+  setContainerHeight(`${actualVH}px`);
+  document.documentElement.style.setProperty("--actual-vh", `${actualVH * 0.01}px`);
+}, []);
 
-      // Set CSS custom property for dvh fallback
-      document.documentElement.style.setProperty(
-        "--actual-vh",
-        `${actualVH * 0.01}px`
-      );
-    };
 
-    calculateHeight();
-    window.addEventListener("resize", calculateHeight);
-    window.addEventListener("orientationchange", calculateHeight);
-
-    return () => {
-      window.removeEventListener("resize", calculateHeight);
-      window.removeEventListener("orientationchange", calculateHeight);
-    };
-  }, []);
 
   return (
     <div className="w-full min-h-dvh flex flex-col items-center bg-black home-main overflow-hidden">

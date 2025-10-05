@@ -2,7 +2,7 @@
 
 import Input from "@/app/ui/input";
 import Link from "next/link";
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
@@ -27,6 +27,7 @@ function SignInForm() {
     "loading" | "idle" | "submitted" | "error" | "unverified"
   >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const {
     register,
@@ -38,6 +39,68 @@ function SignInForm() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
+
+   useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      setSignState("error");
+      
+      // Handle different NextAuth error types
+      let displayError = "Authentication failed";
+      
+      switch (error) {
+        case "AccessDenied":
+          displayError = "Access denied. Please try again.";
+          break;
+        case "Configuration":
+          displayError = "There is a problem with the server configuration.";
+          break;
+        case "Verification":
+          displayError = "The verification token has expired or has already been used.";
+          break;
+        case "OAuthSignin":
+          displayError = "Error in constructing an authorization URL.";
+          break;
+        case "OAuthCallback":
+          displayError = "Error in handling the response from an OAuth provider.";
+          break;
+        case "OAuthCreateAccount":
+          displayError = "Could not create OAuth provider user in the database.";
+          break;
+        case "EmailCreateAccount":
+          displayError = "Could not create email provider user in the database.";
+          break;
+        case "Callback":
+          displayError = "Error in the OAuth callback handler route.";
+          break;
+        case "OAuthAccountNotLinked":
+          displayError = "Email already exists with a different sign-in method.";
+          break;
+        case "SessionRequired":
+          displayError = "Please sign in to access this page.";
+          break;
+        case "Default":
+          displayError = "Unable to sign in.";
+          break;
+        default:
+          // If it's a custom error message, decode and use it
+          displayError = decodeURIComponent(error);
+      }
+      
+      setErrorMessage(displayError);
+      
+      // Clear error after 5 seconds
+      const timer = setTimeout(() => {
+        setSignState("idle");
+        setErrorMessage(null);
+        // Clear URL params without refresh
+        router.replace("/sign-in", { scroll: false });
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, router]);
+
 
   const onSubmit: SubmitHandler<SignInSchema> = async (data) => {
     try {
@@ -94,6 +157,22 @@ function SignInForm() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true);
+      await signIn("google", { callbackUrl: "/" });
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      setSignState("error");
+      setErrorMessage("Failed to initiate Google sign-in");
+      setIsGoogleLoading(false);
+      setTimeout(() => {
+        setSignState("idle");
+        setErrorMessage(null);
+      }, 3000);
+    }
+  };
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -138,12 +217,14 @@ function SignInForm() {
         <p className="text-sm text-black/30 font-avenir">or</p>
         <div className="w-full h-[1px] bg-black/20"></div>
       </div>
-      <div 
-      onClick={()=>signIn('google',{ callbackUrl:"/"})}
-      className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
+      <button type="button"
+        onClick={handleGoogleSignIn}
+        disabled={isGoogleLoading || signInState === "loading"}
+        className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2"
+      >
         <Image src="/icons/google.svg" width={16} height={16} alt="google" />
         <p>Google</p>
-      </div>
+      </button>
     </form>
   );
 }
@@ -182,7 +263,8 @@ export default function SignIn() {
               alt="Loading form"
             />
           </div>
-        }>
+        }
+      >
         <SignInForm />
       </Suspense>
     </div>

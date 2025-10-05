@@ -1,6 +1,9 @@
 import { capitalize } from "@/libs/functions";
 import Image from "next/image";
 import React from "react";
+import ClothTypeModal from "./clothTypeModal";
+
+
 
 export type SizeCongfigType = {
   gender: "male" | "female";
@@ -47,42 +50,7 @@ export default function SizeType({
           </p>
         )}
       </div>
-      <div className="mt-6">
-        <div className="flex justify-between items-center">
-          <p className="font-avenir font-[500] text-lg">Cloth Type</p>
-        </div>
-
-        <div className="relative mt-2 flex items-center">
-          <select
-            {...register("sizeType.clothType")}
-            className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl"
-          >
-            <option value="">Select cloth type</option>
-            <option value="men-shirts">Men Shirts</option>
-            <option value="men-t-shirts">Men T-shirts</option>
-            <option value="polo">Polo</option>
-            <option value="men-jeans">Men Jeans</option>
-            <option value="men-pants">Men Pants</option>
-            <option value="men-cargo-pants">Men Cargo Pants</option>
-            <option value="men-cargo-shorts">Men Cargo Shorts</option>
-            <option value="men-baggy-jeans">Men Baggy Jeans</option>
-            <option value="crop-top-short-sleeve">Crop Top Short Sleeve</option>
-            <option value="crop-top-long-sleeve">Crop Top Long Sleeve</option>
-            <option value="pleated-skirt">Pleated Skirt</option>
-            <option value="women-baggy-jeans">Women Baggy Jeans</option>
-            <option value="women-cargo-pants">Women Cargo Pants</option>
-          </select>
-
-          <div className="absolute right-3">
-            <Image src="/icons/arrow.svg" width={16} height={16} alt="arrow" />
-          </div>
-        </div>
-        {errors?.sizeType?.clothType && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.sizeType?.clothType.message}
-          </p>
-        )}
-      </div>
+      <ClothTypeModal  />
       <div
         className={`mt-10 p-3 bg-blue-50 rounded-2xl border border-blue-200 `}
       >
@@ -102,3 +70,4 @@ export default function SizeType({
     </div>
   );
 }
+

@@ -23,6 +23,7 @@ import { handleNavigation } from "@/libs/navigate";
 import { useStoreInitialization } from "@/libs/cartPersist";
 import { useApiClient } from "@/libs/useApiClient";
 import { useSession } from "next-auth/react";
+import Loader from "./loader";
 
 
 gsap.registerPlugin(ScrollTrigger);
@@ -186,6 +187,7 @@ export default function Nav() {
 
   return (
     <div className="fixed top-0 w-full left-auto z-50 h-fit">
+      <Loader/>
       <div>
         <div className=" flex items-center px-4 md:px-8 py-4 bg-black text-white overflow-hidden h-[40px] nav-ads justify-between">
           <p className="opacity-0">h</p>

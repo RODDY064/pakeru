@@ -91,8 +91,6 @@ export const useCategory: StateCreator<
 
       const result = response;
 
-      console.log(result, "cat results");
-
       if (!result || !Array.isArray(result.data)) {
         throw new Error("Invalid categories response format");
       }

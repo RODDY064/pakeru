@@ -13,7 +13,7 @@ import { ProductData } from "@/store/dashbaord/products";
 import SizeGuild from "./size-guild";
 import ProductCare from "./productCare";
 import Cedis from "./cedis";
-import { ClothTypeName } from "@/libs/sizeguilde";
+import { MeasurementGroupName } from "@/libs/sizeguilde";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -166,8 +166,6 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   };
 
   useEffect(() => {
-    console.log(imageDiv, "image div");
-
     if (!imageDiv.current) return;
 
     const el = imageDiv.current;
@@ -338,11 +336,6 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
         ?.images || []
     );
   }, [productData, colorActive?._id]);
-
-  function toEnumClothType(value: string): ClothTypeName | undefined {
-    const formatted = value.replace(/-/g, " ").toUpperCase();
-    return ClothTypeName[formatted as keyof typeof ClothTypeName];
-  }
 
   return (
     <div className="w-full  flex flex-col items-center text-black bg-white min-h-screen ">
@@ -765,14 +758,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           )}
         </div>
       </div>
-      <SizeGuild
-        clothType={
-          productData?.sizeType?.clothType
-            ? toEnumClothType(productData.sizeType.clothType) ??
-              ClothTypeName.MenTshirts
-            : ClothTypeName.MenTshirts
-        }
-      />
+      <SizeGuild groupName={MeasurementGroupName.MenTops} />
 
       {/* Pinch Zoom Modal */}
       {pinchZoom.show && (
@@ -820,6 +806,14 @@ const PinchZoom = ({
   const [isZooming, setIsZooming] = useState(false);
   const lastTouchRef = useRef({ distance: 0, center: { x: 0, y: 0 } });
   const initialTouchRef = useRef({ distance: 0, center: { x: 0, y: 0 } });
+  const [windowHeight, setWindowHeight] = useState(0);
+
+  useEffect(() => {
+    const updateHeight = () => setWindowHeight(window.innerHeight);
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
 
   // Get distance between two touch points
   const getDistance = (touch1: React.Touch, touch2: React.Touch) => {
@@ -862,29 +856,54 @@ const PinchZoom = ({
     setTransform({ scale: 1, x: 0, y: 0 }); // Reset zoom when changing images
   };
 
+  useEffect(() => {
+    if (show) {
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.overflow = "hidden"; // Disable scrolling
+    } else {
+      // Restore scroll position
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      if (scrollY) window.scrollTo(0, parseInt(scrollY || "0") * -1);
+    }
+
+    return () => {
+      // Cleanup if component unmounts
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+    };
+  }, [show]);
+
   if (!show) return null;
 
   return (
-    <div
-      className="fixed top-0 left-0 bottom-0 bg-white z-[999] w-full flex-1 inset-0   p-6 md:p-10 text-black font-avenir">
-      <div className="flex flex-col items-center ">
-        <div className="w-full md:w-[80%] flex items-center justify-between pt-2">
+    <div className="absolute top-0 left-0  bg-white z-[90] w-full h-[1000px]  p-6 md:p-10 text-black font-avenir overflow-hidden">
+     <div className="retive h-screen flex flex-col ">
+        <div className="w-full md:w-[80%] flex items-center justify-between pt-2 h-[10%]">
           <p className="font-[400] text-lg">{title.toUpperCase()}</p>
           <div
             onClick={onClose}
-            className="size-10 border  border-black/30 md:size-12 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/5"
-          >
+            className="size-10 border  border-black/30 md:size-12 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/5">
             <div className="w-[1.5px] h-[20px] md:h-[24px] bg-black rotate-[45deg]"></div>
             <div className="w-[1.5px] h-[20px] md:h-[24px] bg-black rotate-[-45deg]"></div>
           </div>
         </div>
-      </div>
-
-      <div
+        <div
         ref={containerRef}
-        className="relative flex h-full   py-10 overflow-hidden flex-col items-center"
-        onTouchStart={handleTouchStart}
-      >
+        className="relative flex h-[90%] pb-4 pt-2 overflow-hidden flex-col items-center"
+        onTouchStart={handleTouchStart}>
         <div
           ref={imageRef}
           className="w-full md:w-[80%] h-[80%] bg-[#f2f2f2]  relative overflow-hidden select-none"
@@ -894,8 +913,7 @@ const PinchZoom = ({
             }px, ${transform.y / transform.scale}px)`,
             transition: isZooming ? "none" : "transform 0.3s ease",
             transformOrigin: "center center",
-          }}
-        >
+          }}>
           <Image
             src={images[currentIndex].url}
             fill
@@ -903,9 +921,9 @@ const PinchZoom = ({
             alt={title}
             priority
           />
-        </div>
-
-        {/* Navigation buttons - only show if not zoomed */}
+        </div> 
+        {/* 
+         Navigation buttons - only show if not zoomed  */}
         {transform.scale <= 1.1 && images.length > 1 && (
           <div className="absolute bottom-[12%]  md:w-[80%] flex justify-between z-10 w-full px-4 md:px-6">
             <button
@@ -937,7 +955,7 @@ const PinchZoom = ({
           </div>
         )}
 
-        {/* Image indicator dots */}
+   
         {images.length > 1 && (
           <div className="absolute bottom-[15%] left-1/2 transform -translate-x-1/2 flex gap-2">
             {images.map((_, index) => (
@@ -953,13 +971,14 @@ const PinchZoom = ({
           </div>
         )}
 
-        {/* Zoom level indicator */}
+
         {transform.scale > 1.1 && (
           <div className="absolute top-4 right-4 bg-black/80 text-white px-3 py-1 rounded-full text-sm">
             {Math.round(transform.scale * 100)}%
           </div>
         )}
-      </div>
+       </div>
+        </div> 
     </div>
   );
 };

@@ -179,6 +179,7 @@ export default function Menu() {
             key={`${data?.image?._id}-img-${data.category}`}
             className={cn("h-fit cursor-pointer w-full")}
           >
+            <Link href={`/shop?category=${data.category}`}>
             <div className="w-full h-[35vh] relative overflow-hidden border-b border-black/20">
               <Image
                 src={data?.image?.url ?? "/images/image-fallback.png"}
@@ -187,7 +188,7 @@ export default function Menu() {
                 className="object-contain"
                 priority
               />
-            </div>
+            </div></Link>
             <p className="text-center font-avenir font-[400] my-3 text-sm uppercase">
               {data.category.toLocaleUpperCase()}
             </p>

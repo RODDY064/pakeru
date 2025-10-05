@@ -14,7 +14,7 @@ export default function ProductCon() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { get } = useApiClient()
+  const { get } = useApiClient();
 
   useEffect(() => {
     if (products.length !== 0 && pagination > 1) {
@@ -26,7 +26,7 @@ export default function ProductCon() {
         params.delete("page");
       }
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
-      loadProducts(false, pagination,25,{});
+      loadProducts(false, pagination, 25, {});
     }
   }, [pagination]);
 
@@ -40,7 +40,8 @@ export default function ProductCon() {
         <div className="w-full h-full min-h-300 fixed top-0 left-0 flex flex-col items-center justify-center">
           <Image src="/icons/loader.svg" width={34} height={34} alt="loader" />
         </div>
-      }>
+      }
+    >
       <motion.div
         animate={{ opacity: 1 }}
         initial={{ opacity: 0 }}
@@ -51,9 +52,39 @@ export default function ProductCon() {
           className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out"
           layout
         >
-          {products?.map((product) => (
-            <ProductCard key={product._id} type="large" productData={product} />
-          ))}
+          {products.length === 0 ? (
+            <div className="w-full flex flex-col items-center md:col-span-3 xl:col-span-4">
+              <div className="w-full flex flex-col items-center ">
+                <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-500">
+                  <div className=" mb-4">
+                    <Image
+                      src="/icons/search.svg"
+                      width={32}
+                      height={32}
+                      alt="search"
+                      className="opacity-30"
+                    />
+                  </div>
+                  <p className="font-avenir font-[400] text-lg">
+                    No products found
+                  </p>
+                  <p className="mt-1 font-avenir text-sm text-black/30">
+                    Try a different filtering term
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {products?.map((product) => (
+                <ProductCard
+                  key={product._id}
+                  type="large"
+                  productData={product}
+                />
+              ))}
+            </>
+          )}
         </motion.div>
         <div
           onClick={() => handlePage(pagination + 1)}

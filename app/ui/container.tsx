@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useLayoutEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import gsap from "gsap";
@@ -11,11 +11,10 @@ import Modal from "./Modal";
 import Footer from "./footer";
 import Loader from "./loader";
 
-
 export default function Container({ children }: { children: React.ReactNode }) {
   const { setScrollAmount, setScrollRef } = useBoundStore();
 
-    useGSAP(() => {
+  useGSAP(() => {
     gsap.registerPlugin(ScrollTrigger);
 
     ScrollTrigger.create({
@@ -29,11 +28,10 @@ export default function Container({ children }: { children: React.ReactNode }) {
   });
 
   return (
-    <main>
-       <Loader/>
+    <main className="overflow-hidden">
       <Nav />
       {children}
-      <Footer/>
+      <Footer />
     </main>
   );
 }

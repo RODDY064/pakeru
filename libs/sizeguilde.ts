@@ -8,26 +8,20 @@ export enum MeasurementLabel {
   Hips = "HIPS",
 }
 
-export enum ClothTypeName {
+export enum MeasurementGroupName {
   MenShirts = "MEN SHIRTS",
-  MenTshirts = "MEN T-SHIRTS",
-  Polo = "POLO",
-  MenJeans = "MEN JEANS",
+  MenTops = "MEN T-SHIRTS OR POLO",
   MenPants = "MEN PANTS",
-  MenCargoPants = "MEN CARGO PANTS",
-  MenCargoShorts = "MEN CARGO SHORTS",
-  MenBaggyJeans = "MEN BAGGY JEANS",
-  CropTopShortSleeve = "CROP TOP SHORT SLEEVE",
-  CropTopLongSleeve = "CROP TOP LONG SLEEVE",
-  PleatedSkirt = "PLEATED SKIRT",
-  WomenBaggyJeans = "WOMEN BAGGY JEANS",
-  WomenCargoPants = "WOMEN CARGO PANTS",
+  MenOthers = "MEN JACKETS & COATS",
+  WomenTops = "WOMEN TOPS",
+  WomenPants = "WOMEN PANTS",
+  WomenSkirtsShorts = "WOMEN SKIRTS & SHORTS",
 }
 
 export interface MeasurementItem {
   label: MeasurementLabel;
-  valueCm: number; // base unit in cm
-  valueIn: number; // converted inches
+  valueCm: number;
+  valueIn: number;
 }
 
 export interface SizeEntry {
@@ -35,691 +29,378 @@ export interface SizeEntry {
   measurement: MeasurementItem[];
 }
 
-export interface ClothType {
-  type: ClothTypeName;
+export interface MeasurementGroup {
+  group: MeasurementGroupName;
   size: SizeEntry[];
 }
 
 export interface CountrySize {
   country: string;
-  clothTypes: ClothType[];
+  measureGroups: MeasurementGroup[];
 }
 
-const GhanaClothTypes: ClothType[] = [
-  // MEN SHIRTS
+
+
+export const GhanaMeasurementGroups: MeasurementGroup[] = [
+  // 👕 MEN SHIRTS
   {
-    type: ClothTypeName.MenShirts,
+    group: MeasurementGroupName.MenShirts,
     size: [
       {
         name: "S",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 100.0, valueIn: 39.5 },
-          { label: MeasurementLabel.Shoulders, valueCm: 44.0, valueIn: 17.5 },
-          { label: MeasurementLabel.Sleeve, valueCm: 61.0, valueIn: 24.0 },
+          { label: MeasurementLabel.Shoulders, valueCm: 44, valueIn: 17.5 },
+          { label: MeasurementLabel.Arms, valueCm: 61, valueIn: 24 },
+          { label: MeasurementLabel.Chest, valueCm: 100, valueIn: 39.5 },
+          { label: MeasurementLabel.Waist, valueCm: 88, valueIn: 34.6 },
+          { label: MeasurementLabel.Hips, valueCm: 94, valueIn: 37 },
         ],
       },
       {
         name: "M",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 106.0, valueIn: 41.5 },
-          { label: MeasurementLabel.Shoulders, valueCm: 46.0, valueIn: 18.0 },
-          { label: MeasurementLabel.Sleeve, valueCm: 62.0, valueIn: 24.5 },
+          { label: MeasurementLabel.Shoulders, valueCm: 46, valueIn: 18 },
+          { label: MeasurementLabel.Arms, valueCm: 62, valueIn: 24.5 },
+          { label: MeasurementLabel.Chest, valueCm: 106, valueIn: 41.5 },
+          { label: MeasurementLabel.Waist, valueCm: 94, valueIn: 37 },
+          { label: MeasurementLabel.Hips, valueCm: 98, valueIn: 38.5 },
         ],
       },
       {
         name: "L",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 112.0, valueIn: 44.0 },
-          { label: MeasurementLabel.Shoulders, valueCm: 48.0, valueIn: 19.0 },
-          { label: MeasurementLabel.Sleeve, valueCm: 63.0, valueIn: 25.0 },
+          { label: MeasurementLabel.Shoulders, valueCm: 48, valueIn: 19 },
+          { label: MeasurementLabel.Arms, valueCm: 63, valueIn: 25 },
+          { label: MeasurementLabel.Chest, valueCm: 112, valueIn: 44 },
+          { label: MeasurementLabel.Waist, valueCm: 100, valueIn: 39.4 },
+          { label: MeasurementLabel.Hips, valueCm: 102, valueIn: 40 },
         ],
       },
       {
         name: "XL",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 118.0, valueIn: 46.5 },
-          { label: MeasurementLabel.Shoulders, valueCm: 50.0, valueIn: 19.5 },
-          { label: MeasurementLabel.Sleeve, valueCm: 64.0, valueIn: 25.5 },
+          { label: MeasurementLabel.Shoulders, valueCm: 50, valueIn: 19.5 },
+          { label: MeasurementLabel.Arms, valueCm: 64, valueIn: 25.5 },
+          { label: MeasurementLabel.Chest, valueCm: 118, valueIn: 46.5 },
+          { label: MeasurementLabel.Waist, valueCm: 108, valueIn: 42.5 },
+          { label: MeasurementLabel.Hips, valueCm: 108, valueIn: 42.5 },
         ],
       },
       {
         name: "XXL",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 124.0, valueIn: 49.0 },
-          { label: MeasurementLabel.Shoulders, valueCm: 52.0, valueIn: 20.5 },
-          { label: MeasurementLabel.Sleeve, valueCm: 65.0, valueIn: 26.0 },
+          { label: MeasurementLabel.Shoulders, valueCm: 52, valueIn: 20.5 },
+          { label: MeasurementLabel.Arms, valueCm: 65, valueIn: 26 },
+          { label: MeasurementLabel.Chest, valueCm: 124, valueIn: 49 },
+          { label: MeasurementLabel.Waist, valueCm: 114, valueIn: 45 },
+          { label: MeasurementLabel.Hips, valueCm: 114, valueIn: 45 },
         ],
       },
       {
         name: "XXXL",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 130.0, valueIn: 51.0 },
-          { label: MeasurementLabel.Shoulders, valueCm: 54.0, valueIn: 21.0 },
-          { label: MeasurementLabel.Sleeve, valueCm: 66.0, valueIn: 26.5 },
+          { label: MeasurementLabel.Shoulders, valueCm: 54, valueIn: 21 },
+          { label: MeasurementLabel.Arms, valueCm: 66, valueIn: 26.5 },
+          { label: MeasurementLabel.Chest, valueCm: 130, valueIn: 51 },
+          { label: MeasurementLabel.Waist, valueCm: 120, valueIn: 47 },
+          { label: MeasurementLabel.Hips, valueCm: 120, valueIn: 47 },
         ],
       },
     ],
   },
-  // MEN T-SHIRTS
+
+  // 👕 MEN T-SHIRTS / POLO
   {
-    type: ClothTypeName.MenTshirts,
+    group: MeasurementGroupName.MenTops,
     size: [
       {
         name: "S",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 96.0, valueIn: 38.0 },
-          { label: MeasurementLabel.Shoulders, valueCm: 43.0, valueIn: 17.0 },
+          { label: MeasurementLabel.Shoulders, valueCm: 43.5, valueIn: 17 },
+          { label: MeasurementLabel.Arms, valueCm: 20, valueIn: 7.9 },
+          { label: MeasurementLabel.Chest, valueCm: 98, valueIn: 38.5 },
+          { label: MeasurementLabel.Waist, valueCm: 78, valueIn: 30.7 },
+          { label: MeasurementLabel.Hips, valueCm: 94, valueIn: 37 },
         ],
       },
       {
         name: "M",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 102.0, valueIn: 40.0 },
-          { label: MeasurementLabel.Shoulders, valueCm: 45.0, valueIn: 17.5 },
+          { label: MeasurementLabel.Shoulders, valueCm: 45.5, valueIn: 18 },
+          { label: MeasurementLabel.Arms, valueCm: 21, valueIn: 8.3 },
+          { label: MeasurementLabel.Chest, valueCm: 104, valueIn: 41 },
+          { label: MeasurementLabel.Waist, valueCm: 83, valueIn: 32.7 },
+          { label: MeasurementLabel.Hips, valueCm: 99, valueIn: 39 },
         ],
       },
       {
         name: "L",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 108.0, valueIn: 42.5 },
-          { label: MeasurementLabel.Shoulders, valueCm: 47.0, valueIn: 18.5 },
-        ],
-      },
-      {
-        name: "XL",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 114.0, valueIn: 45.0 },
-          { label: MeasurementLabel.Shoulders, valueCm: 49.0, valueIn: 19.5 },
-        ],
-      },
-      {
-        name: "XXL",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 120.0, valueIn: 47.0 },
-          { label: MeasurementLabel.Shoulders, valueCm: 51.0, valueIn: 20.0 },
-        ],
-      },
-      {
-        name: "XXXL",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 126.0, valueIn: 49.5 },
-          { label: MeasurementLabel.Shoulders, valueCm: 53.0, valueIn: 21.0 },
-        ],
-      },
-    ],
-  },
-  // POLO
-  {
-    type: ClothTypeName.Polo,
-    size: [
-      {
-        name: "S",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 98.0, valueIn: 38.5 },
-          { label: MeasurementLabel.Shoulders, valueCm: 43.5, valueIn: 17.0 },
-        ],
-      },
-      {
-        name: "M",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 104.0, valueIn: 41.0 },
-          { label: MeasurementLabel.Shoulders, valueCm: 45.5, valueIn: 18.0 },
-        ],
-      },
-      {
-        name: "L",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 110.0, valueIn: 43.5 },
           { label: MeasurementLabel.Shoulders, valueCm: 47.5, valueIn: 18.5 },
+          { label: MeasurementLabel.Arms, valueCm: 21.5, valueIn: 8.5 },
+          { label: MeasurementLabel.Chest, valueCm: 110, valueIn: 43.5 },
+          { label: MeasurementLabel.Waist, valueCm: 88, valueIn: 34.6 },
+          { label: MeasurementLabel.Hips, valueCm: 104, valueIn: 40.9 },
         ],
       },
       {
         name: "XL",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 116.0, valueIn: 45.5 },
           { label: MeasurementLabel.Shoulders, valueCm: 49.5, valueIn: 19.5 },
+          { label: MeasurementLabel.Arms, valueCm: 22, valueIn: 8.7 },
+          { label: MeasurementLabel.Chest, valueCm: 116, valueIn: 45.5 },
+          { label: MeasurementLabel.Waist, valueCm: 93, valueIn: 36.6 },
+          { label: MeasurementLabel.Hips, valueCm: 109, valueIn: 42.9 },
         ],
       },
       {
         name: "XXL",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 122.0, valueIn: 48.0 },
           { label: MeasurementLabel.Shoulders, valueCm: 51.5, valueIn: 20.5 },
+          { label: MeasurementLabel.Arms, valueCm: 22.5, valueIn: 8.9 },
+          { label: MeasurementLabel.Chest, valueCm: 122, valueIn: 48 },
+          { label: MeasurementLabel.Waist, valueCm: 98, valueIn: 38.6 },
+          { label: MeasurementLabel.Hips, valueCm: 114, valueIn: 44.9 },
         ],
       },
       {
         name: "XXXL",
         measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 128.0, valueIn: 50.5 },
-          { label: MeasurementLabel.Shoulders, valueCm: 53.5, valueIn: 21.0 },
+          { label: MeasurementLabel.Shoulders, valueCm: 53.5, valueIn: 21 },
+          { label: MeasurementLabel.Arms, valueCm: 23, valueIn: 9 },
+          { label: MeasurementLabel.Chest, valueCm: 128, valueIn: 50.5 },
+          { label: MeasurementLabel.Waist, valueCm: 103, valueIn: 40.6 },
+          { label: MeasurementLabel.Hips, valueCm: 119, valueIn: 46.9 },
         ],
       },
     ],
   },
-  // MEN JEANS
-  {
-    type: ClothTypeName.MenJeans,
+   {
+    group: MeasurementGroupName.MenOthers,
     size: [
       {
         name: "S",
         measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 78.0, valueIn: 30.5 },
-          { label: MeasurementLabel.Hips, valueCm: 94.0, valueIn: 37.0 },
+          { label: MeasurementLabel.Shoulders, valueCm: 43.5, valueIn: 17 },
+          { label: MeasurementLabel.Arms, valueCm: 20, valueIn: 7.9 },
+          { label: MeasurementLabel.Chest, valueCm: 98, valueIn: 38.5 },
+          { label: MeasurementLabel.Waist, valueCm: 78, valueIn: 30.7 },
+          { label: MeasurementLabel.Hips, valueCm: 94, valueIn: 37 },
         ],
       },
       {
         name: "M",
         measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 82.0, valueIn: 32.0 },
-          { label: MeasurementLabel.Hips, valueCm: 98.0, valueIn: 38.5 },
+          { label: MeasurementLabel.Shoulders, valueCm: 45.5, valueIn: 18 },
+          { label: MeasurementLabel.Arms, valueCm: 21, valueIn: 8.3 },
+          { label: MeasurementLabel.Chest, valueCm: 104, valueIn: 41 },
+          { label: MeasurementLabel.Waist, valueCm: 83, valueIn: 32.7 },
+          { label: MeasurementLabel.Hips, valueCm: 99, valueIn: 39 },
         ],
       },
       {
         name: "L",
         measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 86.0, valueIn: 34.0 },
-          { label: MeasurementLabel.Hips, valueCm: 102.0, valueIn: 40.0 },
+          { label: MeasurementLabel.Shoulders, valueCm: 47.5, valueIn: 18.5 },
+          { label: MeasurementLabel.Arms, valueCm: 21.5, valueIn: 8.5 },
+          { label: MeasurementLabel.Chest, valueCm: 110, valueIn: 43.5 },
+          { label: MeasurementLabel.Waist, valueCm: 88, valueIn: 34.6 },
+          { label: MeasurementLabel.Hips, valueCm: 104, valueIn: 40.9 },
         ],
       },
       {
         name: "XL",
         measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 92.0, valueIn: 36.0 },
-          { label: MeasurementLabel.Hips, valueCm: 108.0, valueIn: 42.5 },
+          { label: MeasurementLabel.Shoulders, valueCm: 49.5, valueIn: 19.5 },
+          { label: MeasurementLabel.Arms, valueCm: 22, valueIn: 8.7 },
+          { label: MeasurementLabel.Chest, valueCm: 116, valueIn: 45.5 },
+          { label: MeasurementLabel.Waist, valueCm: 93, valueIn: 36.6 },
+          { label: MeasurementLabel.Hips, valueCm: 109, valueIn: 42.9 },
         ],
       },
       {
         name: "XXL",
         measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 98.0, valueIn: 38.5 },
-          { label: MeasurementLabel.Hips, valueCm: 114.0, valueIn: 45.0 },
+          { label: MeasurementLabel.Shoulders, valueCm: 51.5, valueIn: 20.5 },
+          { label: MeasurementLabel.Arms, valueCm: 22.5, valueIn: 8.9 },
+          { label: MeasurementLabel.Chest, valueCm: 122, valueIn: 48 },
+          { label: MeasurementLabel.Waist, valueCm: 98, valueIn: 38.6 },
+          { label: MeasurementLabel.Hips, valueCm: 114, valueIn: 44.9 },
         ],
       },
       {
         name: "XXXL",
         measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 104.0, valueIn: 41.0 },
-          { label: MeasurementLabel.Hips, valueCm: 120.0, valueIn: 47.0 },
+          { label: MeasurementLabel.Shoulders, valueCm: 53.5, valueIn: 21 },
+          { label: MeasurementLabel.Arms, valueCm: 23, valueIn: 9 },
+          { label: MeasurementLabel.Chest, valueCm: 128, valueIn: 50.5 },
+          { label: MeasurementLabel.Waist, valueCm: 103, valueIn: 40.6 },
+          { label: MeasurementLabel.Hips, valueCm: 119, valueIn: 46.9 },
         ],
       },
     ],
   },
-  // MEN PANTS
+
+  // 👖 MEN PANTS
   {
-    type: ClothTypeName.MenPants,
+    group: MeasurementGroupName.MenPants,
     size: [
-      {
-        name: "S",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 76.0, valueIn: 30.0 },
-          { label: MeasurementLabel.Hips, valueCm: 92.0, valueIn: 36.0 },
-        ],
-      },
-      {
-        name: "M",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 80.0, valueIn: 31.5 },
-          { label: MeasurementLabel.Hips, valueCm: 96.0, valueIn: 37.8 },
-        ],
-      },
-      {
-        name: "M/L",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 84.0, valueIn: 33.0 },
-          { label: MeasurementLabel.Hips, valueCm: 100.0, valueIn: 39.0 },
-        ],
-      },
-      {
-        name: "L",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 88.0, valueIn: 34.5 },
-          { label: MeasurementLabel.Hips, valueCm: 104.0, valueIn: 41.0 },
-        ],
-      },
-      {
-        name: "XL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 92.0, valueIn: 36.0 },
-          { label: MeasurementLabel.Hips, valueCm: 108.0, valueIn: 42.5 },
-        ],
-      },
-      {
-        name: "XXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 96.0, valueIn: 38.0 },
-          { label: MeasurementLabel.Hips, valueCm: 112.0, valueIn: 44.0 },
-        ],
-      },
-      {
-        name: "XXXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 100.0, valueIn: 39.5 },
-          { label: MeasurementLabel.Hips, valueCm: 116.0, valueIn: 45.5 },
-        ],
-      },
+      { name: "S", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 76, valueIn: 30 },
+        { label: MeasurementLabel.Hips, valueCm: 92, valueIn: 36 },
+      ]},
+      { name: "M", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 80, valueIn: 31.5 },
+        { label: MeasurementLabel.Hips, valueCm: 96, valueIn: 37.8 },
+      ]},
+      { name: "L", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 88, valueIn: 34.5 },
+        { label: MeasurementLabel.Hips, valueCm: 104, valueIn: 41 },
+      ]},
+      { name: "XL", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 92, valueIn: 36 },
+        { label: MeasurementLabel.Hips, valueCm: 108, valueIn: 42.5 },
+      ]},
+      { name: "XXL", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 96, valueIn: 38 },
+        { label: MeasurementLabel.Hips, valueCm: 112, valueIn: 44 },
+      ]},
+      { name: "XXXL", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 100, valueIn: 39.5 },
+        { label: MeasurementLabel.Hips, valueCm: 116, valueIn: 45.5 },
+      ]},
     ],
   },
-  // MEN CARGO PANTS
+
+  // 👚 WOMEN TOPS
   {
-    type: ClothTypeName.MenCargoPants,
+    group: MeasurementGroupName.WomenTops,
     size: [
-      {
-        name: "S",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 78.0, valueIn: 30.7 },
-          { label: MeasurementLabel.Hips, valueCm: 94.0, valueIn: 37.0 },
-        ],
-      },
-      {
-        name: "M",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 83.0, valueIn: 32.7 },
-          { label: MeasurementLabel.Hips, valueCm: 99.0, valueIn: 39.0 },
-        ],
-      },
-      {
-        name: "L",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 88.0, valueIn: 34.6 },
-          { label: MeasurementLabel.Hips, valueCm: 104.0, valueIn: 40.9 },
-        ],
-      },
-      {
-        name: "XL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 93.0, valueIn: 36.6 },
-          { label: MeasurementLabel.Hips, valueCm: 109.0, valueIn: 42.9 },
-        ],
-      },
-      {
-        name: "XXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 98.0, valueIn: 38.6 },
-          { label: MeasurementLabel.Hips, valueCm: 114.0, valueIn: 44.9 },
-        ],
-      },
-      {
-        name: "XXXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 103.0, valueIn: 40.6 },
-          { label: MeasurementLabel.Hips, valueCm: 119.0, valueIn: 46.9 },
-        ],
-      },
+      { name: "S", measurement: [
+        { label: MeasurementLabel.Chest, valueCm: 90, valueIn: 35.4 },
+        { label: MeasurementLabel.Waist, valueCm: 74, valueIn: 29.1 },
+        { label: MeasurementLabel.Hips, valueCm: 90, valueIn: 35.4 },
+      ]},
+      { name: "M", measurement: [
+        { label: MeasurementLabel.Chest, valueCm: 94, valueIn: 37 },
+        { label: MeasurementLabel.Waist, valueCm: 78, valueIn: 30.7 },
+        { label: MeasurementLabel.Hips, valueCm: 96, valueIn: 37.8 },
+      ]},
+      { name: "L", measurement: [
+        { label: MeasurementLabel.Chest, valueCm: 98, valueIn: 38.6 },
+        { label: MeasurementLabel.Waist, valueCm: 82, valueIn: 32.3 },
+        { label: MeasurementLabel.Hips, valueCm: 100, valueIn: 39.4 },
+      ]},
+      { name: "XL", measurement: [
+        { label: MeasurementLabel.Chest, valueCm: 102, valueIn: 40.2 },
+        { label: MeasurementLabel.Waist, valueCm: 86, valueIn: 33.9 },
+        { label: MeasurementLabel.Hips, valueCm: 104, valueIn: 40.9 },
+      ]},
+      { name: "XXL", measurement: [
+        { label: MeasurementLabel.Chest, valueCm: 106, valueIn: 41.7 },
+        { label: MeasurementLabel.Waist, valueCm: 90, valueIn: 35.4 },
+        { label: MeasurementLabel.Hips, valueCm: 108, valueIn: 42.5 },
+      ]},
+      { name: "XXXL", measurement: [
+        { label: MeasurementLabel.Chest, valueCm: 110, valueIn: 43.3 },
+        { label: MeasurementLabel.Waist, valueCm: 94, valueIn: 37 },
+        { label: MeasurementLabel.Hips, valueCm: 112, valueIn: 44.1 },
+      ]},
     ],
   },
-  // MEN CARGO SHORTS (same as MEN CARGO PANTS)
+
+  // 👖 WOMEN PANTS
   {
-    type: ClothTypeName.MenCargoShorts,
+    group: MeasurementGroupName.WomenPants,
     size: [
-      {
-        name: "S",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 78.0, valueIn: 30.7 },
-          { label: MeasurementLabel.Hips, valueCm: 94.0, valueIn: 37.0 },
-        ],
-      },
-      {
-        name: "M",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 83.0, valueIn: 32.7 },
-          { label: MeasurementLabel.Hips, valueCm: 99.0, valueIn: 39.0 },
-        ],
-      },
-      {
-        name: "L",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 88.0, valueIn: 34.6 },
-          { label: MeasurementLabel.Hips, valueCm: 104.0, valueIn: 40.9 },
-        ],
-      },
-      {
-        name: "XL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 93.0, valueIn: 36.6 },
-          { label: MeasurementLabel.Hips, valueCm: 109.0, valueIn: 42.9 },
-        ],
-      },
-      {
-        name: "XXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 98.0, valueIn: 38.6 },
-          { label: MeasurementLabel.Hips, valueCm: 114.0, valueIn: 44.9 },
-        ],
-      },
-      {
-        name: "XXXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 103.0, valueIn: 40.6 },
-          { label: MeasurementLabel.Hips, valueCm: 119.0, valueIn: 46.9 },
-        ],
-      },
+      { name: "S", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 70, valueIn: 27.5 },
+        { label: MeasurementLabel.Hips, valueCm: 95, valueIn: 37.5 },
+      ]},
+      { name: "M", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 75, valueIn: 29.5 },
+        { label: MeasurementLabel.Hips, valueCm: 100, valueIn: 39.5 },
+      ]},
+      { name: "L", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 80, valueIn: 31.5 },
+        { label: MeasurementLabel.Hips, valueCm: 105, valueIn: 41.5 },
+      ]},
+      { name: "XL", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 85, valueIn: 33.5 },
+        { label: MeasurementLabel.Hips, valueCm: 110, valueIn: 43.5 },
+      ]},
+      { name: "XXL", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 90, valueIn: 35.5 },
+        { label: MeasurementLabel.Hips, valueCm: 115, valueIn: 45.5 },
+      ]},
+      { name: "XXXL", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 95, valueIn: 37.5 },
+        { label: MeasurementLabel.Hips, valueCm: 120, valueIn: 47.5 },
+      ]},
     ],
   },
-  // MEN BAGGY JEANS
+
+  // 👗 WOMEN SKIRTS & SHORTS
   {
-    type: ClothTypeName.MenBaggyJeans,
+    group: MeasurementGroupName.WomenSkirtsShorts,
     size: [
-      {
-        name: "S",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 76.0, valueIn: 30.0 },
-          { label: MeasurementLabel.Hips, valueCm: 98.0, valueIn: 38.6 },
-        ],
-      },
-      {
-        name: "M",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 81.0, valueIn: 32.0 },
-          { label: MeasurementLabel.Hips, valueCm: 103.0, valueIn: 40.6 },
-        ],
-      },
-      {
-        name: "L",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 86.0, valueIn: 34.0 },
-          { label: MeasurementLabel.Hips, valueCm: 108.0, valueIn: 42.5 },
-        ],
-      },
-      {
-        name: "XL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 91.0, valueIn: 36.0 },
-          { label: MeasurementLabel.Hips, valueCm: 113.0, valueIn: 44.5 },
-        ],
-      },
-      {
-        name: "XXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 96.0, valueIn: 38.0 },
-          { label: MeasurementLabel.Hips, valueCm: 118.0, valueIn: 46.5 },
-        ],
-      },
-      {
-        name: "XXXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 101.0, valueIn: 39.8 },
-          { label: MeasurementLabel.Hips, valueCm: 123.0, valueIn: 48.4 },
-        ],
-      },
-    ],
-  },
-  // CROP TOP SHORT SLEEVE
-  {
-    type: ClothTypeName.CropTopShortSleeve,
-    size: [
-      {
-        name: "S",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 90.0, valueIn: 35.4 },
-          { label: MeasurementLabel.Shoulders, valueCm: 42.0, valueIn: 16.5 },
-          { label: MeasurementLabel.Waist, valueCm: 74.0, valueIn: 29.1 },
-        ],
-      },
-      {
-        name: "M",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 94.0, valueIn: 37.0 },
-          { label: MeasurementLabel.Shoulders, valueCm: 43.0, valueIn: 16.9 },
-          { label: MeasurementLabel.Waist, valueCm: 78.0, valueIn: 30.7 },
-        ],
-      },
-      {
-        name: "L",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 98.0, valueIn: 38.6 },
-          { label: MeasurementLabel.Shoulders, valueCm: 44.0, valueIn: 17.3 },
-          { label: MeasurementLabel.Waist, valueCm: 82.0, valueIn: 32.3 },
-        ],
-      },
-      {
-        name: "XL",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 102.0, valueIn: 40.2 },
-          { label: MeasurementLabel.Shoulders, valueCm: 45.0, valueIn: 17.7 },
-          { label: MeasurementLabel.Waist, valueCm: 86.0, valueIn: 33.9 },
-        ],
-      },
-      {
-        name: "XXL",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 106.0, valueIn: 41.7 },
-          { label: MeasurementLabel.Shoulders, valueCm: 46.0, valueIn: 18.1 },
-          { label: MeasurementLabel.Waist, valueCm: 90.0, valueIn: 35.4 },
-        ],
-      },
-      {
-        name: "XXXL",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 110.0, valueIn: 43.3 },
-          { label: MeasurementLabel.Shoulders, valueCm: 47.0, valueIn: 18.5 },
-          { label: MeasurementLabel.Waist, valueCm: 94.0, valueIn: 37.0 },
-        ],
-      },
-    ],
-  },
-  // CROP TOP LONG SLEEVE (same as short sleeve)
-  {
-    type: ClothTypeName.CropTopLongSleeve,
-    size: [
-      {
-        name: "S",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 90.0, valueIn: 35.4 },
-          { label: MeasurementLabel.Shoulders, valueCm: 42.0, valueIn: 16.5 },
-          { label: MeasurementLabel.Waist, valueCm: 74.0, valueIn: 29.1 },
-        ],
-      },
-      {
-        name: "M",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 94.0, valueIn: 37.0 },
-          { label: MeasurementLabel.Shoulders, valueCm: 43.0, valueIn: 16.9 },
-          { label: MeasurementLabel.Waist, valueCm: 78.0, valueIn: 30.7 },
-        ],
-      },
-      {
-        name: "L",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 98.0, valueIn: 38.6 },
-          { label: MeasurementLabel.Shoulders, valueCm: 44.0, valueIn: 17.3 },
-          { label: MeasurementLabel.Waist, valueCm: 82.0, valueIn: 32.3 },
-        ],
-      },
-      {
-        name: "XL",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 102.0, valueIn: 40.2 },
-          { label: MeasurementLabel.Shoulders, valueCm: 45.0, valueIn: 17.7 },
-          { label: MeasurementLabel.Waist, valueCm: 86.0, valueIn: 33.9 },
-        ],
-      },
-      {
-        name: "XXL",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 106.0, valueIn: 41.7 },
-          { label: MeasurementLabel.Shoulders, valueCm: 46.0, valueIn: 18.1 },
-          { label: MeasurementLabel.Waist, valueCm: 90.0, valueIn: 35.4 },
-        ],
-      },
-      {
-        name: "XXXL",
-        measurement: [
-          { label: MeasurementLabel.Chest, valueCm: 110.0, valueIn: 43.3 },
-          { label: MeasurementLabel.Shoulders, valueCm: 47.0, valueIn: 18.5 },
-          { label: MeasurementLabel.Waist, valueCm: 94.0, valueIn: 37.0 },
-        ],
-      },
-    ],
-  },
-  // PLEATED SKIRT
-  {
-    type: ClothTypeName.PleatedSkirt,
-    size: [
-      {
-        name: "S",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 68.0, valueIn: 26.8 },
-          { label: MeasurementLabel.Hips, valueCm: 92.0, valueIn: 36.2 },
-        ],
-      },
-      {
-        name: "M",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 72.0, valueIn: 28.3 },
-          { label: MeasurementLabel.Hips, valueCm: 96.0, valueIn: 37.8 },
-        ],
-      },
-      {
-        name: "L",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 76.0, valueIn: 29.9 },
-          { label: MeasurementLabel.Hips, valueCm: 100.0, valueIn: 39.4 },
-        ],
-      },
-      {
-        name: "XL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 80.0, valueIn: 31.5 },
-          { label: MeasurementLabel.Hips, valueCm: 104.0, valueIn: 40.9 },
-        ],
-      },
-      {
-        name: "XXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 84.0, valueIn: 33.1 },
-          { label: MeasurementLabel.Hips, valueCm: 108.0, valueIn: 42.5 },
-        ],
-      },
-      {
-        name: "XXXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 88.0, valueIn: 34.6 },
-          { label: MeasurementLabel.Hips, valueCm: 112.0, valueIn: 44.1 },
-        ],
-      },
-    ],
-  },
-  // WOMEN BAGGY JEANS
-  {
-    type: ClothTypeName.WomenBaggyJeans,
-    size: [
-      {
-        name: "S",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 70.0, valueIn: 27.5 },
-          { label: MeasurementLabel.Hips, valueCm: 95.0, valueIn: 37.5 },
-        ],
-      },
-      {
-        name: "M",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 75.0, valueIn: 29.5 },
-          { label: MeasurementLabel.Hips, valueCm: 100.0, valueIn: 39.5 },
-        ],
-      },
-      {
-        name: "L",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 80.0, valueIn: 31.5 },
-          { label: MeasurementLabel.Hips, valueCm: 105.0, valueIn: 41.5 },
-        ],
-      },
-      {
-        name: "XL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 85.0, valueIn: 33.5 },
-          { label: MeasurementLabel.Hips, valueCm: 110.0, valueIn: 43.5 },
-        ],
-      },
-      {
-        name: "XXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 90.0, valueIn: 35.5 },
-          { label: MeasurementLabel.Hips, valueCm: 115.0, valueIn: 45.5 },
-        ],
-      },
-      {
-        name: "XXXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 95.0, valueIn: 37.5 },
-          { label: MeasurementLabel.Hips, valueCm: 120.0, valueIn: 47.5 },
-        ],
-      },
-    ],
-  },
-  // WOMEN CARGO PANTS (same as WOMEN BAGGY JEANS)
-  {
-    type: ClothTypeName.WomenCargoPants,
-    size: [
-      {
-        name: "S",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 70.0, valueIn: 27.5 },
-          { label: MeasurementLabel.Hips, valueCm: 95.0, valueIn: 37.5 },
-        ],
-      },
-      {
-        name: "M",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 75.0, valueIn: 29.5 },
-          { label: MeasurementLabel.Hips, valueCm: 100.0, valueIn: 39.5 },
-        ],
-      },
-      {
-        name: "L",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 80.0, valueIn: 31.5 },
-          { label: MeasurementLabel.Hips, valueCm: 105.0, valueIn: 41.5 },
-        ],
-      },
-      {
-        name: "XL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 85.0, valueIn: 33.5 },
-          { label: MeasurementLabel.Hips, valueCm: 110.0, valueIn: 43.5 },
-        ],
-      },
-      {
-        name: "XXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 90.0, valueIn: 35.5 },
-          { label: MeasurementLabel.Hips, valueCm: 115.0, valueIn: 45.5 },
-        ],
-      },
-      {
-        name: "XXXL",
-        measurement: [
-          { label: MeasurementLabel.Waist, valueCm: 95.0, valueIn: 37.5 },
-          { label: MeasurementLabel.Hips, valueCm: 120.0, valueIn: 47.5 },
-        ],
-      },
+      { name: "S", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 70, valueIn: 27.5 },
+        { label: MeasurementLabel.Hips, valueCm: 95, valueIn: 37.5 },
+      ]},
+      { name: "M", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 75, valueIn: 29.5 },
+        { label: MeasurementLabel.Hips, valueCm: 100, valueIn: 39.5 },
+      ]},
+      { name: "L", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 80, valueIn: 31.5 },
+        { label: MeasurementLabel.Hips, valueCm: 105, valueIn: 41.5 },
+      ]},
+      { name: "XL", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 85, valueIn: 33.5 },
+        { label: MeasurementLabel.Hips, valueCm: 110, valueIn: 43.5 },
+      ]},
+      { name: "XXL", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 90, valueIn: 35.5 },
+        { label: MeasurementLabel.Hips, valueCm: 115, valueIn: 45.5 },
+      ]},
+      { name: "XXXL", measurement: [
+        { label: MeasurementLabel.Waist, valueCm: 95, valueIn: 37.5 },
+        { label: MeasurementLabel.Hips, valueCm: 120, valueIn: 47.5 },
+      ]},
     ],
   },
 ];
+
 
 export const Sizes: CountrySize[] = [
   {
     country: "GHANA",
-    clothTypes: GhanaClothTypes,
+    measureGroups: GhanaMeasurementGroups,
   },
   {
     country: "USA",
-    clothTypes: GhanaClothTypes, 
+    measureGroups: GhanaMeasurementGroups,
   },
   {
     country: "UK",
-    clothTypes: GhanaClothTypes, 
+    measureGroups: GhanaMeasurementGroups,
   },
   {
     country: "France",
-    clothTypes: GhanaClothTypes, // French sizes are comparable, with minor variations in fit.
+    measureGroups: GhanaMeasurementGroups,
   },
   {
     country: "Italy",
-    clothTypes: GhanaClothTypes, // Italian sizes are similar to French.
+    measureGroups: GhanaMeasurementGroups,
   },
   {
     country: "Canada",
-    clothTypes: GhanaClothTypes, // Canadian sizes match US standards.
+    measureGroups: GhanaMeasurementGroups,
   },
 ];
+
+
+
+
+

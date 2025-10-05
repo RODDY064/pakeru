@@ -2,7 +2,6 @@ import NextAuth, { Session, JWT } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { z } from "zod";
-import { AuthCache } from "./libs/redis";
 
 const SignInType = z.object({
   username: z.string().min(1, { message: "Username is required." }),
@@ -101,7 +100,7 @@ export class AuthService {
       firstname: data.user.firstName,
       lastname: data.user.lastName,
       role: data.user.role || "user",
-      image:data.user.rofilePictureUrl,
+      image: data.user.profilePictureUrl,
       accessToken: data.accessToken,
       refreshToken,
       refreshTokenExpiresAt,
@@ -109,7 +108,6 @@ export class AuthService {
     };
   }
 
-  // New method for Google authentication
   static async authenticateGoogle(
     email: string,
     firstName: string,
@@ -127,10 +125,9 @@ export class AuthService {
       }
     );
 
-    // console.log(response.statusText, "response");
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.log(errorData)
       throw new Error(
         errorData.msg ||
           errorData.message ||
@@ -194,7 +191,7 @@ export class AuthService {
       refreshToken,
       refreshTokenExpiresAt,
       expiresAt,
-      image:data.user.image
+      image: data.user.image,
     };
   }
 }
@@ -211,7 +208,7 @@ declare module "next-auth" {
     expiresAt: number;
     refreshTokenExpiresAt?: number;
     refreshType?: string;
-    image?:string
+    image?: string;
   }
 
   interface Session {
@@ -221,7 +218,7 @@ declare module "next-auth" {
       firstname: string;
       lastname: string;
       role: string;
-       image?:string
+      image?: string;
     };
     accessToken: string;
     refreshToken?: string;
@@ -243,7 +240,7 @@ declare module "next-auth" {
       firstname: string;
       lastname: string;
       role: string;
-       image?:string
+      image?: string;
     };
     error?: "RefreshTokenError" | "TokenExpiredError";
   }
@@ -270,11 +267,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         try {
+          // Critical fix: Check if credentials exist and have the required fields
+          if (!credentials || !credentials.username || !credentials.password) {
+            console.error("Missing credentials");
+            return null;
+          }
+
           const result = SignInType.safeParse(credentials);
           if (!result.success) {
-            throw new Error(
-              result.error.errors.map((e) => e.message).join(", ")
-            );
+            console.error("Validation failed:", result.error.errors);
+            return null;
           }
 
           const { username, password } = credentials as {
@@ -284,6 +286,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           const user = await AuthService.authenticate(username, password);
           if (!user) return null;
+
           return {
             _id: user._id,
             username: user.email ?? user._id,
@@ -297,7 +300,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           };
         } catch (err) {
           console.error("Authorization failed:", err);
-          return null; 
+          return null;
         }
       },
     }),
@@ -306,26 +309,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: "/sign-in",
     signOut: "/sign-in",
-    error: "/sign-in"
+    error: "/sign-in",
   },
 
   callbacks: {
     async signIn({ user, account }) {
-      // console.log(user);
-
-      const nameParts = user.name?.split(" ") || [];
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || "";
-
       // Handle Google sign-in
       if (account?.provider === "google") {
         try {
+          if (!user.email) {
+            console.error("Google user missing email");
+            return false;
+          }
+
+          const nameParts = user.name?.split(" ") || [];
+          const firstName = nameParts[0] || "";
+          const lastName = nameParts.slice(1).join(" ") || "";
+
           const googleUser = await AuthService.authenticateGoogle(
-            user.email!,
+            user.email,
             firstName,
             lastName,
             user.id!,
-            user.image!
+            user.image || undefined
           );
 
           // Attach tokens to user object for jwt callback
@@ -339,12 +345,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           (user as any).refreshTokenExpiresAt =
             googleUser.refreshTokenExpiresAt;
           (user as any).expiresAt = googleUser.expiresAt;
-          (user as any).profilePictureUrl = googleUser.image
+          (user as any).image = googleUser.image;
 
           return true;
         } catch (error) {
           console.error("Google sign-in failed:", error);
-          return false;
+          // Return URL with error parameter for better UX
+          return `/sign-in?error=Google sign-in failed`;
         }
       }
       return true;
@@ -366,6 +373,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             firstname: (user as any).firstname,
             lastname: (user as any).lastname,
             role: (user as any).role,
+            image: (user as any).image,
           },
         };
       }
@@ -423,12 +431,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
 
     async session({ session, token }): Promise<Session> {
-      session.error = token.error === "RefreshTokenError" || token.error === "TokenExpiredError" ? token.error : undefined;
+      session.error =
+        token.error === "RefreshTokenError" ||
+        token.error === "TokenExpiredError"
+          ? token.error
+          : undefined;
       session.user = (token.user as any) ?? {};
       session.accessToken = (token.accessToken as string) ?? "";
       session.expiresAt = (token.expiresAt as number) ?? 0;
       session.refreshToken = token.refreshToken as string | undefined;
-      session.refreshTokenExpiresAt = token.refreshTokenExpiresAt as | number | undefined;
+      session.refreshTokenExpiresAt = token.refreshTokenExpiresAt as
+        | number
+        | undefined;
 
       return session;
     },

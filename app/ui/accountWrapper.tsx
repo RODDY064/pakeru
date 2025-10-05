@@ -72,35 +72,36 @@ function AccountContent({ children }: { children: React.ReactNode }) {
     }
   }, [searchParams]);
 
+  
   useGSAP(() => {
     if (!navRef.current) return;
 
-    // Clear any existing ScrollTriggers
-    ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-
-    // Create the scroll animation
-    const tl = gsap.timeline({
+    // Hide nav when scrolling down past 50px
+    gsap.to(navRef.current, {
+      y: -40,
+      ease: "power2.out",
       scrollTrigger: {
-        trigger: document.body, // Use body as trigger for more reliable detection
-        start: "top top",
-        end: "bottom bottom",
-        scrub: 1,
-        onUpdate: (self) => {
-          // Smooth transform based on scroll progress
-          const progress = self.progress;
-          gsap.to(navRef.current, {
-            y: progress > 0.02 ? -35 : 0,
-            duration: 0.2,
-          });
-        },
+        trigger: document.body,
+        start: "50 top",
+        end: "51 top",
+        scrub: 0.5,
+        toggleActions: "play none none reverse",
       },
     });
 
     return () => {
-      tl.kill();
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      ScrollTrigger.getAll().forEach((st) => st.kill());
     };
   }, [pathname]);
+
+  // Refresh ScrollTrigger when route changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [pathname]);
+
 
   // Refresh ScrollTrigger when route changes
   useEffect(() => {
@@ -130,11 +131,10 @@ function AccountContent({ children }: { children: React.ReactNode }) {
     <AccountContext.Provider value={{ pages, handlePage }}>
       <div
         ref={navRef}
-        style={{ transform: "translateY(0)" }}
+        style={{ transform: "translateY(40)" }}
         className={`w-full h-12 md:h-20 px-4 md:px-8 fixed border-t border-b border-black/10 flex ${
           session?.user.role !== "admin" ? "justify-between " : "justify-end"
-        } account-nav  bg-white ${navZ}`}
-      >
+        } account-nav  bg-white ${navZ}`}>
         {session?.user.role !== "admin" && (
           <>
             {isMobile ? (

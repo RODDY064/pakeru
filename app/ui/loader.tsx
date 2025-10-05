@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Lottie from "lottie-react";
 import loaderAnimation from "../../public/lottie/pakeru.json";
 import { useBoundStore } from "@/store/store";
@@ -46,7 +46,6 @@ export default function Loader() {
         "-=0.3"
       )
 
-
         .to(".loader-container", {
           opacity: 0,
           duration: 0.1,
@@ -66,12 +65,12 @@ export default function Loader() {
   return (
     <div
       className={cn(
-        "loader-container w-full fixed h-full top-0 opacity-0 left-0 flex flex-col items-center justify-center z-[89] invisible",
+        "loader-container w-full fixed  top-0  h-full  flex flex-col items-center  z-[99] invisible",
         routeChange ? "pointer-events-auto" : "pointer-events-none"
-      )}
-    >
-      <div className="absolute w-full h-full bg-white curtain"></div>
-      <div className="size-20 relative z-10">
+      )}>
+      <div className="absolute w-full h-full flex-none bg-white curtain"></div>
+      <div className="w-full h-full flex flex-col items-center justify-center  flex-none">
+        <div className="size-20 relative z-10">
         <Lottie
           animationData={loaderAnimation}
           loop={true}
@@ -81,6 +80,8 @@ export default function Loader() {
       <p className="mt-4 text-gray-600 text-sm font-avenir font-[400] animate-pulse">
         Loading...
       </p>
+      </div>
+
     </div>
   );
 }

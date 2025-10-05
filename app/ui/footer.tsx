@@ -117,14 +117,22 @@ export default function Footer() {
             </p>
             <div className="my-4 mt-2 w-full flex gap-2">
               <Link href="mailto:pakeru@25gmail.com" className="w-full">
-                <div className="w-[70%] h-12 bg-black flex gap-2 items-center justify-center rounded-md cursor-pointer">
+                <div className="w-[70%] h-8 md:h-10 bg-black flex gap-2 items-center justify-center rounded-md cursor-pointer">
                   <Image
                     src="/icons/contacts.svg"
                     width={24}
                     height={24}
                     alt="contacts"
+                    className="md:flex hidden"
                   />
-                  <p className="text-white font-avenir pt-[3px]">Email Us</p>
+                  <Image
+                    src="/icons/contacts.svg"
+                    width={16}
+                    height={16}
+                    alt="contacts"
+                    className="flex md:hidden"
+                  />
+                  <p className="text-white font-avenir pt-[3px] md:text-md text-sm">Email Us</p>
                 </div>
               </Link>
             </div>

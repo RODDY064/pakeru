@@ -5,125 +5,82 @@ import Icon from "./Icon";
 import { useBoundStore } from "@/store/store";
 import { AnimatePresence, motion, cubicBezier } from "motion/react";
 import Image from "next/image";
-import { Sizes, ClothTypeName } from "@/libs/sizeguilde";
-type SizeType = {
-  gender: "men" | "women" | "unisex";
-  type: "pants" | "tops" | "skirts";
-  key: string;
-};
+import { MeasurementGroupName, Sizes } from "@/libs/sizeguilde";
 
-const clothTypeToInfo: Record<ClothTypeName, SizeType> = {
-  [ClothTypeName.MenShirts]: { gender: "men", type: "tops", key: "men_tops" },
-  [ClothTypeName.MenTshirts]: { gender: "men", type: "tops", key: "men_tops" },
-  [ClothTypeName.Polo]: { gender: "men", type: "tops", key: "men_tops" },
-  [ClothTypeName.MenJeans]: { gender: "men", type: "pants", key: "men_pants" },
-  [ClothTypeName.MenPants]: { gender: "men", type: "pants", key: "men_pants" },
-  [ClothTypeName.MenCargoPants]: {
-    gender: "men",
-    type: "pants",
-    key: "men_pants",
-  },
-  [ClothTypeName.MenCargoShorts]: {
-    gender: "men",
-    type: "pants",
-    key: "men_pants",
-  },
-  [ClothTypeName.MenBaggyJeans]: {
-    gender: "men",
-    type: "pants",
-    key: "men_pants",
-  },
-
-  [ClothTypeName.CropTopShortSleeve]: {
-    gender: "women",
-    type: "tops",
-    key: "women_tops",
-  },
-  [ClothTypeName.CropTopLongSleeve]: {
-    gender: "women",
-    type: "tops",
-    key: "women_tops",
-  },
-  [ClothTypeName.PleatedSkirt]: {
-    gender: "women",
-    type: "skirts",
-    key: "women_skirts",
-  },
-  [ClothTypeName.WomenBaggyJeans]: {
-    gender: "women",
-    type: "pants",
-    key: "women_pants",
-  },
-  [ClothTypeName.WomenCargoPants]: {
-    gender: "women",
-    type: "pants",
-    key: "women_pants",
-  },
-};
-
-// your guide images remain the same
 const guideImages: Record<string, string> = {
-  men_tops: "/sizes/men-tops.jpg",
-  men_pants: "/sizes/men-pants.jpg",
+  men_shirts: "/sizes/men-shirts.jpg",
+  men_tops: "/sizes/men-tshirts.jpeg",
+  men_others:"/sizes/men-others.jpg",
+  men_pants:"/sizes/men-pants.jpg",
   women_tops: "/sizes/woman-tops.jpg",
   women_pants: "/sizes/woman-skirts.jpg",
   women_skirts: "/sizes/woman-skirts.jpg",
-
-  // Fallback for unisex
-  unisex_tops: "/sizes/men-tops.jpg",
+  unisex_tops: "/sizes/men-shirts.jpg",
   unisex_pants: "/sizes/men-pants.jpg",
-  unisex_skirts: "/sizes/woman-skirts.jpg",
 };
 
-export default function SizeGuild({ clothType }: { clothType: ClothTypeName }) {
+
+const getMeasurementCategory = (groupName: MeasurementGroupName) => {
+  switch (groupName) {
+    case MeasurementGroupName.MenShirts:
+      return { key: "men_shirts", gender: "men", type: "tops" };
+    case MeasurementGroupName.MenTops:
+      return { key: "men_tops", gender: "men", type: "tops" };
+    case MeasurementGroupName.MenOthers:
+      return { key: "men_others", gender: "men", type: "others" };
+    case MeasurementGroupName.MenPants:
+      return { key: "men_pants", gender: "men", type: "pants" };
+    case MeasurementGroupName.WomenTops:
+      return { key: "women_tops", gender: "women", type: "tops" };
+    case MeasurementGroupName.WomenPants:
+      return { key: "women_pants", gender: "women", type: "pants" };
+    case MeasurementGroupName.WomenSkirtsShorts:
+      return { key: "women_skirts", gender: "women", type: "skirts" };
+    default:
+      return { key: "unisex_tops", gender: "unisex", type: "tops" };
+  }
+};
+
+
+export default function SizeGuild({
+  groupName,
+}: {
+  groupName: MeasurementGroupName;
+}) {
   const { sizeGuild, setSizeGuild } = useBoundStore();
 
-  const info = clothTypeToInfo[clothType];
-  if (!info) {
-    console.warn(`No info found for clothType: ${clothType}`);
-    return null;
-  }
+   const { key, gender, type } = getMeasurementCategory(groupName);
+   const imageSrc = guideImages[key];
 
-  const { gender, type, key: categoryKey } = info;
-
-  // States for country & size
   const [selectedCountry, setSelectedCountry] = useState(Sizes[0].country);
   const [selectedSize, setSelectedSize] = useState(() => {
     const firstCountry = Sizes[0];
-    const ct = firstCountry.clothTypes.find((c) => c.type === clothType);
-    return ct?.size[0]?.name || "";
+    const group = firstCountry.measureGroups.find((g) => g.group === groupName);
+    return group?.size[0]?.name || "";
   });
 
-  // Get current size data
+  // Sizes for selected group & country
   const currentSizes = useMemo(() => {
     const countryObj = Sizes.find((c) => c.country === selectedCountry);
-    const ct = countryObj?.clothTypes.find((c) => c.type === clothType);
-    return ct?.size || [];
-  }, [selectedCountry, clothType]);
+    const group = countryObj?.measureGroups.find((g) => g.group === groupName);
+    return group?.size || [];
+  }, [selectedCountry, groupName]);
 
-  // Get current size data
   const currentMeasurements = useMemo(() => {
     const countryObj = Sizes.find((c) => c.country === selectedCountry);
-    const ct = countryObj?.clothTypes.find((c) => c.type === clothType);
-    const sizeEntry = ct?.size.find((s) => s.name === selectedSize);
+    const group = countryObj?.measureGroups.find((g) => g.group === groupName);
+    const sizeEntry = group?.size.find((s) => s.name === selectedSize);
     return sizeEntry?.measurement || [];
-  }, [selectedCountry, selectedSize, clothType]);
-
-  const filteredMeasurements = useMemo(() => {
-    return currentMeasurements.filter(({ label }) => {
-      if (type === "pants" || type === "skirts") {
-        return label === "WAIST" || label === "HIPS";
-      }
-      return true;
-    });
-  }, [currentMeasurements, type]);
+  }, [selectedCountry, selectedSize, groupName]);
 
   const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCountry = e.target.value;
     setSelectedCountry(newCountry);
+
     const countryObj = Sizes.find((c) => c.country === newCountry);
-    const ct = countryObj?.clothTypes.find((c) => c.type === clothType);
-    setSelectedSize(ct?.size[0]?.name || "");
+    const group = countryObj?.measureGroups.find((g) => g.group === groupName);
+
+    setSelectedSize(group?.size?.[0]?.name || "");
   };
 
   return (
@@ -201,16 +158,16 @@ export default function SizeGuild({ clothType }: { clothType: ClothTypeName }) {
                 </div>
                 <div
                   className={`grid max-sm:grid-cols-1  items-stretch ${
-                    filteredMeasurements.length === 2
+                    currentMeasurements.length === 2
                       ? "grid-cols-2"
-                      : filteredMeasurements.length === 3
+                      : currentMeasurements.length === 3
                       ? "grid-cols-3"
-                      : filteredMeasurements.length === 4
+                      : currentMeasurements.length === 4
                       ? "grid-cols-4"
                       : "grid-cols-5"
                   }`}
                 >
-                  {filteredMeasurements.map((item) => (
+                  {currentMeasurements.map((item) => (
                     <div
                       key={item.label}
                       className="py-2 md:py-4 flex flex-col justify-between h-full"
@@ -220,7 +177,7 @@ export default function SizeGuild({ clothType }: { clothType: ClothTypeName }) {
                       </p>
                       <div className="w-full h-[1px] bg-black/10 my-2 md:my-3" />
                       <p className="mt-6 px-4 font-avenir text-sm">
-                        {`${item.valueCm} cm - ${item.valueIn} inc`}
+                        {`${item.valueCm} cm - ${item.valueIn}"`}
                       </p>
                       {item.label !== "HIPS" && (
                         <div className="w-full h-[1px] bg-black/10 my-2 md:hidden" />
@@ -240,167 +197,14 @@ export default function SizeGuild({ clothType }: { clothType: ClothTypeName }) {
                 </p>
                 <div className="flex items-center justify-center w-full mt-4">
                   <Image
-                    src={guideImages[categoryKey] || guideImages.men_tops}
+                    src={imageSrc || guideImages.men_tops}
                     width={500}
                     height={200}
-                    alt={`${gender} ${type} size guide`}
+                    alt={`${groupName} size guide`}
                     className="object-contain"
                   />
                 </div>
-                <div className="mt-4 mb-20">
-                  {gender === "men" && type === "tops" && (
-                    <>
-                      <div>
-                        <p className="font-avenir font-[500] text-lg">
-                          1. Shoulder width
-                        </p>
-                        <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                          Pass the tape measure straight across from the tip of
-                          one shoulder to the other, just above your shoulder
-                          blades
-                        </p>
-                      </div>
-                      <div className="mt-10">
-                        <p className="font-avenir font-[500] text-lg">
-                          2. Chest
-                        </p>
-                        <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                          Pass the tape measure across your back, under your
-                          arms and over your breastbone at its widest point,
-                          taking care to keep the tape measure horizontal. It
-                          should sit snugly against your body, but should not be
-                          pulled too tight
-                        </p>
-                      </div>
-                      <div className="mt-10">
-                        <p className="font-avenir font-[500] text-lg">
-                          3. Waist
-                        </p>
-                        <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                          Pass the tape measure around your natural waistline,
-                          at the narrowest point of your waist. The tape measure
-                          should sit snugly against your body, but should not be
-                          pulled too tight
-                        </p>
-                      </div>
-                      <div className="mt-10">
-                        <p className="font-avenir font-[500] text-lg">
-                          4. Sleeve Length
-                        </p>
-                        <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                          Keeping your arm straight by your side, measure from
-                          the tip of your shoulder to the base of your thumb
-                        </p>
-                      </div>
-                    </>
-                  )}
-                  {gender === "men" && type === "pants" && (
-                    <>
-                      <div>
-                        <p className="font-avenir font-[500] text-lg">
-                          1. Waist
-                        </p>
-                        <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                          Pass the tape measure around your natural waistline,
-                          at the narrowest point of your waist. The tape measure
-                          should sit snugly against your body, but should not be
-                          pulled too tight.
-                        </p>
-                      </div>
-                      <div>
-                        <p className="font-avenir font-[500] text-lg">
-                          2. Hips
-                        </p>
-                        <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                          Pass the tape measure across your hipbone, around the
-                          fullest point of your hips.
-                        </p>
-                      </div>
-                    </>
-                  )}
-                  {gender === "women" &&
-                    (type === "skirts" || type === "pants") && (
-                      <>
-                        <div>
-                          <p className="font-avenir font-[500] text-lg">
-                            1. Bust
-                          </p>
-                          <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                            Wearing a bra, pass the tape measure straight across
-                            your back, under your arms and over the fullest
-                            point of your bust.
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-avenir font-[500] text-lg">
-                            2. Waist
-                          </p>
-                          <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                            Pass the tape measure around your natural waistline,
-                            at the narrowest point of your waist. The tape
-                            measure should sit snugly against your body, but
-                            should not be pulled too tight.
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-avenir font-[500] text-lg">
-                            3. Hips
-                          </p>
-                          <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                            Pass the tape measure around your natural waistline,
-                            at the narrowest point of your waist. The tape
-                            measure should sit snugly against your body, but
-                            should not be pulled too tight.
-                          </p>
-                        </div>
-                        <div>
-                          <p className="font-avenir font-[500] text-lg">
-                            3. Dress Length
-                          </p>
-                          <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                            Standing up straight, barefoot and with both feet
-                            together, measure from the middle of the most
-                            prominent bone at the base of your nape downwards,
-                            as far as the length indicated in the product
-                            details.
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  {gender === "women" && type === "tops" && (
-                    <>
-                      <div>
-                        <p className="font-avenir font-[500] text-lg">
-                          1. Bust
-                        </p>
-                        <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                          Wearing a bra, pass the tape measure straight across
-                          your back, under your arms and over the fullest point
-                          of your bust.
-                        </p>
-                      </div>
-                      <div>
-                        <p className="font-avenir font-[500] text-lg">
-                          2. Waist
-                        </p>
-                        <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                          Pass the tape measure around your natural waistline, at the narrowest point of your
-                          waist. The tape measure should sit snugly against your
-                          body, but should not be pulled too tight. 
-                        </p>
-                      </div>
-                      <div>
-                        <p className="font-avenir font-[500] text-lg">
-                          3. Hips
-                        </p>
-                        <p className="my-3 text-sm md:text-md font-avenir font-[500] text-black/70">
-                          Pass the tape measure across your hipbone, around the
-                          fullest point of your hips
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <MeasurementInstructions gender={gender} type={type} />
               </div>
             </div>
           </motion.div>
@@ -409,6 +213,141 @@ export default function SizeGuild({ clothType }: { clothType: ClothTypeName }) {
     </div>
   );
 }
+
+
+const MeasurementInstructions = ({
+  gender,
+  type,
+}: {
+  gender: string;
+  type: string;
+}) => {
+  const Section = ({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) => (
+    <div>
+      <p className="font-avenir font-[500] text-base">{title}</p>
+      <p className="mt-2 text-sm md:text-base font-avenir font-[400] text-black/70 leading-relaxed">
+        {children}
+      </p>
+    </div>
+  );
+
+  const menTops = (
+    <>
+      <Section title="1. Shoulder width">
+        Pass the tape measure straight across from the tip of one shoulder to
+        the other, just above your shoulder blades.
+      </Section>
+      <Section title="2. Chest">
+        Pass the tape measure across your back, under your arms and over your
+        breastbone at its widest point, taking care to keep the tape measure
+        horizontal. It should sit snugly against your body, but should not be
+        pulled too tight.
+      </Section>
+      <Section title="3. Waist">
+        Pass the tape measure around your natural waistline, at the narrowest
+        point of your waist. The tape measure should sit snugly against your
+        body, but should not be pulled too tight.
+      </Section>
+      <Section title="4. Sleeve Length">
+        Keeping your arm straight by your side, measure from the tip of your
+        shoulder to the base of your thumb.
+      </Section>
+    </>
+  );
+
+  const menOthers = (
+    <>
+      <Section title="1. Shoulder width">
+        Pass the tape measure straight across from the tip of one shoulder to
+        the other, just above your shoulder blades.
+      </Section>
+      <Section title="2. Chest">
+        Pass the tape measure across your back, under your arms and over your
+        breastbone at its widest point, taking care to keep the tape measure
+        horizontal.
+      </Section>
+      <Section title="3. Waist">
+        Pass the tape measure around your natural waistline, at the narrowest
+        point of your waist.
+      </Section>
+      <Section title="4. Hips">
+        Pass the tape measure across your hipbone, around the fullest point of
+        your hips.
+      </Section>
+      <Section title="5. Sleeve Length">
+        Keeping your arm straight by your side, measure from the tip of your
+        shoulder to the base of your thumb.
+      </Section>
+    </>
+  );
+
+  const menPants = (
+    <>
+      <Section title="1. Waist">
+        Pass the tape measure around your natural waistline, at the narrowest
+        point of your waist. The tape measure should sit snugly against your
+        body, but should not be pulled too tight.
+      </Section>
+      <Section title="2. Hips">
+        Pass the tape measure across your hipbone, around the fullest point of
+        your hips.
+      </Section>
+    </>
+  );
+
+  const womenCommon = (
+    <>
+      <Section title="1. Bust">
+        Wearing a bra, pass the tape measure straight across your back, under
+        your arms and over the fullest point of your bust.
+      </Section>
+      <Section title="2. Waist">
+        Pass the tape measure around your natural waistline, at the narrowest
+        point of your waist. The tape measure should sit snugly against your
+        body, but should not be pulled too tight.
+      </Section>
+      <Section title="3. Hips">
+        Pass the tape measure across your hipbone, around the fullest point of
+        your hips.
+      </Section>
+    </>
+  );
+
+  const womenSkirtsExtra = (
+    <Section title="4. Skirt Length">
+     Standing up straight, barefoot and with both feet together, measure from the back of your natural waistline downwards,
+      as far as the length indicated in the product details.
+    </Section>
+  );
+
+  // Select based on gender/type
+  const getContent = () => {
+    if (gender === "men" && type === "tops") return menTops;
+    if (gender === "men" && type === "others") return menOthers;
+    if (gender === "men" && type === "pants") return menPants;
+    if (gender === "women" && type === "tops") return womenCommon;
+    if (gender === "women" && type === "pants") return womenCommon;
+    if (gender === "women" && type === "skirts")
+      return (
+        <>
+          {womenCommon}
+          {womenSkirtsExtra}
+        </>
+      );
+    return null;
+  };
+
+  return <div className="mt-6 mb-20 space-y-8">{getContent()}</div>;
+};
+
+
+
 
 export const overlay = {
   visible: {
@@ -461,14 +400,3 @@ const list = {
   },
 };
 
-// 1. Bust
-// Wearing a bra, pass the tape measure straight across your back, under your arms and over the fullest point of your bust.
-
-// 2. Waist
-// Pass the tape measure around your natural waistline, at the narrowest point of your waist. The tape measure should sit snugly against your body, but should not be pulled too tight.
-
-// 3. Hips
-// Pass the tape measure across your hipbone, around the fullest point of your hips.
-
-// 4. Dress Length
-// Standing up straight, barefoot and with both feet together, measure from the middle of the most prominent bone at the base of your nape downwards, as far as the length indicated in the product details.

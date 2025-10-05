@@ -955,11 +955,7 @@ export const useCartStore: StateCreator<
           "Invalid response format: expected { data: ProductData[] }"
         );
       }
-
-      if (process.env.NODE_ENV === "development") {
-        console.log(result, "results");
-      }
-
+      
       // Transform products
       const transformedProducts: ProductData[] = result.data.map(
         (product: any) => {
