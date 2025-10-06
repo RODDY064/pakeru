@@ -17,7 +17,7 @@ import SearchIcon from "./searchIcon";
 import { MenuItem } from "@/store/modal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useApiClient } from "@/libs/useApiClient";
 
 export default function Menu() {
@@ -177,17 +177,19 @@ export default function Menu() {
           <div
             onClick={() => handlePush(data.category)}
             key={`${data?.image?._id}-img-${data.category}`}
-            className={cn("h-fit cursor-pointer w-full")}>
+            className={cn("h-fit cursor-pointer w-full")}
+          >
             <Link href={`/shop?category=${data.category}`}>
-            <div className="w-full h-[35vh] relative overflow-hidden border-b border-black/20">
-              <Image
-                src={data?.image?.url ?? "/images/image-fallback.png"}
-                fill
-                alt={data.category}
-                className="object-contain"
-                priority
-              />
-            </div></Link>
+              <div className="w-full h-[35vh] relative overflow-hidden border-b border-black/20">
+                <Image
+                  src={data?.image?.url ?? "/images/image-fallback.png"}
+                  fill
+                  alt={data.category}
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </Link>
             <p className="text-center font-avenir font-[400] my-3 text-sm uppercase">
               {data.category.toLocaleUpperCase()}
             </p>
@@ -377,13 +379,11 @@ export default function Menu() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="flex gap-3"
-              >
+                className="flex gap-3">
                 {memoizedProducts.map((product, index) => (
                   <motion.div
                     key={`mobile-${product._id}-${index}`}
-                    className="flex-shrink-0"
-                  >
+                    className="flex-shrink-0">
                     <ProductCard
                       type="small"
                       productData={product}
@@ -418,6 +418,8 @@ export default function Menu() {
     }, 270);
   };
 
+  const { data: session } = useSession();
+
   return (
     <AnimatePresence>
       {/* Desktop */}
@@ -430,7 +432,7 @@ export default function Menu() {
         className="md:w-[35%] xl:w-[30%] h-full bg-white flex-col gap-4 relative z-20 menu-desktop hidden md:flex flex-none"
       >
         <div className="w-full h-full flex flex-none">
-          <div className="w-full flex flex-none flex-col gap-1 pt-[90px] px-9 overflow-y-auto">
+          <div className="w-full flex flex-none flex-col gap-1 pt-[120px] px-9 overflow-y-auto">
             {menuItems?.length === 0 ? (
               <div className="w-full min-h-[300px] flex items-center justify-center">
                 <div className="flex items-center gap-0">
@@ -553,7 +555,8 @@ export default function Menu() {
                   animate={{ opacity: 1, y: 0 }}
                   initial={{ opacity: 0, y: 20 }}
                   transition={{ type: "tween", delay: 0.5 }}
-                  className="mt-6 pb-6">
+                  className="mt-6 pb-6"
+                >
                   <Link onClick={closeModal} href="/about-us">
                     <p className="font-avenir uppercase text-md cursor-pointer hover:text-black text-blue-600">
                       ABOUT US
@@ -609,7 +612,8 @@ export default function Menu() {
         initial="close"
         exit="close"
         key="mobile-menu"
-        className="w-[100%]  pb-10 relative bg-white flex-col pt-[90px] px-12 flex md:hidden menu-mobile" >
+        className="w-[100%]  pb-10 relative bg-white flex-col pt-[90px] px-12 flex md:hidden menu-mobile"
+      >
         <div className="flex flex-col gap-2 overflow-auto nav-slider py-[30px] pb-[45px]">
           {/* Render grouped items for mobile */}
           {Object.entries(groupedMenuItems.groups).map(([parent, items]) => {
@@ -648,14 +652,16 @@ export default function Menu() {
                   initial={false}
                   animate={{ opacity: isOpen ? 1 : 0 }}
                   transition={{ duration: 0.3, ease: easingShow }}
-                  className={cn("overflow-hidden", isOpen ? "pb-3" : "pb-0")} >
+                  className={cn("overflow-hidden", isOpen ? "pb-3" : "pb-0")}
+                >
                   {isOpen && (
                     <div className="pl-4">
                       {items.map((item, index) => (
                         <div
                           key={`mobile-menu-${item.category}-${index}`}
                           onClick={() => handleMobileMenuClick(item.category)}
-                          className="font-avenir w-fit text-md cursor-pointer uppercase mb-3" >
+                          className="font-avenir w-fit text-md cursor-pointer uppercase mb-3"
+                        >
                           {item.category}
                           <p className="w-full h-[1px] bg-amber-600"></p>
                         </div>
@@ -723,14 +729,24 @@ export default function Menu() {
                 </p>
               </div>
             </Link>
-            <div
-              onClick={async () => await signOut({ callbackUrl: "/sign-in" })}
-              className="flex flex-col mt-12"
-            >
-              <p className="px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
-                Logout
-              </p>
-            </div>
+
+            {session?.user._id ? (
+              <div
+                onClick={async () => await signOut({ callbackUrl: "/sign-in" })}
+                className="flex flex-col mt-12">
+                <p className="px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
+                  Logout
+                </p>
+              </div>
+            ) : (
+              <div
+                onClick={async () => await signOut({ callbackUrl: "/sign-in" })}
+                className="flex flex-col mt-12">
+                <p className="px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
+                  Sign in
+                </p>
+              </div>
+            )}
           </motion.div>
         </div>
       </motion.div>
@@ -744,8 +760,7 @@ export default function Menu() {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white"
-          >
+            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white">
             {RenderMobileTAB(mobileActiveItem)}
           </motion.div>
         )}
