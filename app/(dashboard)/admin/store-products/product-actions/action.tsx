@@ -103,6 +103,7 @@ function ProductActionsContent() {
   const [productLoadError, setProductLoadError] = useState<string | null>(null);
   const [originalData, setOriginalData] = useState<ProductFormData | null>(null);
   const [originalColors, setOriginalColors] = useState<ProductColor[] | null>(null);
+  const [selectedClothType, setSelectedClothType] = useState(null)
   const [aboutToSubmit,setAboutToSubmit] = useState(false)
 
   const [instruction, setInstruction] = useState("");
@@ -272,6 +273,7 @@ function ProductActionsContent() {
   useEffect(() => {
     setValue("category", selectedCategory);
   }, [selectedCategory, setValue]);
+
 
   const validateForm = (data: ProductFormData): string | null => {
     if (variants.length === 0) {
@@ -645,13 +647,17 @@ function ProductActionsContent() {
                       </div>
                     )}
                   </div>
-                  <SizeType register={register} errors={errors} watch={watch} />
+                  <SizeType
+                   register={register} 
+                   errors={errors} 
+                   watch={watch} 
+                   setValue={setValue}
+                   />
                   <button
                     type="submit"
                     disabled={isSubmitting}
                     onClick={()=>setAboutToSubmit(true)}
-                    className="mt-2 w-full p-4 md:p-6 md:h-35 rounded-2xl md:rounded-[26px] cursor-pointer flex items-center justify-center bg-black"
-                  >
+                    className="mt-2 w-full p-4 md:p-6 md:h-35 rounded-2xl md:rounded-[26px] cursor-pointer flex items-center justify-center bg-black">
                     <p className="text-white font-avenir font-black text-xl md:text-4xl">
                       {productID
                         ? isSubmitting

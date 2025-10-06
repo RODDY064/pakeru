@@ -350,6 +350,11 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     return `${letter}${mainNumber}-${checkDigit}`;
   }
 
+
+    useEffect(()=>{
+     console.log(productData)
+    },[productData])
+
   return (
     <div className="w-full  flex flex-col items-center text-black bg-white min-h-screen ">
       <div className="pt-20 md:pt-16">
@@ -771,7 +776,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           )}
         </div>
       </div>
-      <SizeGuild groupName={MeasurementGroupName.MenTops} />
+      <SizeGuild groupName={MeasurementGroupName["MenTops"]} />
 
       {/* Pinch Zoom Modal */}
       {pinchZoom.show && (

@@ -393,10 +393,12 @@ export function formatJoinedDate(dateString: string): string {
   return `${weekday} ${day}${suffix}`;
 }
 
-export function capitalize(str?: string) {
+export function capitalize(str?: unknown) {
   if (!str) return "";
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  const safeStr = String(str);
+  return safeStr.charAt(0).toUpperCase() + safeStr.slice(1).toLowerCase();
 }
+
 
 export const apiCall = async (
   endpoint: string,

@@ -444,15 +444,13 @@ export default function ClothTypeModal({
                           <button
                             type="button"
                             onClick={() => setSelectedSizeType(option.id)}
-                            className="flex gap-3 items-center mb-3 group w-full text-left"
-                          >
+                            className="flex gap-3 items-center mb-3 group w-full text-left">
                             <div
                               className={`size-5 border-2 rounded-full cursor-pointer p-[2px] flex items-center justify-center transition-colors ${
                                 selectedSizeType === option.id
                                   ? "border-black"
                                   : "border-black/30 group-hover:border-black/50"
-                              }`}
-                            >
+                              }`}>
                               <div
                                 className={`w-full h-full rounded-full transition-colors ${
                                   selectedSizeType === option.id

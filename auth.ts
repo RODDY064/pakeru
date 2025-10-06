@@ -247,11 +247,12 @@ declare module "next-auth" {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true, 
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
+       authorization: {
         params: {
           prompt: "consent",
           access_type: "offline",
@@ -350,7 +351,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return true;
         } catch (error) {
           console.error("Google sign-in failed:", error);
-          // Return URL with error parameter for better UX
           return `/sign-in?error=Google sign-in failed`;
         }
       }

@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "motion/react";
 import React, { useEffect, useRef, useState } from "react";
-import { Helps } from "../data";
+
 
 export default async function DynamicHelps({
   params,

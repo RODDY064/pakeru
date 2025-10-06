@@ -1,9 +1,9 @@
 import { capitalize } from "@/libs/functions";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 import ClothTypeModal from "./clothTypeModal";
-
-
+import { useBoundStore } from "@/store/store";
+import { ClothType } from "@/store/general";
 
 export type SizeCongfigType = {
   gender: "male" | "female";
@@ -14,13 +14,27 @@ export default function SizeType({
   register,
   errors,
   watch,
+  setValue,
 }: {
   register: any;
   errors: any;
   watch: any;
+  setValue: any;
 }) {
+  const [selectedClothType, setSelectedClothType] = useState<ClothType | null>(
+    null
+  );
+  const [watchClothName, setWatchClothName] = useState(null);
+
   const gender = watch("sizeType.gender");
   const clothType = watch("sizeType.clothType");
+  const { clothTypes } = useBoundStore();
+
+  const selectedCloth = clothTypes.find((c) => c._id === clothType);
+
+  const handleSelect = (id: string) => {
+    setValue("sizeType.clothType", id);
+  };
 
   return (
     <div className="w-full h-auto flex-1 bg-white border border-black/20 rounded-[26px] inline-block self-start p-4 md:p-6 py-8 relative overflow-hidden">
@@ -50,24 +64,28 @@ export default function SizeType({
           </p>
         )}
       </div>
-      <ClothTypeModal  />
+      <ClothTypeModal
+        selectedClothType={selectedClothType}
+        onSelect={handleSelect}
+      />
       <div
         className={`mt-10 p-3 bg-blue-50 rounded-2xl border border-blue-200 `}
       >
         <div className="flex justify-between text-sm">
           <span className="text-blue-700 font-aveni">Gender:</span>
-          <span className="font-medium text-blue-800 font-aveni">
-            {capitalize(gender) ?? "not choosen"}
+          <span className="font-medium text-blue-800 font-avenir">
+             {gender ? capitalize(gender) : "not chosen"}
           </span>
         </div>
         <div className="flex justify-between text-sm mt-1">
           <span className="text-blue-700 font-aveni">Cloth Type:</span>
           <span className="font-medium text-blue-800 font-avenir">
-            {capitalize(clothType) ?? "not choosen"}
+            {selectedCloth?.name
+              ? capitalize(selectedCloth.name)
+              : "not chosen"}
           </span>
         </div>
       </div>
     </div>
   );
 }
-

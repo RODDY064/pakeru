@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import React, { useState } from "react";
-import { Helps } from "./data";
 import Contacts from "@/app/ui/contacts";
 
 export default function HelpLayout({
