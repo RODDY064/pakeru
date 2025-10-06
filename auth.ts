@@ -128,9 +128,7 @@ export class AuthService {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.log(errorData)
-      throw new Error(
-        errorData.msg ||
-          errorData.message ||
+      throw new Error(errorData.msg || errorData.message ||
           `Google authentication failed: ${response.statusText}`
       );
     }
@@ -350,8 +348,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           return true;
         } catch (error) {
-          console.error("Google sign-in failed:", error);
-          return `/sign-in?error=Google sign-in failed`;
+          console.log("Google sign-in failed:", error);
+          const errorMessage = error instanceof Error  ? error.message
+              : typeof error === "object" && error !== null && "message" in error
+              ? (error as any).message
+              : "Google sign-in failed";
+          return `/sign-in?error=${errorMessage}`;
         }
       }
       return true;

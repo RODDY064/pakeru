@@ -29,6 +29,7 @@ function SignUpForm() {
   >("idle");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const searchParams = useSearchParams();
+  const [signupError, setSignUpError] = useState<string | null>(null);
 
   const { setUser } = useBoundStore();
   const {
@@ -49,83 +50,81 @@ function SignUpForm() {
   }, [searchParams, router]);
 
   const onSubmit: SubmitHandler<SignUpSchema> = async (data) => {
+    const parseResult = signUp.safeParse(data);
+    if (!parseResult.success) {
+      setSignState("error");
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      setSignState("idle");
+      return;
+    }
+
     try {
-      const parseResult = signUp.safeParse(data);
-      if (!parseResult.success) {
-        setSignState("error");
-        // console.log(parseResult.error);
-
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        setSignState("idle");
-        return;
-      }
-
       setSignState("loading");
 
-      const newData = {
-        firstName: data.firstname,
-        lastName: data.lastname,
-        email: data.email,
+      const payload = {
+        firstName: data.firstname.trim(),
+        lastName: data.lastname.trim(),
+        email: data.email.trim(),
         password: data.password,
       };
 
-      const req = await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/v1/auth/register`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(newData),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         }
       );
 
-      const res = await req.json();
-      console.log("Server response:", res);
+      const json = await res.json();
+      console.log("Server response:", json);
 
-      if (req.ok) {
-        setUser({
-          firstname: newData.firstName,
-          lastname: newData.lastName,
-          email: newData.email,
-          userType: "unverified",
-        });
-        setSignState("submitted");
-
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        router.push("/otp");
-      } else {
-        throw new Error(" Error fetching data");
+      if (!res.ok) {
+        throw new Error(json?.message  || "Failed to create an account");
       }
 
-      // Show feedback for 3 seconds
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      setSignState("idle");
+      setUser({
+        firstname: payload.firstName,
+        lastname: payload.lastName,
+        email: payload.email,
+        userType: "unverified",
+      });
+
+      setSignState("submitted");
+      setSignUpError(null);
+
+      // Allow user to see success message before redirect
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      router.push("/otp");
     } catch (error: any) {
+      console.error("Sign-up error:", error);
       setSignState("error");
-      console.error("Catch block error:", error);
+      setSignUpError(error?.message || "Failed to create an account");
 
       await new Promise((resolve) => setTimeout(resolve, 3000));
+    } finally {
       setSignState("idle");
+      setSignUpError(null);
     }
   };
 
-   const handleGoogleSignIn = async () => {
-      try {
-        setIsGoogleLoading(true);
-        await signIn("google", {
-          callbackUrl: "/",
-          errorRedirect: "/google",
-        });
-      } catch (error) {
-        console.error("Google sign-in error:", error);
-        setSignState("error");
-        setIsGoogleLoading(false);
-        setTimeout(() => {
-          setSignState("idle");
-        }, 3000);
-      }
-    };
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true);
+      await signIn("google", {
+        callbackUrl: "/",
+        errorRedirect: "/google",
+      });
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      setSignState("error");
+      setIsGoogleLoading(false);
+      setTimeout(() => {
+        setSignState("idle");
+      }, 3000);
+    }
+  };
 
   return (
     <form
@@ -173,11 +172,15 @@ function SignUpForm() {
         name="password"
         style="mt-3"
       />
-      <Submit type={signUpState} submitType="sign-up" />
+      <Submit 
+      type={signUpState} 
+      submitType="sign-up" 
+      errorMessage={signupError} />
       <div className="my-2">
         <Link
           href="/sign-in"
-          className="cursor-pointer text-blue-500 hover:text-black">
+          className="cursor-pointer text-blue-500 hover:text-black"
+        >
           Already have an account? Sign in
         </Link>
       </div>
@@ -189,7 +192,7 @@ function SignUpForm() {
       <button
         type="button"
         onClick={handleGoogleSignIn}
-         disabled={isGoogleLoading || signUpState === "loading"}
+        disabled={isGoogleLoading || signUpState === "loading"}
         className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black  text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2"
       >
         <Image src="/icons/google.svg" width={16} height={16} alt="google" />

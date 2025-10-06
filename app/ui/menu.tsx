@@ -430,7 +430,7 @@ export default function Menu() {
         className="md:w-[35%] xl:w-[30%] h-full bg-white flex-col gap-4 relative z-20 menu-desktop hidden md:flex flex-none"
       >
         <div className="w-full h-full flex flex-none">
-          <div className="w-full flex flex-none flex-col gap-1 pt-[100px] px-9 overflow-y-auto">
+          <div className="w-full flex flex-none flex-col gap-1 pt-[90px] px-9 overflow-y-auto">
             {menuItems?.length === 0 ? (
               <div className="w-full min-h-[300px] flex items-center justify-center">
                 <div className="flex items-center gap-0">
@@ -610,7 +610,7 @@ export default function Menu() {
         exit="close"
         key="mobile-menu"
         className="w-[100%]  pb-10 relative bg-white flex-col pt-[90px] px-12 flex md:hidden menu-mobile" >
-        <div className="flex flex-col gap-2 overflow-auto nav-slider py-[30px]">
+        <div className="flex flex-col gap-2 overflow-auto nav-slider py-[30px] pb-[45px]">
           {/* Render grouped items for mobile */}
           {Object.entries(groupedMenuItems.groups).map(([parent, items]) => {
             const isOpen = openGroups.has(parent);

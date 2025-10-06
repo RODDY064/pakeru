@@ -68,7 +68,6 @@ function SignInForm() {
 
       if (!response || response.error) {
         let errorMessage = "Authentication failed";
-
         switch (response?.error) {
           case "CredentialsSignin":
             errorMessage = "Invalid username or password";
@@ -95,6 +94,7 @@ function SignInForm() {
       const from = searchParams.get("from") || "/";
       router.replace(from);
     } catch (error: any) {
+      console.log(error,'error')
       setSignState("error");
       setErrorMessage(error.message || "Sign in failed");
       await new Promise((resolve) => setTimeout(resolve, 3000));
