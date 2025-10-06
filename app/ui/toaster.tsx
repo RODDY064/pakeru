@@ -96,7 +96,7 @@ function Toast(props: ToastProps & { position?: string }) {
             />
           </div>
         )}
-        <div className={`w-full ${description ? "mt-[2px] p-2" : ""}`}>
+        <div className={`w-full ${description ? "mt-[2px] p-0.5" : ""}`}>
           {typeof title === "string" ? (
             <p
               className={`text-sm font-medium ${

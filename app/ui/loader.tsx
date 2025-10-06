@@ -65,7 +65,7 @@ export default function Loader() {
   return (
     <div
       className={cn(
-        "loader-container w-full fixed  top-0  h-full  flex flex-col items-center  z-[99] invisible",
+        "loader-container w-full fixed  top-0  h-full  flex flex-col items-center  z-[999] invisible",
         routeChange ? "pointer-events-auto" : "pointer-events-none"
       )}>
       <div className="absolute w-full h-full flex-none bg-white curtain"></div>

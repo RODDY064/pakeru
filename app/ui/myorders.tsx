@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { OrdersData } from "@/store/dashbaord/orders-store/orders";
 import { capitalize } from "@/libs/functions";
 import { cn } from "@/libs/cn";
+import Cedis from "./cedis";
 
 export default function MyOrders() {
   const { get } = useApiClient();
@@ -161,7 +162,7 @@ const MyOrderCard = ({
             <Image
               src={variant?.images[0].url as string??"/images/image-fallback.png"}
               fill
-              alt={order.items?.products[0]?.product?.name}
+              alt={order.items?.products[0]?.product?.name??" user order"}
               className="object-cover"
             />
           </div>
@@ -238,13 +239,16 @@ const MyOrderCard = ({
           )}
           <div className="mt-1 md:mt-4 ">
             <div className="border-y-[0.5px] border-black/10 w-full flex justify-end ">
-              <p className="p-2 font-avenir  text-[12px] md:text-[15px] text-black/70 font-semibold ">
-                TOTAL
-              </p>
-              <div className="w-[1px] self-stretch bg-black/10 sm:mx-2" />
-              <p className="p-2 font-avenir text-[12px] md:text-[15px]  text-black/70 font-semibold ">
-                GHS {order?.total}
-              </p>
+               <div className="w-full flex items-center justify-between">
+              <p className="font-avenir font-[400] text-md pt-[5px] text-black/60">TOTAL</p>
+              <div className="flex gap-0.5 items-center">
+                <Cedis cedisStyle="pt-[4px] opacity-50" className="text-black/60" />
+                <p className=" font-avenir font-[400] text-md pt-[7px] text-black/60">
+                  {order?.total}
+                </p>
+              </div>
+            </div>
+          
             </div>
           </div>
           <Link href={`/account/myorder/${order?.IDTrim}?id=${order._id}`}>

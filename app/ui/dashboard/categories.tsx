@@ -1,4 +1,5 @@
 import { useApiClient } from "@/libs/useApiClient";
+import { CategoryType } from "@/store/category";
 import { useBoundStore } from "@/store/store";
 import { motion } from "motion/react";
 import Image from "next/image";
@@ -34,7 +35,7 @@ export default function Category({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const {  post, patch } = useApiClient();
+  const { post, patch } = useApiClient();
   const [addNewParentCategory, setAddNewParentCategory] = useState(false);
 
   const {
@@ -48,6 +49,25 @@ export default function Category({
   useEffect(() => {
     loadCategories();
   }, []);
+
+  const groupCategories = useMemo(() => {
+    const groups: Record<string, CategoryType[]> = {};
+    const ungrouped: CategoryType[] = [];
+
+    categories.forEach((item) => {
+      if (item.parentCategory) {
+        const parent = item.parentCategory;
+        if (!groups[parent]) {
+          groups[parent] = [];
+        }
+        groups[parent].push(item);
+      } else {
+        ungrouped.push(item);
+      }
+    });
+
+    return { groups, ungrouped };
+  }, [categories]);
 
   const parentCategories = useMemo(() => {
     const uniqueParents = new Set<string>();
@@ -134,7 +154,7 @@ export default function Category({
   };
 
   // Handle adding a new category
-   const handleSubmitCategory = async () => {
+  const handleSubmitCategory = async () => {
     if (!formData.name.trim()) {
       setError("Subcategory name is required");
       return;
@@ -164,12 +184,12 @@ export default function Category({
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name.trim());
       formDataToSend.append("description", formData.description.trim());
-      
+
       // Use the parent category from the form
       if (formData.parentCategory) {
         formDataToSend.append("parentCategory", formData.parentCategory);
       }
-      
+
       if (formData.image) {
         formDataToSend.append("image", formData.image);
       }
@@ -188,7 +208,9 @@ export default function Category({
       setShowForm(false);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : `Failed to ${editingCategoryId ? 'update' : 'create'} category`
+        err instanceof Error
+          ? err.message
+          : `Failed to ${editingCategoryId ? "update" : "create"} category`
       );
     } finally {
       setIsLoading(false);
@@ -223,7 +245,7 @@ export default function Category({
     setShowForm(true);
   };
 
-    const resetForm = () => {
+  const resetForm = () => {
     setFormData({
       name: "",
       description: "",
@@ -238,7 +260,6 @@ export default function Category({
       fileInputRef.current.value = "";
     }
   };
-
 
   return (
     <>
@@ -264,7 +285,7 @@ export default function Category({
             </div>
           </div>
 
-          <p className="font-avenir font-[500] text-sm pt-3 pb-2">
+          <p className="font-avenir font-[500] text-md pt-3 pb-2 text-black/70">
             Parent Category
           </p>
 
@@ -295,8 +316,10 @@ export default function Category({
           </div>
         </div>
         <div>
-          <div className="flex justify-between items-center pt-3 pb-2">
-            <p className="font-avenir font-[500] text-sm">Sub-category</p>
+          <div className="flex justify-between items-center pt-4 pb-2">
+            <p className="font-avenir font-[500] text-md text-black/70">
+              Sub-category
+            </p>
           </div>
           <div className="relative flex items-center">
             <select
@@ -379,6 +402,7 @@ export default function Category({
                       className="w-full h-full object-contain bg-white"
                     />
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRemoveImage();
@@ -502,6 +526,7 @@ export default function Category({
             {/* Action Buttons */}
             <div className="flex gap-2 mt-6">
               <button
+                type="button"
                 onClick={resetForm}
                 disabled={isLoading}
                 className="flex-1 px-4 py-2 border border-black/20 rounded-lg cursor-pointer hover:bg-black/5 transition-colors disabled:opacity-50"
@@ -540,17 +565,16 @@ export default function Category({
                   </div>
                 ) : (
                   <div>
-                    {parentCategories.map((parent, parentIndex) => (
-                      <div
-                        key={parentIndex}
-                        className="border-b border-black/10 last:border-b-0"
-                      >
-                        <div className="flex items-center justify-between py-3 px-4 border-b border-black/20 font-medium">
-                          <p className="font-avenir">{parent}</p>
-                        </div>
-                        {categories
-                          .filter((cat) => cat.parentCategory === parent)
-                          .map((cat, index) => (
+                    {Object.entries(groupCategories.groups).map(
+                      ([parent, items]) => (
+                        <div
+                          key={parent}
+                          className="border-b border-black/10 last:border-b-0"
+                        >
+                          <div className="flex items-center justify-between py-3 px-4 border-b border-black/20 font-medium">
+                            <p className="font-avenir">{parent}</p>
+                          </div>
+                          {items.map((cat, index) => (
                             <div
                               key={cat._id}
                               className={`w-full min-h-12 p-2 pl-8 flex items-center justify-between hover:bg-black/5 transition-colors ${
@@ -579,9 +603,42 @@ export default function Category({
                               </div>
                             </div>
                           ))}
-                      </div>
-                    ))}
-                  </div>
+                        </div>
+                      )
+                    )}
+                     <div className="flex items-center justify-between py-3 px-4 border-b border-black/20 font-medium">
+                      <p className="font-avenir text-black/30">Ungroup Category</p>
+                          </div>
+                          {groupCategories.ungrouped.map((cat, index) => (
+                            <div
+                              key={cat._id}
+                              className={`w-full min-h-12 p-2 pl-8 flex items-center justify-between hover:bg-black/5 transition-colors ${
+                                index % 2 === 0
+                                  ? "bg-black/10"
+                                  : " bg-transparent"
+                              }`}
+                            >
+                              <div className="flex-1 px-4">
+                                <p className="font-medium">{cat.name}</p>
+                                {cat.description && (
+                                  <p className="text-xs text-black/60 mt-1">
+                                    {cat.description}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="px-4 border-l border-black/20 h-full flex items-center justify-center">
+                                <Image
+                                  src="/icons/edit-cat.svg"
+                                  width={20}
+                                  height={20}
+                                  alt="delete"
+                                  className="cursor-pointer hover:opacity-70 transition-opacity"
+                                  onClick={() => handleEditCategory(cat._id)}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                 )}
               </div>
             </div>

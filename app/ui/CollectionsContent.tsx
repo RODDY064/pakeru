@@ -32,7 +32,6 @@ const debounce: Debounce = (func, wait) => {
 
 export default function CollectionsContent({ id }: { id: string }) {
   const [containerHeight, setContainerHeight] = useState("100vh");
-  const [cardType, setCardType] = useState<"small" | "medium">("small");
   const [productsLink, setProductsLink] = useState<ProductData[]>([]);
   const [activeGallery, setActiveGallery] = useState<GalleryItem>();
   const { galleries, products, loadProducts } = useBoundStore();
@@ -89,40 +88,14 @@ export default function CollectionsContent({ id }: { id: string }) {
   );
 
   // Update card type based on viewport width
-  const updateCardType = useCallback(
-    debounce(() => {
-      setCardType(window.innerWidth >= 1024 ? "medium" : "small");
-    }, 100),
-    []
-  );
-
-  useEffect(() => {
-    calculateHeight();
-    updateCardType();
-    window.addEventListener("resize", calculateHeight);
-    window.addEventListener("orientationchange", calculateHeight);
-    window.addEventListener("resize", updateCardType);
-
-    return () => {
-      window.removeEventListener("resize", calculateHeight);
-      window.removeEventListener("orientationchange", calculateHeight);
-      window.removeEventListener("resize", updateCardType);
-    };
-  }, [calculateHeight, updateCardType]);
 
   return (
     <>
-      <div className="w-full pt-36  px-4  xl:px-8 relative ">
+      <div className="w-full pt-32  px-4  xl:px-8 relative ">
         <div className="w-full h-full flex lg:flex-row   flex-col ">
-          <div className="w-full flex-shrink-0 h-full lg:w-[55%] relative">
-            <h1 className="text-black font-avenir uppercase text-xl font-semibold tracking-wide">
-              {activeGallery?.name}
-            </h1>
-            <p className="w-full sm:w-[70%] mt-4 font-avenir text-black/50 font-[500] text-md text-balance"></p>
+          <div className="w-full flex-shrink-0 h-svh lg:w-[50%] relative  ">
             <div
-              style={{ height: containerHeight }}
-              className="mt-4 w-full relative h-full bg-amber-100"
-            >
+              className=" w-full relative h-full ">
               <Image
                 src={activeGallery?.image.url ?? "/images/image-fallback.png"}
                 fill
@@ -131,28 +104,29 @@ export default function CollectionsContent({ id }: { id: string }) {
                 className="object-cover"
                 priority
               />
+              <h1 className="text-black font-avenir uppercase text-xl font-semibold tracking-wide absolute top-0">
+                {activeGallery?.name}
+              </h1>
             </div>
           </div>
-          <div className="w-full  mt-6 md:mt-0 hidden lg:block lg:w-[45%] flex-shrink-0 ">
-            <div className="w-full flex justify-end">
-              <div className="w-full flex flex-wrap items-start gap-4">
-                {isLoadingProducts ? (
-                  <div className="w-full min-h-[400px] flex flex-col items-center justify-center">
-                    <Image
-                      src="/icons/loader.svg"
-                      width={36}
-                      height={36}
-                      alt="loading icon"
-                    />
-                  </div>
-                ) : (
-                  <>
-                    {productsLink?.slice(0, 4).map((item) => (
-                      <CollectionCard key={item._id} data={item} />
-                    ))}
-                  </>
-                )}
-              </div>
+          <div className="w-full  mt-6 md:mt-0 hidden lg:block lg:w-[50%] flex-shrink-0 ">
+            <div className="w-full grid grid-cols-2">
+              {isLoadingProducts ? (
+                <div className="w-full min-h-[400px] grid-cols-2 flex flex-col items-center justify-center">
+                  <Image
+                    src="/icons/loader.svg"
+                    width={36}
+                    height={36}
+                    alt="loading icon"
+                  />
+                </div>
+              ) : (
+                <>
+                  {productsLink?.slice(0, 4).map((item) => (
+                    <CollectionCard key={item._id} data={item} />
+                  ))}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -192,33 +166,24 @@ export default function CollectionsContent({ id }: { id: string }) {
   );
 }
 
-const CollectionCard = ({ data }: { data: ProductData  }) => {
+const CollectionCard = ({ data }: { data: ProductData }) => {
   return (
     <Link href={`/shop/${data._id}`}>
-    <div className="lg:w-[200px] xl:w-[300px]  lg:h-[250px] xl:h-[320px] 2xl:h-[350px] ">
-      <div className="w-full h-[90%] relative lex border border-black/10 rounded-sm cursor-pointer transition-shadow duration-300 hover:border hover:z-20 hover:border-black/20">
-        <Image
-          src={data.mainImage.url ?? "/images/image-fallback.png"}
-          fill
-          sizes="100vw"
-          alt="collection"
-          className="object-cover"
-          priority
-        />
-      </div>
-      <div className="w-full h-[10%] pt-3 px-[2px]">
-        <div className="flex items-start justify-between">
-          <div className="w-[60%] font-avenir font-normal text-black/70 pt-[4px]">
+      <div className="w-full  lg:h-[250px] xl:h-[320px] 2xl:h-[450px] ">
+        <div className="w-full h-full relative lex border border-black/10 rounded-sm cursor-pointer transition-shadow duration-300 hover:border hover:z-20 hover:border-black/20">
+          <Image
+            src={data.mainImage.url ?? "/images/image-fallback.png"}
+            fill
+            sizes="100vw"
+            alt="collection"
+            className="object-cover"
+            priority
+          />
+          <p className="w-[60%] font-avenir font-normal text-black/70 pt-[4px] absolute bottom-2 left-2">
             {data.name}
-          </div>
-
-          <div className="w-[30%] flex items-center justify-end text-black/50 gap-0.5 ">
-            <Cedis cedisStyle="opacity-40 pt-[4px]"/>
-            <p className="font-avenir font-normal text-black/50 pt-[7px]">{data.price}</p>
-          </div>
+          </p>
         </div>
       </div>
-    </div>
     </Link>
   );
 };

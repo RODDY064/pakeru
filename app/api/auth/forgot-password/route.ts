@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
-    // console.log(email);
+    console.log(email);
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -16,7 +16,11 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({ email: email }),
     });
 
+    console.log(backendResponse, 'response')
+
     const data = await backendResponse.json();
+
+    console.log(data)
 
     if (!backendResponse.ok) {
       return NextResponse.json(data, { status: backendResponse.status });

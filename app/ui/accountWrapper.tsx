@@ -30,7 +30,7 @@ function AccountContent({ children }: { children: React.ReactNode }) {
   ]);
   const router = useRouter();
   const pathname = usePathname();
-  const { modal, isSearching, modalDisplay } = useBoundStore();
+  const { modal, isSearching, modalDisplay, routeChange  } = useBoundStore();
   const navRef = useRef<HTMLDivElement>(null);
   const [navZ, setNavZ] = useState("z-50");
   const { data: session } = useSession();
@@ -70,7 +70,7 @@ function AccountContent({ children }: { children: React.ReactNode }) {
       newParams.delete("userPage");
       router.replace(`?${newParams.toString()}`);
     }
-  }, [searchParams]);
+  }, [searchParams, pathname]);
 
   
   useGSAP(() => {
@@ -107,33 +107,33 @@ function AccountContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       ScrollTrigger.refresh();
-    }, 100);
+    }, 50);
     return () => clearTimeout(timer);
   }, [pathname]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
 
-    if (modal || isSearching) {
-      setNavZ("z-20");
+
+    if (modal || isSearching || routeChange ) {
+      setNavZ("z-10");
     } else {
       timer = setTimeout(() => {
         setNavZ("z-50");
-      }, 300);
+      }, 50);
     }
 
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [modal, isSearching]);
+  }, [modal, isSearching, routeChange]);
 
   return (
     <AccountContext.Provider value={{ pages, handlePage }}>
       <div
         ref={navRef}
         style={{ transform: "translateY(40)" }}
-        className={`w-full h-12 md:h-20 px-4 md:px-8 fixed border-t border-b border-black/10 flex ${
-          session?.user.role !== "admin" ? "justify-between " : "justify-end"
+        className={`w-full h-12 md:h-20 px-4 md:px-8 fixed border-t border-b border-black/10 flex ${session?.user.role !== "admin" ? "justify-between " : "justify-end"
         } account-nav  bg-white ${navZ}`}>
         {session?.user.role !== "admin" && (
           <>

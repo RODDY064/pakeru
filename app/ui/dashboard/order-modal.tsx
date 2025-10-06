@@ -331,7 +331,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                             disabled={isUpdating}
                             className="px-4 my-10 py-3 text-xl text-center bg-black text-white font-avenir font-[500] rounded-xl cursor-pointer hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            {isUpdating ? "Fulfilling..." : "Fulfill item"}
+                           {isUpdating ? "Updating fulfillment status..." : "Mark as fulfilled"}
                           </button>
                         )}
 

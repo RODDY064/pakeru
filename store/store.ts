@@ -8,7 +8,7 @@ import { CartStore, useCartStore } from "./cart";
 import { ModalStore, useModalStore } from "./modal";
 import { ImgSlideStore, useSliderStore } from "./slider";
 import { UserStore, useUserStore } from "./user";
-import { GeneralStore, useGenralStore } from "./general";
+import { GeneralStore, useGeneralStore } from "./general";
 import { CategoryStore, CategoryType, useCategory } from "./category";
 import { OrdersStore, useOrdersStore } from "./dashbaord/orders-store/orders";
 import {
@@ -328,7 +328,7 @@ export const useBoundStore = create<Store>()(
       ...useModalStore(set, get, store),
       ...useSliderStore(set, get, store),
       ...useUserStore(set, get, store),
-      ...useGenralStore(set, get, store),
+      ...useGeneralStore(set, get, store),
       ...useCategory(set, get, store),
       ...useOrdersStore(set, get, store),
       ...useStoreProductStore(set, get, store),

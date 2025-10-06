@@ -177,8 +177,7 @@ export default function Menu() {
           <div
             onClick={() => handlePush(data.category)}
             key={`${data?.image?._id}-img-${data.category}`}
-            className={cn("h-fit cursor-pointer w-full")}
-          >
+            className={cn("h-fit cursor-pointer w-full")}>
             <Link href={`/shop?category=${data.category}`}>
             <div className="w-full h-[35vh] relative overflow-hidden border-b border-black/20">
               <Image

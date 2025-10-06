@@ -35,7 +35,7 @@ export default function Navbar() {
       </div>
       <div className="flex items-center gap-2 ">
           <WebhookConnectionStatus/>
-        <div  onClick={()=>toggleNotModal('notification')} className="px-2 rounded-lg py-2  max-sm:mt-2 md:bg-white/15 relative cursor-pointer">
+        {/* <div  onClick={()=>toggleNotModal('notification')} className="px-2 rounded-lg py-2  max-sm:mt-2 md:bg-white/15 relative cursor-pointer">
           <Image
             src="/icons/notification.svg"
             width={16}
@@ -48,7 +48,7 @@ export default function Navbar() {
               3
             </p>
           </div>
-        </div>
+        </div> */}
         {/* <Link
           href="/"
           className="px-4 py-2 bg-white/15 rounded-lg cursor-pointer hidden md:flex">

@@ -1,95 +1,82 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const EXCLUDED_HEADERS = new Set([
-  "content-length",
-  "content-encoding",
-  "transfer-encoding",
-  "host",
-  "connection",
-  "upgrade",
-  "expect",
-]);
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const CLOTH_TYPES_ENDPOINT = `${BASE_URL}/v1/cloth-types`;
 
-function buildForwardHeaders(request: NextRequest): Record<string, string> {
-  const forwardHeaders: Record<string, string> = {};
-  request.headers.forEach((value, key) => {
-    const lowerKey = key.toLowerCase();
-    if (!EXCLUDED_HEADERS.has(lowerKey)) {
-      forwardHeaders[key] = value;
-    }
-  });
-  return forwardHeaders;
+function handleApiError(error: any, operation: string) {
+  console.error(`${operation} failed:`, error);
+  return NextResponse.json(
+    {
+      error: `${operation} failed`,
+      message: error.message || "An unexpected error occurred",
+    },
+    { status: 500 }
+  );
 }
 
-async function makeApiRequest(
-  url: string,
-  method: string,
-  headers: Record<string, string>,
-  body?: BodyInit
-) {
+async function forwardResponse(response: Response) {
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("API error:", errorText);
 
-  console.log(body)
+    let errorData;
+    try {
+      errorData = JSON.parse(errorText);
+    } catch {
+      errorData = { message: errorText };
+    }
 
-  const response = await fetch(url, {
-    method,
-    headers,
-    body,
-    cache:"no-store"
-  });
-
-  let data: any;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
+    return NextResponse.json(
+      {
+        error: "API error",
+        message: errorData.message || errorText,
+      },
+      { status: response.status }
+    );
   }
 
+  const data = await response.json();
   return NextResponse.json(data, { status: response.status });
 }
-
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+
+    const body = await request.text();
     const { id } = await params;
-    const contentType = request.headers.get("content-type") || "";
-    const forwardHeaders = buildForwardHeaders(request);
-    let body: BodyInit | undefined;
-    const contentLength = request.headers.get("content-length");
-    
-    if (contentLength && parseInt(contentLength) > 0 &&
-       contentType.includes("application/json")
-    ) {
-      try {
-        const jsonBody = await request.json();
-        console.log(jsonBody,'json body')
-        body = JSON.stringify(jsonBody);
-      } catch (error) {
-        console.warn("Failed to parse JSON body, proceeding without body:",error);
-        body = undefined;
-      }
-    } else if (contentLength && parseInt(contentLength) > 0) {
-      try {
-        body = await request.text();
-      } catch (error) {
-        console.warn("Failed to read request body:", error);
-        body = undefined;
-      }
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing cloth type ID" },
+        { status: 400 }
+      );
     }
 
-    return await makeApiRequest(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`,
-      "PATCH",
-      forwardHeaders,
-      body
-    );
+    const headers: Record<string, string> = {
+      "Content-Type": request.headers.get("content-type") || "application/json",
+    };
+
+    const authHeader = request.headers.get("authorization");
+    if (authHeader) {
+      headers["Authorization"] = authHeader;
+    }
+
+    console.log(`Updating cloth type ${id}...`);
+
+    const response = await fetch(`${CLOTH_TYPES_ENDPOINT}/${id}`, {
+      method: "PATCH",
+      headers,
+      body,
+      cache: "no-store",
+    });
+
+    console.log("Response status:", response.status);
+
+    return forwardResponse(response);
   } catch (error: any) {
-    console.error("PATCH request failed:", error);
-    return NextResponse.json(
-      { error: "Cloth type update failed", message: error.message },
-      { status: 500 }
-    );
+    return handleApiError(error, "Cloth type update");
   }
 }

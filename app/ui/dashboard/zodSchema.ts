@@ -40,7 +40,7 @@ export const SizeTypeSchema = z.object({
 });
 
 
-// Updated main product form schema
+//  main product form schema
 export const ProductFormSchema = z
   .object({
     name: z.string().min(3, "Product name must be at least 3 characters"),
@@ -71,12 +71,11 @@ export const ProductFormSchema = z
       .array(ProductColorSchema)
       .min(1, "At least one color variant is required"),
     productCare: z.string().min(5, "Product care is required"),
-    washInstructions: z.array(z.string().min(1)).min(1, "At least one wash instruction is required"),
+    washInstructions: z.array(z.string().min(1)).optional(),
     sizeType: SizeTypeSchema,
   })
   .refine(
     (data) => {
-      // Custom validation: ensure total stock matches sum of color stocks
       const totalColorStock = data.variants.reduce(
         (sum, color) => sum + color.stock,
         0
@@ -89,7 +88,16 @@ export const ProductFormSchema = z
         "Total stock across all colors cannot exceed the declared total number",
       path: ["totalNumber"],
     }
-  );
+  )
+  .superRefine((data, ctx) => {
+    if (!data.washInstructions || data.washInstructions.length === 0) {
+      ctx.addIssue({
+        path: ["washInstructions"],
+        message: "At least one wash instruction is required",
+        code: "custom",
+      });
+    }
+  });
 
 // Infer TypeScript types from schema
 export type ProductFormData = z.infer<typeof ProductFormSchema>;

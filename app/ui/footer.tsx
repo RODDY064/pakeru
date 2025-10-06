@@ -74,9 +74,9 @@ export default function Footer() {
                 <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                   Shippment
                 </li>
-                <Link href="/account">
+                <Link href="/account?userPage=orders">
                   <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                    Order Tracking
+                    My Orders
                   </li>
                 </Link>
                 <Link href="/faqs">

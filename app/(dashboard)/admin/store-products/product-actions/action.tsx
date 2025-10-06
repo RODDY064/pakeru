@@ -29,39 +29,6 @@ import SizeType from "@/app/ui/dashboard/sizeType";
 import Instructions from "@/app/ui/dashboard/instructions";
 import StatusBadge from "@/app/ui/dashboard/statusBadge";
 
-const debugFormData = (data: ProductFormData, variants: ProductColor[]) => {
-  console.log("🐛 Form submission debug:", {
-    formData: {
-      name: `"${data.name}" (length: ${data.name?.length})`,
-      description: `"${data.description?.slice(0, 50)}..." (length: ${
-        data.description?.length
-      })`,
-      price: `"${data.price}" (type: ${typeof data.price})`,
-      totalNumber: `"${data.totalNumber}" (type: ${typeof data.totalNumber})`,
-      status: `"${data.status}"`,
-      category: `"${data.category}" (length: ${data.category?.length})`,
-      tags: data.tags?.map((t) => `"${t}"`),
-      tagsLength: data.tags?.length,
-    },
-    productCare: `${data.productCare}`,
-    washInstructions: `${data.washInstructions[0]}`,
-    variants: variants.map((color) => ({
-      name: `"${color.name}" (length: ${color.name?.length})`,
-      hex: color.hex,
-      stock: color.stock,
-      sizes: color.sizes,
-      imagesCount: color.images?.length,
-      hasFiles: color.images?.some((img) => img.file instanceof File),
-    })),
-    validation: {
-      hasName: !!data.name?.trim(),
-      hasPrice: !!data.price,
-      hasColors: variants.length > 0,
-      hasValidColors: variants.some((c) => c.name?.trim()),
-      hasSufficientImages: variants.every((c) => c.images?.length >= 3),
-    },
-  });
-};
 
 export type ProductImage = {
   _id: string;
@@ -107,7 +74,8 @@ function ProductActionsContent() {
         gender: "",
         clothType: "",
       },
-    },
+      washInstructions:[]
+    }
   });
 
   const {
@@ -290,7 +258,7 @@ function ProductActionsContent() {
   const watchedValues = watch();
 
   useEffect(() => {
-    setValue("washInstructions", instructions, { shouldValidate: true });
+    setValue("washInstructions", instructions);
   }, [instructions, setValue]);
 
   useEffect(() => {
