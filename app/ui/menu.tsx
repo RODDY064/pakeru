@@ -733,7 +733,7 @@ export default function Menu() {
             {session?.user._id ? (
               <div
                 onClick={async () => await signOut({ callbackUrl: "/sign-in" })}
-                className="flex flex-col mt-12">
+                className="flex flex-col my-12">
                 <p className="px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
                   Logout
                 </p>
@@ -742,7 +742,7 @@ export default function Menu() {
              <Link href="/sign-in">
               <div
                
-                className="flex flex-col mt-12">
+                className="flex flex-col my-12">
                 <p className="px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
                   Sign in
                 </p>
