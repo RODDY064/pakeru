@@ -12,7 +12,7 @@ export async function fetchProductsServer(): Promise<ProductData[]> {
     const response = await fetch(`${BASE_URL}/v1/products?limit=25`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      next: { revalidate: 60 },
+      cache:"no-store"
     });
 
     const result = await response.json();

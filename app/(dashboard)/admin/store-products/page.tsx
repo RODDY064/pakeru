@@ -60,6 +60,8 @@ export default function Products() {
     loadCategories();
   }, []);
 
+
+
   useEffect(() => {
    
     if(filteredStoreProducts.length === 0){
@@ -67,8 +69,6 @@ export default function Products() {
     }
   
   }, [filteredStoreProducts]);
-
-  const productStats = useMemo(() => getProductStats(), [getProductStats]);
 
   useEffect(() => {
     const catNames = categories.map((cat) => cat.name);
@@ -111,22 +111,22 @@ export default function Products() {
     { label: "Product Out of Stock", value: 0 },
   ]);
 
+ 
   useEffect(() => {
-    if (!productStats) return;
+  if (!storeProducts.length) return;
 
-    setStats([
-      { label: "Total Products", value: productStats.total ?? 0 },
-      { label: "Active Products", value: productStats.active ?? 0 },
-      { label: "Inactive Products", value: productStats.inactive ?? 0 },
-      { label: "Product Out of Stock", value: productStats.outOfStock ?? 0 },
-    ]);
-  }, [productStats]);
+  const productStats = getProductStats();
+
+  setStats([
+    { label: "Total Products", value: productStats.total ?? 0 },
+    { label: "Active Products", value: productStats.active ?? 0 },
+    { label: "Inactive Products", value: productStats.inactive ?? 0 },
+    { label: "Product Out of Stock", value: productStats.outOfStock ?? 0 },
+  ]);
+}, [storeProducts]); 
 
   // filtering
 
-  useEffect(() => {
-    console.log(storeProductFilters,'store filters ');
-  }, [storeProductFilters]);
 
   const tableColumns: Column[] = [
     {

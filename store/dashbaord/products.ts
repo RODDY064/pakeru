@@ -336,8 +336,7 @@ export const useStoreProductStore: StateCreator<
       console.log(query.toString(), "Query parameters");
 
       const result = await apiGet<{ data: ProductData[]; total?: number }>(
-        `/products?${query.toString()}`,
-        {
+        `/products?${query.toString()}`,{
           cache:"no-store"
         }
       );

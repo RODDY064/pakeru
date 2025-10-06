@@ -78,7 +78,7 @@ async function fetchProductsServer(): Promise<ProductData[]> {
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },
-        next: { revalidate: 3600 }, 
+        cache:"no-store"
       }
     );
 

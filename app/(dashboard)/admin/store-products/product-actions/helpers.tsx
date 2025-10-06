@@ -101,6 +101,7 @@ export class ProductAPIService {
 
     const updatePromise = patch(`/products/${productId}`, updatePayload, {
       requiresAuth: true,
+      cache:"no-store"
     });
 
     return toast.promise(updatePromise, {
@@ -232,7 +233,7 @@ export class ProductAPIService {
     post: ReturnType<typeof useApiClient>["post"]
   ): Promise<any> {
     const formData = await this.buildFormData(data, variants);
-    return post("/products", formData, { requiresAuth: true });
+    return post("/products", formData, { requiresAuth: true, cache:"no-store" });
   }
 
   private static async appendImageFiles(

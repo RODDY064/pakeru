@@ -8,23 +8,22 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: '/',
         disallow: [
-          '/shopping-cart',       // Prevent indexing cart pages
-          '/payment',   // Sensitive user data
-          '/account',    // User private areas
-          '/admin',      // Admin panels if any
-          '/api',        // API endpoints
-          '/search',     // Dynamic search results
+          '/shopping-cart',       
+          '/payment',  
+          '/account',    
+          '/admin',     
+          '/api',       
+          '/search',     
         ],
       },
       {
         userAgent: 'Googlebot',
         allow: '/',
         disallow: [
-          '/cart',
-          '/checkout',
-          '/account',
-          '/admin',
-          '/api',
+           '/shopping-cart',      
+          '/payment',  
+          '/admin',     
+          '/api',     
           '/search',
         ],
       },
