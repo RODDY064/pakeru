@@ -739,13 +739,15 @@ export default function Menu() {
                 </p>
               </div>
             ) : (
+             <Link href="/sign-in">
               <div
-                onClick={async () => await signOut({ callbackUrl: "/sign-in" })}
+               
                 className="flex flex-col mt-12">
                 <p className="px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
                   Sign in
                 </p>
               </div>
+             </Link>
             )}
           </motion.div>
         </div>
