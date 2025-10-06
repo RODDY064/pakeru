@@ -430,7 +430,7 @@ export default function Menu() {
         className="md:w-[35%] xl:w-[30%] h-full bg-white flex-col gap-4 relative z-20 menu-desktop hidden md:flex flex-none"
       >
         <div className="w-full h-full flex flex-none">
-          <div className="w-full flex flex-none flex-col gap-1 pt-[120px] px-9 overflow-y-auto">
+          <div className="w-full flex flex-none flex-col gap-1 pt-[100px] px-9 overflow-y-auto">
             {menuItems?.length === 0 ? (
               <div className="w-full min-h-[300px] flex items-center justify-center">
                 <div className="flex items-center gap-0">
@@ -559,9 +559,14 @@ export default function Menu() {
                       ABOUT US
                     </p>
                   </Link>
-                  <Link onClick={closeModal} href="/faqs">
+                  <Link onClick={closeModal} href="/help">
                     <p className="font-avenir uppercase text-md cursor-pointer hover:text-black text-blue-600">
-                      FAQs
+                      HEPLS
+                    </p>
+                  </Link>
+                  <Link onClick={closeModal} href="/help">
+                    <p className="font-avenir uppercase text-md cursor-pointer hover:text-black text-blue-600">
+                      POLICY
                     </p>
                   </Link>
                 </motion.div>

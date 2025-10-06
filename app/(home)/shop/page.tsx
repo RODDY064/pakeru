@@ -1,5 +1,4 @@
 "use client";
-
 import Button from "@/app/ui/button";
 import Filter from "@/app/ui/filter";
 import ProductSkeleton from "@/app/ui/product-skeleton";
@@ -12,12 +11,11 @@ import { useRouter } from "next/navigation";
 import React, { Suspense, useEffect, useState } from "react";
 
 export default function Product() {
-  const { cartState, loadProducts } = useBoundStore();
+  const { cartState, products, loadProducts } = useBoundStore();
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
-
   const [containerHeight, setContainerHeight] = useState("100vh");
-  const { get } = useApiClient()
+  const { get } = useApiClient();
 
   useEffect(() => {
     const calculateHeight = () => {
@@ -28,11 +26,9 @@ export default function Product() {
         `${actualVH * 0.01}px`
       );
     };
-
     calculateHeight();
     window.addEventListener("resize", calculateHeight);
     window.addEventListener("orientationchange", calculateHeight);
-
     return () => {
       window.removeEventListener("resize", calculateHeight);
       window.removeEventListener("orientationchange", calculateHeight);
@@ -42,7 +38,7 @@ export default function Product() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await loadProducts(true,1,25);
+      await loadProducts(true, 1, 25);
       await new Promise((res) => setTimeout(res, 500));
       router.refresh();
     } finally {
@@ -50,21 +46,27 @@ export default function Product() {
     }
   };
 
+  // Show skeleton only on initial load (when loading and no products exist)
+  const isInitialLoading = (cartState === "loading" || cartState === "idle") && products.length === 0;
+
   return (
     <Suspense>
       <div
         style={{ minHeight: containerHeight }}
-        className="w-full min-h-screen  flex flex-col items-center text-black  home-main  transition-all">
-        <div className="w-full h-full  bg-white flex overflow-hidden gap-4 pt-30">
-          {(cartState === "loading" || cartState === "idle" ) && (
-              <motion.div
-                className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out"
-                layout>
-                {[1, 2, 3, 4].map((item) => (
-                  <ProductSkeleton type="large" key={item} />
-                ))}
-              </motion.div>
-            )}
+        className="w-full min-h-screen flex flex-col items-center text-black home-main transition-all"
+      >
+        <div className="w-full h-full bg-white flex overflow-hidden gap-4 pt-30">
+          {isInitialLoading && (
+            <motion.div
+              className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out"
+              layout
+            >
+              {[1, 2, 3, 4].map((item) => (
+                <ProductSkeleton type="large" key={item} />
+              ))}
+            </motion.div>
+          )}
+
           {cartState === "error" && (
             <div className="w-full h-dvh flex items-center flex-col pt-12 md:pt-24">
               <Image
@@ -107,7 +109,10 @@ export default function Product() {
               </div>
             </div>
           )}
-          {cartState === "success" && <ProductCon />}
+
+          {(cartState === "success" || (products.length > 0 && cartState !== "error")) && (
+            <ProductCon />
+          )}
         </div>
       </div>
       <Filter />

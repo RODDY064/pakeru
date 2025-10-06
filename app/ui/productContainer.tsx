@@ -254,9 +254,6 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     };
   }, [colorActive, productData, isMobile]);
 
-
-  
-
   // buttons ref
   const prevBtnRef = useRef<HTMLButtonElement>(
     null as unknown as HTMLButtonElement
@@ -339,6 +336,19 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
         ?.images || []
     );
   }, [productData, colorActive?._id]);
+
+  function generateSequentialCoolId(mongoId: string) {
+    if (!mongoId) return;
+    const id = mongoId.toString();
+    const timestamp = parseInt(id.slice(0, 8), 16);
+    const letterCode = Math.floor(timestamp / 86400) % 26;
+    const letter = String.fromCharCode(65 + letterCode);
+    const counter = parseInt(id.slice(16, 22), 16);
+    const mainNumber = (counter % 999) + 1;
+    const checkDigit = parseInt(id.slice(14, 16), 16) % 10;
+
+    return `${letter}${mainNumber}-${checkDigit}`;
+  }
 
   return (
     <div className="w-full  flex flex-col items-center text-black bg-white min-h-screen ">
@@ -469,7 +479,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
             <div className="w-full px-6 md:px-8 md:w-[90%] lg:w-[80%] xl:w-[60%]">
               <div className="flex justify-between items-center">
                 <p className="text-black/50 text-sm font-[300] font-avenir">
-                  A440-2
+                  {generateSequentialCoolId(productData?._id as string)}
                 </p>
                 <Image
                   onClick={() => addBookmark(productData as ProductData)}
@@ -892,9 +902,7 @@ const PinchZoom = ({
   if (!show) return null;
 
   return (
-    
-    <div
-      className="fixed top-0 left-0 bottom-0 bg-white z-[999] w-full flex-1 inset-0   p-6 md:p-10 text-black font-avenir">
+    <div className="fixed top-0 left-0 bottom-0 bg-white z-[999] w-full flex-1 inset-0   p-6 md:p-10 text-black font-avenir">
       <div className="flex flex-col items-center ">
         <div className="w-full md:w-[80%] flex items-center justify-between pt-2">
           <p className="font-[400] text-lg">{title.toUpperCase()}</p>
@@ -990,7 +998,6 @@ const PinchZoom = ({
       </div>
     </div>
   );
-
 };
 
 // deescription function

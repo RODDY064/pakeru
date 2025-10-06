@@ -30,11 +30,11 @@ const socailMedia = [
     href: "https://snapchat.com/t/2roHlINV",
   },
   {
-    name:"facebook",
-    icon:"facebook.svg",
-    size:30,
-    href:"https://www.facebook.com/share/1FGrwyBGT6/?mibextid=wwXIfr"
-  }
+    name: "facebook",
+    icon: "facebook.svg",
+    size: 30,
+    href: "https://www.facebook.com/share/1FGrwyBGT6/?mibextid=wwXIfr",
+  },
 ];
 
 export default function Footer() {
@@ -51,17 +51,21 @@ export default function Footer() {
             <div className="text-black/70">
               <p className="text-sm md:text-md font-[400] font-avenir">SHOP</p>
               <ul className="mt-3 list-disc ml-4 flex flex-col gap-3">
-               <Link href="shop?createdAt=newest">
-                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  New Arrivals
-                </li>
-               </Link>
-                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Best Sellers
-                </li>
-                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  All Products
-                </li>
+                <Link href="/shop?createdAt=newest">
+                  <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                    New Arrivals
+                  </li>
+                </Link>
+                <Link href="/shop">
+                  <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                    Best Sellers
+                  </li>
+                </Link>
+                <Link href="/shop">
+                  <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                    All Products
+                  </li>
+                </Link>
               </ul>
             </div>
 
@@ -71,15 +75,17 @@ export default function Footer() {
                 CUSTOMER SERVICE
               </p>
               <ul className="mt-3 list-disc ml-4 flex flex-col gap-2">
-                <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                  Shippment
-                </li>
+                <Link href="/help">
+                  <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                    Helps
+                  </li>
+                </Link>
                 <Link href="/account?userPage=orders">
                   <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                     My Orders
                   </li>
                 </Link>
-                <Link href="/faqs">
+                <Link href="/help">
                   <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                     FAQs
                   </li>
@@ -132,7 +138,9 @@ export default function Footer() {
                     alt="contacts"
                     className="flex md:hidden"
                   />
-                  <p className="text-white font-avenir pt-[3px] md:text-md text-sm">Email Us</p>
+                  <p className="text-white font-avenir pt-[3px] md:text-md text-sm">
+                    Email Us
+                  </p>
                 </div>
               </Link>
             </div>

@@ -87,7 +87,7 @@ export type CartStore = {
     force?: boolean,
     page?: number,
     limit?: number,
-    filters?: FilterQueries,
+    filters?: FilterQueries
   ) => Promise<void>;
   refreshProducts: () => Promise<void>;
   syncCartWithProducts: () => void;
@@ -151,9 +151,9 @@ interface FilterQueries {
   category?: string[];
   sort_by?: string;
   price?: string;
-  products?:string[],
-  name?:string
-  createdAt?:string
+  products?: string[];
+  name?: string;
+  createdAt?: string;
 }
 
 const sortMapping: { [key: string]: string } = {
@@ -872,24 +872,24 @@ export const useCartStore: StateCreator<
       const query = new URLSearchParams();
       state.loadCategories();
 
-      query.append("status","active")
+      query.append("status", "active");
 
       if (page && page !== 1) {
         query.append("page", page.toString());
       }
+
       if (limit) {
         query.append("limit", limit.toString());
       }
 
       // Add filter parameters
       if (filters) {
-
-        if(filters.name){
-          query.append("name", filters.name)
+        if (filters.name) {
+          query.append("name", filters.name);
         }
 
-        if(filters.createdAt){
-          query.append("createdAt", filters.createdAt)
+        if (filters.createdAt) {
+          query.append("createdAt", filters.createdAt);
         }
 
         // Category filter - join multiple categories with comma
@@ -897,7 +897,7 @@ export const useCartStore: StateCreator<
           query.append("category", filters.category.join(","));
         }
 
-        if(filters.products && filters.products.length > 0){
+        if (filters.products && filters.products.length > 0) {
           query.append("id", filters.products.join(","));
         }
 
@@ -933,7 +933,7 @@ export const useCartStore: StateCreator<
 
       // Fetch products from API with query parameters
       const response = await fetch(`/api/products?${query.toString()}`, {
-        cache:"no-cache"
+        cache: "no-cache",
       });
 
       if (!response.ok) {
@@ -955,7 +955,7 @@ export const useCartStore: StateCreator<
           "Invalid response format: expected { data: ProductData[] }"
         );
       }
-      
+
       // Transform products
       const transformedProducts: ProductData[] = result.data.map(
         (product: any) => {
@@ -993,7 +993,7 @@ export const useCartStore: StateCreator<
             state.totalItems = result.total;
           }
 
-          // Only set success state for fresh loads
+          // Set appropriate success state
           if (isFreshLoad) {
             state.cartState = "success";
           } else {
@@ -1017,10 +1017,11 @@ export const useCartStore: StateCreator<
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
       console.error("Failed to load products:", error);
+
+      // Only update cartState for fresh loads
       if (isFreshLoad) {
         set((state) => {
           state.cartState = "error";
-          state.productPaginationState = "idle";
           state.error = errorMessage;
         });
       } else {
