@@ -1,3 +1,4 @@
+import Contacts from "@/app/ui/contacts";
 import React from "react";
 
 const policy = [
@@ -147,6 +148,7 @@ export default function Policy() {
           </div>
         ))}
       </div>
+      <Contacts/>
     </div>
   );
 }
