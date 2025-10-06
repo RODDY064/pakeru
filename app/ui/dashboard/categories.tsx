@@ -201,6 +201,13 @@ export default function Category({
         // Create new category
         const newCategory = await createCategory(formDataToSend, post);
         setSelectedCategory(newCategory._id);
+
+        if (formData.parentCategory) {
+          setSelectedParentCategory(formData.parentCategory);
+        }
+
+        // Select the new subcategory
+        setSelectedCategory(newCategory._id);
       }
 
       // Reset form and close modal
@@ -606,39 +613,39 @@ export default function Category({
                         </div>
                       )
                     )}
-                     <div className="flex items-center justify-between py-3 px-4 border-b border-black/20 font-medium">
-                      <p className="font-avenir text-black/30">Ungroup Category</p>
-                          </div>
-                          {groupCategories.ungrouped.map((cat, index) => (
-                            <div
-                              key={cat._id}
-                              className={`w-full min-h-12 p-2 pl-8 flex items-center justify-between hover:bg-black/5 transition-colors ${
-                                index % 2 === 0
-                                  ? "bg-black/10"
-                                  : " bg-transparent"
-                              }`}
-                            >
-                              <div className="flex-1 px-4">
-                                <p className="font-medium">{cat.name}</p>
-                                {cat.description && (
-                                  <p className="text-xs text-black/60 mt-1">
-                                    {cat.description}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="px-4 border-l border-black/20 h-full flex items-center justify-center">
-                                <Image
-                                  src="/icons/edit-cat.svg"
-                                  width={20}
-                                  height={20}
-                                  alt="delete"
-                                  className="cursor-pointer hover:opacity-70 transition-opacity"
-                                  onClick={() => handleEditCategory(cat._id)}
-                                />
-                              </div>
-                            </div>
-                          ))}
+                    <div className="flex items-center justify-between py-3 px-4 border-b border-black/20 font-medium">
+                      <p className="font-avenir text-black/30">
+                        Ungroup Category
+                      </p>
+                    </div>
+                    {groupCategories.ungrouped.map((cat, index) => (
+                      <div
+                        key={cat._id}
+                        className={`w-full min-h-12 p-2 pl-8 flex items-center justify-between hover:bg-black/5 transition-colors ${
+                          index % 2 === 0 ? "bg-black/10" : " bg-transparent"
+                        }`}
+                      >
+                        <div className="flex-1 px-4">
+                          <p className="font-medium">{cat.name}</p>
+                          {cat.description && (
+                            <p className="text-xs text-black/60 mt-1">
+                              {cat.description}
+                            </p>
+                          )}
                         </div>
+                        <div className="px-4 border-l border-black/20 h-full flex items-center justify-center">
+                          <Image
+                            src="/icons/edit-cat.svg"
+                            width={20}
+                            height={20}
+                            alt="delete"
+                            className="cursor-pointer hover:opacity-70 transition-opacity"
+                            onClick={() => handleEditCategory(cat._id)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>

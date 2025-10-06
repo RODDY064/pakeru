@@ -103,7 +103,7 @@ function ResetPasswordContent() {
 
       // Redirect to sign in after 2 seconds
       setTimeout(() => {
-        router.push("/auth/sign-in");
+        router.push("/sign-in");
       }, 2000);
 
     } catch (error: any) {

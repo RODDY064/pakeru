@@ -154,7 +154,7 @@ function SignInForm() {
       />
       <div className="my-2">
         <Link
-          href="/forgetten-password"
+          href="/forgotten-password"
           className="cursor-pointer text-blue-500 hover:text-black"
         >
           Forgotten password?
