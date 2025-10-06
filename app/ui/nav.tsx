@@ -25,7 +25,6 @@ import { useApiClient } from "@/libs/useApiClient";
 import { useSession } from "next-auth/react";
 import Loader from "./loader";
 
-
 gsap.registerPlugin(ScrollTrigger);
 
 const ads = [
@@ -93,8 +92,7 @@ export default function Nav() {
   } = useBoundStore();
 
   const { data: session, status } = useSession();
-  const { get } = useApiClient()
-
+  const { get } = useApiClient();
 
   useStoreInitialization();
 
@@ -140,6 +138,10 @@ export default function Nav() {
     // Clean up any existing ScrollTriggers first
     ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
 
+    if (modal) {
+      return;
+    }
+
     // Small delay to ensure DOM is ready after route change
     const timer = setTimeout(() => {
       gsap.to(".nav-ads", {
@@ -183,11 +185,11 @@ export default function Nav() {
       clearTimeout(timer);
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
-  }, [pathname]);
+  }, [pathname, modal]);
 
   return (
     <div className="fixed top-0 w-full left-auto z-50 h-fit">
-      <Loader/>
+      <Loader />
       <div>
         <div className=" flex items-center px-4 md:px-8 py-4 bg-black text-white overflow-hidden h-[40px] nav-ads justify-between">
           <p className="opacity-0">h</p>
@@ -232,12 +234,15 @@ export default function Nav() {
               "bg-white border-[1px] border-black/20": isSnap,
               "border-none": pathname.includes("/account"),
               "bg-white border-[1px] border-black/20 ":
-                pathname.includes("/shop"),}
-          )}>
+                pathname.includes("/shop"),
+            }
+          )}
+        >
           <div
             className={`w-10 md:w-20 flex-none flex overflow-visible  relative gap-4 items-center ${
               !routeChange ? "pointer-events-auto" : "pointer-events-none"
-            }`}>
+            }`}
+          >
             <SearchIcon style="hidden md:flex  mt-4" />
           </div>
           <Link
@@ -247,7 +252,8 @@ export default function Nav() {
             }
             className={`flex-none pt-3 w-24 h-[24px] ${
               !routeChange ? "pointer-events-auto" : "pointer-events-none"
-            }`}>
+            }`}
+          >
             <Image
               src="/icons/text-logo.svg"
               width={150}
@@ -259,7 +265,8 @@ export default function Nav() {
           <div
             className={`flex md:gap-4 max-sm:mr-1 pt-3 ${
               !routeChange ? "pointer-events-auto" : "pointer-events-none"
-            }`}>
+            }`}
+          >
             {iconTabs.map((icon, index) => (
               <div key={icon.name} className="relative">
                 {icon.name !== "user" ? (

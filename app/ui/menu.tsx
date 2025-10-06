@@ -612,9 +612,9 @@ export default function Menu() {
         initial="close"
         exit="close"
         key="mobile-menu"
-        className="w-[100%]  pb-10 relative bg-white flex-col pt-[90px] px-12 flex md:hidden menu-mobile"
+        className="w-[100%]  pb-10  relative bg-white flex-col pt-[110px] px-12 flex md:hidden menu-mobile"
       >
-        <div className="flex flex-col gap-2 overflow-auto nav-slider py-[30px] pb-[45px]">
+        <div className="flex flex-col gap-2 overflow-auto nav-slider pb-[30px] pb-[45px]">
           {/* Render grouped items for mobile */}
           {Object.entries(groupedMenuItems.groups).map(([parent, items]) => {
             const isOpen = openGroups.has(parent);
