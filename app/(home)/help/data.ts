@@ -8,6 +8,7 @@ export const helps = [
     ],
     faqs: [
       {
+        
         question: "How do I find Pakeru products online?",
         answer: [
           "You can search by product name or code in our site’s search bar to quickly locate items.",
