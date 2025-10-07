@@ -141,7 +141,7 @@ function ProductActionsContent() {
         washInstructions: product.washInstructions ?? [],
         sizeType: {
           gender: product?.sizeType?.gender ?? "",
-          clothType: product?.sizeType?.clothType ?? "",
+          clothType: product?.sizeType?.clothType?._id ?? "",
         } as {
           gender: "" | "male" | "female";
           clothType:
@@ -153,6 +153,8 @@ function ProductActionsContent() {
             | "cargo pants";
         },
       };
+
+      
 
       // Set form values
       setValue("name", formData.name);

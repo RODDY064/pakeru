@@ -23,7 +23,7 @@ const easing = cubicBezier(0.37, 0.24, 0.38, 0.99);
 
 export default function Home() {
   const { scrollAmount, setRouteChange } = useBoundStore();
-     const [containerHeight, setContainerHeight] = useState("100vh");
+  const [containerHeight, setContainerHeight] = useState("100vh");
 
   const router = useRouter();
   useGSAP(() => {
@@ -35,14 +35,14 @@ export default function Home() {
     }
   }, [scrollAmount]);
 
-
   useLayoutEffect(() => {
-  const actualVH = window.innerHeight;
-  setContainerHeight(`${actualVH}px`);
-  document.documentElement.style.setProperty("--actual-vh", `${actualVH * 0.01}px`);
-}, []);
-
-
+    const actualVH = window.innerHeight;
+    setContainerHeight(`${actualVH}px`);
+    document.documentElement.style.setProperty(
+      "--actual-vh",
+      `${actualVH * 0.01}px`
+    );
+  }, []);
 
   return (
     <div className="w-full min-h-dvh flex flex-col items-center bg-black home-main overflow-hidden">
@@ -53,7 +53,7 @@ export default function Home() {
         }
       />
       <div className="w-full mt-[1px]  pt-4 bg-white  ">
-        <Slider   containerHeight={containerHeight} />
+        <Slider containerHeight={containerHeight} />
         <Product />
         <Video />
       </div>
@@ -61,15 +61,24 @@ export default function Home() {
   );
 }
 
-const Images = ({ action, containerHeight }: { action: any, containerHeight:any }) => {
+const Images = ({
+  action,
+  containerHeight,
+}: {
+  action: any;
+  containerHeight: any;
+}) => {
+  const { hero } = useBoundStore();
 
-  const { hero } = useBoundStore()
-
+  useEffect(() => {
+    console.log(hero);
+  }, [hero]);
 
   return (
     <div
       className="w-full slider-container font-avenir bg-white"
-      style={{ height: containerHeight }}>
+      style={{ height: containerHeight }}
+    >
       <div className="slider w-full h-full">
         <div className="w-full h-full relative overflow-hidden flex flex-col">
           {/* Top Spacer - Responsive */}
@@ -80,7 +89,11 @@ const Images = ({ action, containerHeight }: { action: any, containerHeight:any 
             <div className="w-full h-full relative mt-8">
               {/* Desktop Hero */}
               <Image
-                src={hero?.hero[0].image.url as string ?? "/images/hero/pakeru desktop hero.webp"}
+                src={
+                  hero?.hero[0]?.image?.url?.trim()
+                    ? hero.hero[0].image.url
+                    : "/images/hero/pakeru desktop hero.webp"
+                }
                 fill
                 className="object-contain object-center hidden xl:block"
                 alt="Pakeru Desktop Hero"
@@ -91,7 +104,11 @@ const Images = ({ action, containerHeight }: { action: any, containerHeight:any 
 
               {/* Tablet Hero */}
               <Image
-                src={hero?.hero[2].image.url as string?? "/images/hero/pakeru tablet hero.webp"}
+                src={
+                  hero?.hero[2].image?.url?.trim()
+                    ? hero?.hero[2].image.url
+                    : "/images/hero/pakeru tablet hero.webp"
+                }
                 fill
                 className="object-contain object-center hidden md:block xl:hidden"
                 alt="Pakeru Tablet Hero"
@@ -102,7 +119,11 @@ const Images = ({ action, containerHeight }: { action: any, containerHeight:any 
 
               {/* Mobile Hero */}
               <Image
-               src={hero?.hero[1].image.url as string?? "/images/hero/pakeru mobile hero.webp"}
+                src={
+                  hero?.hero[1]?.image?.url?.trim()
+                    ? hero?.hero[1].image.url
+                    : "/images/hero/pakeru mobile hero.webp"
+                }
                 fill
                 className="object-contain object-center block md:hidden"
                 alt="Pakeru Mobile Hero"
@@ -117,7 +138,7 @@ const Images = ({ action, containerHeight }: { action: any, containerHeight:any 
           <div className="w-full flex-shrink-0 flex flex-col items-center justify-center pb-10 relative ">
             <div className="w-full flex flex-col gap-3 items-center px-4">
               <p className="text-black font-avenir font-medium text-[13px] md:text-[16px] lg:text-[18px] text-center leading-8">
-               {hero?.title}
+                {hero?.title}
               </p>
 
               <h1 className="text-black font-avenir uppercase  font-bold text-[20px] md:text-[24px] lg:text-[28px] xl:text-[32px] leading-4 text-center">
@@ -135,11 +156,11 @@ const Images = ({ action, containerHeight }: { action: any, containerHeight:any 
   );
 };
 
-const Slider = ({ containerHeight }: { containerHeight:any }) => {
+const Slider = ({ containerHeight }: { containerHeight: any }) => {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const { slider, setLookAt, scrollAmount } = useBoundStore();
-  const router = useRouter()
+  const router = useRouter();
 
   useGSAP(() => {
     gsap.registerPlugin(Draggable, InertiaPlugin);
@@ -174,24 +195,30 @@ const Slider = ({ containerHeight }: { containerHeight:any }) => {
       animate={{ opacity: 1 }}
       initial={{ opacity: 0 }}
       transition={{ duration: 0.6, ease: "easeInOut" }}
-      style={{ maxHeight:containerHeight}}
+      style={{ maxHeight: containerHeight }}
       className="w-full h-full mt-10"
     >
       <div>
         <div
           ref={sliderRef}
-          className="flex gap-1 md:gap-3 overflow-hidden text-white relative hero-slider-div">
-          {slider.map((product) => (
+          className="flex gap-1 md:gap-3 overflow-hidden text-white relative hero-slider-div"
+        >
+          {slider?.map((product) => (
             <div
-              key={product._id}
-              onClick={() => router.push(`/shop?category=${product.title.toLocaleLowerCase()}`)}
+              key={product?._id}
+              onClick={() =>
+                router.push(
+                  `/shop?category=${product.title.toLocaleLowerCase()}`
+                )
+              }
               className={cn(
                 "w-[calc(90vw)] slider-element md:w-[calc(70vw)] card h-[350px]  flex-shrink-0  relative lg:h-[calc(35vw)]  flex-none  flex items-center justify-center overflow-hidden  ",
                 {
                   "pl-1 md:pl-3 ": product._id === 0,
                   "border border-black/20 ": product._id !== 0,
                 }
-              )}>
+              )}
+            >
               {product._id === 0 ? (
                 <div className="w-[calc(90vw)] md:w-[calc(70vw)] h-full relative  overflow-hidden border border-black/10 ">
                   <motion.div
@@ -204,7 +231,8 @@ const Slider = ({ containerHeight }: { containerHeight:any }) => {
                       damping: 18,
                       mass: 0.7,
                     }}
-                    className="w-full h-full border-black/10 border  group/slider bg-[#f2f2f2] mx-auto relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden">
+                    className="w-full h-full border-black/10 border  group/slider bg-[#f2f2f2] mx-auto relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden"
+                  >
                     <Image
                       src={product.mainImage}
                       alt={product.title}
@@ -257,7 +285,7 @@ const Slider = ({ containerHeight }: { containerHeight:any }) => {
                     <div className="w-full h-24  flex px-4 pb-8">
                       <motion.div
                         variants={textMovement}
-                        transition={{ type:"spring" }}
+                        transition={{ type: "spring" }}
                         className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
                       >
                         <motion.div
@@ -295,15 +323,14 @@ const textOverlay = {
   },
 };
 
-
 const textMovement = {
   show: {
     x: 15,
-    transition: {  stiffness: 150, damping: 16, mass: 0.6 },
+    transition: { stiffness: 150, damping: 16, mass: 0.6 },
   },
   hide: {
     x: 35,
-    transition: {stiffness: 150, damping: 16, mass: 0.6 },
+    transition: { stiffness: 150, damping: 16, mass: 0.6 },
   },
 };
 
@@ -335,7 +362,7 @@ const Product = () => {
     goToPage,
     reinitialize,
   } = useGsapSlider({
-    sliderRef:sliderRef,
+    sliderRef: sliderRef,
     prevRef: prevBtnRef,
     nextRef: nextBtnRef,
     cardRef,
@@ -351,9 +378,9 @@ const Product = () => {
     }
   }, [products]);
 
-  useEffect(()=>{
-   console.log(products)
-  },[products])
+  useEffect(() => {
+    console.log(products);
+  }, [products]);
 
   return (
     <div className="w-full mt-10 px-2 md:px-8 lg:mx-2">
@@ -367,7 +394,8 @@ const Product = () => {
               cartState === "loading" || cartState === "error",
           }
         )}
-        style={{ scrollBehavior: "smooth" }}>
+        style={{ scrollBehavior: "smooth" }}
+      >
         {cartState === "loading" ||
         cartState === "error" ||
         cartState === "idle" ? (

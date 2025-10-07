@@ -1,6 +1,6 @@
 import { capitalize } from "@/libs/functions";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ClothTypeModal from "./clothTypeModal";
 import { useBoundStore } from "@/store/store";
 import { ClothType } from "@/store/general";
@@ -21,12 +21,29 @@ export default function SizeType({
   watch: any;
   setValue: any;
 }) {
-
   const gender = watch("sizeType.gender");
   const clothType = watch("sizeType.clothType");
   const { clothTypes } = useBoundStore();
+  const [selectedCloth, setSelectedCloth] = useState<ClothType| null>(null);
 
-  const selectedCloth = clothTypes.find((c) => c._id === clothType);
+  useEffect(() => {
+ 
+    if (!clothType) {
+      setSelectedCloth(null);
+      return;
+    }
+
+    const found = clothTypes.find((c) => c._id === clothType);
+    setSelectedCloth(found ||null);
+  }, [clothType, clothTypes]);
+
+  useEffect(() => {}, [selectedCloth]);
+
+  useEffect(()=>{
+    console.log(clothType,'cloth type')
+    console.log(selectedCloth,'selected')
+  }
+  ,[clothType, selectedCloth])
 
   const handleSelect = (id: string) => {
     setValue("sizeType.clothType", id);
@@ -60,17 +77,14 @@ export default function SizeType({
           </p>
         )}
       </div>
-      <ClothTypeModal
-        selectedClothType={clothType}
-        onSelect={handleSelect}
-      />
+      <ClothTypeModal selectedClothType={clothType} onSelect={handleSelect} />
       <div
         className={`mt-10 p-3 bg-blue-50 rounded-2xl border border-blue-200 `}
       >
         <div className="flex justify-between text-sm">
           <span className="text-blue-700 font-aveni">Gender:</span>
           <span className="font-medium text-blue-800 font-avenir">
-             {gender ? capitalize(gender) : "not chosen"}
+            {gender ? capitalize(gender) : "not chosen"}
           </span>
         </div>
         <div className="flex justify-between text-sm mt-1">

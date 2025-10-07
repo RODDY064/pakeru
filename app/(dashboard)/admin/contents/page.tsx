@@ -98,7 +98,7 @@ export default function Contents() {
                 {/* Gallery 1 */}
                 <div
                   onClick={() =>
-                    toggleContentModal(true, "gallery", galleries[0]._id)
+                    toggleContentModal(true, "gallery", galleries[0]?._id)
                   }
                   className="w-full flex-nowrap cursor-pointer flex-none h-[350px] bg-black/5 flex border border-dashed border-black/30  items-center justify-center relative rounded-[36px] overflow-hidden"
                 >
@@ -592,8 +592,7 @@ export default function Contents() {
                   onClick={() =>
                     toggleContentModal(true, "gallery", galleries[10]._id)
                   }
-                  className="w-full  h-[200px] cursor-pointer relative overflow-hidden  items-center justify-center bg-black/5 flex border border-dashed border-black/30 rounded-[32px]"
-                >
+                  className="w-full  h-[200px] cursor-pointer relative overflow-hidden  items-center justify-center bg-black/5 flex border border-dashed border-black/30 rounded-[32px]">
                   {galleries[10]?.image.url ? (
                     <>
                       <Image
@@ -638,32 +637,6 @@ export default function Contents() {
               </div>
             </div>
           </div>
-          {/* <div className="w-[94%] md:w-[90%] xl:w-[90%] my-10">
-            <p className="font-avenir font-medium text-md ">SLIDDER</p>
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              {sliders.map((slider) => (
-                <div key={slider._id} 
-                onClick={()=>toggleContentModal(true,'slider',slider._id)}
-                className="w-full flex-nowrap flex-none h-[350px] bg-black/5 flex cursor-pointer border border-dashed border-black/30  items-center justify-center relative rounded-[36px]">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="size-12 rounded-full border border-dashed border-black/30 bg-black/10 flex items-center justify-center ">
-                      <Image
-                        src="/icons/plus-w.svg"
-                        width={30}
-                        height={30}
-                        alt="Add"
-                        className="invert opacity-60"
-                      />
-                    </div>
-                  </div>
-                  <div className="absolute bottom-3 right-3 size-8 z-50  md:size-16 bg-black rounded-full text-white flex items-center justify-center cursor-pointer">
-                    hello
-                  </div>
-                </div>
-              ))}
-         
-            </div>
-          </div> */}
         </div>
       </div>
       <EditContent setShouldRefresh={setShouldRefresh} />

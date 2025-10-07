@@ -35,7 +35,7 @@ export default function Bentos() {
               items={1}
               className="px-2 absolute"
               name={galleries[0]?.name}
-              id={galleries[0]._id as string}
+              id={galleries[0]?._id as string}
             />
           </div>
           <div className="w-full  h-[200px] xl:h-[270px]   items-center justify-center">

@@ -591,80 +591,12 @@ export default function EditContent({
               className="h-full overflow-scroll pb-24 px-10 pt-10 "
             >
               {contentModalType === "hero" ? (
-                <>
-                  {/* <div>
-                    <p className="font-avenir text-lg mx-2 mb-2">Desktop</p>
-                    <div className="w-full flex-nowrap flex-none h-[400px] bg-black/5 flex border border-dashed border-black/30  items-center justify-center relative rounded-[36px]">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="size-12 rounded-full border border-dashed border-black/30 bg-black/10 flex items-center justify-center ">
-                          <Image
-                            src="/icons/plus-w.svg"
-                            width={30}
-                            height={30}
-                            alt="Add"
-                            className="invert opacity-60"
-                          />
-                        </div>
-                      </div>
-                      <div className="absolute bottom-3 right-3 size-8 z-50  md:size-16 bg-black rounded-full text-white flex items-center justify-center cursor-pointer">
-                        <div className="relative flex items-center justify-center">
-                          <div className="w-[20px] h-[1px] bg-white"></div>
-                          <div className="w-[1px] h-[20px] bg-white absolute"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-10">
-                    <p className="font-avenir text-lg mx-2 mb-2">Tablet</p>
-                    <div className="w-full flex-nowrap flex-none h-[350px] bg-black/5 flex border border-dashed border-black/30  items-center justify-center relative rounded-[36px]">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="size-12 rounded-full border border-dashed border-black/30 bg-black/10 flex items-center justify-center ">
-                          <Image
-                            src="/icons/plus-w.svg"
-                            width={30}
-                            height={30}
-                            alt="Add"
-                            className="invert opacity-60"
-                          />
-                        </div>
-                      </div>
-                      <div className="absolute bottom-3 right-3 size-8 z-50  md:size-16 bg-black rounded-full text-white flex items-center justify-center cursor-pointer">
-                        <div className="relative flex items-center justify-center">
-                          <div className="w-[20px] h-[1px] bg-white"></div>
-                          <div className="w-[1px] h-[20px] bg-white absolute"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-10">
-                    <p className="font-avenir text-lg mx-2 mb-2">Mobile</p>
-                    <div className="w-full flex-nowrap flex-none h-[300px] bg-black/5 flex border border-dashed border-black/30  items-center justify-center relative rounded-[36px]">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="size-12 rounded-full border border-dashed border-black/30 bg-black/10 flex items-center justify-center ">
-                          <Image
-                            src="/icons/plus-w.svg"
-                            width={30}
-                            height={30}
-                            alt="Add"
-                            className="invert opacity-60"
-                          />
-                        </div>
-                      </div>
-                      <div className="absolute bottom-3 right-3 size-8 z-50  md:size-16 bg-black rounded-full text-white flex items-center justify-center cursor-pointer">
-                        <div className="relative flex items-center justify-center">
-                          <div className="w-[20px] h-[1px] bg-white"></div>
-                          <div className="w-[1px] h-[20px] bg-white absolute"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div> */}
-
+  
                   <>
                     {renderImageUploadSection("desktop", "h-[400px]")}
                     {renderImageUploadSection("tablet", "h-[350px]")}
                     {renderImageUploadSection("mobile", "h-[300px]")}
                   </>
-                </>
               ) : (
                 <>{renderGalleryImageUploadSection()}</>
               )}
@@ -716,7 +648,6 @@ export default function EditContent({
                     />
                   </>
                 )}
-
                 <div className="flex gap-3 my-10">
                   <button
                     type="submit"
