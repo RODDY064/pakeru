@@ -17,6 +17,7 @@ interface ProductCardProps {
   cardStyle?: string;
   productData: ProductData;
   hideDetails?: boolean;
+  cardSize?:string
 }
 
 const ProductCard = ({
@@ -25,6 +26,7 @@ const ProductCard = ({
   cardStyle,
   productData,
   hideDetails = false,
+  cardSize
 }: ProductCardProps) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -138,8 +140,7 @@ const ProductCard = ({
         whileTap="tap"
         initial="initial"
         className={cn(
-          "relative flex border border-black/5 rounded-sm cursor-pointer transition-shadow duration-300 hover:border hover:z-20 hover:border-black/20",
-          config.container
+          "relative flex border border-black/5 rounded-sm cursor-pointer transition-shadow duration-300 hover:border hover:z-20 hover:border-black/20",config.container, cardSize
         )}
       >
         {/* Image Container */}

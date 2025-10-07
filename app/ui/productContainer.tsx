@@ -351,16 +351,16 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   }
 
   const getGroupName = (sizeGuideType?: string) => {
-    if (!sizeGuideType) return MeasurementGroupName.MenShirts;
+  if (!sizeGuideType) return MeasurementGroupName.MenShirts;
 
-    const key = sizeGuideType
-      .replace(/_([a-z])/g, (_, c) => c.toUpperCase())
-      .replace(/^./, (c) =>
-        c.toUpperCase()
-      ) as keyof typeof MeasurementGroupName;
+  const key = sizeGuideType
+    .toLowerCase()
+    .replace(/[-_]+([a-z])/g, (_, c) => c.toUpperCase()) // convert after - or _
+    .replace(/^./, (c) => c.toUpperCase()) as keyof typeof MeasurementGroupName;
 
-    return MeasurementGroupName[key] ?? MeasurementGroupName.MenShirts;
-  };
+  return MeasurementGroupName[key] ?? MeasurementGroupName.MenShirts;
+};
+
 
   return (
     <div className="w-full  flex flex-col items-center text-black bg-white min-h-screen ">

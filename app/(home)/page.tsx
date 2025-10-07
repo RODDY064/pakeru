@@ -105,8 +105,8 @@ const Images = ({
               {/* Tablet Hero */}
               <Image
                 src={
-                  hero?.hero[2].image?.url?.trim()
-                    ? hero?.hero[2].image.url
+                  hero?.hero[1].image?.url?.trim()
+                    ? hero?.hero[1].image.url
                     : "/images/hero/pakeru tablet hero.webp"
                 }
                 fill
@@ -120,8 +120,8 @@ const Images = ({
               {/* Mobile Hero */}
               <Image
                 src={
-                  hero?.hero[1]?.image?.url?.trim()
-                    ? hero?.hero[1].image.url
+                  hero?.hero[2]?.image?.url?.trim()
+                    ? hero?.hero[2].image.url
                     : "/images/hero/pakeru mobile hero.webp"
                 }
                 fill
@@ -422,6 +422,7 @@ const Product = () => {
                 cardRef={index === 0 ? cardRef : undefined}
                 cardStyle="md:mb-6"
                 hideDetails={true}
+                cardSize="max-w-[400px]"
               />
             ))}
           </>

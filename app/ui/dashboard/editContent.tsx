@@ -26,23 +26,23 @@ interface DeviceRequirements {
   gallery: ImageDimensions;
 }
 
-interface ImageData {
-  _id: string;
-  publicId: string;
-  url: string;
+interface ImageState {
+  file?: File;
+  previewUrl: string;
+  hasChanged: boolean;
 }
 
 interface GalleryItem {
   _id: string;
   name: string;
-  image: ImageData;
+  image: { _id: string; publicId: string; url: string };
   products: string[];
 }
 
 interface FormData {
   description?: string;
   name: string;
-  title:string
+  title: string;
 }
 
 export default function EditContent({
@@ -52,26 +52,35 @@ export default function EditContent({
 }) {
   const { isContentModalOpen, toggleContentModal, contentModalType, content } =
     useBoundStore();
-  const [originalHeroData, setOriginalHeroData] = useState<HeroContent | null>(
-    null
-  );
-  const [originalGalleryData, setOriginalGalleryData] = useState<GalleryItem | null>(null);
-  const { patch } = useApiClient();
+  const { patch, post } = useApiClient();
 
-  const [heroItems, setHeroItems] = useState<HeroContent["hero"]>([
-    { name: "desktop", image: { _id: "", publicId: "", url: "" } },
-    { name: "tablet", image: { _id: "", publicId: "", url: "" } },
-    { name: "mobile", image: { _id: "", publicId: "", url: "" } },
-  ]);
+  // Track original data for change detection
+  const [originalData, setOriginalData] = useState<{
+    title?: string;
+    description?: string;
+    name?: string;
+    products?: string[];
+  }>({});
 
-  const [galleryItem, setGalleryItem] = useState<Omit<GalleryItem, "_id">>({
-    name: "",
-    image: { _id: "", publicId: "", url: "" },
-    products: [],
+  // Determine create vs edit mode
+  const isCreateMode =
+    !content ||
+    (content.type === "hero" && !(content as HeroContent)._id) ||
+    (content.type === "gallery" && !((content as GalleryContent).items?.[0]?._id));
+
+  // Image states - track files and preview URLs separately
+  const [heroImages, setHeroImages] = useState<Record<string, ImageState>>({
+    desktop: { previewUrl: "", hasChanged: false },
+    tablet: { previewUrl: "", hasChanged: false },
+    mobile: { previewUrl: "", hasChanged: false },
   });
 
-  const { register, handleSubmit, reset, setValue, watch } =
-    useForm<FormData>();
+  const [galleryImage, setGalleryImage] = useState<ImageState>({
+    previewUrl: "",
+    hasChanged: false,
+  });
+
+  const { register, handleSubmit, reset, setValue } = useForm<FormData>();
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, string>>({});
@@ -117,7 +126,6 @@ export default function EditContent({
     file: File,
     deviceType: keyof DeviceRequirements
   ) => {
-    // Check file type
     const allowedTypes = ["image/webp"];
     if (!allowedTypes.includes(file.type)) {
       setImageErrors((prev) => ({
@@ -127,135 +135,226 @@ export default function EditContent({
       return;
     }
 
-    // Validate dimensions
     const isValidDimensions = await validateImage(file, deviceType);
     if (!isValidDimensions) {
       return;
     }
 
-    // If validation passes, upload the image
+    const previewUrl = URL.createObjectURL(file);
+
+    if (deviceType === "gallery") {
+      setGalleryImage({ file, previewUrl, hasChanged: true });
+    } else {
+      setHeroImages((prev) => ({
+        ...prev,
+        [deviceType]: { file, previewUrl, hasChanged: true },
+      }));
+    }
+  };
+
+  // Load existing content when modal opens
+  useEffect(() => {
+    if (!isContentModalOpen) return;
+
+    if (isCreateMode) {
+      // Reset to empty state
+      reset();
+      setHeroImages({
+        desktop: { previewUrl: "", hasChanged: false },
+        tablet: { previewUrl: "", hasChanged: false },
+        mobile: { previewUrl: "", hasChanged: false },
+      });
+      setGalleryImage({ previewUrl: "", hasChanged: false });
+      setSelectedProducts([]);
+      setImageErrors({});
+      setOriginalData({});
+      return;
+    }
+
+    // Load existing data for edit mode
+    if (!content) return;
+
+    if (content.type === "hero" && contentModalType === "hero") {
+      const heroContent = content as HeroContent;
+      setValue("title", heroContent.title ?? "");
+      setValue("description", heroContent.description ?? "");
+      
+      setOriginalData({
+        title: heroContent.title,
+        description: heroContent.description,
+      });
+
+      // Load existing images as previews
+      const newHeroImages: Record<string, ImageState> = {};
+      heroContent.hero.forEach((item) => {
+        newHeroImages[item.name] = {
+          previewUrl: item.image.url ?? "",
+          hasChanged: false,
+        };
+      });
+      setHeroImages(newHeroImages);
+    } else if (content.type === "gallery" && contentModalType === "gallery") {
+      const galleryContent = content as GalleryContent;
+      const firstItem = galleryContent.items?.[0];
+      
+      if (firstItem) {
+        setValue("name", firstItem.name ?? "");
+        setSelectedProducts(firstItem.products ?? []);
+        
+        setOriginalData({
+          name: firstItem.name,
+          products: firstItem.products,
+        });
+
+        setGalleryImage({
+          previewUrl: firstItem.image?.url ?? "",
+          hasChanged: false,
+        });
+      }
+    }
+  }, [isContentModalOpen, content, contentModalType, setValue, isCreateMode, reset]);
+
+  const onSubmit = async (data: FormData) => {
     setIsUploading(true);
     try {
-      // Here you would typically upload to your storage service
-      // For now, we'll create a mock URL
-      const mockImageData: ImageData = {
-        _id: `mock_${Date.now()}`,
-        publicId: `mock_${file.name}`,
-        url: URL.createObjectURL(file),
-      };
+      if (contentModalType === "hero") {
+        const formData = new FormData();
 
-      if (deviceType === "gallery") {
-        handleGalleryImageUpload(mockImageData);
-      } else {
-        handleHeroImageUpload(
-          deviceType as "desktop" | "tablet" | "mobile",
-          mockImageData
-        );
+        if (isCreateMode) {
+          // CREATE: Send all data
+          formData.append("title", data.title || "");
+          formData.append("description", data.description || "");
+
+          // Rename and attach image files to 'images' field
+          Object.entries(heroImages).forEach(([deviceType, imageState]) => {
+            if (imageState.file) {
+              const renamedFile = new File(
+                [imageState.file],
+                deviceType,
+                { type: imageState.file.type }
+              );
+              formData.append("images", renamedFile);
+            }
+          });
+
+          await saveContentToast(
+            post("/content/hero", formData, { requiresAuth: true }),
+            "hero",
+            { setShouldRefresh },
+            true
+          );
+        } else {
+          // UPDATE: Send only changes
+          const formData = new FormData();
+          let hasChanges = false;
+
+          if (data.title !== originalData.title) {
+            formData.append("title", data.title);
+            hasChanges = true;
+          }
+
+          if (data.description !== originalData.description) {
+            formData.append("description", data.description || "");
+            hasChanges = true;
+          }
+
+          // Only attach changed images
+          Object.entries(heroImages).forEach(([deviceType, imageState]) => {
+            if (imageState.hasChanged && imageState.file) {
+              const renamedFile = new File(
+                [imageState.file],
+                deviceType,
+                { type: imageState.file.type }
+              );
+              formData.append("images", renamedFile);
+              hasChanges = true;
+            }
+          });
+
+          if (hasChanges) {
+            const contentId = (content as any)?._id;
+            await saveContentToast(
+              patch(`/content/hero/${contentId}`, formData, { requiresAuth: true }),
+              "hero",
+              { setShouldRefresh },
+              false
+            );
+          }
+        }
+      } else if (contentModalType === "gallery") {
+        const formData = new FormData();
+
+        if (isCreateMode) {
+          // CREATE: Send all data
+          formData.append("name", data.name || "");
+          
+          if (galleryImage.file) {
+            formData.append("image", galleryImage.file);
+          }
+          
+          formData.append("products", JSON.stringify(selectedProducts));
+
+          await saveContentToast(
+            post("/content/gallery", formData, { requiresAuth: true }),
+            "gallery",
+            { setShouldRefresh },
+            true
+          );
+        } else {
+          // UPDATE: Send only changes
+          let hasChanges = false;
+
+          if (data.name !== originalData.name) {
+            formData.append("name", data.name || "");
+            hasChanges = true;
+          }
+
+          if (galleryImage.hasChanged && galleryImage.file) {
+            const renamedFile = new File(
+              [galleryImage.file],
+              "gallery",
+              { type: galleryImage.file.type }
+            );
+            formData.append("image", renamedFile);
+            hasChanges = true;
+          }
+
+          const productsChanged =
+            JSON.stringify([...selectedProducts].sort()) !==
+            JSON.stringify([...(originalData.products || [])].sort());
+
+          if (productsChanged) {
+            formData.append("products", JSON.stringify(selectedProducts));
+            hasChanges = true;
+          }
+
+          if (hasChanges) {
+            const contentId = (content as GalleryContent).items?.[0]._id;
+            await saveContentToast(
+              patch(`/content/gallery/${contentId}`, formData, { requiresAuth: true }),
+              "gallery",
+              { setShouldRefresh },
+              false
+            );
+          }
+        }
       }
+
+      toggleContentModal(false);
+      reset();
     } catch (error) {
-      console.error("Error uploading image:", error);
-      setImageErrors((prev) => ({
-        ...prev,
-        [deviceType]: "Failed to upload image. Please try again.",
-      }));
+      console.error("Error saving content:", error);
     } finally {
       setIsUploading(false);
     }
   };
 
-  // Handle image upload for hero items
-  // Handle gallery image upload
-  const handleHeroImageUpload = (
-    deviceType: "desktop" | "tablet" | "mobile",
-    imageData: ImageData
-  ) => {
-    setHeroItems((prev) =>
-      prev.map((item) =>
-        item.name === deviceType ? { ...item, image: imageData } : item
-      )
-    );
-  };
-
-  const handleGalleryImageUpload = (imageData: ImageData) => {
-    setGalleryItem((prev) => ({ ...prev, image: imageData }));
-  };
-
-  // Load existing content when modal opens
-  useEffect(() => {
-    if (!isContentModalOpen || !content) return;
-
-    switch (content.type) {
-      case "hero": {
-        if (contentModalType === "hero") {
-          setHeroItems(content.hero);
-          setValue("title", content.title ?? "");
-          setValue("description", content.description ?? "");
-          // Save original data
-          setOriginalHeroData(content);
-        }
-        break;
-      }
-      case "gallery": {
-        if (contentModalType === "gallery") {
-          const firstItem = content.items?.[0];
-          if (firstItem) {
-            setValue("name", firstItem.name ?? "");
-            setGalleryItem({
-              name: firstItem.name ?? "",
-              image: {
-                _id: firstItem.image?._id ?? "",
-                publicId: firstItem.image?.publicId ?? "",
-                url: firstItem.image?.url ?? "",
-              },
-              products: firstItem.products ?? [],
-            });
-            setSelectedProducts(firstItem.products ?? []);
-            setOriginalGalleryData({
-              _id: firstItem._id ?? "",
-              name: firstItem.name ?? "",
-              image: {
-                _id: firstItem.image?._id ?? "",
-                publicId: firstItem.image?.publicId ?? "",
-                url: firstItem.image?.url ?? "",
-              },
-              products: firstItem.products ?? [],
-            });
-          }
-        }
-        break;
-      }
-    }
-  }, [isContentModalOpen, content, contentModalType, setValue]);
-
-
-  // Reset form when modal closes
-  useEffect(() => {
-    if (!isContentModalOpen) {
-      reset();
-      setHeroItems([
-        { name: "desktop", image: { _id: "", publicId: "", url: "" } },
-        { name: "tablet", image: { _id: "", publicId: "", url: "" } },
-        { name: "mobile", image: { _id: "", publicId: "", url: "" } },
-      ]);
-      setGalleryItem({
-        name: "",
-        image: { _id: "", publicId: "", url: "" },
-        products: [],
-      });
-      setSelectedProducts([]);
-      setImageErrors({});
-      // Clear original data
-      setOriginalHeroData(null);
-      setOriginalGalleryData(null);
-    }
-  }, [isContentModalOpen, reset]);
-
   const renderImageUploadSection = (
     deviceType: "desktop" | "tablet" | "mobile",
     height: string
   ) => {
-    const item = heroItems.find((h) => h.name === deviceType);
-    const hasImage = item?.image.url;
+    const imageState = heroImages[deviceType];
+    const hasImage = imageState?.previewUrl;
     const error = imageErrors[deviceType];
     const required = requiredDimensions[deviceType];
 
@@ -280,7 +379,7 @@ export default function EditContent({
           {hasImage ? (
             <>
               <Image
-                src={(item.image.url as string) ?? "/images/image-fallback.png"}
+                src={imageState.previewUrl}
                 fill
                 alt={`${deviceType} hero image`}
                 className="object-contain bg-white"
@@ -336,7 +435,7 @@ export default function EditContent({
   };
 
   const renderGalleryImageUploadSection = () => {
-    const hasImage = galleryItem.image.url;
+    const hasImage = galleryImage.previewUrl;
     const error = imageErrors.gallery;
     const required = requiredDimensions.gallery;
 
@@ -359,7 +458,7 @@ export default function EditContent({
           {hasImage ? (
             <>
               <Image
-                src={galleryItem.image.url ?? "/images/image-fallback.png"}
+                src={galleryImage.previewUrl}
                 fill
                 alt="Gallery image"
                 className="object-contain bg-white"
@@ -412,144 +511,6 @@ export default function EditContent({
     );
   };
 
-  const onSubmit = async (data: FormData) => {
-    setIsUploading(true);
-    try {
-      if (contentModalType === "hero") {
-        const changes = {} as any;
-        let hasImageChanges = false;
-
-        // Check title change
-        if (data.title !== originalHeroData?.title) {
-          Object.assign(changes, { title: data.title });
-        }
-
-        // Check description change
-        if (data.description !== originalHeroData?.description) {
-          Object.assign(changes, { description: data.description || "" });
-        }
-
-        // Check hero images changes
-        hasImageChanges = heroItems.some((item, index) => {
-          const original = originalHeroData?.hero[index];
-          return (
-            item.image._id !== original?.image._id ||
-            item.image.url !== original?.image.url
-          );
-        });
-
-        if (hasImageChanges) {
-          Object.assign(changes, { hero: [...heroItems] });
-        }
-
-        // Only send if there are changes
-        if (Object.keys(changes).length > 0) {
-          const contentId = (content as any)?._id;
-          const endpoint = `/content/hero/${contentId}`;
-
-          let body: BodyInit;
-          let headers: Record<string, string> = {};
-
-          if (hasImageChanges) {
-            // Send as FormData when images changed
-            const formData = new FormData();
-            Object.entries(changes).forEach(([key, value]) => {
-              if (key === "hero") {
-                formData.append(key, JSON.stringify(value));
-              } else {
-                formData.append(key, value as string);
-              }
-            });
-            // if (contentId) formData.append('_id', contentId);
-            body = formData;
-          } else {
-            body = { ...changes };
-            headers["Content-Type"] = "application/json";
-          }
-
-          await saveContentToast(
-            patch(endpoint, body, { headers, requiresAuth: true }),
-            "hero",
-            { setShouldRefresh }
-          );
-        } else {
-          console.log("No changes detected for hero content");
-        }
-
-        toast;
-      } else if (contentModalType === "gallery") {
-        const changes = {} as any;
-        let hasImageChange = false;
-
-        // Check title/name change
-        if (data.name !== originalGalleryData?.name) {
-          Object.assign(changes, { name: data.name || "" });
-        }
-
-        // Check image change
-        if (
-          galleryItem.image._id !== originalGalleryData?.image._id ||
-          galleryItem.image.url !== originalGalleryData?.image.url
-        ) {
-          Object.assign(changes, { image: { ...galleryItem.image } });
-          hasImageChange = true;
-        }
-
-        // Check products change
-        const productsChanged =
-          JSON.stringify([...selectedProducts].sort()) !==
-          JSON.stringify([...(originalGalleryData?.products || [])].sort());
-
-        if (productsChanged) {
-          Object.assign(changes, { products: [...selectedProducts] });
-        }
-
-        // Only send if there are changes
-        if (Object.keys(changes).length > 0) {
-          const contentId = originalGalleryData?._id;
-          const endpoint = `/content/gallery/${contentId}`;
-
-          let body: BodyInit;
-          let headers: Record<string, string> = {};
-
-          if (hasImageChange) {
-            // Send as FormData when image changed
-            const formData = new FormData();
-            Object.entries(changes).forEach(([key, value]) => {
-              if (key === "image" || key === "products") {
-                formData.append(key, JSON.stringify(value));
-              } else {
-                formData.append(key, value as string);
-              }
-            });
-            // if (contentId) formData.append('_id', contentId);
-            body = formData;
-          } else {
-            // Send as JSON when only text/products changed
-            body = { ...changes };
-            headers["Content-Type"] = "application/json";
-          }
-
-          await saveContentToast(
-            patch(endpoint, body, { headers, requiresAuth: true }),
-            "gallery",
-            { setShouldRefresh }
-          );
-        } else {
-          console.log("No changes detected for gallery content");
-        }
-      }
-
-      // Close modal after successful save
-      toggleContentModal(false);
-      reset();
-    } catch (error) {
-      console.error("Error saving content:", error);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   return (
     <div
       className={`fixed w-full h-full bg-black/80 top-0 left-0 z-[99] ${
@@ -570,16 +531,16 @@ export default function EditContent({
             <div className="flex items-center justify-between pt-8 pb-4 px-10 border-b border-black/20">
               <div className="flex items-center gap-4">
                 <p className="font-avenir text-lg font-normal pt-1">
-                  Edit {capitalize(contentModalType as string)}
+                  {isCreateMode ? "Create" : "Edit"} {capitalize(contentModalType as string)}
                 </p>
               </div>
               <div
                 onClick={() => toggleContentModal(false)}
-                className="flex  gap-1 cursor-pointer"
+                className="flex gap-1 cursor-pointer"
               >
-                <div className="relative flex items-center justify-center ">
+                <div className="relative flex items-center justify-center">
                   <div className="w-[16px] h-[1px] rotate-45 bg-black"></div>
-                  <div className="w-[16px] h-[1px] rotate-[-45deg] bg-black absolute "></div>
+                  <div className="w-[16px] h-[1px] rotate-[-45deg] bg-black absolute"></div>
                 </div>
                 <p className="capitalize font-avenir font-[400] text-sm mt-1">
                   CLOSE
@@ -588,15 +549,14 @@ export default function EditContent({
             </div>
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="h-full overflow-scroll pb-24 px-10 pt-10 "
+              className="h-full overflow-scroll pb-24 px-10 pt-10"
             >
               {contentModalType === "hero" ? (
-  
-                  <>
-                    {renderImageUploadSection("desktop", "h-[400px]")}
-                    {renderImageUploadSection("tablet", "h-[350px]")}
-                    {renderImageUploadSection("mobile", "h-[300px]")}
-                  </>
+                <>
+                  {renderImageUploadSection("desktop", "h-[400px]")}
+                  {renderImageUploadSection("tablet", "h-[350px]")}
+                  {renderImageUploadSection("mobile", "h-[300px]")}
+                </>
               ) : (
                 <>{renderGalleryImageUploadSection()}</>
               )}
@@ -606,9 +566,9 @@ export default function EditContent({
                     <div>
                       <label className="font-avenir text-lg">Title</label>
                       <input
-                        id="tittle"
+                        id="title"
                         {...register("title", { required: true })}
-                        placeholder="e.g Made for you "
+                        placeholder="e.g Made for you"
                         className="border border-black/30 w-full h-12 mt-2 rounded-xl focus:outline-none focus:border-black/60 p-3"
                       />
                     </div>
@@ -618,7 +578,7 @@ export default function EditContent({
                         id="description"
                         {...register("description")}
                         placeholder="e.g DEFY THE NORM"
-                        className="border min-h-[90px] max-h-[90px] h-[90px] border-black/30 w-full  mt-2 rounded-xl focus:outline-none focus:border-black/60 p-2 ove"
+                        className="border min-h-[90px] max-h-[90px] h-[90px] border-black/30 w-full mt-2 rounded-xl focus:outline-none focus:border-black/60 p-2"
                       />
                     </div>
                   </>
@@ -630,16 +590,12 @@ export default function EditContent({
                       <label className="font-avenir text-lg">Name</label>
                       <input
                         {...register("name", { required: true })}
-                        placeholder="e.g Aegis "
+                        placeholder="e.g Aegis"
                         className="border border-black/30 w-full h-12 mt-2 rounded-xl focus:outline-none focus:border-black/60 p-3"
                       />
                     </div>
                     <AttachPicker
-                      type={
-                        contentModalType === "gallery"
-                          ? "products"
-                          : "categories"
-                      }
+                      type="products"
                       productsLink={
                         content?.type === "gallery"
                           ? content.items?.[0].products
@@ -652,9 +608,14 @@ export default function EditContent({
                   <button
                     type="submit"
                     disabled={isUploading}
-                    className={`rounded-full p-4 w-full cursor-pointer border ${isUploading ? "bg-black/50 border-black/50":" border-black bg-black "}`} >
+                    className={`rounded-full p-4 w-full cursor-pointer border ${
+                      isUploading
+                        ? "bg-black/50 border-black/50"
+                        : "border-black bg-black"
+                    }`}
+                  >
                     <p className="text-white text-md font-avenir text-center">
-                      {isUploading ? "Uploading...": "Upload"}
+                      {isUploading ? "Uploading..." : isCreateMode ? "Create" : "Update"}
                     </p>
                   </button>
                 </div>
@@ -691,30 +652,27 @@ const container = {
 async function saveContentToast<T>(
   action: Promise<T>,
   entity: "hero" | "gallery",
-  { setShouldRefresh }: { setShouldRefresh: React.Dispatch<React.SetStateAction<boolean>> }
+  { setShouldRefresh }: { setShouldRefresh: React.Dispatch<React.SetStateAction<boolean>> },
+  isCreate: boolean
 ): Promise<T> {
   return toast.promise(action, {
     loading: {
-      title: `Saving ${entity} content...`,
-      description: `Please wait while we update your ${entity}`,
+      title: `${isCreate ? "Creating" : "Saving"} ${entity} content...`,
+      description: `Please wait while we ${isCreate ? "create" : "update"} your ${entity}`,
       duration: Infinity,
     },
     success: {
-      title: `${entity[0].toUpperCase() + entity.slice(1)} content updated`,
-      description: `The ${entity} section was saved successfully. Please refresh to see the changes.`,
+      title: `${entity[0].toUpperCase() + entity.slice(1)} content ${isCreate ? "created" : "updated"}`,
+      description: `The ${entity} section was ${isCreate ? "created" : "saved"} successfully. Please refresh to see the changes.`,
     },
     error: (error) => ({
-      title: `Failed to update ${entity} content`,
+      title: `Failed to ${isCreate ? "create" : "update"} ${entity} content`,
       description: error?.message || "Please try again",
     }),
     position: "top-left",
   }).then((res) => {
-    // flip refresh flag
     setShouldRefresh(true);
-
-    // reset after 5s
     setTimeout(() => setShouldRefresh(false), 10000);
-
     return res;
   });
 }

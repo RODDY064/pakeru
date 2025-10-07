@@ -148,7 +148,7 @@ export default function Contents() {
                   {/* Gallery 2 */}
                   <div
                     onClick={() =>
-                      toggleContentModal(true, "gallery", galleries[1]._id)
+                      toggleContentModal(true, "gallery", galleries[1]?._id)
                     }
                     className="w-full h-full  overflow-hidden  bg-black/5 flex items-center cursor-pointer justify-center  border border-dashed border-black/30 rounded-[26px] relative"
                   >
@@ -197,7 +197,7 @@ export default function Contents() {
                   {/* Gallery 3 */}
                   <div
                     onClick={() =>
-                      toggleContentModal(true, "gallery", galleries[2]._id)
+                      toggleContentModal(true, "gallery", galleries[2]?._id)
                     }
                     className="w-full h-full overflow-hidden cursor-pointer items-center justify-center  bg-black/5 flex border border-dashed border-black/30 rounded-[26px] relative"
                   >
@@ -248,7 +248,7 @@ export default function Contents() {
 
                 <div
                   onClick={() =>
-                    toggleContentModal(true, "gallery", galleries[3]._id)
+                    toggleContentModal(true, "gallery", galleries[3]?._id)
                   }
                   className="w-full  h-[200px] overflow-hidden relative flex items-center cursor-pointer justify-center     bg-black/5 border border-dashed border-black/30 rounded-[32px]"
                 >
@@ -299,7 +299,7 @@ export default function Contents() {
                   {/* Gallery 4 */}
                   <div
                     onClick={() =>
-                      toggleContentModal(true, "gallery", galleries[4]._id)
+                      toggleContentModal(true, "gallery", galleries[4]?._id)
                     }
                     className="w-full h-full  bg-black/5 flex border border-dashed border-black/30 rounded-[26px] overflow-hidden relative cursor-pointer items-center justify-center"
                   >
@@ -348,7 +348,7 @@ export default function Contents() {
                   {/* Gallery 5 */}
                   <div
                     onClick={() =>
-                      toggleContentModal(true, "gallery", galleries[5]._id)
+                      toggleContentModal(true, "gallery", galleries[5]?._id)
                     }
                     className="w-full h-full  bg-black/5 flex border border-dashed border-black/30 rounded-[26px] overflow-hidden relative cursor-pointer items-center justify-center"
                   >
@@ -396,7 +396,7 @@ export default function Contents() {
                 </div>
                 <div
                   onClick={() =>
-                    toggleContentModal(true, "gallery", galleries[6]._id)
+                    toggleContentModal(true, "gallery", galleries[6]?._id)
                   }
                   className="w-full flex-nowrap flex-none h-[560px] bg-black/5 flex border border-dashed border-black/30  items-center justify-center 
               rounded-[36px] overflow-hidden cursor-pointer relative"
@@ -446,7 +446,7 @@ export default function Contents() {
               <div className="flex flex-col gap-3">
                 <div
                   onClick={() =>
-                    toggleContentModal(true, "gallery", galleries[7]._id)
+                    toggleContentModal(true, "gallery", galleries[7]?._id)
                   }
                   className="w-full flex-nowrap flex-none h-[350px] bg-black/5 flex border border-dashed border-black/30  items-center justify-center 
               rounded-[36px] overflow-hidden relative cursor-pointer"
@@ -495,7 +495,7 @@ export default function Contents() {
                 <div className="w-full  h-[150px]  justify-center flex items-center gap-2">
                   <div
                     onClick={() =>
-                      toggleContentModal(true, "gallery", galleries[8]._id)
+                      toggleContentModal(true, "gallery", galleries[8]?._id)
                     }
                     className="w-full h-full  bg-black/5 flex border border-dashed border-black/30 rounded-[26px] relative overflow-hidden cursor-pointer"
                   >
@@ -520,7 +520,7 @@ export default function Contents() {
                       </>
                     ) : (
                       <>
-                        <div className="flex flex-col items-center gap-4">
+                        <div className="relative w-full h-full justify-center flex flex-col items-center gap-4">
                           <div className="size-12 rounded-full border border-dashed border-black/30 bg-black/10 flex items-center justify-center ">
                             <Image
                               src="/icons/plus-w.svg"
@@ -542,7 +542,7 @@ export default function Contents() {
                   </div>
                   <div
                     onClick={() =>
-                      toggleContentModal(true, "gallery", galleries[9]._id)
+                      toggleContentModal(true, "gallery", galleries[9]?._id)
                     }
                     className="w-full h-full  bg-black/5 flex border border-dashed border-black/30 rounded-[26px] relative overflow-hidden cursor-pointer"
                   >
@@ -566,8 +566,8 @@ export default function Contents() {
                         </div>
                       </>
                     ) : (
-                      <>
-                        <div className="flex flex-col items-center gap-4">
+                      <> 
+                        <div className="relative w-full h-full flex flex-col justify-center items-center gap-4">
                           <div className="size-12 rounded-full border border-dashed border-black/30 bg-black/10 flex items-center justify-center ">
                             <Image
                               src="/icons/plus-w.svg"
@@ -590,7 +590,7 @@ export default function Contents() {
                 </div>
                 <div
                   onClick={() =>
-                    toggleContentModal(true, "gallery", galleries[10]._id)
+                    toggleContentModal(true, "gallery", galleries[10]?._id)
                   }
                   className="w-full  h-[200px] cursor-pointer relative overflow-hidden  items-center justify-center bg-black/5 flex border border-dashed border-black/30 rounded-[32px]">
                   {galleries[10]?.image.url ? (
@@ -614,7 +614,7 @@ export default function Contents() {
                     </>
                   ) : (
                     <>
-                      <div className="flex flex-col items-center gap-4">
+                      <div className=" flex flex-col items-center gap-4">
                         <div className="size-12 rounded-full border border-dashed border-black/30 bg-black/10 flex items-center justify-center ">
                           <Image
                             src="/icons/plus-w.svg"

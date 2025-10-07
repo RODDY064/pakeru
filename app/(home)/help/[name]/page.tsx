@@ -21,9 +21,11 @@ export default async function DynamicHelp({
 
   const decodedName = decodeURIComponent(name as string);
 
-  const section = (helps as HelpSection[]).find((h) => h.label.toLowerCase() === decodedName.toLowerCase());
+  const section = (helps as HelpSection[]).find(
+    (h) => h.label.toLowerCase() === decodedName.toLowerCase()
+  );
 
-  if (!section) {
+  if (section) {
     return (
       <div className="flex flex-col items-center w-[85%] md:w-[70%] pt-16 justify-center h-full text-gray-500">
         <div className=" mb-4">
@@ -45,20 +47,20 @@ export default async function DynamicHelp({
   }
 
   return (
-    <div className="w-[85%] md:w-[70%] py-24 flex flex-col ">
-      <h1 className="text-2xl font-semibold mb-6 font-avenir">{decodedName}?</h1>
-      <div className="space-y-10">
-        {section?.faqs?.map((faq, idx) => (
-          <div key={idx}>
-            <h2 className="text-lg font-medium mb-2">{faq?.question}</h2>
-            <ul className="list-disc ml-5 space-y-1 text-sm text-gray-700">
-              {faq.answer.map((ans, i) => (
-                <li key={i}>{ans}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
+    <div className="w-[85%] md:w-[70%] py-12 md:py-24 flex flex-col ">
+      <h1 className="text-lg md:text-2xl lg:text-3xl font-semibold mb-6 font-avenir">
+        {decodedName}?
+      </h1>
+      <ul className="space-y-2 list-disc pl-4">
+        <li className="text-[16px] md:text-[20px] font-[300] font-avenir">
+          You can search by product name or code in our site’s search bar to
+          quickly locate items.
+        </li>
+        <li className="text-[16px] md:text-[20px] font-[300] font-avenir">
+          Browse through our collections to discover individual product pages, complete with visuals, product details, available colors, and size options.
+        </li>
+      </ul>
     </div>
   );
 }
+
