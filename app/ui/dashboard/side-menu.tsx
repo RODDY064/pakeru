@@ -6,6 +6,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { motion } from "motion/react";
+import { useBoundStore } from "@/store/store";
+import { WebhookConnectionStatus } from "@/app/(dashboard)/admin/orders/hooks/webhookProivider";
+import { useSession } from "next-auth/react";
 
 const pages: Array<{
   name: string;
@@ -48,10 +51,24 @@ const pages: Array<{
 
 export default function SideMenu() {
   const pathname = usePathname();
+  const { toggleNotModal } = useBoundStore();
+  const { data: session } = useSession();
 
   return (
     <>
-      <div className="fixed md:w-[25%] xl:inline hidden xl:w-[16%] h-full  bg-[#E9E9E9] border border-black/5 px-8  pt-24">
+      <div className="fixed  md:w-[25%] xl:inline hidden xl:w-[16%] h-full  bg-[#E9E9E9] border border-black/5 px-8  ">
+        <ul className="flex pb-12 pt-5 items-center justify-between">
+          <div
+            onClick={() => toggleNotModal("control")}
+            className="size-10 rounded-full  items-center justify-center bg-black hidden md:flex cursor-pointer"
+          >
+            <p className="font-avenir font-[500] text-sm text-white">
+              {session?.user.firstname?.charAt(0).toUpperCase()}
+              {session?.user.lastname?.charAt(0).toUpperCase()}
+            </p>
+          </div>
+          <WebhookConnectionStatus />
+        </ul>
         <ul className="flex flex-col gap-1">
           {pages.map((item) => (
             <div key={item.name} className="relative w-full group">
@@ -149,7 +166,10 @@ export default function SideMenu() {
               }
             )}
           >
-            <Link href={"/admin/contents"} className=" flex items-center gap-2  ">
+            <Link
+              href={"/admin/contents"}
+              className=" flex items-center gap-2  "
+            >
               <Image
                 src={`/icons/content.svg`}
                 width={19}

@@ -232,7 +232,7 @@ function FulfilledContent() {
   ];
 
   return (
-    <div className="overflow-hidden h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%] pt-22 pb-26 ">
+    <div className="overflow-hidden h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%]  pt-4 pb-24  ">
       <p className="font-avenir text-xl font-bold max-sm:px-3">
         Fulfilled Orders
       </p>

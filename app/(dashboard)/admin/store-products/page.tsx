@@ -259,7 +259,7 @@ export default function Products() {
   };
 
   return (
-    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%]  pt-22 pb-26 ">
+    <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%]  pt-4 pb-26 ">
       <div className="flex items-center justify-between max-sm:px-3">
         <p className="font-avenir text-xl font-bold">Products</p>
         <Link

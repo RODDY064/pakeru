@@ -27,7 +27,7 @@ export default function Contents() {
 
   return (
     <>
-      <div className="min-h-dvh sm:px-4 xl:px-8   xl:ml-[20%] pb-24 sm:pb-10 pt-20   md:pt-26">
+      <div className="min-h-dvh sm:px-4 xl:px-8   xl:ml-[20%] pb-24 sm:pb-10 pt-4">
         <div className="w-full h-full flex flex-col items-center  xl:block">
           {shouldRefresh && (
             <div className="w-full flex items-center  my-4  gap-2 ">
