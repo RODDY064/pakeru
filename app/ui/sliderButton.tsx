@@ -11,7 +11,7 @@ export default function SliderButton() {
 
   return (
     <div
-      className="w-[30%] h-16 rounded-full bg-black navButton items-center text-white justify-center lg:flex hidden px-3"
+      className="w-fit  h-16 rounded-full bg-black navButton items-center text-white justify-center lg:flex hidden px-3"
     >
       <div className="flex items-center justify-between w-full">
         <div className="size-10 hero-slider-prev hover:border-white/50 cursor-pointer flex items-center justify-center border rounded-full prev flex-none">
