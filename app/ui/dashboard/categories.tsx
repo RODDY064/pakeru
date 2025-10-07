@@ -69,6 +69,21 @@ export default function Category({
     return { groups, ungrouped };
   }, [categories]);
 
+  useEffect(() => {
+    if (!selectedCategory) return;
+    const selectedCatObj = categories.find(
+      (cat) => cat._id === selectedCategory
+    );
+
+    if (selectedCatObj) {
+      if (selectedCatObj.parentCategory) {
+        setSelectedParentCategory(selectedCatObj.parentCategory);
+      } else {
+        setSelectedParentCategory("");
+      }
+    }
+  }, [selectedCategory, categories]);
+
   const parentCategories = useMemo(() => {
     const uniqueParents = new Set<string>();
     categories.forEach((cat) => {

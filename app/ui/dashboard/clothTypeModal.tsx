@@ -211,6 +211,10 @@ export default function ClothTypeModal({
     setShowEditPanel(true);
   }, []);
 
+  useEffect(()=>{
+   console.log(selectedClothType,'selected cloth type')
+  },[selectedClothType])
+
   return (
     <>
       <div className="mt-6">
@@ -238,7 +242,7 @@ export default function ClothTypeModal({
 
         <div className="relative mt-2 flex items-center">
           <select
-            value={selectedClothType?._id || ""}
+            value={selectedClothType || ""}
             onChange={(e) => onSelect?.(e.target.value)}
             className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl">
             <option value="">Select cloth type</option>

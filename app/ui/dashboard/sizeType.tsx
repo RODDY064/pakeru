@@ -21,10 +21,6 @@ export default function SizeType({
   watch: any;
   setValue: any;
 }) {
-  const [selectedClothType, setSelectedClothType] = useState<ClothType | null>(
-    null
-  );
-  const [watchClothName, setWatchClothName] = useState(null);
 
   const gender = watch("sizeType.gender");
   const clothType = watch("sizeType.clothType");
@@ -65,7 +61,7 @@ export default function SizeType({
         )}
       </div>
       <ClothTypeModal
-        selectedClothType={selectedClothType}
+        selectedClothType={clothType}
         onSelect={handleSelect}
       />
       <div

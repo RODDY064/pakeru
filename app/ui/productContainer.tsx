@@ -350,10 +350,17 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     return `${letter}${mainNumber}-${checkDigit}`;
   }
 
+  const getGroupName = (sizeGuideType?: string) => {
+    if (!sizeGuideType) return MeasurementGroupName.MenShirts;
 
-    useEffect(()=>{
-     console.log(productData)
-    },[productData])
+    const key = sizeGuideType
+      .replace(/_([a-z])/g, (_, c) => c.toUpperCase())
+      .replace(/^./, (c) =>
+        c.toUpperCase()
+      ) as keyof typeof MeasurementGroupName;
+
+    return MeasurementGroupName[key] ?? MeasurementGroupName.MenShirts;
+  };
 
   return (
     <div className="w-full  flex flex-col items-center text-black bg-white min-h-screen ">
@@ -776,7 +783,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           )}
         </div>
       </div>
-      <SizeGuild groupName={MeasurementGroupName["MenTops"]} />
+      <SizeGuild groupName={getGroupName(productData?.sizeType?.clothType?.sizeGuideType)} />
 
       {/* Pinch Zoom Modal */}
       {pinchZoom.show && (
