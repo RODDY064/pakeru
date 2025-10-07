@@ -65,15 +65,17 @@ export default function PersonalDetails() {
             </p>
           </div>
         </div> */}
-        <div className="my-10">
-          <div className="flex items-center justify-center w-full">
-            <Link href="/change-password">
-              <div className="py-3 px-4  bg-black text-white text-md font-avenir rounded-md md:mt-2 cursor-pointer">
-                Change password
-              </div>
-            </Link>
+        {!session?.user.isAuthProvider && (
+          <div className="my-10">
+            <div className="flex items-center justify-center w-full">
+              <Link href="/change-password">
+                <div className="py-3 px-4  bg-black text-white text-md font-avenir rounded-md md:mt-2 cursor-pointer">
+                  Change password
+                </div>
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -94,11 +94,13 @@ export class AuthService {
     const data = await response.json();
     const expiresAt = this.getTokenExpiration(data.accessToken);
 
+
     return {
       _id: data.user._id,
       email: data.user.email,
       firstname: data.user.firstName,
       lastname: data.user.lastName,
+      isAuthProvider: data.user.isAuthProvider,
       role: data.user.role || "user",
       image: data.user.profilePictureUrl,
       accessToken: data.accessToken,
@@ -185,6 +187,7 @@ export class AuthService {
       firstname: data.user.firstName || data.user.firstname || "",
       lastname: data.user.lastName || data.user.lastname || "",
       role: data.user.role || "user",
+      isAuthProvider: data.user.isAuthProvider,
       accessToken: data.accessToken,
       refreshToken,
       refreshTokenExpiresAt,
@@ -200,6 +203,7 @@ declare module "next-auth" {
     username: string;
     firstname: string;
     lastname: string;
+    isAuthProvider?:boolean;
     role: string;
     accessToken: string;
     refreshToken?: string;
@@ -215,6 +219,7 @@ declare module "next-auth" {
       username: string;
       firstname: string;
       lastname: string;
+      isAuthProvider?:boolean;
       role: string;
       image?: string;
     };
@@ -237,6 +242,7 @@ declare module "next-auth" {
       username: string;
       firstname: string;
       lastname: string;
+      isAuthProvider?:boolean;
       role: string;
       image?: string;
     };
@@ -291,6 +297,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             username: user.email ?? user._id,
             firstname: user.firstname ?? "",
             lastname: user.lastname ?? "",
+            isAuthProvider:user.isAuthProvider?? "",
             role: user.role ?? "user",
             accessToken: user.accessToken,
             expiresAt: user.expiresAt,
@@ -338,6 +345,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           (user as any).username = googleUser.email;
           (user as any).firstname = googleUser.firstname;
           (user as any).lastname = googleUser.lastname;
+          (user as any).isAuthProvider = googleUser.isAuthProvider,
           (user as any).role = googleUser.role;
           (user as any).accessToken = googleUser.accessToken;
           (user as any).refreshToken = googleUser.refreshToken;
@@ -374,6 +382,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             username: (user as any).username,
             firstname: (user as any).firstname,
             lastname: (user as any).lastname,
+            isAuthProvider: (user as any).isAuthProvider,
             role: (user as any).role,
             image: (user as any).image,
           },
