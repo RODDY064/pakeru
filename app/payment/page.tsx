@@ -302,7 +302,7 @@ export default function Payment() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-black text-white py-4 font-avenir font-[500] text-lg cursor-pointer mt-6 md:block hidden rounded-md disabled:bg-gray-100 disabled:text-black
+          className="bg-black text-white py-4 font-avenir f font-[500] text-lg cursor-pointer mt-6 md:block hidden rounded-md disabled:bg-gray-100 disabled:text-black
             disabled:border-black/10 disabled:border
            disabled:cursor-not-allowed transition-colors">
           {isSubmitting ? (
@@ -408,8 +408,7 @@ export default function Payment() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-black text-white py-4 md:hidden font-avenir font-[500] text-lg cursor-pointer mt-2 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
+          className="bg-black text-white py-4 flex items-center justify-center md:hidden font-avenir font-[500] text-lg cursor-pointer mt-2 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
           {isSubmitting ? (
             <div className="flex items-center gap-2">
               <p>Processing...</p>

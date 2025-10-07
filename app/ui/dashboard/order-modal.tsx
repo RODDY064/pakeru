@@ -188,6 +188,9 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
                         <p className="font-avenir font-[500] cursor-pointer text-blue-600 decoration-dotted underline underline-offset-2 text-md">
                           {orderInView?.user?.email}
                         </p>
+                         <p className="font-avenir font-[500] cursor-pointer text-black/70 pt-0.5  text-md">
+                          {orderInView?.shippingAddress?.phoneNumber}
+                        </p>
                       </div>
                       <div className="mt-6">
                         <p className="text-black/50 text-md font-avenir font-[300] mt-1">
