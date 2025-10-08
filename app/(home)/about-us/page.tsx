@@ -10,17 +10,23 @@ export default function AboutUs() {
           About us
         </h1>
         <p className="text-justify md:text-pretty text-md md:text-2xl font-avenir mt-4 indent-8 text-black/50">
-          "In a quiet village nestled between emerald hills, Lie, a curious fox
-          with fur like autumn leaves, discovered a shimmering stone hidden
-          beneath a gnarled oak. Each night, it whispered forgotten secrets of
-          the forest, tales of ancient trees and wandering spirits. Lie,
-          enchanted, shared these stories with the village children, who
-          gathered under starlight, eyes wide with wonder.
+          "You were never made to blend in. The world teaches conformity, but
+          you were built to write your own rules. Pakeru exists for you: the
+          ambitious, the unorthodox, the one who chooses to Defy the Norm. Born
+          in Ghana, Pakeru is where Western refinement meets Ghanaian soul.
+          Every piece is crafted in limited runs, shaped by local artisans who
+          bring precision, meaning, and human touch into every detail. We
+          believe true luxury is not loud, it is rare, intentional, and refined.
+          Our collections are more than clothing. 
         </p>
         <p className="text-justify md:text-pretty text-md md:text-2xl  font-avenir mt-4 text-black/50">
-          But the stone’s glow began to fade, and Lie realized it thrived on
-          truth. So, the fox wove its tales with honesty, and the stone shone
-          brighter, binding the village in trust and magic forever."
+          They are symbols of identity
+          rewards for those who have escaped the ordinary, and challenges for
+          those still breaking free. Minimal yet bold, tailored yet expressive,
+          each garment is designed to move with you, to become part of your
+          story. At Pakeru, we do not chase trends. We honor craft, rarity, and
+          defiance. This is not just our story it is yours. A legacy carried in
+          fabric, stitched for those who dare to stand apart."
         </p>
 
         <div className="mt-12 flex flex-col items-center">

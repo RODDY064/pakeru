@@ -12,7 +12,8 @@ export async function fetchProductsServer(): Promise<ProductData[]> {
     const response = await fetch(`${BASE_URL}/v1/products?limit=25`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      cache:"no-store"
+      cache:"no-store",
+      next:{ revalidate: 0}
     });
 
     const result = await response.json();
@@ -58,7 +59,8 @@ export async function fetchCategoriesServer(): Promise<CategoryType[]> {
     const response = await fetch(`${BASE_URL}/v1/categories`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      next: { revalidate: 60 },
+      next: { revalidate: 0 },
+      cache: "no-store"
     });
 
     const result = await response.json();

@@ -11,8 +11,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Input from "../ui/input";
 import { CartItemType } from "@/store/cart";
 import { z } from "zod";
-import router from "next/router";
-import { apiCall } from "@/libs/functions";
 import { toast } from "../ui/toaster";
 import { usePaymentProcessing } from "@/libs/paymentFunc";
 import { useAuth } from "@/libs/useAuth";

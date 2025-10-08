@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic"; 
+export const revalidate = 0;        
+
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    // Forward query parameters
     const queryString = searchParams.toString();
-    console.log(queryString);
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products${
       queryString ? `?${queryString}` : ""
     }`;
@@ -15,34 +17,47 @@ export async function GET(request: NextRequest) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
       },
-      cache:"no-store"
+      cache: "no-store",
+      next: { revalidate: 0}
     });
 
     const data = await response.json();
 
-    // console.log(data,'products')
-
-    return NextResponse.json(data, { status: response.status });
+    return new NextResponse(JSON.stringify(data), {
+      status: response.status,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
   } catch (error: any) {
     return NextResponse.json(
       { error: "Products fetch failed", message: error.message },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
     );
   }
 }
 
+// --- CREATE PRODUCT ---
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-
     const targetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products`;
 
-    // Create headers object but exclude problematic headers
+    // Filter unsafe headers
     const incomingHeaders: Record<string, string> = {};
     request.headers.forEach((value, key) => {
-      // Exclude headers that should not be forwarded
-      const excludedHeaders = [
+      const excluded = [
         "content-length",
         "content-encoding",
         "transfer-encoding",
@@ -51,18 +66,14 @@ export async function POST(request: NextRequest) {
         "upgrade",
         "expect",
       ];
-
-      if (!excludedHeaders.includes(key.toLowerCase())) {
+      if (!excluded.includes(key.toLowerCase())) {
         incomingHeaders[key] = value;
       }
     });
 
-    // Recreate FormData to avoid corruption
+    // Clone FormData safely
     const newFormData = new FormData();
-
-    // Copy all fields from original FormData
     for (const [key, value] of formData.entries()) {
-      // console.log(`FormData entry: ${key} =`, value);
       newFormData.append(key, value);
     }
 
@@ -70,34 +81,51 @@ export async function POST(request: NextRequest) {
 
     const response = await fetch(targetUrl, {
       method: "POST",
-      headers: incomingHeaders,
+      headers: {
+        ...incomingHeaders,
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+      },
       body: newFormData,
-      cache:"no-store"
+      cache: "no-store",
     });
-
-    // console.log("Response status:", response.status);
-    // console.log("Response ok:", response.ok);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.log("Error response:", errorText);
       return NextResponse.json(
         { error: "External API error", message: errorText },
-        { status: response.status }
+        {
+          status: response.status,
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+          },
+        }
       );
     }
 
     const data = await response.json();
-    return NextResponse.json(data, { status: response.status });
-  } catch (error: any) {
 
-    let errorMessage = error.message;
+    return new NextResponse(JSON.stringify(data), {
+      status: response.status,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
+  } catch (error: any) {
     return NextResponse.json(
       {
         error: "Product creation failed",
-        message: errorMessage,
+        message: error.message,
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
     );
   }
 }

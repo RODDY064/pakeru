@@ -2,7 +2,6 @@ import { type StateCreator } from "zustand";
 import { Store } from "../store";
 import { produce } from "immer";
 import { apiCall } from "@/libs/functions";
-import { ProductAPIService } from "@/app/(dashboard)/admin/store-products/product-actions/helpers";
 import { useApiClient } from "@/libs/useApiClient";
 import { ClothType } from "../general";
 
@@ -303,8 +302,6 @@ export const useStoreProductStore: StateCreator<
       throw new Error("API get function is required");
     }
 
-    if (state.storeProducts.length > 0 && !force) return;
-
     set(
       produce((state: Store) => {
         state.dashboardProductLoading.products = true;
@@ -335,9 +332,9 @@ export const useStoreProductStore: StateCreator<
 
       console.log(query.toString(), "Query parameters");
 
-      const result = await apiGet<{ data: ProductData[]; total?: number }>(
-        `/products?${query.toString()}`,{
-          cache:"no-store"
+      const result = await apiGet<{ data: ProductData[]; total?: number }>(`/products?${query.toString()}`,{
+          cache:"no-store",
+          next: { revalidate : 0}
         }
       );
 

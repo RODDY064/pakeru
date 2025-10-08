@@ -421,6 +421,7 @@ export const apiCall = async (
     },
     credentials: "include",
     ...options,
+    cache:"no-store"
   });
 
   if (!response.ok) {

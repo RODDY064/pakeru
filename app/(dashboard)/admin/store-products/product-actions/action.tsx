@@ -1,4 +1,10 @@
 "use client";
+
+export const revalidate = 0; 
+export const dynamic = "force-dynamic";
+
+
+
 import React, {
   use,
   useCallback,
@@ -74,8 +80,8 @@ function ProductActionsContent() {
         gender: "",
         clothType: "",
       },
-      washInstructions:[]
-    }
+      washInstructions: [],
+    },
   });
 
   const {
@@ -83,6 +89,7 @@ function ProductActionsContent() {
     setSelectedProduct,
     loadStoreProduct,
     getCategoryNameById,
+    clothTypes
   } = useBoundStore();
 
   const { patch, post } = useApiClient();
@@ -101,10 +108,13 @@ function ProductActionsContent() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [productLoadError, setProductLoadError] = useState<string | null>(null);
-  const [originalData, setOriginalData] = useState<ProductFormData | null>(null);
-  const [originalColors, setOriginalColors] = useState<ProductColor[] | null>(null);
-  const [selectedClothType, setSelectedClothType] = useState(null)
-  const [aboutToSubmit,setAboutToSubmit] = useState(false)
+  const [originalData, setOriginalData] = useState<ProductFormData | null>(
+    null
+  );
+  const [originalColors, setOriginalColors] = useState<ProductColor[] | null>(
+    null
+  );
+  const [aboutToSubmit, setAboutToSubmit] = useState(false);
 
   const [instruction, setInstruction] = useState("");
   const [instructions, setInstructions] = useState<string[]>([]);
@@ -122,7 +132,7 @@ function ProductActionsContent() {
 
   const populateFormWithProduct = useCallback(
     (product: ProductData) => {
-      // console.log("🔧 Populating form with product:", product._id);
+      console.log("🔧 Populating form with product:", product);
 
       const formData: ProductFormData = {
         name: product.name,
@@ -144,17 +154,9 @@ function ProductActionsContent() {
           clothType: product?.sizeType?.clothType?._id ?? "",
         } as {
           gender: "" | "male" | "female";
-          clothType:
-            | ""
-            | "t-shirts"
-            | "polo"
-            | "jeans"
-            | "pants"
-            | "cargo pants";
+          clothType: string;
         },
       };
-
-      
 
       // Set form values
       setValue("name", formData.name);
@@ -167,7 +169,7 @@ function ProductActionsContent() {
       setValue("productCare", formData.productCare);
       setValue("washInstructions", formData.washInstructions);
       setValue("sizeType.gender", formData.sizeType.gender);
-      setValue("sizeType.clothType", formData.sizeType?.clothType);
+      setValue("sizeType.clothType", formData.sizeType.clothType);
 
       setEditorValue(formData.description);
       setTags(formData.tags ?? []);
@@ -210,7 +212,6 @@ function ProductActionsContent() {
           console.log("📡 Loading product from store...");
           await loadStoreProduct(productID);
         } else {
-          // console.log("✅ Product already available:", selectedProduct._id);
           populateFormWithProduct(selectedProduct);
           setLoadingProduct(false);
         }
@@ -232,12 +233,11 @@ function ProductActionsContent() {
     }
 
     if (selectedProduct._id === productID) {
-      // console.log("📦 Product loaded from store:", selectedProduct._id);
       populateFormWithProduct(selectedProduct);
       setLoadingProduct(false);
     }
-  }, [selectedProduct, productID, isInitialized, populateFormWithProduct]);
-
+  }, [selectedProduct, productID, isInitialized, populateFormWithProduct,clothTypes]);
+ 
   useEffect(() => {
     if (!productID || !loadingProduct) return;
 
@@ -276,7 +276,6 @@ function ProductActionsContent() {
     setValue("category", selectedCategory);
   }, [selectedCategory, setValue]);
 
-
   const validateForm = (data: ProductFormData): string | null => {
     if (variants.length === 0) {
       return "Please add at least one color variant";
@@ -296,11 +295,7 @@ function ProductActionsContent() {
     return null;
   };
 
-  useEffect(() => {
-    console.log(submitError, "sumit eroror");
-    console.log();
-  }, [submitError]);
-
+ 
   const onSubmit = async (data: ProductFormData) => {
     setSubmitError("");
     setStocksError("");
@@ -314,7 +309,6 @@ function ProductActionsContent() {
 
     setIsSubmitting(true);
     // debugFormData(data, variants);
-
 
     try {
       if (isEditMode && productID && originalData && originalColors) {
@@ -333,7 +327,7 @@ function ProductActionsContent() {
         if (result.message === "No changes to save") {
           setSubmitError("No changes detected to save");
           setIsSubmitting(false);
-          setAboutToSubmit(false)
+          setAboutToSubmit(false);
           return;
         }
         // console.log("Product updated successfully:", result);
@@ -365,7 +359,7 @@ function ProductActionsContent() {
       }
     } finally {
       setIsSubmitting(false);
-      setAboutToSubmit(false)
+      setAboutToSubmit(false);
     }
   };
 
@@ -382,9 +376,9 @@ function ProductActionsContent() {
     }
   }, [variants, setValue, watch]);
 
-  useEffect(()=>{
-   console.log(aboutToSubmit)
-  },[aboutToSubmit])
+  useEffect(() => {
+    console.log(aboutToSubmit);
+  }, [aboutToSubmit]);
 
   const handelBack = () => {
     setSelectedProduct(null);
@@ -645,21 +639,26 @@ function ProductActionsContent() {
                             ? "Add a color first"
                             : "Select a color to manage stock and sizes"}
                         </p>
-                       {aboutToSubmit && variants.length === 0 && <p className="pb-3 font-avenir text-red-500">No variant's added</p>}
+                        {aboutToSubmit && variants.length === 0 && (
+                          <p className="pb-3 font-avenir text-red-500">
+                            No variant's added
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
                   <SizeType
-                   register={register} 
-                   errors={errors} 
-                   watch={watch} 
-                   setValue={setValue}
-                   />
+                    register={register}
+                    errors={errors}
+                    watch={watch}
+                    setValue={setValue}
+                  />
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    onClick={()=>setAboutToSubmit(true)}
-                    className="mt-2 w-full p-4 md:p-6 md:h-35 rounded-2xl md:rounded-[26px] cursor-pointer flex items-center justify-center bg-black">
+                    onClick={() => setAboutToSubmit(true)}
+                    className="mt-2 w-full p-4 md:p-6 md:h-35 rounded-2xl md:rounded-[26px] cursor-pointer flex items-center justify-center bg-black"
+                  >
                     <p className="text-white font-avenir font-black text-xl md:text-4xl">
                       {productID
                         ? isSubmitting

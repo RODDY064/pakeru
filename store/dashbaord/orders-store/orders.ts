@@ -152,7 +152,6 @@ export type OrdersStore = {
       get?: ReturnType<typeof useApiClient>["get"];
     }
   ) => Promise<any>;
-  refundOrder: (orderId: string) => Promise<void>;
   getFilteredOrders: (type: "fulfilled" | "unfulfilled") => OrdersData[];
   getOrdersStats: (type: "fulfilled" | "unfulfilled") => OrdersStats;
   resetErrors: () => void;
@@ -448,16 +447,6 @@ const apiService = {
     }
   },
 
-  async refundOrder(orderId: string): Promise<void> {
-    try {
-      await apiCall(`/orders/id/${orderId}`, {
-        method: "DELETE",
-      });
-    } catch (error) {
-      console.error("Failed to refund order:", error);
-      throw error;
-    }
-  },
 
   async fetchUserOrders(
     get: ReturnType<typeof useApiClient>["get"]
@@ -949,49 +938,6 @@ export const useOrdersStore: StateCreator<
     return updatePromise;
   },
 
-  refundOrder: async (orderId) => {
-    const refundPromise = (async () => {
-      try {
-        await apiService.refundOrder(orderId);
-
-        set((state) => {
-          state.fulfilledOrders = state.fulfilledOrders.filter(
-            (o) => o._id !== orderId
-          );
-          state.unfulfilledOrders = state.unfulfilledOrders.filter(
-            (o) => o._id !== orderId
-          );
-
-          if (state.orderInView?._id === orderId) {
-            state.orderInView = null;
-          }
-        });
-
-        return;
-      } catch (error) {
-        console.error("Failed to refund order:", error);
-        throw error;
-      }
-    })();
-
-    toast.promise(refundPromise, {
-      loading: "Processing refund...",
-      success: () => {
-        const order = [
-          ...get().fulfilledOrders,
-          ...get().unfulfilledOrders,
-        ].find((o) => o._id === orderId);
-        return {
-          title: `Order ${
-            order?.IDTrim || generateTrimmedId(orderId)
-          } refunded successfully`,
-        };
-      },
-      error: "Failed to process refund. Please try again.",
-    });
-
-    return refundPromise;
-  },
   getFilteredOrders: (type) => {
     const { OrderFilters: filters } = get();
     const orders =

@@ -5,6 +5,7 @@ import { useBoundStore } from "@/store/store";
 import { motion, cubicBezier, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { UseFormSetValue, FieldErrors } from "react-hook-form";
 
 type SizeType =
   | "men-shirts"
@@ -23,6 +24,13 @@ interface SizeTypeOption {
   id: SizeType;
   label: string;
   image: string;
+}
+
+interface ClothTypeModalProps {
+  selectedClothType?: string; 
+  errors?: any;
+  setValue: UseFormSetValue<any>;
+  register: any;
 }
 
 const sizeTypeOptions: SizeTypeOption[] = [
@@ -75,18 +83,14 @@ const container = {
 export default function ClothTypeModal({
   selectedClothType,
   errors,
-  onSelect,
-}: {
-  selectedClothType?: ClothType | any;
-  errors?: any;
-  onSelect?: (clothTypeId: string) => void;
-}) {
+  setValue,
+  register,
+}: ClothTypeModalProps) {
   const [showClothModal, setShowClothModal] = useState(false);
   const [showEditPanel, setShowEditPanel] = useState(false);
   const [editingClothType, setEditingClothType] = useState<ClothType | null>(null);
   const [clothError, setClothError] = useState<string | null>(null);
-  const [selectedSizeType, setSelectedSizeType] =
-    useState<SizeType>("men-tops");
+  const [selectedSizeType, setSelectedSizeType] = useState<SizeType>("men-tops");
   const [clothName, setClothName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const sizeGuideRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -105,13 +109,12 @@ export default function ClothTypeModal({
       selectedSizeType &&
       sizeGuideRefs.current[selectedSizeType]
     ) {
-      // Small delay to ensure panel animation has started
       setTimeout(() => {
         sizeGuideRefs.current[selectedSizeType]?.scrollIntoView({
           behavior: "smooth",
           block: "center",
         });
-      }, 400); // Match the panel animation duration
+      }, 400);
     }
   }, [showEditPanel, selectedSizeType]);
 
@@ -126,12 +129,10 @@ export default function ClothTypeModal({
       setSelectedSizeType("men-tops");
     }
     setClothError(null);
-    // Keep manage modal open, just show edit panel
     setShowEditPanel(true);
   }, []);
 
   const handleCloseModal = useCallback(() => {
-    // Only close manage modal if edit panel is not open
     if (!showEditPanel) {
       setShowClothModal(false);
     }
@@ -158,29 +159,25 @@ export default function ClothTypeModal({
       };
 
       if (editingClothType?._id) {
-        // Update existing cloth type
         const success = await updateClothTypes(
           editingClothType._id,
           data,
           patch
         );
         if (success) {
-          setShowEditPanel(false); // Close edit panel
+          setShowEditPanel(false);
           setEditingClothType(null);
           setClothName("");
           setSelectedSizeType("men-tops");
-          // Reload the list
           await loadClothTypes(get);
         }
       } else {
-        // Create new cloth type
         const success = await createClothTypes(data, post);
         if (success) {
-          setShowEditPanel(false); // Close edit panel
+          setShowEditPanel(false);
           setEditingClothType(null);
           setClothName("");
           setSelectedSizeType("men-tops");
-          // Reload the list
           await loadClothTypes(get);
         }
       }
@@ -207,13 +204,17 @@ export default function ClothTypeModal({
     setClothName("");
     setSelectedSizeType("men-tops");
     setClothError(null);
-    // Keep manage modal open, just show edit panel
     setShowEditPanel(true);
   }, []);
 
-  useEffect(()=>{
-   console.log(selectedClothType,'selected cloth type')
-  },[selectedClothType])
+  // Update parent form when cloth type changes in modal
+  useEffect(() => {
+    if (selectedClothType) {
+      setValue("sizeType.clothType", selectedClothType, { 
+        shouldValidate: true 
+      });
+    }
+  }, [selectedClothType, setValue]);
 
   return (
     <>
@@ -222,7 +223,7 @@ export default function ClothTypeModal({
           <p className="font-avenir font-[500] text-lg">Cloth Type</p>
           <div className="flex items-center gap-2 relative">
             <p className="font-avenir font-[500] text-sm hidden lg:flex">
-              Cloth type
+              Manage types
             </p>
             <button
               type="button"
@@ -234,7 +235,7 @@ export default function ClothTypeModal({
                 src="/icons/plus-w.svg"
                 width={16}
                 height={16}
-                alt="plus"
+                alt=""
               />
             </button>
           </div>
@@ -242,9 +243,9 @@ export default function ClothTypeModal({
 
         <div className="relative mt-2 flex items-center">
           <select
-            value={selectedClothType || ""}
-            onChange={(e) => onSelect?.(e.target.value)}
-            className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl">
+            {...register("sizeType.clothType")}
+            className="w-full h-10 font-avenir p-2 px-3 appearance-none border border-black/20 focus:outline-none focus:border-black/50 rounded-xl"
+          >
             <option value="">Select cloth type</option>
             {clothTypes.map((cloth) => (
               <option key={cloth._id} value={cloth._id}>
@@ -254,12 +255,13 @@ export default function ClothTypeModal({
           </select>
 
           <div className="absolute right-3 pointer-events-none">
-            <Image src="/icons/arrow.svg" width={16} height={16} alt="arrow" />
+            <Image src="/icons/arrow.svg" width={16} height={16} alt="" />
           </div>
         </div>
+        
         {errors?.sizeType?.clothType && (
           <p className="text-red-500 text-sm mt-1">
-            {errors.sizeType?.clothType.message}
+            {errors.sizeType.clothType.message}
           </p>
         )}
       </div>
@@ -271,7 +273,7 @@ export default function ClothTypeModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            key={"manage-modal"}
+            key="manage-modal"
             className="fixed w-full h-full inset-0 flex justify-center items-center z-[99] overflow-auto py-10"
           >
             <motion.div
@@ -281,7 +283,6 @@ export default function ClothTypeModal({
               transition={{ duration: 0.3 }}
               className="absolute inset-0 bg-black/80"
               onClick={() => {
-                // Only close if edit panel is not open
                 if (!showEditPanel) {
                   handleCloseModal();
                 }
@@ -289,7 +290,7 @@ export default function ClothTypeModal({
             />
             <div className="w-[90%] md:w-[60%] xl:w-[40%] min-h-[400px] max-h-[90vh] bg-white py-6 relative z-20 rounded-3xl flex flex-col">
               <div className="flex items-center justify-between border-b border-black/30 px-8 pb-4">
-                <p className="font-semibold text-lg">Manage Cloth Type</p>
+                <p className="font-semibold text-lg">Manage Cloth Types</p>
                 <button
                   type="button"
                   onClick={handleCloseModal}
@@ -311,7 +312,7 @@ export default function ClothTypeModal({
                   {clothTypes.length === 0 ? (
                     <div className="w-full py-4 bg-black/10 px-6 flex items-center justify-center">
                       <p className="font-avenir text-md text-black/50">
-                        No cloth type data available
+                        No cloth types available
                       </p>
                     </div>
                   ) : (
@@ -342,7 +343,7 @@ export default function ClothTypeModal({
                             src="/icons/edit-cat.svg"
                             width={20}
                             height={20}
-                            alt="edit"
+                            alt=""
                           />
                         </button>
                       </div>
@@ -433,14 +434,14 @@ export default function ClothTypeModal({
                         setClothName(e.target.value);
                         setClothError(null);
                       }}
-                      placeholder="Enter cloth type name"
+                      placeholder="e.g., Cotton T-Shirt"
                       className="w-full border placeholder:text-black/30 text-md border-black/10 bg-black/5 rounded-xl h-12 px-3 focus:outline-none focus:border-black/30 transition-colors"
                     />
                   </div>
 
                   <div>
                     <label className="block text-md font-medium font-avenir mb-4">
-                      Select Size Type Template
+                      Select Size Guide Template
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {sizeTypeOptions.map((option) => (
@@ -448,13 +449,15 @@ export default function ClothTypeModal({
                           <button
                             type="button"
                             onClick={() => setSelectedSizeType(option.id)}
-                            className="flex gap-3 items-center mb-3 group w-full text-left">
+                            className="flex gap-3 items-center mb-3 group w-full text-left"
+                          >
                             <div
                               className={`size-5 border-2 rounded-full cursor-pointer p-[2px] flex items-center justify-center transition-colors ${
                                 selectedSizeType === option.id
                                   ? "border-black"
                                   : "border-black/30 group-hover:border-black/50"
-                              }`}>
+                              }`}
+                            >
                               <div
                                 className={`w-full h-full rounded-full transition-colors ${
                                   selectedSizeType === option.id
@@ -474,7 +477,7 @@ export default function ClothTypeModal({
                             </p>
                           </button>
                           <div
-                            className={`aspect-fit w-full   border  relative rounded-xl overflow-hidden transition-all ${
+                            className={`aspect-fit w-full border relative rounded-xl overflow-hidden transition-all ${
                               selectedSizeType === option.id
                                 ? "border-black border-2"
                                 : "border-black/20"
@@ -507,7 +510,7 @@ export default function ClothTypeModal({
                       ? "Saving..."
                       : editingClothType
                       ? "Update"
-                      : "Add"}
+                      : "Create"}
                   </button>
                   <button
                     type="button"
