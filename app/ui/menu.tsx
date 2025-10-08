@@ -100,13 +100,7 @@ export default function Menu() {
 
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
 
-  // Initialize first group as open
-  useEffect(() => {
-    const groupKeys = Object.keys(groupedMenuItems.groups);
-    if (groupKeys.length > 0 && openGroups.size === 0) {
-      setOpenGroups(new Set([groupKeys[0]]));
-    }
-  }, [groupedMenuItems.groups]);
+
 
   const toggleGroup = useCallback((parent: string) => {
     setOpenGroups((prev) => {
