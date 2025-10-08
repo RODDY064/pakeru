@@ -194,6 +194,7 @@ export const useCategory: StateCreator<
         // Call your PATCH endpoint
         const response = await patch<{ data:CategoryType }>(`/categories/${categoryId}`, body, {
           requiresAuth: true,
+          cache:"no-store"
         });
 
         console.log("Category updated:", response);

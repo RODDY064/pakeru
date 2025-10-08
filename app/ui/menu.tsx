@@ -109,16 +109,11 @@ export default function Menu() {
   }, [groupedMenuItems.groups]);
 
   const toggleGroup = useCallback((parent: string) => {
-    console.log("Toggling group:", parent);
     setOpenGroups((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(parent)) {
-        newSet.delete(parent);
-      } else {
-        newSet.add(parent);
+      if (prev.has(parent)) {
+        return new Set(); 
       }
-      console.log("New openGroups:", Array.from(newSet));
-      return newSet;
+      return new Set([parent]);
     });
   }, []);
 
@@ -379,11 +374,13 @@ export default function Menu() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="flex gap-3">
+                className="flex gap-3"
+              >
                 {memoizedProducts.map((product, index) => (
                   <motion.div
                     key={`mobile-${product._id}-${index}`}
-                    className="flex-shrink-0">
+                    className="flex-shrink-0"
+                  >
                     <ProductCard
                       type="small"
                       productData={product}
@@ -733,21 +730,20 @@ export default function Menu() {
             {session?.user._id ? (
               <div
                 onClick={async () => await signOut({ callbackUrl: "/sign-in" })}
-                className="flex flex-col my-12">
+                className="flex flex-col my-12"
+              >
                 <p className="px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
                   Logout
                 </p>
               </div>
             ) : (
-             <Link href="/sign-in">
-              <div
-               
-                className="flex flex-col my-12">
-                <p className="px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
-                  Sign in
-                </p>
-              </div>
-             </Link>
+              <Link href="/sign-in">
+                <div className="flex flex-col my-12">
+                  <p className="px-4 w-[60%] border text-center bg-black/10 font-avenir text-md border-black cursor-pointer py-4 rounded-full">
+                    Sign in
+                  </p>
+                </div>
+              </Link>
             )}
           </motion.div>
         </div>
@@ -762,7 +758,8 @@ export default function Menu() {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white">
+            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white"
+          >
             {RenderMobileTAB(mobileActiveItem)}
           </motion.div>
         )}

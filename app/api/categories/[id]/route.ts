@@ -10,7 +10,7 @@ export async function PATCH(
     const formData = await request.formData();
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories/${categoryId}`;
 
-    console.log(formData.get("name"));
+
 
     const incomingHeaders: Record<string, string> = {};
     const allowedHeaders = ["authorization", "cookie"];
@@ -24,6 +24,7 @@ export async function PATCH(
       method: "PATCH",
       headers: incomingHeaders,
       body: formData,
+      cache:"no-store"
     });
 
     const data = await response.json();

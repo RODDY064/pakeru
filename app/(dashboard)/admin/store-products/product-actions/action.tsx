@@ -401,7 +401,7 @@ function ProductActionsContent() {
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="px-4 xl:px-8 xl:ml-[15%] pt-24 pb-32">
+        <div className="px-4 xl:px-8 xl:ml-[15%] pt-4 pb-32">
           <div className="w-full flex items-center gap-1 md:gap-4">
             <div onClick={handelBack}>
               <Image

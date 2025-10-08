@@ -8,7 +8,6 @@ export const helps = [
     ],
     faqs: [
       {
-        
         question: "How do I find Pakeru products online?",
         answer: [
           "You can search by product name or code in our site’s search bar to quickly locate items.",
@@ -25,7 +24,7 @@ export const helps = [
       {
         question: "Can I place orders without creating an account?",
         answer: [
-          "Yes, you can checkout as a guest.",
+          "No, you can checkout as a guest.",
           "However, registering lets you track orders, manage returns/exchanges, save addresses, and curate a personal wishlist.",
         ],
       },
@@ -33,72 +32,16 @@ export const helps = [
   },
   {
     label: "Payment Methods",
-    helps: [
-      "Which payment options are available?",
-      "Is it safe to make payments on Pakeru?",
-      "When is my card or account charged?",
-      "Can I pay using multiple methods?",
-      "Do you accept cash on delivery?",
-      "What should I do if my payment fails?",
-      "Can I get an invoice or payment receipt?",
-    ],
+    helps: ["Which payment options are available?"],
     faqs: [
       {
         question: "Which payment options are available?",
         answer: [
-          "Pakeru offers a variety of secure and convenient payment options:",
-          "• Credit & Debit Cards: Visa, MasterCard, American Express.",
-          "• Mobile Payments: Apple Pay, Google Pay (where available).",
-          "• Local Payment Solutions: Mobile Money (MoMo) for Ghana and select African countries.",
-          "• International Options: PayPal (in select regions) and Wire Transfer upon request.",
-          "All transactions are processed through encrypted, verified gateways that meet international PCI DSS standards.",
-        ],
-      },
-      {
-        question: "Is it safe to make payments on Pakeru?",
-        answer: [
-          "Yes. Your payment data is protected using industry-grade SSL encryption and is never stored on our servers.",
-          "All transactions are processed securely by trusted payment partners.",
-          "We also monitor every transaction for unusual activity to prevent fraud or unauthorized use.",
-        ],
-      },
-      {
-        question: "When is my card or account charged?",
-        answer: [
-          "Your payment method is authorized at checkout but only charged once your order has been confirmed and prepared for shipment.",
-          "In some cases, a temporary authorization hold may appear on your bank statement before final confirmation.",
-        ],
-      },
-      {
-        question: "Can I pay using multiple methods?",
-        answer: [
-          "At this time, we only accept a single payment method per order.",
-          "You can, however, split purchases by placing multiple orders and using different payment methods for each.",
-        ],
-      },
-      {
-        question: "Do you accept cash on delivery?",
-        answer: [
-          "Cash on Delivery (COD) is currently available for selected regions within Ghana.",
-          "To ensure smooth delivery, please confirm that you have the exact amount ready upon arrival.",
-          "COD may not be eligible for certain high-value or pre-order items.",
-        ],
-      },
-      {
-        question: "What should I do if my payment fails?",
-        answer: [
-          "If your payment is declined or fails to process:",
-          "1. Verify that your card or wallet has sufficient funds.",
-          "2. Ensure that your billing details match those registered with your payment provider.",
-          "3. Try another payment method such as Mobile Money or PayPal.",
-          "If the issue persists, contact our customer support team at support@pakeru.com for assistance.",
-        ],
-      },
-      {
-        question: "Can I get an invoice or payment receipt?",
-        answer: [
-          "Yes. Once your payment is confirmed, an electronic receipt is automatically sent to your registered email address.",
-          "You can also download a tax-compliant invoice or proof of purchase from your Pakeru account under 'Order History'.",
+          "Credit & Debit Cards: Visa, MasterCard, American Express.",
+          "Mobile Payments: Apple Pay, Google Pay (where available).",
+          "Local Payment Solutions: MOMO (Mobile Money) for Ghana and select African countries.",
+          "International Options: PayPal (select markets), Wire Transfer (on request).",
+          "Please note: Payment is processed securely and your card will only be charged when your order is shipped.",
         ],
       },
     ],
@@ -144,35 +87,6 @@ export const helps = [
     ],
   },
   {
-    label: "Returns & Exchanges",
-    helps: [
-      "What is your return/exchange policy?",
-      "Can I return or exchange customized items?",
-      "How will refunds be processed?",
-    ],
-    faqs: [
-      {
-        question: "What is your return/exchange policy?",
-        answer: [
-          "You may return or exchange any Pakeru item within 30 days of receipt, provided it is unused, unaltered, in original packaging, and has all tags attached.",
-          "To arrange a return or exchange, log in to your account (or use your order details if you checked out as a guest), and request a Return Authorization Number. Follow the provided instructions for packaging and carrier pickup.",
-        ],
-      },
-      {
-        question: "Can I return or exchange customized items?",
-        answer: [
-          "Custom orders, personalized products, and certain accessories are non-returnable unless found faulty or defective.",
-        ],
-      },
-      {
-        question: "How will refunds be processed?",
-        answer: [
-          "Refunds for returned items will be credited to your original payment method, or as store credit if preferred/requested.",
-        ],
-      },
-    ],
-  },
-  {
     label: "Product, Sizing & Alterations",
     helps: [
       "Is there a sizing guide for Pakeru products?",
@@ -190,6 +104,69 @@ export const helps = [
         answer: [
           "Pakeru offers complimentary adjustments for select products (hemming, waist tailoring, sleeve shortening) if requested within 6 months of purchase.",
           "Please bring your item and receipt to a Pakeru flagship or authorized stockist near you.",
+        ],
+      },
+    ],
+  },
+  {
+    label: "Gifts & Packaging",
+    helps: ["Can I order Pakeru products as a gift?"],
+    faqs: [
+      {
+        question: "Can I order Pakeru products as a gift?",
+        answer: [
+          "Yes, we offer signature gift packaging and allow you to include a personal message.",
+          "(Digital Gift Cards and Video Messages coming soon.)",
+        ],
+      },
+    ],
+  },
+  {
+    label: "Product Authentication & Traceability",
+    helps: [
+      "How does Pakeru guarantee product authenticity?",
+      "Will Pakeru offer blockchain certification or digital ownership?",
+    ],
+    faqs: [
+      {
+        question: "How does Pakeru guarantee product authenticity?",
+        answer: [
+          "All Pakeru pieces are 100% authentic, crafted in our atelier and/or partner studios.",
+          "Each product includes a product passport and unique authenticity code.",
+        ],
+      },
+      {
+        question: "Will Pakeru offer blockchain certification or digital ownership?",
+        answer: [
+          "Blockchain-powered ownership and product passports are in development, aligning with future luxury authentication standards.",
+        ],
+      },
+    ],
+  },
+  {
+    label: "Customer Support",
+    helps: ["How can I contact Pakeru?"],
+    faqs: [
+      {
+        question: "How can I contact Pakeru?",
+        answer: [
+          "Ghana: support@pakeru.com / WhatsApp: +233 XX XXX XXXX (Mon-Fri, 9am-6pm GMT).",
+          "International: info@pakeru.com / Phone numbers for major markets (if available).",
+        ],
+      },
+    ],
+  },
+  {
+    label: "Account & Wishlist",
+    helps: ["What are the benefits of registering at Pakeru?"],
+    faqs: [
+      {
+        question: "What are the benefits of registering at Pakeru?",
+        answer: [
+          "• Track current and past orders.",
+          "• Save and edit delivery addresses.",
+          "• Manage account details and settings.",
+          "• Create and maintain a personalized wishlist.",
         ],
       },
     ],
