@@ -465,7 +465,6 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
   onClose,
   onDeleteSuccess,
 }) => {
-  const { refundOrder } = useBoundStore();
   const [confirmationText, setConfirmationText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -486,8 +485,6 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
         setDeleteError("Order ID is not provided.");
         return;
       }
-
-      await refundOrder(orderID);
       onDeleteSuccess?.();
       onClose();
       setConfirmationText("");
