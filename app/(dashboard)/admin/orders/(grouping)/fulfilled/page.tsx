@@ -89,6 +89,7 @@ function FulfilledContent() {
       size: 25,
     });
 
+    
     setOrderTypeFilter("fulfilled");
   }, []);
 
