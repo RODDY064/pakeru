@@ -26,6 +26,7 @@ function buildForwardHeaders(request: NextRequest): Record<string, string> {
   forwardHeaders["pragma"] = "no-cache";
   forwardHeaders["expires"] = "0";
 
+
   return forwardHeaders;
 }
 
@@ -58,13 +59,9 @@ async function makeApiRequest(
       data = { error: "Failed to parse response" };
     }
   } else {
-    // For non-JSON responses (common with DELETE)
     const text = await response.text();
     data = text ? { message: text } : { success: true };
   }
-
-  console.log(response, 'response');
-  console.log(data, 'parsed data');
 
   return NextResponse.json(data, {
     status: response.status,
@@ -135,14 +132,7 @@ export async function DELETE(
     const { id } = await params;
     const forwardHeaders = buildForwardHeaders(request);
 
-    console.log(`Deleting product: ${id}`);
-    console.log(`URL: ${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`);
-
-    return await makeApiRequest(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`,
-      "DELETE",
-      forwardHeaders,
-    );
+    return await makeApiRequest(`${process.env.NEXT_PUBLIC_BASE_URL}/${id}`,"DELETE", forwardHeaders);
   } catch (error: any) {
     console.error("DELETE error:", error);
     return NextResponse.json(

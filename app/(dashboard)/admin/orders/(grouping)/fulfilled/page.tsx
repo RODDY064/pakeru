@@ -98,8 +98,6 @@ function FulfilledContent() {
   );
 
   useEffect(() => {
-    if (!orderStats) return;
-
     setFulfilledStats([
       { label: "Delivered", value: orderStats.ordersDelivered ?? 0 },
       { label: "Shipped", value: orderStats.orderShipped ?? 0 },

@@ -111,8 +111,6 @@ export default function Products() {
   ]);
 
   useEffect(() => {
-    if (!storeProducts.length) return;
-
     const productStats = getProductStats();
 
     setStats([
@@ -121,7 +119,7 @@ export default function Products() {
       { label: "Inactive Products", value: productStats.inactive ?? 0 },
       { label: "Product Out of Stock", value: productStats.outOfStock ?? 0 },
     ]);
-  }, [storeProducts]);
+  }, [storeProducts,currentPageProducts, filteredStoreProducts]);
 
   // filtering
 

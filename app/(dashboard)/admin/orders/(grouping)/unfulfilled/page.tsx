@@ -59,7 +59,6 @@ export default function Unfulfilled() {
   const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
 
   const unfulfilledStats = useMemo(() => {
-    if (!orderStats) return [];
     return [
       { label: "Total Unfulfilled", value: orderStats.totalOrders ?? 0 },
       { label: "Pending", value: orderStats.pendingOrders ?? 0 },
