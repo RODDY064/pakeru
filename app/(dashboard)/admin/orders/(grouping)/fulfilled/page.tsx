@@ -88,8 +88,6 @@ function FulfilledContent() {
       loadFunction: loadOrdersForPagination,
       size: 25,
     });
-
-    
     setOrderTypeFilter("fulfilled");
   }, []);
 
