@@ -322,7 +322,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     if (variantImg) {
       const transformedImages = variantImg.map((img) => ({
         _id: img._id,
-        publicId: img.productId,
+        publicId: img.publicId,
         url: img.url,
       }));
       images.push(...transformedImages);
