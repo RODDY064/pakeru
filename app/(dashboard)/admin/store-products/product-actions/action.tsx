@@ -39,6 +39,7 @@ import StatusBadge from "@/app/ui/dashboard/statusBadge";
 export type ProductImage = {
   _id: string;
   url: string | ArrayBuffer;
+  publicId?:string,
   name: string;
   file?: File | Blob;
 };
@@ -132,18 +133,14 @@ function ProductActionsContent() {
 
   const populateFormWithProduct = useCallback(
     (product: ProductData) => {
-      console.log("🔧 Populating form with product:", product);
+    
 
       const formData: ProductFormData = {
         name: product.name,
         description: product.description as string,
         price: product.price.toString(),
         totalNumber: product.totalNumber.toString(),
-        status: product.status as
-          | "active"
-          | "inactive"
-          | "out-of-stock"
-          | "draft",
+        status: product.status as | "active" | "inactive" | "out-of-stock"| "draft",
         category: product.category,
         tags: product.tags as string[],
         variants: [],
@@ -276,35 +273,265 @@ function ProductActionsContent() {
     setValue("category", selectedCategory);
   }, [selectedCategory, setValue]);
 
-  const validateForm = (data: ProductFormData): string | null => {
-    if (variants.length === 0) {
-      return "Please add at least one color variant";
+ const validateProductForm = (
+  data: ProductFormData,
+  variants: ProductColor[]
+): { isValid: boolean; error: string | null } => {
+  // Validate basic required fields
+  if (!data.name || data.name.trim().length < 3) {
+    return {
+      isValid: false,
+      error: "Product name must be at least 3 characters",
+    };
+  }
+
+  if (!data.description || data.description.trim().length < 10) {
+    return {
+      isValid: false,
+      error: "Description must be at least 10 characters",
+    };
+  }
+
+  if (!data.category || data.category.trim().length === 0) {
+    return {
+      isValid: false,
+      error: "Please select a category",
+    };
+  }
+
+  // Validate price
+  if (!data.price || data.price.trim().length === 0) {
+    return {
+      isValid: false,
+      error: "Please enter a price",
+    };
+  }
+
+  const priceNum = parseFloat(String(data.price).replace(/[^\d.]/g, ""));
+  if (isNaN(priceNum) || priceNum <= 0) {
+    return {
+      isValid: false,
+      error: "Please enter a valid price greater than 0",
+    };
+  }
+
+  // Validate total number/stock
+  if (!data.totalNumber || data.totalNumber.trim().length === 0) {
+    return {
+      isValid: false,
+      error: "Please enter total stock number",
+    };
+  }
+
+  const totalNum = parseInt(String(data.totalNumber));
+  if (isNaN(totalNum) || totalNum <= 0) {
+    return {
+      isValid: false,
+      error: "Total stock must be a positive number",
+    };
+  }
+
+  // Validate status
+  const validStatuses = ["active", "inactive", "out-of-stock", "draft"];
+  if (!data.status || !validStatuses.includes(data.status)) {
+    return {
+      isValid: false,
+      error: "Please select a valid product status",
+    };
+  }
+
+  // Validate tags
+  if (!data.tags || data.tags.length === 0) {
+    return {
+      isValid: false,
+      error: "Please add at least one tag",
+    };
+  }
+
+  const validTags = data.tags.filter((tag) => tag && tag.trim().length > 0);
+  if (validTags.length === 0) {
+    return {
+      isValid: false,
+      error: "Please add at least one valid tag",
+    };
+  }
+
+  // Validate product care
+  if (!data.productCare || data.productCare.trim().length < 5) {
+    return {
+      isValid: false,
+      error: "Product care information must be at least 5 characters",
+    };
+  }
+
+  // Validate wash instructions
+  if (!data.washInstructions || data.washInstructions.length === 0) {
+    return {
+      isValid: false,
+      error: "Please add at least one wash instruction",
+    };
+  }
+
+  const validInstructions = data.washInstructions.filter(
+    (instruction) => instruction && instruction.trim().length > 0
+  );
+  if (validInstructions.length === 0) {
+    return {
+      isValid: false,
+      error: "Please add at least one valid wash instruction",
+    };
+  }
+
+  // Validate size type
+  if (!data.sizeType || !data.sizeType.gender || !data.sizeType.clothType) {
+    return {
+      isValid: false,
+      error: "Please select both gender and cloth type",
+    };
+  }
+
+  // Validate variants/colors
+  if (!variants || variants.length === 0) {
+    return {
+      isValid: false,
+      error: "Please add at least one color variant",
+    };
+  }
+
+  // Validate each variant
+  for (let i = 0; i < variants.length; i++) {
+    const variant = variants[i];
+    const variantLabel = variant.name || `Variant ${i + 1}`;
+
+    // Check color name
+    if (!variant.name || variant.name.trim().length === 0) {
+      return {
+        isValid: false,
+        error: `${variantLabel}: Color name is required`,
+      };
     }
 
-    if (!data.price || isNaN(Number(data.price))) {
-      return "Please enter a valid price";
+    // Check hex color
+    if (!variant.hex || !/^#[0-9A-F]{6}$/i.test(variant.hex)) {
+      return {
+        isValid: false,
+        error: `${variantLabel}: Invalid color hex code`,
+      };
     }
 
-    const hasInsufficientImages = variants.some(
-      (color) => color.images.length < 3
-    );
-    if (hasInsufficientImages) {
-      return "Each color must have at least 3 images";
+    // Check stock
+    if (variant.stock === undefined || variant.stock === null) {
+      return {
+        isValid: false,
+        error: `${variantLabel}: Stock quantity is required`,
+      };
     }
 
-    return null;
+    if (variant.stock < 0) {
+      return {
+        isValid: false,
+        error: `${variantLabel}: Stock cannot be negative`,
+      };
+    }
+
+    // Check sizes
+    if (!variant.sizes || variant.sizes.length === 0) {
+      return {
+        isValid: false,
+        error: `${variantLabel}: At least one size is required`,
+      };
+    }
+
+    const validSizes = variant.sizes.filter((size) => size && size.trim().length > 0);
+    if (validSizes.length === 0) {
+      return {
+        isValid: false,
+        error: `${variantLabel}: At least one valid size is required`,
+      };
+    }
+
+    // Check images
+    if (!variant.images || variant.images.length < 3) {
+      return {
+        isValid: false,
+        error: `${variantLabel}: At least 3 images are required`,
+      };
+    }
+
+    if (variant.images.length > 5) {
+      return {
+        isValid: false,
+        error: `${variantLabel}: Maximum 5 images allowed`,
+      };
+    }
+
+    // Validate each image
+    for (let j = 0; j < variant.images.length; j++) {
+      const image = variant.images[j];
+      
+      if (!image.name || image.name.trim().length === 0) {
+        return {
+          isValid: false,
+          error: `${variantLabel}: Image ${j + 1} is missing a name`,
+        };
+      }
+
+      // If it's a new file upload, validate it
+      if (image.file instanceof File || image.file instanceof Blob) {
+        const file = image.file;
+        const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+        const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+        if (!ALLOWED_TYPES.includes(file.type)) {
+          return {
+            isValid: false,
+            error: `${variantLabel}: Image ${j + 1} must be JPEG, PNG, or WebP`,
+          };
+        }
+
+        if (file.size > MAX_SIZE) {
+          return {
+            isValid: false,
+            error: `${variantLabel}: Image ${j + 1} exceeds 10MB limit`,
+          };
+        }
+      } else if (!image.url) {
+        // If not a file, must have a URL
+        return {
+          isValid: false,
+          error: `${variantLabel}: Image ${j + 1} is missing URL or file`,
+        };
+      }
+    }
+  }
+
+  // Validate total stock across variants
+  const totalVariantStock = variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+  if (totalVariantStock > totalNum) {
+    return {
+      isValid: false,
+      error: `Total variant stock (${totalVariantStock}) exceeds declared total (${totalNum})`,
+    };
+  }
+
+  return {
+    isValid: true,
+    error: null,
   };
+};
 
  
   const onSubmit = async (data: ProductFormData) => {
     setSubmitError("");
     setStocksError("");
 
+    console.log(data)
+
     // Validate form
-    const validationError = validateForm(data);
-    if (validationError) {
-      setSubmitError(validationError);
-      return;
+    const validationError = validateProductForm(data, variants);
+    if (!validationError.isValid) {
+      setSubmitError(validationError.error??"");
+      return; 
     }
 
     setIsSubmitting(true);

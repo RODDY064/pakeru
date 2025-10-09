@@ -12,7 +12,7 @@ export type ProductVariant = {
   colorHex?: string;
   description: string;
   sizes: string[];
-  images: Array<{ _id: string; url: string; productId: string }>;
+  images: Array<{ _id: string; url: string; publicId: string }>;
   stock: number;
 };
 
@@ -35,14 +35,14 @@ export type ProductData = {
   isActive: boolean;
   price: number;
   comparePrice?: number;
-  washInstructions:string[],
-  productCare?:string,
+  washInstructions: string[];
+  productCare?: string;
   variants: ProductVariant[];
-  totalSize:number,
-  sizeType?:{
-    gender?: "male" | "female" | "unisex",
-    clothType?: ClothType
-  },
+  totalSize: number;
+  sizeType?: {
+    gender?: "male" | "female" | "unisex";
+    clothType?: ClothType;
+  };
   seo?: {
     title?: string;
     description?: string;
@@ -177,8 +177,8 @@ const transformApiProduct = (apiProduct: any): ProductData => {
     comparePrice: apiProduct.comparePrice || undefined,
     variants: apiProduct.variants || [],
     washInstructions: apiProduct.washInstructions || [],
-    productCare:apiProduct.productCare || "",
-    sizeType:apiProduct.sizeType || undefined,
+    productCare: apiProduct.productCare || "",
+    sizeType: apiProduct.sizeType || undefined,
     seo: {
       title: apiProduct.seo?.title || `${apiProduct.name} | Store`,
       description: apiProduct.seo?.description || apiProduct.description || "",
@@ -189,7 +189,7 @@ const transformApiProduct = (apiProduct: any): ProductData => {
     visibility: apiProduct.visibility || "public",
     mainImage: apiProduct.mainImage || apiProduct.images?.[0]?.url || "",
     images: apiProduct.images || [],
-    totalSize:apiProduct.total
+    totalSize: apiProduct.total,
   };
 };
 
@@ -297,7 +297,6 @@ export const useStoreProductStore: StateCreator<
 
   loadStoreProducts: async (force = false, apiGet, limit) => {
     const state = get();
-
     if (!apiGet) {
       throw new Error("API get function is required");
     }
@@ -315,26 +314,36 @@ export const useStoreProductStore: StateCreator<
       const urlParams = new URLSearchParams(
         typeof window !== "undefined" ? window.location.search : ""
       );
+
       const page = urlParams.get("page");
-      const createdAt = urlParams.get("createdAt")
+      const createdAt = urlParams.get("createdAt");
 
       const query = new URLSearchParams();
+
       if (page && page !== "1") {
         query.append("page", page);
       }
+
       if (limit) {
         query.append("limit", limit.toString());
       }
 
-      if(createdAt){
-        query.append("createdAt", createdAt)
+      if (createdAt) {
+        query.append("createdAt", createdAt);
       }
 
-      console.log(query.toString(), "Query parameters");
+      // Add cache-busting timestamp
+      query.append("_t", Date.now().toString());
 
-      const result = await apiGet<{ data: ProductData[]; total?: number }>(`/products?${query.toString()}`,{
-          cache:"no-store",
-          next: { revalidate : 0}
+      const result = await apiGet<{ data: ProductData[]; total?: number }>(
+        `/products?${query.toString()}`,
+        {
+          cache: "no-store",
+          next: { revalidate: 0 },
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            Pragma: "no-cache",
+          },
         }
       );
 
@@ -348,24 +357,26 @@ export const useStoreProductStore: StateCreator<
         transformApiProduct(product)
       );
 
-      set(
-        produce((state: Store) => {
-          const existingProductIds = new Set(
-            state.storeProducts.map((p) => p._id)
-          );
-          const newProducts = transformedProducts.filter(
-            (product) => !existingProductIds.has(product._id)
-          );
-          state.storeProducts = [...state.storeProducts, ...newProducts];
-          state.filteredStoreProducts = [
-            ...state.storeProducts,
-            ...newProducts,
-          ];
-          if (result.total !== undefined) {
-            state.totalItems = result.total;
-          }
-        })
-      );
+     set(
+      produce((state: Store) => {
+        if (force) {
+          state.storeProducts = transformedProducts;
+        } else {
+          const mergedMap = new Map<string, ProductData>();
+          state.storeProducts.forEach((p) => mergedMap.set(p._id, p));
+          transformedProducts.forEach((p) => mergedMap.set(p._id, p));
+          state.storeProducts = Array.from(mergedMap.values());
+        }
+ 
+        state.filteredStoreProducts = [...state.storeProducts];
+        if (result.total !== undefined) {
+          state.totalItems = result.total;
+        }
+        if (force && state.pagination) {
+          state.pagination.page = 1;
+        }
+      })
+    );
 
       setTimeout(() => get().applyStoreProductFilters(), 0);
     } catch (error) {
@@ -384,28 +395,37 @@ export const useStoreProductStore: StateCreator<
       );
     }
   },
-
   loadStoreProduct: async (id) => {
     try {
-      // Check if product exists in store first
+
       const existingProduct = get().getProductById(id);
       if (existingProduct) {
         get().setSelectedProduct(existingProduct);
         return;
       }
 
-      // Fetch single product from API
-      const result = await apiCall(`/products/${id}`, {
-        cache:"no-store"
-      }, true);
+      const result = await apiCall(`/products/${id}?_t=${Date.now()}`, {
+        cache: "no-store",
+        next: { revalidate: 0 },
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+          Pragma: "no-cache",
+        },
+      });
 
       const product = transformApiProduct(result.data || result);
-
       get().setSelectedProduct(product);
-
-      // Also add to products list if not already there
+      set(
+        produce((state: Store) => {
+          const exists = state.storeProducts.some((p) => p._id === product._id);
+          if (!exists) {
+            state.storeProducts.push(product);
+          }
+        })
+      );
     } catch (error) {
       console.error("Error loading product:", error);
+      throw error; 
     }
   },
 
@@ -458,7 +478,6 @@ export const useStoreProductStore: StateCreator<
     // Start with all products
     let filtered = [...storeProducts];
 
-
     // Apply status filter
     if (storeProductFilters.status && storeProductFilters.status !== "all") {
       const beforeCount = filtered.length;
@@ -486,7 +505,8 @@ export const useStoreProductStore: StateCreator<
       const beforeCount = filtered.length;
       filtered = filtered.filter((p) => {
         // Case-insensitive comparison and handle potential undefined
-        const productCategory = get().getCategoryById(p.category)?.name?.toLowerCase()|| "";
+        const productCategory =
+          get().getCategoryById(p.category)?.name?.toLowerCase() || "";
         const filterCategory = storeProductFilters.category.toLowerCase();
         const matches = productCategory === filterCategory;
 

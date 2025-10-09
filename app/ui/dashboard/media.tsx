@@ -185,7 +185,7 @@ const Media = React.memo(
       if (aboutToSubmit && variants.length === 0) {
         setUploadError("Please add a variants and its images");
       }
-    }, [aboutToSubmit,variants]);
+    }, [aboutToSubmit, variants]);
 
     const addColor = useCallback(() => {
       if (!newColor.name.trim()) {
@@ -270,17 +270,14 @@ const Media = React.memo(
           return;
         }
 
-        // Validate all files first
+        // Validate files
         const validationErrors: string[] = [];
         const validFiles: File[] = [];
 
         fileArray.forEach((file) => {
           const error = validateFile(file);
-          if (error) {
-            validationErrors.push(error);
-          } else {
-            validFiles.push(file);
-          }
+          if (error) validationErrors.push(error);
+          else validFiles.push(file);
         });
 
         if (validationErrors.length > 0) {
@@ -292,20 +289,30 @@ const Media = React.memo(
         validFiles.forEach((file) => {
           const reader = new FileReader();
           reader.onload = (e) => {
-            if (e.target?.result) {
-              const newImage: ProductImage = {
-                _id: String(Date.now() + Math.random()),
-                url: e.target.result,
-                name: file.name,
-                file: file,
-              };
-
+            const target = e.target as FileReader | null;
+            if (target && target.result) {
               setVariants((prev) =>
-                prev.map((color) =>
-                  color._id === activeColorId
-                    ? { ...color, images: [...color.images, newImage] }
-                    : color
-                )
+                prev.map((variant) => {
+                  if (variant._id !== activeColorId) return variant;
+
+                  const alreadyExists = variant.images.some(
+                    (img) => img.name === file.name
+                  );
+
+                  if (alreadyExists) return variant; 
+
+                  const newImage: ProductImage = {
+                    _id: String(Date.now() + Math.random()),
+                    url: target.result as string,
+                    name: file.name, 
+                    file: file,
+                  };
+
+                  return {
+                    ...variant,
+                    images: [...variant.images, newImage],
+                  };
+                })
               );
             }
           };

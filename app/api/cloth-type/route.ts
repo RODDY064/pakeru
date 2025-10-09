@@ -17,8 +17,6 @@ function handleApiError(error: any, operation: string) {
 async function forwardResponse(response: Response) {
   if (!response.ok) {
     const errorText = await response.text();
-    console.error("API error:", errorText);
-    
     let errorData;
     try {
       errorData = JSON.parse(errorText);
@@ -43,7 +41,6 @@ export async function GET(request: NextRequest) {
   try {
   
     const url = CLOTH_TYPES_ENDPOINT
-    console.log("Fetching cloth types:", url);
 
     const response = await fetch(url, {
       method: "GET",

@@ -29,7 +29,14 @@ export async function GET(request: NextRequest) {
       }
     );
 
+  
+
+    if (!response.ok) {
+      console.error("Backend refresh error:", response.status);
+    }
+
     const data = await response.json();
+
     // console.log("Backend refresh response:", response.status, data.msg);
     const nextResponse = NextResponse.json(data, { status: response.status });
 

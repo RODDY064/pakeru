@@ -167,16 +167,24 @@ const Slider = ({ containerHeight }: { containerHeight: any }) => {
 
     const boxes = gsap.utils.toArray(".card") as HTMLElement[];
     let activeElement: HTMLElement | null = null;
+
     const loop = horizontalLoop(boxes, {
       paused: true,
       draggable: true,
       center: true,
       onChange: (element, index) => {
-        activeElement && activeElement.classList.remove("active");
+        activeElement?.classList.remove("active");
         element.classList.add("active");
         activeElement = element;
       },
     });
+
+    const draggable = Draggable.get(".hero-slider-div");
+    if (draggable) {
+      draggable.vars.throwResistance = 6000;
+      draggable.vars.dragResistance = 0.4;
+      draggable.vars.edgeResistance = 0.8;
+    }
 
     const nextBtn = document.querySelector(".next");
     const prevBtn = document.querySelector(".prev");
@@ -184,7 +192,6 @@ const Slider = ({ containerHeight }: { containerHeight: any }) => {
     nextBtn?.addEventListener("click", () => {
       loop.next({ duration: 0.4, ease: "power1.inOut" });
     });
-
     prevBtn?.addEventListener("click", () => {
       loop.previous({ duration: 0.4, ease: "power1.inOut" });
     });
@@ -378,17 +385,13 @@ const Product = () => {
     }
   }, [products]);
 
-  useEffect(() => {
-    console.log(products);
-  }, [products]);
-
   return (
     <div className="w-full mt-10 px-2 md:px-8 lg:mx-2">
       <p className="text-xl font-bold font-avenir mb-6">SHOP ALL</p>
       <div
         ref={sliderRef}
         className={cn(
-          "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] py-2 md:auto-cols-[minmax(26rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none px-2",
+          "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] place-content-start py-2 md:auto-cols-[minmax(26rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none px-2",
           {
             "auto-cols-[minmax(100%,1fr)]":
               cartState === "loading" || cartState === "error",
@@ -422,7 +425,6 @@ const Product = () => {
                 cardRef={index === 0 ? cardRef : undefined}
                 cardStyle="md:mb-6"
                 hideDetails={true}
-                cardSize="max-w-[400px]"
               />
             ))}
           </>
@@ -441,7 +443,7 @@ const Product = () => {
           ))}
         </div>
       </div>
-      {cartState === "success" && (
+      {cartState === "success" && products.length !== 0 && (
         <div className="md:flex items-center justify-center gap-6 md:gap-12 hidden ">
           <button
             ref={prevBtnRef}

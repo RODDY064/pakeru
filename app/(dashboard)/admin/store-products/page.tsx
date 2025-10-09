@@ -13,7 +13,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-
 export default function Products() {
   const {
     getProductStats,
@@ -35,11 +34,15 @@ export default function Products() {
   } = useBoundStore();
 
   const { get } = useApiClient();
-  const [currentPageProducts, setCurrentPageProducts] = useState<ProductData[]>([]);
+  const [currentPageProducts, setCurrentPageProducts] = useState<ProductData[]>(
+    []
+  );
   const [categoriesSelect, setCategoriesSelect] = useState<string[]>([]);
   const router = useRouter();
-  const [productState, setProductState] = useState<"idle" | "loading" | "success" | "failed">("idle");
-  const [isFilterd, setIsFilterd] = useState(false)
+  const [productState, setProductState] = useState<
+    "idle" | "loading" | "success" | "failed"
+  >("idle");
+  const [isFilterd, setIsFilterd] = useState(false);
 
   useEffect(() => {
     if (dashboardProductLoading.products || pagination.isLoading) {
@@ -60,14 +63,10 @@ export default function Products() {
     loadCategories();
   }, []);
 
-
-
   useEffect(() => {
-   
-    if(filteredStoreProducts.length === 0){
-      setIsFilterd(true)
+    if (filteredStoreProducts.length === 0) {
+      setIsFilterd(true);
     }
-  
   }, [filteredStoreProducts]);
 
   useEffect(() => {
@@ -102,7 +101,7 @@ export default function Products() {
   useEffect(() => {
     const sliceData = slice(filteredStoreProducts);
     setCurrentPageProducts(sliceData);
-  }, [pagination, storeProducts, storeProductFilters,filteredStoreProducts]);
+  }, [pagination, storeProducts, storeProductFilters, filteredStoreProducts]);
 
   const [stats, setStats] = useState([
     { label: "Total Products", value: 0 },
@@ -111,35 +110,29 @@ export default function Products() {
     { label: "Product Out of Stock", value: 0 },
   ]);
 
- 
   useEffect(() => {
-  if (!storeProducts.length) return;
+    if (!storeProducts.length) return;
 
-  const productStats = getProductStats();
+    const productStats = getProductStats();
 
-  setStats([
-    { label: "Total Products", value: productStats.total ?? 0 },
-    { label: "Active Products", value: productStats.active ?? 0 },
-    { label: "Inactive Products", value: productStats.inactive ?? 0 },
-    { label: "Product Out of Stock", value: productStats.outOfStock ?? 0 },
-  ]);
-}, [storeProducts]); 
+    setStats([
+      { label: "Total Products", value: productStats.total ?? 0 },
+      { label: "Active Products", value: productStats.active ?? 0 },
+      { label: "Inactive Products", value: productStats.inactive ?? 0 },
+      { label: "Product Out of Stock", value: productStats.outOfStock ?? 0 },
+    ]);
+  }, [storeProducts]);
 
   // filtering
-
 
   const tableColumns: Column[] = [
     {
       label: (
-        <div className="w-[20px] flex gap-2 cursor-pointer flex-shrink-0">
-       
-        </div>
+        <div className="w-[20px] flex gap-2 cursor-pointer flex-shrink-0"></div>
       ),
       width: "w-[20px]",
       render: (product: any) => (
-        <div className="w-[20px] flex gap-2 cursor-pointer flex-shrink-0">
-    
-        </div>
+        <div className="w-[20px] flex gap-2 cursor-pointer flex-shrink-0"></div>
       ),
     },
     {
@@ -258,6 +251,12 @@ export default function Products() {
     );
   };
 
+    const handleReload = async () => {
+    router.refresh();
+    setTimeout(() => {
+      loadStoreProducts(true, get);
+    }, 150);
+  };
   return (
     <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%]  pt-4 pb-26 ">
       <div className="flex items-center justify-between max-sm:px-3">
@@ -302,7 +301,7 @@ export default function Products() {
         columns={tableColumns}
         data={currentPageProducts}
         tableName="Products"
-        reload={() => loadStoreProducts(true, get)}
+        reload={() => handleReload()}
         columnStyle="py-4"
         columnClick={(product) => handleLink(product)}
         dateKey="createdAt"

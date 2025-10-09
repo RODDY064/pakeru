@@ -1,38 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic"; 
-export const revalidate = 0;        
-
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-
+   
+    searchParams.set('_t', Date.now().toString());
     const queryString = searchParams.toString();
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products${
-      queryString ? `?${queryString}` : ""
-    }`;
+    
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products?${queryString}`;
 
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         "Cache-Control": "no-store, no-cache, must-revalidate",
-        Pragma: "no-cache",
+        "Pragma": "no-cache",
       },
       cache: "no-store",
-      next: { revalidate: 0}
+      next: { revalidate: 0 }
     });
 
+    console.log(response.ok)
     const data = await response.json();
 
     return new NextResponse(JSON.stringify(data), {
       status: response.status,
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "no-store, no-cache, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "Surrogate-Control": "no-store",
       },
     });
   } catch (error: any) {
@@ -52,7 +53,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const targetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products`;
+    
+    // Add cache-busting timestamp to URL
+    const targetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products?_t=${Date.now()}`;
 
     // Filter unsafe headers
     const incomingHeaders: Record<string, string> = {};
@@ -84,10 +87,11 @@ export async function POST(request: NextRequest) {
       headers: {
         ...incomingHeaders,
         "Cache-Control": "no-store, no-cache, must-revalidate",
-        Pragma: "no-cache",
+        "Pragma": "no-cache",
       },
       body: newFormData,
       cache: "no-store",
+      next: { revalidate: 0 },
     });
 
     if (!response.ok) {
@@ -109,9 +113,10 @@ export async function POST(request: NextRequest) {
       status: response.status,
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "no-store, no-cache, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "Surrogate-Control": "no-store",
       },
     });
   } catch (error: any) {

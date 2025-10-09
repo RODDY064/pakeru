@@ -87,9 +87,8 @@ const ProductCard = ({
         const transforms =
           type === "large"
             ? "c_pad,w_800,h_700,q_90,b_rgb:f2f2f2,f_auto,g_center"
-            : type === "medium"
-            ? "c_fit,w_300,h_400,q_90,f_auto,g_center"
-            : "c_fit,w_250,h_300,q_90,b_rgb:f2f2f2,f_auto,f_auto,g_center";
+            : type === "medium"? "c_fit,w_300,h_400,q_90,f_auto,g_center"
+            : "c_fit,w_500,h_500,q_90,b_rgb:f2f2f2,f_auto,f_auto,g_center";
 
         const optimizedUrl = buildCloudinaryUrl(publicId, transforms);
 

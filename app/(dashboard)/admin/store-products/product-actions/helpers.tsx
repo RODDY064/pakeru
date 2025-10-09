@@ -45,8 +45,7 @@ export class ProductAPIService {
     originalColors: ProductColor[],
     patch: ReturnType<typeof useApiClient>["patch"]
   ): Promise<any> {
-
-    console.log(productId,'id')
+    console.log(productId, "id");
 
     const changes = ProductChangeDetector.detectChanges(
       originalData,
@@ -54,7 +53,6 @@ export class ProductAPIService {
       currentData,
       currentColors
     );
-
 
     if (!changes.hasChanges) {
       return { message: "No changes to save" };
@@ -97,11 +95,18 @@ export class ProductAPIService {
       );
     }
 
-    console.log(updatePayload,'update payload')
+    console.log(updatePayload,'consle')
+   
+
 
     const updatePromise = patch(`/products/${productId}`, updatePayload, {
       requiresAuth: true,
-      cache:"no-store"
+      cache: "no-store",
+      next: { revalidate: 0 },
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+      },
     });
 
     return toast.promise(updatePromise, {
@@ -214,7 +219,15 @@ export class ProductAPIService {
     productId: string,
     del: ReturnType<typeof useApiClient>["del"]
   ): Promise<any> {
-    const deletePromise = del(`/products/${productId}`, { requiresAuth: true, cache:"no-store" });
+    const deletePromise = del(`/products/${productId}`, {
+      requiresAuth: true,
+      cache: "no-store",
+      next: { revalidate: 0 },
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+      },
+    });
 
     return toast.promise(deletePromise, {
       loading: "Deleting product...",
@@ -233,7 +246,10 @@ export class ProductAPIService {
     post: ReturnType<typeof useApiClient>["post"]
   ): Promise<any> {
     const formData = await this.buildFormData(data, variants);
-    return post("/products", formData, { requiresAuth: true, cache:"no-store" });
+    return post("/products", formData, {
+      requiresAuth: true,
+      cache: "no-store",
+    });
   }
 
   private static async appendImageFiles(
@@ -312,7 +328,7 @@ export class ProductAPIService {
     }
 
     if (variants?.length) {
-      const variantsBuild = this.buildVariants(variants);
+      const variantsBuild = this.buildVariants(variants, { isUpdate: partial });
       formData.append("variants", JSON.stringify(variantsBuild));
 
       await this.appendImageFiles(formData, variants);
@@ -418,23 +434,37 @@ export class ProductAPIService {
     return isNaN(parsed) ? 0 : Math.max(0, parsed);
   }
 
-  private static buildVariants(variants: ProductColor[]): any[] {
+  private static buildVariants(
+    variants: ProductColor[],
+    options: { isUpdate?: boolean } = {}
+  ): any[] {
     if (!variants?.length) {
       return [];
     }
 
+    const { isUpdate = false } = options;
+
     return variants
-      .map((variant) => ({
-        color: variant.name?.trim() || variant.color?.trim() || "Unknown Color",
-        colorHex: variant.hex || "#000000",
-        sizes: variant.sizes || [],
-        stock: variant.stock || 0,
-        images: (variant.images || [])
-          .filter((img) => img.name?.trim())
-          .map((img) => img.name.trim()),
-      }))
+      .map((variant) => {
+        const variantData: any = {
+          color:variant.name?.trim() || variant.color?.trim() || "Unknown Color",
+          colorHex: variant.hex || "#000000",
+          sizes: variant.sizes || [],
+          stock: variant.stock || 0,
+          images: (variant.images || []).filter((img) => img.name?.trim()).map((img) => img.name.trim()),
+        };
+
+        if (isUpdate && variant._id) {
+          variantData._id = variant._id;
+        }
+
+        console.log(variantData)
+
+        return variantData;
+      })
       .filter((variant) => variant.color !== "Unknown variant");
   }
+
   private static async compressImagesInBatch(
     variants: ProductColor[]
   ): Promise<void> {
@@ -481,32 +511,29 @@ export const mapVariantsToColors = (
     if (colorMap.has(colorKey)) {
       const existingColor = colorMap.get(colorKey)!;
 
-      // Merge sizes (avoid duplicates)
       const newSizes = (variant.sizes || []).filter(
         (size) => size && !existingColor.sizes.includes(size)
       );
       existingColor.sizes.push(...newSizes);
-
-      // Add stock
       existingColor.stock += variant.stock || 0;
 
-      // Add images
       if (variant.images?.length) {
         const mappedImages = variant.images.map((img, imgIndex) => ({
           _id: String(img._id ?? existingColor.images.length + imgIndex + 1),
           url: img.url,
           name:
-            img.productId || `image-${existingColor.images.length + imgIndex}`,
+            img.publicId?.trim() || `image-${existingColor.images.length + imgIndex}`,
           file: undefined,
         }));
         existingColor.images.push(...mappedImages);
       }
     } else {
+
       const mappedImages: ProductImage[] = (variant.images || []).map(
         (img, imgIndex) => ({
           _id: String(img._id ?? imgIndex + 1),
           url: img.url,
-          name: img.productId || `image-${imgIndex}`,
+          name: img.publicId?.trim() || `image-${imgIndex}`,
           file: undefined,
         })
       );
