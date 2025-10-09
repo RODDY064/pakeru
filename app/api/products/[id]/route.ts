@@ -204,7 +204,7 @@ export async function PATCH(
 
     console.log(body)
 
-    const cacheBustUrl = `https://7948cf41cf7f.ngrok-free.app/v1/products/${id}`;
+    const cacheBustUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`;
 
     const response = await fetch(cacheBustUrl, {
       method: "PATCH",
@@ -228,8 +228,6 @@ export async function PATCH(
       const text = await response.text();
       data = text ? { message: text } : null;
     }
-
-    console.log(response.ok, 'response');
 
     return NextResponse.json(data, {
       status: response.status,
