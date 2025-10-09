@@ -132,7 +132,7 @@ export async function DELETE(
     const { id } = await params;
     const forwardHeaders = buildForwardHeaders(request);
 
-    return await makeApiRequest(`${process.env.NEXT_PUBLIC_BASE_URL}/${id}`,"DELETE", forwardHeaders);
+    return await makeApiRequest(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`,"DELETE", forwardHeaders);
   } catch (error: any) {
     console.error("DELETE error:", error);
     return NextResponse.json(
