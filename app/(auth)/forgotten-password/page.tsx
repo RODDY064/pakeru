@@ -47,7 +47,7 @@ export default function Forgotten() {
       const result = await res.json();
 
       if (!res.ok) {
-        throw new Error(result.error || "Failed to send reset link");
+        throw new Error(result.message || "Failed to send reset link");
       }
 
       // Success

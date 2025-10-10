@@ -78,54 +78,54 @@ const ProductCard = ({
   // Optional: Enhanced ProductCard with manual URL building
   // Use this if you need more control over transformations
 
- const renderImageWithCustomTransforms = () => {
-  // Skip Cloudinary for medium or small types
-  if (type === "medium" || type === "small") {
-    return (
-      <Image
-        src={imageSrc}
-        fill
-        alt={productName}
-        className="object-cover bg-[#f2f2f2]"
-        sizes={config.sizes}
-      />
-    );
-  }
-
-  // Apply Cloudinary only for large images
-  if (isCloudinaryImage) {
-    const publicId = imageSrc.split("/upload/")[1]?.split(".")[0];
-
-    if (publicId) {
-      const transforms =
-        "c_pad,w_800,h_700,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2";
-
-      const optimizedUrl = buildCloudinaryUrl(publicId, transforms);
-
+const renderImageWithCustomTransforms = () => {
+    if (!isCloudinaryImage) {
       return (
         <Image
-          src={optimizedUrl}
+          src={imageSrc}
           fill
           alt={productName}
           className="object-cover bg-[#f2f2f2]"
           sizes={config.sizes}
+          quality={100}
         />
       );
     }
-  }
 
+    const publicId = imageSrc.split("/upload/")[1]?.split(".")[0];
+    if (!publicId) {
+      return (
+        <Image
+          src={imageSrc}
+          fill
+          alt={productName}
+          className="object-cover bg-[#f2f2f2]"
+          sizes={config.sizes}
+          quality={100}
+        />
+      );
+    }
 
-  return (
-    <Image
-      src={imageSrc}
-      fill
-      alt={productName}
-      className="object-cover bg-[#f2f2f2]"
-      sizes={config.sizes}
-    />
-  );
-};
+    // Type-specific Cloudinary transforms
+    const transforms = {
+      large: "c_pad,w_800,h_700,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2",
+      medium: "c_fit,w_800,h_700,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2",
+      small: "c_fit,w_900,h_800,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2"
+    };
 
+    const optimizedUrl = buildCloudinaryUrl(publicId, transforms[type]);
+
+    return (
+      <Image
+        src={optimizedUrl}
+        fill
+        alt={productName}
+        className="object-cover bg-[#f2f2f2]"
+        sizes={config.sizes}
+        quality={100}
+      />
+    );
+  };
 
   return (
     <div

@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({ email: email }),
     });
 
-    console.log(backendResponse, 'response')
+    // console.log(backendResponse, 'response')
 
     const data = await backendResponse.json();
 
