@@ -86,7 +86,7 @@ export default function Products() {
     configure({
       dataKey: "storeProducts",
       loadFunction: loadProductForPagination,
-      size: 10,
+      size: 25,
     });
   }, []);
 
