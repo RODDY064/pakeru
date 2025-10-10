@@ -58,10 +58,13 @@ export default function AboutUs() {
               <p className="font-avenir text-black mt-2 underline decoration-dotted underline-offset-2 cursor-pointer text-lg">
                 +233 55 698-6761
               </p>
-              <p className="font-avenir text-black mt-3  text-lg">
-                Asokore Mampong,
+              <p className="font-avenir text-black mt-2 underline decoration-dotted underline-offset-2 cursor-pointer text-lg">
+                 +233 24 646-679
               </p>
-              <p className="font-avenir text-black   text-lg">Ashanti</p>
+              <p className="font-avenir text-black mt-3  text-lg">
+                KNUST.
+              </p>
+              <p className="font-avenir text-black   text-lg">Kumasi, Ashanti</p>
             </div>
           </div>
         </div>

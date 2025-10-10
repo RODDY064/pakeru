@@ -73,7 +73,7 @@ export async function PATCH(
       cache: "no-store",
     });
 
-    console.log("Response status:", response.status);
+    // console.log("Response status",response);
 
     return forwardResponse(response);
   } catch (error: any) {

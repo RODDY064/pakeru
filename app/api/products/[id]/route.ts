@@ -209,7 +209,7 @@ export async function PATCH(
 
     console.log('Forwarding request with removed variants:', removedVariantIds);
 
-    const backendUrl = new URL(`https://faaaf07094d3.ngrok-free.app/v1/products/${id}`);
+    const backendUrl = new URL(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`);
     if (removedVariantIds.length > 0) {
       backendUrl.searchParams.set('removedVariants', removedVariantIds.join(','));
     }

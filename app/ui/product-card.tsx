@@ -88,7 +88,6 @@ const ProductCard = ({
         alt={productName}
         className="object-cover bg-[#f2f2f2]"
         sizes={config.sizes}
-        priority={false}
       />
     );
   }
@@ -110,13 +109,12 @@ const ProductCard = ({
           alt={productName}
           className="object-cover bg-[#f2f2f2]"
           sizes={config.sizes}
-          priority={type === "large"}
         />
       );
     }
   }
 
-  // Default fallback for non-Cloudinary URLs
+
   return (
     <Image
       src={imageSrc}
@@ -124,7 +122,6 @@ const ProductCard = ({
       alt={productName}
       className="object-cover bg-[#f2f2f2]"
       sizes={config.sizes}
-      priority={type === "large"}
     />
   );
 };
