@@ -200,7 +200,6 @@ export async function PATCH(
       headers["cache-control"] = "no-store, no-cache, must-revalidate";
       headers["pragma"] = "no-cache";
       headers["expires"] = "0";
-      headers["ngrok-skip-browser-warning"] = "true";
     } else {
       const forwardHeaders = buildForwardHeaders(request);
       body = await request.text();
