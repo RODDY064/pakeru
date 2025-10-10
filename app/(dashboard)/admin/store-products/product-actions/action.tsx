@@ -14,7 +14,6 @@ import React, {
   Suspense,
 } from "react";
 import Image from "next/image";
-import Editor from "@/app/ui/dashboard/editor";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -700,13 +699,11 @@ function ProductActionsContent() {
                       <p className="font-avenir font-[500] text-lg">
                         Description
                       </p>
-                      <div className="mt-2">
-                        <Editor
-                          value={editorValue}
-                          onChange={(content: string) =>
-                            setValue("description", content)
-                          }
-                        />
+                      <div className="">
+                        <textarea  
+                        {...register("description")}
+                        placeholder="start typing the product description"
+                        className="w-full border min-h-[150px] font-avenir  placeholder:text-black/30 border-black/10 bg-black/5 rounded-2xl mt-2 h-11 p-4 focus:outline-none focus-within:border-black/30"></textarea>
                         {errors.description && (
                           <p className="text-red-500 text-sm mt-1">
                             {errors.description.message}

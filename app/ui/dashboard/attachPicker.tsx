@@ -1,63 +1,23 @@
 import { capitalize } from "@/libs/functions";
 import { useApiClient } from "@/libs/useApiClient";
+import { CartItemType, CartStore } from "@/store/cart";
+import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 
 export default function AttachPicker({
   type,
-  productsLink
+  productsLink = [],
+  selectedProducts,
+  setSelectedProducts,
 }: {
   type: "products" | "categories";
-  productsLink?:string[]
+  productsLink?: string[];
+  selectedProducts: string[];
+  setSelectedProducts: React.Dispatch<React.SetStateAction<string[]>>;
 }) {
   const [manageTable, setManageTabel] = useState(false);
-
-  return (
-    <>
-      <div className="my-4 mb-10">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <label className="font-avenir text-lg">{capitalize(type)}</label>
-            <div className="size-8 bg-black flex items-center justify-center rounded-full gap.0.5">
-              <div className="relative flex items-center justify-center">
-                <div className="w-[6px] h-[1px] bg-white"></div>
-                <div className="w-[1px] h-[6px] bg-white absolute"></div>
-              </div>
-              <p className="font-avenir text-sm text-white ">3</p>
-            </div>
-          </div>
-          <div
-            onClick={() => setManageTabel(true)}
-            className="mx-4 font-avenir text-md cursor-pointer text-blue-600"
-          >
-            Manage table
-          </div>
-        </div>
-        <div className="mt-2 w-full border  rounded-2xl border-black/20 overflow-hidden">
-          <div className="w-full   flex font-avenir">
-            <p className="h-full p-3.5 border-r border-black/20 px-6">0</p>
-            <p className="h-full p-3.5 px-4">Untitle Product</p>
-          </div>
-        </div>
-      </div>
-      {manageTable && (
-        <MangeTable type={type} setManageTabel={setManageTabel} productsLinked={productsLink} />
-      )}
-    </>
-  );
-}
-
-
-const MangeTable = ({
-  type,
-  setManageTabel,
-  productsLinked
-}: {
-  type: "products" | "categories";
-  productsLinked?:string[]
-  setManageTabel: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
   const {
     loadProducts,
     loadCategories,
@@ -68,11 +28,11 @@ const MangeTable = ({
   } = useBoundStore();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const { get } = useApiClient()
- 
+  const { get } = useApiClient();
+
   useEffect(() => {
     if (type === "products") {
-      loadProducts(false, 1,25,{});
+      loadProducts(false, 1, 25, {});
     } else {
       loadCategories();
     }
@@ -80,7 +40,8 @@ const MangeTable = ({
 
   // Pick state dynamically
   const isLoading =
-    (type === "products" && (cartState === "loading" || cartState === "idle")) ||
+    (type === "products" &&
+      (cartState === "loading" || cartState === "idle")) ||
     (type === "categories" && isCategoriesLoading);
 
   const data = type === "products" ? products : categories;
@@ -89,6 +50,143 @@ const MangeTable = ({
   const filteredData = data.filter((item: any) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Toggle product/category selection
+  const toggleSelection = (id: string) => {
+    setSelectedProducts((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+    );
+  };
+
+  return (
+    <>
+      <div className="my-4 mb-10">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <label className="font-avenir text-lg">{capitalize(type)}</label>
+            <div className="size-8 bg-black flex items-center justify-center rounded-full gap-0.5">
+              <div className="relative flex items-center justify-center">
+                <div className="w-[6px] h-[1px] bg-white"></div>
+                <div className="w-[1px] h-[6px] bg-white absolute"></div>
+              </div>
+              <p className="font-avenir text-sm text-white">
+                {selectedProducts.length}
+              </p>
+            </div>
+          </div>
+          <div
+            onClick={() => setManageTabel(true)}
+            className="mx-4 font-avenir text-md cursor-pointer text-blue-600"
+          >
+            Manage table
+          </div>
+        </div>
+
+        {selectedProducts.length === 0 ? (
+          <div className="mt-2 w-full border rounded-2xl border-black/20 overflow-hidden">
+            <div className="w-full flex font-avenir">
+              <p className="h-full p-3.5 border-r border-black/20 px-6">0</p>
+              <p className="h-full p-3.5 px-4">Untitled Product</p>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full mt-6 h-full">
+            {isLoading && (
+              <div className="w-full h-24 flex items-center justify-center pt-6">
+                <Image
+                  src="/icons/loader.svg"
+                  width={24}
+                  height={24}
+                  alt="loading icon"
+                />
+              </div>
+            )}
+
+            {!isLoading && (
+              <div className="w-full overflow-auto border rounded-2xl border-black/20">
+                {data
+                  .filter((item: any) => selectedProducts.includes(item._id))
+                  .map((item: any, index: number) => (
+                    <div
+                      key={item._id}
+                      className={`flex justify-between border-b last:border-b-0 border-black/20`}
+                    >
+                      <div className="flex">
+                        <div className="p-3 w-16 flex items-center justify-center flex-none border-r border-black/30">
+                          <p className="font-avenir text-md">{index + 1}</p>
+                        </div>
+                        <div className="p-3 px-6 items-center gap-3 flex">
+                          {type === "products" && item.mainImage && (
+                            <div className="size-10 rounded-md relative border border-black/20 overflow-hidden">
+                              <Image
+                                src={item.mainImage.url}
+                                fill
+                                className="object-cover"
+                                sizes="100vw"
+                                alt={item.name}
+                              />
+                            </div>
+                          )}
+                          <p className="font-avenir text-md">{item.name}</p>
+                        </div>
+                      </div>
+                      <div className="p-3 px-6 border-l border-black/30 flex items-center justify-center">
+                        <div
+                          onClick={() => toggleSelection(item._id)}
+                          className="size-5 border cursor-pointer rounded-full p-[2px]"
+                        >
+                          <div className="size-full rounded-full bg-black"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {manageTable && (
+        <MangeTable
+          type={type}
+          setManageTabel={setManageTabel}
+          selectedProducts={selectedProducts}
+          setSelectedProducts={setSelectedProducts}
+          data={data}
+          isLoading={isLoading}
+        />
+      )}
+    </>
+  );
+}
+
+const MangeTable = ({
+  type,
+  setManageTabel,
+  selectedProducts,
+  setSelectedProducts,
+  data,
+  isLoading,
+}: {
+  type: "products" | "categories";
+  selectedProducts: string[];
+  setSelectedProducts: React.Dispatch<React.SetStateAction<string[]>>;
+  setManageTabel: React.Dispatch<React.SetStateAction<boolean>>;
+  data: any[];
+  isLoading: boolean;
+}) => {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter based on search term
+  const filteredData = data.filter((item: any) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Toggle product/category selection
+  const toggleSelection = (id: string) => {
+    setSelectedProducts((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+    );
+  };
 
   return (
     <div className="fixed top-0 left-0 bg-black/90 z-90 w-full h-full right-0 flex flex-col items-center justify-center">
@@ -140,7 +238,7 @@ const MangeTable = ({
                       className={`flex justify-between border-b border-black/20 `}
                     >
                       <div className="flex">
-                        <div className="p-3 px-6 border-r border-black/30">
+                        <div className="p-3 w-16 flex items-center justify-center flex-none border-r border-black/30">
                           <p className="font-avenir text-md">{index + 1}</p>
                         </div>
                         <div className="p-3 px-6 items-center gap-3 flex">
@@ -159,17 +257,20 @@ const MangeTable = ({
                         </div>
                       </div>
                       <div className="p-3 px-6 border-l border-black/30 flex items-center justify-center">
-                        <div className="size-5 border cursor-pointer rounded-full p-[2px]">
-                         {productsLinked?.includes(item._id) && <div className="size-full rounded-full bg-black"></div>}
+                        <div
+                          onClick={() => toggleSelection(item._id)}
+                          className="size-5 border cursor-pointer rounded-full p-[2px]"
+                        >
+                          {selectedProducts.includes(item._id) && (
+                            <div className="size-full rounded-full bg-black"></div>
+                          )}
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className="w-full h-24 flex items-center justify-center">
-                    <p className="text-black/50 font-avenir">
-                      No {type} found.
-                    </p>
+                    <p className="text-black/50 font-avenir">No {type} found.</p>
                   </div>
                 )}
               </div>

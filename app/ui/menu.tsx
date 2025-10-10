@@ -161,15 +161,14 @@ export default function Menu() {
     );
 
     return (
-      <div className="w-full h-full ">
+      <div className="w-full h-full flex- flex-col ">
         <div className="w-full flex">
           <div
             onClick={() => handlePush(data.category)}
             key={`${data?.image?._id}-img-${data.category}`}
-            className={cn("h-fit cursor-pointer w-full")}
-          >
+            className={cn("h-fit cursor-pointer w-full")}>
             <Link href={`/shop?category=${data.category}`}>
-              <div className="w-full h-[35vh] relative overflow-hidden border-b border-black/20">
+              <div className="w-full h-[30dvh] relative overflow-hidden border-b border-black/20">
                 <Image
                   src={data?.image?.url ?? "/images/image-fallback.png"}
                   fill
@@ -185,7 +184,7 @@ export default function Menu() {
           </div>
         </div>
 
-        <div className="border-t border-black/20">
+        <div className="border-t h-full  border-black/20">
           <p className="font-avenir font-[400] text-sm text-black/50 p-6 pb-2">
             PRODUCTS
           </p>
@@ -228,78 +227,7 @@ export default function Menu() {
                       ))}
                     </motion.div>
                   </div>
-                </AnimatePresence>
-                <div className="flex flex-col items-center">
-                  <div className="w-[80%] md:w-full my-2 flex flex-wrap items-center justify-center gap-1 md:gap-3">
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => goToPage(i)}
-                        className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full ${
-                          i === currentPage ? "bg-black " : "bg-black/20"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="hidden md:flex items-center  justify-center gap-6 md:gap-12">
-                  <button
-                    ref={prevBtnRef}
-                    aria-label="Scroll left"
-                    className={cn(
-                      "size-10 hover:bg-black invisible cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev transition-all duration-200",
-                      {
-                        visible: !isStart,
-                      }
-                    )}
-                  >
-                    <Image
-                      src="/icons/arrow.svg"
-                      width={18}
-                      height={18}
-                      alt="arrow"
-                      priority
-                      className="rotate-90 group-hover/a:hidden transition-all duration-200"
-                    />
-                    <Image
-                      src="/icons/arrow-w.svg"
-                      width={18}
-                      height={18}
-                      alt="arrow"
-                      priority
-                      className="hidden rotate-90 group-hover/a:flex transition-all duration-200"
-                    />
-                  </button>
-
-                  <button
-                    ref={nextBtnRef}
-                    aria-label="Scroll right"
-                    className={cn(
-                      "size-10 hover:bg-black cursor-pointer flex items-center invisible justify-center border rounded-full group/w nav-next transition-all duration-200",
-                      {
-                        visible: !isEnd,
-                      }
-                    )}
-                  >
-                    <Image
-                      src="/icons/arrow.svg"
-                      width={18}
-                      height={18}
-                      alt="arrow"
-                      priority
-                      className="rotate-270 group-hover/w:hidden transition-all duration-200"
-                    />
-                    <Image
-                      src="/icons/arrow-w.svg"
-                      width={18}
-                      height={18}
-                      alt="arrow"
-                      priority
-                      className="hidden rotate-270 group-hover/w:flex transition-all duration-200"
-                    />
-                  </button>
-                </div>
+                </AnimatePresence>       
               </div>
             </>
           )}

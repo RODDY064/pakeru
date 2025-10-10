@@ -14,6 +14,7 @@ import SizeGuild from "./size-guild";
 import ProductCare from "./productCare";
 import Cedis from "./cedis";
 import { MeasurementGroupName } from "@/libs/sizeguilde";
+import ExpandableDescription from "./ExpandableDescription";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -351,15 +352,18 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   }
 
   const getGroupName = (sizeGuideType?: string) => {
-  if (!sizeGuideType) return MeasurementGroupName.MenShirts;
+    if (!sizeGuideType) return MeasurementGroupName.MenShirts;
 
-  const key = sizeGuideType
-    .toLowerCase()
-    .replace(/[-_]+([a-z])/g, (_, c) => c.toUpperCase()) // convert after - or _
-    .replace(/^./, (c) => c.toUpperCase()) as keyof typeof MeasurementGroupName;
+    const key = sizeGuideType
+      .toLowerCase()
+      .replace(/[-_]+([a-z])/g, (_, c) => c.toUpperCase()) // convert after - or _
+      .replace(/^./, (c) =>
+        c.toUpperCase()
+      ) as keyof typeof MeasurementGroupName;
 
-  return MeasurementGroupName[key] ?? MeasurementGroupName.MenShirts;
-};
+    return MeasurementGroupName[key] ?? MeasurementGroupName.MenShirts;
+  };
+
 
 
   return (
@@ -523,12 +527,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
                     {productData?.price}
                   </p>
                 </div>
-                <div
-                  className="my-4 font-avenir text-lg responsive-description"
-                  dangerouslySetInnerHTML={{
-                    __html: productData?.description || "",
-                  }}
-                />
+                <ExpandableDescription description={productData?.description as string} />
               </div>
               <div className="my-4 mt-10 md:mt-6">
                 <div className="flex items-center gap-2">
@@ -783,7 +782,11 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           )}
         </div>
       </div>
-      <SizeGuild groupName={getGroupName(productData?.sizeType?.clothType?.sizeGuideType)} />
+      <SizeGuild
+        groupName={getGroupName(
+          productData?.sizeType?.clothType?.sizeGuideType
+        )}
+      />
 
       {/* Pinch Zoom Modal */}
       {pinchZoom.show && (

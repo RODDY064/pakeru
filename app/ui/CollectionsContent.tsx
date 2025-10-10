@@ -112,7 +112,7 @@ export default function CollectionsContent({ id }: { id: string }) {
           <div className="w-full  mt-6 md:mt-0 hidden lg:block lg:w-[50%] flex-shrink-0 ">
             <div className="w-full grid grid-cols-2">
               {isLoadingProducts ? (
-                <div className="w-full min-h-[400px] grid-cols-2 flex flex-col items-center justify-center">
+                <div className="w-full min-h-[400px] col-span-2 flex flex-col items-center justify-center">
                   <Image
                     src="/icons/loader.svg"
                     width={36}
@@ -147,7 +147,7 @@ export default function CollectionsContent({ id }: { id: string }) {
             : productsLink.length > 0 && (
                 <div className="mt-12 px-4 xl:px-8 w-full  flex flex-col items-center text-black  home-main  transition-all">
                   <p className="w-full font-avenir text-lg">Products</p>
-                  <div className="w-full flex flex-wrap  gap-6 mt-10">
+                  <div className="w-full flex flex-wrap  justify-center lg:jusitfy-start gap-6 mt-10">
                     {(isDesktop ? productsLink.slice(4) : productsLink).map(
                       (item) => (
                         <ProductCard

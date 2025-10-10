@@ -596,11 +596,9 @@ export default function EditContent({
                     </div>
                     <AttachPicker
                       type="products"
-                      productsLink={
-                        content?.type === "gallery"
-                          ? content.items?.[0].products
-                          : []
-                      }
+                      selectedProducts={selectedProducts}
+                      setSelectedProducts={setSelectedProducts}
+                      productsLink={content?.type === "gallery"? content.items?.[0].products: []}
                     />
                   </>
                 )}

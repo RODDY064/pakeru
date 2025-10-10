@@ -164,8 +164,8 @@ export default function Bentos() {
               split={splits}
               direction="column"
               className="px-0 mx-3"
-              name={galleries[6]?.name}
-              id={galleries[6]?._id as string}
+              name={[galleries[6]?.name]}
+              id={[galleries[6]?._id as string]}
             />
           </div>
         </div>

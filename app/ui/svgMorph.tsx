@@ -133,7 +133,7 @@ export default function SVGMorph({
               <p className="font-avenir text-xs md:text-lg capitalize">{name}</p>
             </div>
             <div className="size-12 absolute z-9 bottom-6 right-8 flex items-center justify-center">
-              <Link href={`/collections/${id??""}`}>
+              <Link href={`/collections/${id}`}>
                 <div className="size-10 bg-black/5 rounded-full cursor-pointer flex items-center justify-center">
                   <Image
                     src="/icons/bag.svg"
