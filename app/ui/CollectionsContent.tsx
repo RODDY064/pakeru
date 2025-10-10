@@ -51,28 +51,41 @@ export default function CollectionsContent({ id }: { id: string }) {
   }, []);
 
   useEffect(() => {
-    const run = async () => {
-      const galleryFind = galleries?.find((item) => item._id === id);
-      if (galleryFind) {
-        setActiveGallery(galleryFind);
-        setProductLinkIds(galleryFind.products);
+  const run = async () => {
+    const galleryFind = galleries?.find((item) => item._id === id);
+    if (galleryFind) {
+      setActiveGallery(galleryFind);
+      setProductLinkIds(galleryFind.products);
 
-        // Set loading state
-        setIsLoadingProducts(true);
+      setIsLoadingProducts(true);
+      
+      // Load gallery-specific products if they exist, otherwise load all products
+      if (galleryFind.products && galleryFind.products.length > 0) {
         await loadProducts(true, 1, 25, {
           products: galleryFind.products,
         });
-        setIsLoadingProducts(false);
+      } else {
+        await loadProducts(true, 1, 25);
       }
-    };
-    run();
-  }, [id, galleries]);
+      
+      setIsLoadingProducts(false);
+    }
+  };
+  run();
+}, [id, galleries]);
 
-  useEffect(() => {
-    if (productLinkIds && !isLoadingProducts) {
+useEffect(() => {
+  if (!isLoadingProducts) {
+    // Filter products that match the gallery's product IDs
+    if (productLinkIds && productLinkIds.length > 0) {
+      const filtered = products.filter(p => productLinkIds.includes(p._id));
+      setProductsLink(filtered);
+    } else {
       setProductsLink(products);
     }
-  }, [products, productLinkIds, isLoadingProducts]);
+  }
+}, [products, productLinkIds, isLoadingProducts]);
+
 
   // Calculate container height
   const calculateHeight = useCallback(
@@ -94,8 +107,7 @@ export default function CollectionsContent({ id }: { id: string }) {
       <div className="w-full pt-32  px-4  xl:px-8 relative ">
         <div className="w-full h-full flex lg:flex-row   flex-col ">
           <div className="w-full flex-shrink-0 h-svh lg:w-[50%] relative  ">
-            <div
-              className=" w-full relative h-full ">
+            <div className=" w-full relative h-full ">
               <Image
                 src={activeGallery?.image.url ?? "/images/image-fallback.png"}
                 fill
@@ -131,35 +143,25 @@ export default function CollectionsContent({ id }: { id: string }) {
           </div>
         </div>
       </div>
-      {isLoadingProducts ? (
-        <div className="w-full min-h-[400px] flex flex-col items-center justify-center">
-          <Image
-            src="/icons/loader.svg"
-            width={36}
-            height={36}
-            alt="loading icon"
-          />
-        </div>
-      ) : (
+      {!isLoadingProducts && (
         <>
-          {isDesktop
-            ? productsLink.length > 5
-            : productsLink.length > 0 && (
-                <div className="mt-12 px-4 xl:px-8 w-full  flex flex-col items-center text-black  home-main  transition-all">
-                  <p className="w-full font-avenir text-lg">Products</p>
-                  <div className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out mt-10">
-                    {(isDesktop ? productsLink.slice(4) : productsLink).map(
-                      (item) => (
-                        <ProductCard
-                          key={item._id}
-                          type="large"
-                          productData={item}
-                        />
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
+          {((isDesktop && productsLink.length > 4) ||
+            (!isDesktop && productsLink.length > 0)) && (
+            <div className="mt-12 px-4 xl:px-8 w-full flex flex-col items-center text-black home-main transition-all">
+              <p className="w-full font-avenir text-lg">Products</p>
+              <div className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out mt-10">
+                {(isDesktop ? productsLink.slice(4) : productsLink).map(
+                  (item) => (
+                    <ProductCard
+                      key={item._id}
+                      type="large"
+                      productData={item}
+                    />
+                  )
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
     </>

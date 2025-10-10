@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic"; 
-export const revalidate = 0; 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const EXCLUDED_HEADERS = new Set([
   "content-length",
@@ -26,7 +26,6 @@ function buildForwardHeaders(request: NextRequest): Record<string, string> {
   forwardHeaders["pragma"] = "no-cache";
   forwardHeaders["expires"] = "0";
 
-
   return forwardHeaders;
 }
 
@@ -36,8 +35,8 @@ async function makeApiRequest(
   headers: Record<string, string>,
   body?: BodyInit
 ) {
-  const cacheBustUrl = `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`;
-  
+  const cacheBustUrl = `${url}${url.includes("?") ? "&" : "?"}_t=${Date.now()}`;
+
   const response = await fetch(cacheBustUrl, {
     method,
     headers,
@@ -48,7 +47,7 @@ async function makeApiRequest(
 
   let data: any;
   const contentType = response.headers.get("content-type");
-  
+
   // Check if response has content and is JSON
   if (contentType && contentType.includes("application/json")) {
     try {
@@ -67,8 +66,8 @@ async function makeApiRequest(
     status: response.status,
     headers: {
       "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      "pragma": "no-cache",
-      "expires": "0",
+      pragma: "no-cache",
+      expires: "0",
       "surrogate-control": "no-store",
     },
   });
@@ -84,7 +83,7 @@ export async function GET(
       `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}?_t=${Date.now()}`,
       {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Cache-Control": "no-store, no-cache, must-revalidate",
         },
@@ -103,13 +102,13 @@ export async function GET(
       );
     }
 
-
     return NextResponse.json(data, {
       status: response.status,
       headers: {
-        "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-        "pragma": "no-cache",
-        "expires": "0",
+        "cache-control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
+        pragma: "no-cache",
+        expires: "0",
         "surrogate-control": "no-store",
       },
     });
@@ -132,7 +131,11 @@ export async function DELETE(
     const { id } = await params;
     const forwardHeaders = buildForwardHeaders(request);
 
-    return await makeApiRequest(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`,"DELETE", forwardHeaders);
+    return await makeApiRequest(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`,
+      "DELETE",
+      forwardHeaders
+    );
   } catch (error: any) {
     console.error("DELETE error:", error);
     return NextResponse.json(
@@ -142,20 +145,12 @@ export async function DELETE(
   }
 }
 
-
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    
-   
-    const url = new URL(request.url);
-    const removedVariantsParam = url.searchParams.get('removedVariants');
-    const removedVariantIds = removedVariantsParam ? removedVariantsParam.split(',').filter(Boolean) : [];
-
-    console.log('Removed variant IDs:', removedVariantIds);
 
     const contentType = request.headers.get("content-type") || "";
     let body: BodyInit | undefined;
@@ -164,32 +159,17 @@ export async function PATCH(
     if (contentType.includes("application/json")) {
       const forwardHeaders = buildForwardHeaders(request);
       const jsonData = await request.json();
-      
-    
-      if (removedVariantIds.length > 0) {
-        jsonData.removedVariants = removedVariantIds;
-      }
-      
+
       body = JSON.stringify(jsonData);
       headers = { ...forwardHeaders, "content-type": "application/json" };
     } else if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
       const form = new FormData();
-      
+
       for (const [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          const buffer = await value.arrayBuffer();
-          const blob = new Blob([buffer], { type: value.type });
-          form.append(key, blob, value.name);
-        } else {
-          form.append(key, value);
-        }
+        form.append(key, value);
       }
 
-      if (removedVariantIds.length > 0) {
-        form.append('removedVariants', JSON.stringify(removedVariantIds));
-      }
-      
       body = form as any;
       request.headers.forEach((value, key) => {
         const lowerKey = key.toLowerCase();
@@ -206,12 +186,7 @@ export async function PATCH(
       headers = forwardHeaders;
     }
 
-    console.log('Forwarding request with removed variants:', removedVariantIds);
-
-    const backendUrl = new URL(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`);
-    if (removedVariantIds.length > 0) {
-      backendUrl.searchParams.set('removedVariants', removedVariantIds.join(','));
-    }
+    const backendUrl = new URL( `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`);
 
     const response = await fetch(backendUrl.toString(), {
       method: "PATCH",
@@ -223,7 +198,10 @@ export async function PATCH(
 
     let data: any;
     const responseContentType = response.headers.get("content-type");
-    if (responseContentType && responseContentType.includes("application/json")) {
+    if (
+      responseContentType &&
+      responseContentType.includes("application/json")
+    ) {
       try {
         const text = await response.text();
         data = text ? JSON.parse(text) : null;
@@ -238,9 +216,10 @@ export async function PATCH(
     return NextResponse.json(data, {
       status: response.status,
       headers: {
-        "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-        "pragma": "no-cache",
-        "expires": "0",
+        "cache-control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
+        pragma: "no-cache",
+        expires: "0",
         "surrogate-control": "no-store",
       },
     });
@@ -252,3 +231,111 @@ export async function PATCH(
     );
   }
 }
+
+// export async function PATCH(
+//   request: NextRequest,
+//   { params }: { params: Promise<{ id: string }> }
+// ) {
+//   try {
+//     const { id } = await params;
+
+//     const url = new URL(request.url);
+//     const removedVariantsParam = url.searchParams.get('removedVariants');
+//     const removedVariantIds = removedVariantsParam ? removedVariantsParam.split(',').filter(Boolean) : [];
+
+//     console.log('Removed variant IDs:', removedVariantIds);
+
+//     const contentType = request.headers.get("content-type") || "";
+//     let body: BodyInit | undefined;
+//     let headers: Record<string, string> = {};
+
+//     if (contentType.includes("application/json")) {
+//       const forwardHeaders = buildForwardHeaders(request);
+//       const jsonData = await request.json();
+
+//       if (removedVariantIds.length > 0) {
+//         jsonData.removedVariants = removedVariantIds;
+//       }
+
+//       body = JSON.stringify(jsonData);
+//       headers = { ...forwardHeaders, "content-type": "application/json" };
+//     } else if (contentType.includes("multipart/form-data")) {
+//       const formData = await request.formData();
+//       const form = new FormData();
+
+//       for (const [key, value] of formData.entries()) {
+//         if (value instanceof File) {
+//           const buffer = await value.arrayBuffer();
+//           const blob = new Blob([buffer], { type: value.type });
+//           form.append(key, blob, value.name);
+//         } else {
+//           form.append(key, value);
+//         }
+//       }
+
+//       if (removedVariantIds.length > 0) {
+//         form.append('removedVariants', JSON.stringify(removedVariantIds));
+//       }
+
+//       body = form as any;
+//       request.headers.forEach((value, key) => {
+//         const lowerKey = key.toLowerCase();
+//         if (!EXCLUDED_HEADERS.has(lowerKey) && lowerKey !== "content-type") {
+//           headers[key] = value;
+//         }
+//       });
+//       headers["cache-control"] = "no-store, no-cache, must-revalidate";
+//       headers["pragma"] = "no-cache";
+//       headers["expires"] = "0";
+//     } else {
+//       const forwardHeaders = buildForwardHeaders(request);
+//       body = await request.text();
+//       headers = forwardHeaders;
+//     }
+
+//     console.log('Forwarding request with removed variants:', removedVariantIds);
+
+//     const backendUrl = new URL(`${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`);
+//     if (removedVariantIds.length > 0) {
+//       backendUrl.searchParams.set('removedVariants', removedVariantIds.join(','));
+//     }
+
+//     const response = await fetch(backendUrl.toString(), {
+//       method: "PATCH",
+//       headers,
+//       body,
+//       cache: "no-store",
+//       next: { revalidate: 0 },
+//     });
+
+//     let data: any;
+//     const responseContentType = response.headers.get("content-type");
+//     if (responseContentType && responseContentType.includes("application/json")) {
+//       try {
+//         const text = await response.text();
+//         data = text ? JSON.parse(text) : null;
+//       } catch {
+//         data = null;
+//       }
+//     } else {
+//       const text = await response.text();
+//       data = text ? { message: text } : null;
+//     }
+
+//     return NextResponse.json(data, {
+//       status: response.status,
+//       headers: {
+//         "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+//         "pragma": "no-cache",
+//         "expires": "0",
+//         "surrogate-control": "no-store",
+//       },
+//     });
+//   } catch (error: any) {
+//     console.error("PATCH request failed:", error);
+//     return NextResponse.json(
+//       { error: "Product update failed", message: error.message },
+//       { status: 500, headers: { "cache-control": "no-store" } }
+//     );
+//   }
+// }

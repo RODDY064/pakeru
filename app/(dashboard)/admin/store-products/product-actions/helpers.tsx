@@ -98,24 +98,19 @@ export class ProductAPIService {
       );
     }
 
-    // Add removed variant IDs to payload
     if (removedVariantIds && removedVariantIds.length > 0) {
       if (updatePayload instanceof FormData) {
-        updatePayload.append('removedVariants', JSON.stringify(removedVariantIds));
+        for (const id of removedVariantIds) {
+          updatePayload.append("removedVariants[]", id);
+        }
       } else {
         updatePayload.removedVariants = removedVariantIds;
       }
     }
 
-    console.log(updatePayload, 'payload with removed variants');
+    console.log(updatePayload, "payload with removed variants");
 
-    // Build URL with query params
-    const queryParams = new URLSearchParams();
-    if (removedVariantIds && removedVariantIds.length > 0) {
-      queryParams.set('removedVariants', removedVariantIds.join(','));
-    }
-    
-    const url = `/products/${productId}${queryParams.toString() ? `?${queryParams}` : ''}`;
+    const url = `/products/${productId}`;
 
     const updatePromise = patch(url, updatePayload, {
       requiresAuth: true,
@@ -378,7 +373,8 @@ export class ProductAPIService {
     return variants
       .map((variant) => {
         const variantData: any = {
-          color: variant.name?.trim() || variant.color?.trim() || "Unknown Color",
+          color:
+            variant.name?.trim() || variant.color?.trim() || "Unknown Color",
           colorHex: variant.hex || "#000000",
           sizes: variant.sizes || [],
           stock: variant.stock || 0,
@@ -391,7 +387,7 @@ export class ProductAPIService {
           variantData._id = variant._id;
         }
 
-        console.log(variantData);
+        console.log(variantData, "");
 
         return variantData;
       })
