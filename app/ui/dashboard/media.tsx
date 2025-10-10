@@ -69,7 +69,7 @@ const ColorButton = React.memo<{
     <button
       type="button"
       onClick={handleSelect}
-      className={`flex justify-between gap-2 px-1 sm:px-3 cursor-pointer py-0.5 sm:py-1 rounded-[24px] ${
+      className={`flex  justify-between gap-2 px-1 sm:px-3 cursor-pointer py-0.5 sm:py-1 rounded-[24px] ${
         isActive
           ? "bg-black/20 border border-black/20"
           : "bg-black/2 border border-black/10"

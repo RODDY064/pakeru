@@ -33,6 +33,7 @@ import { useApiClient } from "@/libs/useApiClient";
 import SizeType from "@/app/ui/dashboard/sizeType";
 import Instructions from "@/app/ui/dashboard/instructions";
 import StatusBadge from "@/app/ui/dashboard/statusBadge";
+import { stripHtml } from "@/app/ui/ExpandableDescription";
 
 
 export type ProductImage = {
@@ -156,7 +157,7 @@ function ProductActionsContent() {
 
       // Set form values
       setValue("name", formData.name);
-      setValue("description", formData.description);
+      setValue("description", stripHtml(formData.description));
       setValue("price", formData.price);
       setValue("totalNumber", formData.totalNumber);
       setValue("status", formData.status);
@@ -167,7 +168,7 @@ function ProductActionsContent() {
       setValue("sizeType.gender", formData.sizeType.gender);
       setValue("sizeType.clothType", formData.sizeType.clothType);
 
-      setEditorValue(formData.description);
+      setEditorValue(stripHtml(formData.description));
       setTags(formData.tags ?? []);
       setSelectedCategory(formData.category);
       setInstructions(formData.washInstructions ?? []);
@@ -822,7 +823,7 @@ function ProductActionsContent() {
                     <p className="text-sm pb-2 text-black/50 font-avenir">
                       Stock and sizes for selected color
                     </p>
-                    <div className="w-full pb-4 grid grid-cols-3 gap-2">
+                    <div className="w-full pb-4 flex flex-wrap gap-2">
                       {variants.map((color) => (
                         <div
                           key={color._id}
@@ -834,16 +835,16 @@ function ProductActionsContent() {
                             : "bg-black/2 border border-black/10"
                         }`}
                         >
-                          <div className="flex items-center gap-1">
+                          <div className="flex  items-center gap-1">
                             <div
                               style={{ backgroundColor: color.hex }}
                               className="size-4.5 border border-black/30 rounded-full"
                             ></div>
-                            <p className="font-avenir uppercase pt-1 sm:pt-[0.4px] text-[11px] sm:text-sm">
+                            <p className="font-avenir text-nowrap uppercase pt-1 sm:pt-[0.4px] text-[11px] sm:text-sm">
                               {color.name}
                             </p>
                           </div>
-                          <div className="flex items-centern gap-1"></div>
+                          <div className="flex items-center gap-1"></div>
                         </div>
                       ))}
                     </div>

@@ -55,10 +55,9 @@ export default function ExpandableDescription({
         className="overflow-hidden relative"
       >
         <div
-          className="my-4 font-avenir text-[16px] font-[300] leading-relaxed whitespace-pre-line "
+          className={`my-4 font-avenir text-[16px] font-[300] leading-relaxed whitespace-pre-line ${isExpanded ? "":"line-clamp-5"}`}
           // Prevent text selection during animation
-          style={{ userSelect: isExpanded ? "auto" : "none" }}
-        >
+          style={{ userSelect: isExpanded ? "auto" : "none" }}>
           {strippedDescription || "No description available"}
         </div>
 
@@ -70,7 +69,7 @@ export default function ExpandableDescription({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ type: "tween", duration: 0.2 }}
-              className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent dark:from-gray-900 pointer-events-none"
+              className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
             />
           )}
         </AnimatePresence>
@@ -92,7 +91,7 @@ export default function ExpandableDescription({
   );
 }
 
-function stripHtml(html: string): string {
+export function stripHtml(html: string): string {
   if (!html) return "";
 
   try {
