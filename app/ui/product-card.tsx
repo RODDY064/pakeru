@@ -78,42 +78,57 @@ const ProductCard = ({
   // Optional: Enhanced ProductCard with manual URL building
   // Use this if you need more control over transformations
 
-  const renderImageWithCustomTransforms = () => {
-    if (isCloudinaryImage) {
-      // Extract public ID from Cloudinary URL
-      const publicId = imageSrc.split("/upload/")[1]?.split(".")[0];
-
-      if (publicId) {
-      const transforms = "c_pad,w_800,h_700,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2";
-
-        const optimizedUrl = buildCloudinaryUrl(publicId, transforms);
-        // console.log(optimizedUrl)
-
-        return (
-          <Image
-            src={optimizedUrl}
-            fill
-            alt={productName}
-            className="object-cover bg-[#f2f2f2]"
-            sizes={config.sizes}
-            priority={type === "large"}
-          />
-        );
-      }
-    }
-
-    // Fallback to regular Image
+ const renderImageWithCustomTransforms = () => {
+  // Skip Cloudinary for medium or small types
+  if (type === "medium" || type === "small") {
     return (
       <Image
         src={imageSrc}
         fill
         alt={productName}
-        className="object-cover"
+        className="object-cover bg-[#f2f2f2]"
         sizes={config.sizes}
-        priority={type === "large"}
+        priority={false}
       />
     );
-  };
+  }
+
+  // Apply Cloudinary only for large images
+  if (isCloudinaryImage) {
+    const publicId = imageSrc.split("/upload/")[1]?.split(".")[0];
+
+    if (publicId) {
+      const transforms =
+        "c_pad,w_800,h_700,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2";
+
+      const optimizedUrl = buildCloudinaryUrl(publicId, transforms);
+
+      return (
+        <Image
+          src={optimizedUrl}
+          fill
+          alt={productName}
+          className="object-cover bg-[#f2f2f2]"
+          sizes={config.sizes}
+          priority={type === "large"}
+        />
+      );
+    }
+  }
+
+  // Default fallback for non-Cloudinary URLs
+  return (
+    <Image
+      src={imageSrc}
+      fill
+      alt={productName}
+      className="object-cover bg-[#f2f2f2]"
+      sizes={config.sizes}
+      priority={type === "large"}
+    />
+  );
+};
+
 
   return (
     <div
