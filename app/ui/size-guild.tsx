@@ -1,11 +1,13 @@
 "use client";
 
+"use client";
+
 import React, { useMemo, useState } from "react";
 import Icon from "./Icon";
 import { useBoundStore } from "@/store/store";
 import { AnimatePresence, motion, cubicBezier } from "motion/react";
 import Image from "next/image";
-import { MeasurementGroupName, Sizes } from "@/libs/sizeguilde";
+import { MEASUREMENT_CONFIG, MeasurementGroupName, Sizes } from "@/libs/sizeguilde";
 
 const guideImages: Record<string, string> = {
   men_shirts: "/sizes/men-shirts.jpg",
@@ -21,26 +23,12 @@ const guideImages: Record<string, string> = {
 
 
 const getMeasurementCategory = (groupName: MeasurementGroupName) => {
-  switch (groupName) {
-    case MeasurementGroupName.MenShirts:
-      return { key: "men_shirts", gender: "men", type: "tops" };
-    case MeasurementGroupName.MenTops:
-      return { key: "men_tops", gender: "men", type: "tops" };
-    case MeasurementGroupName.MenOthers:
-      return { key: "men_others", gender: "men", type: "others" };
-    case MeasurementGroupName.MenPants:
-      return { key: "men_pants", gender: "men", type: "pants" };
-    case MeasurementGroupName.WomenTops:
-      return { key: "women_tops", gender: "women", type: "tops" };
-    case MeasurementGroupName.WomenPants:
-      return { key: "women_pants", gender: "women", type: "pants" };
-    case MeasurementGroupName.WomenSkirtsShorts:
-      return { key: "women_skirts", gender: "women", type: "skirts" };
-    default:
-      return { key: "unisex_tops", gender: "unisex", type: "tops" };
-  }
+  const entry = Object.values(MEASUREMENT_CONFIG).find(
+    config => config.group === groupName
+  );
+  
+  return entry?.category ?? { key: "unisex_tops", gender: "unisex", type: "tops" };
 };
-
 
 export default function SizeGuild({
   groupName,
@@ -49,8 +37,14 @@ export default function SizeGuild({
 }) {
   const { sizeGuild, setSizeGuild } = useBoundStore();
 
-   const { key, gender, type } = getMeasurementCategory(groupName);
+  console.log(groupName, 'type')
+
+  const { key, gender, type } = getMeasurementCategory(groupName);
    const imageSrc = guideImages[key];
+
+
+
+  console.log(imageSrc,'img')
 
   const [selectedCountry, setSelectedCountry] = useState(Sizes[0].country);
   const [selectedSize, setSelectedSize] = useState(() => {
@@ -59,7 +53,6 @@ export default function SizeGuild({
     return group?.size[0]?.name || "";
   });
 
-  // Sizes for selected group & country
   const currentSizes = useMemo(() => {
     const countryObj = Sizes.find((c) => c.country === selectedCountry);
     const group = countryObj?.measureGroups.find((g) => g.group === groupName);
@@ -85,23 +78,23 @@ export default function SizeGuild({
 
   return (
     <div
-      className={`fixed w-full  bg-black/80 z-[99]   h-full left-0 right-0 ${
+      className={`fixed w-full bg-black/80 z-[99] h-full left-0 right-0 ${
         sizeGuild
-          ? "pointer-events-auto  bg-black/80"
-          : "pointer-events-none  bg-transparent"
+          ? "pointer-events-auto bg-black/80"
+          : "pointer-events-none bg-transparent"
       }`}
     >
       <AnimatePresence>
-        <div className="flex  h-full justify-end">
+        <div className="flex h-full justify-end">
           <motion.div
             variants={container}
             animate={sizeGuild ? "open" : "close"}
             initial="close"
             exit="close"
             key="desktop"
-            className="w-full lg:w-[50%] xl:w-[45%] h-full bg-white pt-12 "
+            className="w-full lg:w-[50%] xl:w-[45%] h-full bg-white pt-12"
           >
-            <div className="flex pb-8 items-center justify-between px-10 md:px-12   border-b border-black/20 ">
+            <div className="flex pb-8 items-center justify-between px-10 md:px-12 border-b border-black/20">
               <div className="relative">
                 <p className="font-avenir text-md">SIZE GUIDE</p>
               </div>
@@ -109,8 +102,10 @@ export default function SizeGuild({
                 <Icon name="close" onToggle={setSizeGuild} />
               </div>
             </div>
+            
             <div className="py-12 px-6 md:px-16 overflow-scroll h-full">
-              <div className="relative flex  items-center">
+              {/* Country Selector */}
+              <div className="relative flex items-center">
                 <select
                   className="w-full h-10 px-4 text-sm appearance-none border-[1px] focus:border-[1.5px] border-black/30 focus:border-black/60 focus:outline-none rounded-md font-avenir font-[300]"
                   value={selectedCountry}
@@ -129,7 +124,9 @@ export default function SizeGuild({
                   />
                 </div>
               </div>
-              <div className="relative flex  items-center mt-6">
+
+              {/* Size Selector */}
+              <div className="relative flex items-center mt-6">
                 <select
                   className="w-full h-10 text-sm px-4 appearance-none border-[1px] focus:border-[1.5px] border-black/30 focus:border-black/60 focus:outline-none rounded-md font-avenir font-[300]"
                   value={selectedSize}
@@ -150,6 +147,8 @@ export default function SizeGuild({
                   />
                 </div>
               </div>
+
+              {/* Measurements Table */}
               <div className="mt-10 w-full min-h-24 border rounded-md border-black/10">
                 <div className="w-full py-4 bg-[#f2f2f2] border-b border-black/10 px-4">
                   <p className="font-avenir font-[500] text-sm md:text-md text-black/50">
@@ -157,7 +156,7 @@ export default function SizeGuild({
                   </p>
                 </div>
                 <div
-                  className={`grid max-sm:grid-cols-1  items-stretch ${
+                  className={`grid max-sm:grid-cols-1 items-stretch ${
                     currentMeasurements.length === 2
                       ? "grid-cols-2"
                       : currentMeasurements.length === 3
@@ -186,6 +185,8 @@ export default function SizeGuild({
                   ))}
                 </div>
               </div>
+
+              {/* How to Measure Section */}
               <div className="mt-10">
                 <p className="font-avenir font-[500] text-md text-black/70">
                   HOW TO MEASURE
@@ -195,15 +196,17 @@ export default function SizeGuild({
                   take the following measurements using a soft tape measure. If
                   necessary, ask someone else to help.
                 </p>
-                <div className="flex items-center justify-center w-full mt-4">
-                  <Image
-                    src={imageSrc || guideImages.men_tops}
-                    width={500}
-                    height={200}
-                    alt={`${groupName} size guide`}
-                    className="object-contain"
-                  />
-                </div>
+                {imageSrc && (
+                  <div className="flex items-center justify-center w-full mt-4">
+                    <Image
+                      src={imageSrc}
+                      width={500}
+                      height={200}
+                      alt={`${groupName} size guide`}
+                      className="object-contain"
+                    />
+                  </div>
+                )}
                 <MeasurementInstructions gender={gender} type={type} />
               </div>
             </div>
@@ -213,7 +216,6 @@ export default function SizeGuild({
     </div>
   );
 }
-
 
 const MeasurementInstructions = ({
   gender,

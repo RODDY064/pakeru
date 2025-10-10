@@ -1,5 +1,6 @@
 "use client";
 
+import { MEASUREMENT_CONFIG } from "@/libs/sizeguilde";
 import { useApiClient } from "@/libs/useApiClient";
 import { useBoundStore } from "@/store/store";
 import { motion, cubicBezier, AnimatePresence } from "motion/react";
@@ -7,12 +8,16 @@ import Image from "next/image";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { UseFormSetValue, FieldErrors } from "react-hook-form";
 
-type SizeType =
-  | "men-shirts"
-  | "men-tops"
-  | "men-pants"
-  | "women-tops"
-  | "women-skirts-pants";
+
+  const sizeTypeOptions = Object.entries(MEASUREMENT_CONFIG).map(
+  ([id, config]) => ({
+    id,
+    label: config.label,
+    image: config.image,
+  })
+) as Array<{ id: SizeType; label: string; image: string }>;
+
+
 
 interface ClothType {
   _id?: string;
@@ -33,29 +38,7 @@ interface ClothTypeModalProps {
   register: any;
 }
 
-const sizeTypeOptions: SizeTypeOption[] = [
-  {
-    id: "men-tops",
-    label: "MEN T-SHIRTS & POLO",
-    image: "/sizes/admin/men-tshirts.png",
-  },
-  {
-    id: "men-shirts",
-    label: "MEN SHIRTS",
-    image: "/sizes/admin/men-shirts.png",
-  },
-  { id: "men-pants", label: "MEN PANTS", image: "/sizes/admin/men-pants.png" },
-  {
-    id: "women-tops",
-    label: "WOMEN TOPS",
-    image: "/sizes/admin/woman-tops.png",
-  },
-  {
-    id: "women-skirts-pants",
-    label: "WOMEN SKIRTS & PANTS",
-    image: "/sizes/admin/woman-skirts.png",
-  },
-];
+
 
 const easingShow = cubicBezier(0.4, 0, 0.2, 1);
 
@@ -80,12 +63,15 @@ const container = {
   },
 };
 
+type SizeType = keyof typeof MEASUREMENT_CONFIG;
+
 export default function ClothTypeModal({
   selectedClothType,
   errors,
   setValue,
   register,
 }: ClothTypeModalProps) {
+
   const [showClothModal, setShowClothModal] = useState(false);
   const [showEditPanel, setShowEditPanel] = useState(false);
   const [editingClothType, setEditingClothType] = useState<ClothType | null>(null);
@@ -449,8 +435,7 @@ export default function ClothTypeModal({
                           <button
                             type="button"
                             onClick={() => setSelectedSizeType(option.id)}
-                            className="flex gap-3 items-center mb-3 group w-full text-left"
-                          >
+                            className="flex gap-3 items-center mb-3 group w-full text-left">
                             <div
                               className={`size-5 border-2 rounded-full cursor-pointer p-[2px] flex items-center justify-center transition-colors ${
                                 selectedSizeType === option.id

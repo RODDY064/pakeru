@@ -6,7 +6,7 @@ export interface ProductChanges {
   colorChanges: {
     added: ProductColor[];
     updated: ProductColor[];
-    removed: string[];
+    removed: ProductColor[]; // Changed from string[] to ProductColor[]
   };
   hasChanges: boolean;
 }
@@ -19,32 +19,26 @@ export class ProductChangeDetector {
    * Deep equality check with proper handling of all types
    */
   private static deepEqual(a: any, b: any): boolean {
-    // Handle null/undefined
     if (a === b) return true;
     if (a == null || b == null) return false;
     if (typeof a !== typeof b) return false;
 
-    // Handle primitives
     if (typeof a !== "object") return a === b;
 
-    // Handle arrays
     if (Array.isArray(a) && Array.isArray(b)) {
       if (a.length !== b.length) return false;
       
-      // Sort arrays of primitives for comparison (handles tags, sizes, etc.)
       if (a.length > 0 && typeof a[0] !== "object") {
         const sortedA = [...a].sort();
         const sortedB = [...b].sort();
         return sortedA.every((item, i) => item === sortedB[i]);
       }
       
-      // For arrays of objects, compare element by element
       return a.every((item, i) => this.deepEqual(item, b[i]));
     }
 
     if (Array.isArray(a) !== Array.isArray(b)) return false;
 
-    // Handle objects
     const keysA = Object.keys(a).sort();
     const keysB = Object.keys(b).sort();
 
@@ -110,22 +104,16 @@ export class ProductChangeDetector {
   /**
    * Compare two images
    */
-  private static areImagesEqual(
-    img1: any,
-    img2: any
-  ): boolean {
+  private static areImagesEqual(img1: any, img2: any): boolean {
     const hasFile1 = img1.file instanceof File || img1.file instanceof Blob;
     const hasFile2 = img2.file instanceof File || img2.file instanceof Blob;
 
-    // If one has a new file and the other doesn't, they're different
     if (hasFile1 !== hasFile2) return false;
 
-    // If both have new files, compare file properties
     if (hasFile1 && hasFile2) {
       const file1 = img1.file;
       const file2 = img2.file;
       
-      // Compare file names, sizes, and types
       return (
         file1.name === file2.name &&
         file1.size === file2.size &&
@@ -133,8 +121,6 @@ export class ProductChangeDetector {
       );
     }
 
-    // If neither has files, compare existing image data
-    // Check _id, url, and name
     return (
       img1._id === img2._id &&
       img1.url === img2.url &&
@@ -149,7 +135,6 @@ export class ProductChangeDetector {
     color1: ProductColor,
     color2: ProductColor
   ): boolean {
-    // Compare basic fields
     if (
       color1.name?.trim() !== color2.name?.trim() ||
       color1.hex !== color2.hex ||
@@ -158,14 +143,12 @@ export class ProductChangeDetector {
       return false;
     }
 
-    // Compare sizes (order-independent)
     const sizes1 = [...(color1.sizes || [])].sort();
     const sizes2 = [...(color2.sizes || [])].sort();
     if (!this.deepEqual(sizes1, sizes2)) {
       return false;
     }
 
-    // Compare images count
     const images1 = color1.images || [];
     const images2 = color2.images || [];
     
@@ -173,20 +156,16 @@ export class ProductChangeDetector {
       return false;
     }
 
-    // Create maps of images by _id for better comparison
     const imageMap1 = new Map(images1.map((img) => [img._id, img]));
     const imageMap2 = new Map(images2.map((img) => [img._id, img]));
 
-    // Check if all image IDs match
     const ids1 = Array.from(imageMap1.keys()).sort();
     const ids2 = Array.from(imageMap2.keys()).sort();
     
     if (!this.deepEqual(ids1, ids2)) {
-      // Different image IDs means images were added/removed/reordered
       return false;
     }
 
-    // Compare each image by ID
     for (const [id, img1] of imageMap1) {
       const img2 = imageMap2.get(id);
       if (!img2 || !this.areImagesEqual(img1, img2)) {
@@ -198,7 +177,7 @@ export class ProductChangeDetector {
   }
 
   /**
-   * Detect changes in color variants with better comparison
+   * Detect changes in color variants - now returns full removed objects
    */
   static detectColorChanges(
     originalColors: ProductColor[],
@@ -207,17 +186,16 @@ export class ProductChangeDetector {
     const changes = {
       added: [] as ProductColor[],
       updated: [] as ProductColor[],
-      removed: [] as string[],
+      removed: [] as ProductColor[], // Now stores full objects
     };
 
-    // Create maps for easier lookup
     const originalMap = new Map(originalColors.map((c) => [c._id, c]));
     const currentMap = new Map(currentColors.map((c) => [c._id, c]));
 
-    // Find removed colors
+    // Find removed colors - store full objects
     originalColors.forEach((color) => {
       if (!currentMap.has(color._id)) {
-        changes.removed.push(color._id);
+        changes.removed.push(color);
       }
     });
 
@@ -226,10 +204,8 @@ export class ProductChangeDetector {
       const originalColor = originalMap.get(currentColor._id);
 
       if (!originalColor) {
-        // New color (no _id match in original)
         changes.added.push(currentColor);
       } else if (!this.areColorsEqual(originalColor, currentColor)) {
-        // Color exists but has changes
         changes.updated.push(currentColor);
       }
     });
@@ -255,12 +231,19 @@ export class ProductChangeDetector {
       colorChanges.updated.length > 0 ||
       colorChanges.removed.length > 0;
 
-    // Debug logging
     console.log("🔍 Change Detection Results:");
     console.log("  Form changes:", hasFormChanges ? formChanges : "None");
     console.log("  Colors added:", colorChanges.added.length);
     console.log("  Colors updated:", colorChanges.updated.length);
     console.log("  Colors removed:", colorChanges.removed.length);
+    
+    if (colorChanges.removed.length > 0) {
+      console.log("  Removed variants:", colorChanges.removed.map(c => ({
+        id: c._id,
+        name: c.name,
+        imageCount: c.images?.length || 0
+      })));
+    }
 
     return {
       formChanges,

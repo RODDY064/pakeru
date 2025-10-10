@@ -13,12 +13,15 @@ import { ProductData } from "@/store/dashbaord/products";
 import SizeGuild from "./size-guild";
 import ProductCare from "./productCare";
 import Cedis from "./cedis";
-import { MeasurementGroupName } from "@/libs/sizeguilde";
+import { MEASUREMENT_CONFIG, MeasurementGroupName } from "@/libs/sizeguilde";
 import ExpandableDescription from "./ExpandableDescription";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
+
+type SizeTypeId = keyof typeof MEASUREMENT_CONFIG;
+
 
 export default function ProductContainer({ nameID }: { nameID: string }) {
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -351,18 +354,14 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
     return `${letter}${mainNumber}-${checkDigit}`;
   }
 
-  const getGroupName = (sizeGuideType?: string) => {
-    if (!sizeGuideType) return MeasurementGroupName.MenShirts;
-
-    const key = sizeGuideType
-      .toLowerCase()
-      .replace(/[-_]+([a-z])/g, (_, c) => c.toUpperCase()) // convert after - or _
-      .replace(/^./, (c) =>
-        c.toUpperCase()
-      ) as keyof typeof MeasurementGroupName;
-
-    return MeasurementGroupName[key] ?? MeasurementGroupName.MenShirts;
-  };
+  const getGroupName = (sizeGuideType?: string): MeasurementGroupName => {
+  if (!sizeGuideType) return MeasurementGroupName.MenShirts;
+  
+  const normalized = sizeGuideType.toLowerCase();
+  const config = MEASUREMENT_CONFIG[normalized as SizeTypeId];
+  
+  return config?.group ?? MeasurementGroupName.MenShirts;
+};
 
 
 
@@ -783,9 +782,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
         </div>
       </div>
       <SizeGuild
-        groupName={getGroupName(
-          productData?.sizeType?.clothType?.sizeGuideType
-        )}
+        groupName={getGroupName( productData?.sizeType?.clothType?.sizeGuideType)}
       />
 
       {/* Pinch Zoom Modal */}

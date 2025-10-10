@@ -79,14 +79,14 @@ export default function Products() {
   }, [pagination]);
 
   const loadProductForPagination = async (page: number) => {
-    await loadStoreProducts(false, get);
+    await loadStoreProducts(false, get,page);
   };
 
   useEffect(() => {
     configure({
       dataKey: "storeProducts",
       loadFunction: loadProductForPagination,
-      size: 25,
+      size: 50,
     });
   }, []);
 

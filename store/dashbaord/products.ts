@@ -295,7 +295,7 @@ export const useStoreProductStore: StateCreator<
       })
     ),
 
-  loadStoreProducts: async (force = false, apiGet, limit) => {
+  loadStoreProducts: async (force = false, apiGet, limit , page = 1) => {
     const state = get();
     if (!apiGet) {
       throw new Error("API get function is required");
@@ -315,13 +315,13 @@ export const useStoreProductStore: StateCreator<
         typeof window !== "undefined" ? window.location.search : ""
       );
 
-      const page = urlParams.get("page");
+
       const createdAt = urlParams.get("createdAt");
 
       const query = new URLSearchParams();
 
-      if (page && page !== "1") {
-        query.append("page", page);
+      if (page && page !== 1) {
+        query.append("page", page.toString());
       }
 
       if (limit) {

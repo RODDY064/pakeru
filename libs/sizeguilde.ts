@@ -18,6 +18,48 @@ export enum MeasurementGroupName {
   WomenSkirtsShorts = "WOMEN SKIRTS & SHORTS",
 }
 
+
+export const MEASUREMENT_CONFIG = {
+  "men-shirts": {
+    group: MeasurementGroupName.MenShirts,
+    category: { key: "men_shirts", gender: "men", type: "tops" },
+    label: "MEN SHIRTS",
+    image: "/sizes/admin/men-shirts.png",
+  },
+  "men-tops": {
+    group: MeasurementGroupName.MenTops,
+    category: { key: "men_tops", gender: "men", type: "tops" },
+    label: "MEN T-SHIRTS & POLO",
+    image: "/sizes/admin/men-tshirts.png",
+  },
+  "men-pants": {
+    group: MeasurementGroupName.MenPants,
+    category: { key: "men_pants", gender: "men", type: "pants" },
+    label: "MEN PANTS",
+    image: "/sizes/admin/men-pants.png",
+  },
+  // "men-others": {
+  //   group: MeasurementGroupName.MenOthers,
+  //   category: { key: "men_others", gender: "men", type: "others" },
+  //   label: "MEN JACKETS & COATS",
+  //   image: "/sizes/admin/men-jackets.png",
+  // },
+  "women-tops": {
+    group: MeasurementGroupName.WomenTops,
+    category: { key: "women_tops", gender: "women", type: "tops" },
+    label: "WOMEN TOPS",
+    image: "/sizes/admin/woman-tops.png",
+  },
+  "women-skirts-pants": {
+    group: MeasurementGroupName.WomenSkirtsShorts,
+    category: { key: "women_skirts", gender: "women", type: "skirts" },
+    label: "WOMEN SKIRTS & PANTS",
+    image: "/sizes/admin/woman-skirts.png",
+  },
+} as const;
+
+
+
 export interface MeasurementItem {
   label: MeasurementLabel;
   valueCm: number;

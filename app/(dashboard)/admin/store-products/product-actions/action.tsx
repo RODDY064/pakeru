@@ -34,6 +34,7 @@ import SizeType from "@/app/ui/dashboard/sizeType";
 import Instructions from "@/app/ui/dashboard/instructions";
 import StatusBadge from "@/app/ui/dashboard/statusBadge";
 import { stripHtml } from "@/app/ui/ExpandableDescription";
+import { ProductChangeDetector } from "./changeDetector";
 
 
 export type ProductImage = {
@@ -522,73 +523,96 @@ function ProductActionsContent() {
 
  
   const onSubmit = async (data: ProductFormData) => {
-    setSubmitError("");
-    setStocksError("");
+  setSubmitError("");
+  setStocksError("");
+  console.log(data);
 
-    console.log(data)
+  // Validate form
+  const validationError = validateProductForm(data, variants);
+  if (!validationError.isValid) {
+    setSubmitError(validationError.error ?? "");
+    return;
+  }
 
-    // Validate form
-    const validationError = validateProductForm(data, variants);
-    if (!validationError.isValid) {
-      setSubmitError(validationError.error??"");
-      return; 
-    }
+  setIsSubmitting(true);
 
-    setIsSubmitting(true);
-    // debugFormData(data, variants);
+  try {
+    if (isEditMode && productID && originalData && originalColors) {
+    
+      const changes = ProductChangeDetector.detectChanges(
+        originalData,
+        originalColors,
+        data,
+        variants
+      );
 
-    try {
-      if (isEditMode && productID && originalData && originalColors) {
-        // console.log(isEditMode,'editable')
-
-        // Update existing product - send only changes
-        const result = await ProductAPIService.updateProduct(
-          productID,
-          data,
-          variants,
-          originalData,
-          originalColors,
-          patch
-        );
-
-        if (result.message === "No changes to save") {
-          setSubmitError("No changes detected to save");
-          setIsSubmitting(false);
-          setAboutToSubmit(false);
-          return;
-        }
-        // console.log("Product updated successfully:", result);
-      } else {
-        // Create new product - send all data
-        const result = await ProductAPIService.createProduct(
-          data,
-          variants,
-          post
-        );
-        // console.log("Product created successfully:", result);
+      // Check if there are any changes
+      if (!changes.hasChanges) {
+        setSubmitError("No changes detected to save");
+        setIsSubmitting(false);
+        setAboutToSubmit(false);
+        return;
       }
 
-      router.push("/admin/store-products");
-    } catch (error) {
-      console.error("💥 Submission error:", error);
-      if (error instanceof Error) {
-        setSubmitError(
-          `Failed to ${isEditMode ? "update" : "create"} product: ${
-            error.message
-          }`
-        );
-      } else {
-        setSubmitError(
-          `Failed to ${
-            isEditMode ? "update" : "create"
-          } product: An unknown error occurred`
-        );
+      // Extract removed variant IDs
+      const removedIds = changes.colorChanges.removed.map(v => v._id);
+
+      // Update existing product with removed IDs as query param
+      const result = await ProductAPIService.updateProduct(
+        productID,
+        data,
+        variants,
+        originalData,
+        originalColors,
+        patch,
+        removedIds // Pass removed IDs
+      );
+
+      if (result.message === "No changes to save") {
+        setSubmitError("No changes detected to save");
+        setIsSubmitting(false);
+        setAboutToSubmit(false);
+        return;
       }
-    } finally {
-      setIsSubmitting(false);
-      setAboutToSubmit(false);
+
+      console.log("✅ Product updated successfully");
+      
+      if (removedIds.length > 0) {
+        console.log(`🗑️ Removed ${removedIds.length} variant(s):`, removedIds);
+      }
+    } else {
+      // Create new product - send all data
+      const result = await ProductAPIService.createProduct(
+        data,
+        variants,
+        post
+      );
+
+      console.log("✅ Product created successfully");
     }
-  };
+
+    router.push("/admin/store-products");
+  } catch (error) {
+    console.error("💥 Submission error:", error);
+    if (error instanceof Error) {
+      setSubmitError(
+        `Failed to ${isEditMode ? "update" : "create"} product: ${
+          error.message
+        }`
+      );
+    } else {
+      setSubmitError(
+        `Failed to ${
+          isEditMode ? "update" : "create"
+        } product: An unknown error occurred`
+      );
+    }
+  } finally {
+    setIsSubmitting(false);
+    setAboutToSubmit(false);
+  }
+};
+
 
   useEffect(() => {
     if (variants) {

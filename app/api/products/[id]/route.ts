@@ -149,30 +149,45 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const contentType = request.headers.get("content-type") || "";
+    
+   
+    const url = new URL(request.url);
+    const removedVariantsParam = url.searchParams.get('removedVariants');
+    const removedVariantIds = removedVariantsParam ? removedVariantsParam.split(',').filter(Boolean) : [];
 
+    console.log('Removed variant IDs:', removedVariantIds);
+
+    const contentType = request.headers.get("content-type") || "";
     let body: BodyInit | undefined;
     let headers: Record<string, string> = {};
 
     if (contentType.includes("application/json")) {
       const forwardHeaders = buildForwardHeaders(request);
-      body = JSON.stringify(await request.json());
+      const jsonData = await request.json();
+      
+    
+      if (removedVariantIds.length > 0) {
+        jsonData.removedVariants = removedVariantIds;
+      }
+      
+      body = JSON.stringify(jsonData);
       headers = { ...forwardHeaders, "content-type": "application/json" };
     } else if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
-      
-      // Create a new FormData with proper handling
       const form = new FormData();
       
       for (const [key, value] of formData.entries()) {
         if (value instanceof File) {
-          // Convert File to Blob with proper metadata
           const buffer = await value.arrayBuffer();
           const blob = new Blob([buffer], { type: value.type });
           form.append(key, blob, value.name);
         } else {
           form.append(key, value);
         }
+      }
+
+      if (removedVariantIds.length > 0) {
+        form.append('removedVariants', JSON.stringify(removedVariantIds));
       }
       
       body = form as any;
@@ -182,22 +197,24 @@ export async function PATCH(
           headers[key] = value;
         }
       });
-      
       headers["cache-control"] = "no-store, no-cache, must-revalidate";
       headers["pragma"] = "no-cache";
       headers["expires"] = "0";
-      
+      headers["ngrok-skip-browser-warning"] = "true";
     } else {
       const forwardHeaders = buildForwardHeaders(request);
       body = await request.text();
       headers = forwardHeaders;
     }
 
-    console.log(body)
+    console.log('Forwarding request with removed variants:', removedVariantIds);
 
-    const cacheBustUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products/${id}`;
+    const backendUrl = new URL(`https://faaaf07094d3.ngrok-free.app/v1/products/${id}`);
+    if (removedVariantIds.length > 0) {
+      backendUrl.searchParams.set('removedVariants', removedVariantIds.join(','));
+    }
 
-    const response = await fetch(cacheBustUrl, {
+    const response = await fetch(backendUrl.toString(), {
       method: "PATCH",
       headers,
       body,
@@ -207,7 +224,6 @@ export async function PATCH(
 
     let data: any;
     const responseContentType = response.headers.get("content-type");
-    
     if (responseContentType && responseContentType.includes("application/json")) {
       try {
         const text = await response.text();

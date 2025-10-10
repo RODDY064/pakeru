@@ -43,10 +43,12 @@ export class ProductAPIService {
     currentColors: ProductColor[],
     originalData: ProductFormData,
     originalColors: ProductColor[],
-    patch: ReturnType<typeof useApiClient>["patch"]
+    patch: ReturnType<typeof useApiClient>["patch"],
+    removedVariantIds?: string[]
   ): Promise<any> {
     console.log(productId, "id");
 
+    // Use ProductChangeDetector instead of local methods
     const changes = ProductChangeDetector.detectChanges(
       originalData,
       originalColors,
@@ -59,6 +61,7 @@ export class ProductAPIService {
     }
 
     console.log("Detected changes:", changes.formChanges);
+    console.log("Removed variants:", removedVariantIds);
 
     const hasNewFiles = [
       ...changes.colorChanges.added,
@@ -69,7 +72,7 @@ export class ProductAPIService {
       )
     );
 
-    let updatePayload: FormData | Partial<ProductFormData>;
+    let updatePayload: FormData | any;
 
     if (hasNewFiles) {
       const colorsWithNewFiles = [
@@ -95,11 +98,26 @@ export class ProductAPIService {
       );
     }
 
-    console.log(updatePayload,'consle')
-   
+    // Add removed variant IDs to payload
+    if (removedVariantIds && removedVariantIds.length > 0) {
+      if (updatePayload instanceof FormData) {
+        updatePayload.append('removedVariants', JSON.stringify(removedVariantIds));
+      } else {
+        updatePayload.removedVariants = removedVariantIds;
+      }
+    }
 
+    console.log(updatePayload, 'payload with removed variants');
 
-    const updatePromise = patch(`/products/${productId}`, updatePayload, {
+    // Build URL with query params
+    const queryParams = new URLSearchParams();
+    if (removedVariantIds && removedVariantIds.length > 0) {
+      queryParams.set('removedVariants', removedVariantIds.join(','));
+    }
+    
+    const url = `/products/${productId}${queryParams.toString() ? `?${queryParams}` : ''}`;
+
+    const updatePromise = patch(url, updatePayload, {
       requiresAuth: true,
       cache: "no-store",
       next: { revalidate: 0 },
@@ -125,94 +143,6 @@ export class ProductAPIService {
       }),
       position: "top-right",
     });
-  }
-
-  static detectChanges(
-    originalData: ProductFormData,
-    originalColors: ProductColor[],
-    currentData: ProductFormData,
-    currentColors: ProductColor[]
-  ) {
-    const formChanges = this.detectFormChanges(originalData, currentData);
-    const colorChanges = this.detectColorChanges(originalColors, currentColors);
-
-    const hasFormChanges = Object.keys(formChanges).length > 0;
-    const hasColorChanges =
-      colorChanges.added.length > 0 ||
-      colorChanges.updated.length > 0 ||
-      colorChanges.removed.length > 0;
-
-    console.log("🔍 Form changes detected:", hasFormChanges, formChanges);
-    console.log("🔍 Color changes detected:", hasColorChanges, colorChanges);
-
-    return {
-      formChanges,
-      colorChanges,
-      hasChanges: hasFormChanges || hasColorChanges,
-    };
-  }
-
-  static detectFormChanges(
-    originalData: ProductFormData,
-    currentData: ProductFormData
-  ): Partial<ProductFormData> {
-    const changes: Partial<ProductFormData> = {};
-
-    // Compare each field
-    for (const key in currentData) {
-      if (key === "colors") continue; // Skip colors, handled separately
-
-      const currentValue = currentData[key as keyof ProductFormData];
-      const originalValue = originalData[key as keyof ProductFormData];
-
-      // Deep comparison for objects/arrays, shallow for primitives
-      if (JSON.stringify(currentValue) !== JSON.stringify(originalValue)) {
-        (changes as any)[key] = currentValue;
-      }
-    }
-
-    return changes;
-  }
-
-  static detectColorChanges(
-    originalColors: ProductColor[],
-    currentColors: ProductColor[]
-  ): {
-    added: ProductColor[];
-    updated: ProductColor[];
-    removed: ProductColor[];
-  } {
-    const added: ProductColor[] = [];
-    const updated: ProductColor[] = [];
-    const removed: ProductColor[] = [];
-
-    currentColors.forEach((currentColor) => {
-      const originalColor = originalColors.find(
-        (oc) => oc.name === currentColor.name
-      );
-
-      if (!originalColor) {
-        // New color
-        added.push(currentColor);
-      } else if (
-        JSON.stringify(originalColor) !== JSON.stringify(currentColor)
-      ) {
-        // Color has changes
-        updated.push(currentColor);
-      }
-    });
-
-    // Find removed colors
-    originalColors.forEach((originalColor) => {
-      const stillExists = currentColors.find(
-        (cc) => cc.name === originalColor.name
-      );
-      if (!stillExists) {
-        removed.push(originalColor);
-      }
-    });
-
-    return { added, updated, removed };
   }
 
   static async deleteProduct(
@@ -336,6 +266,7 @@ export class ProductAPIService {
 
     return formData;
   }
+
   private static buildJsonPayload(
     data: Partial<ProductFormData>,
     variants: ProductColor[],
@@ -447,18 +378,20 @@ export class ProductAPIService {
     return variants
       .map((variant) => {
         const variantData: any = {
-          color:variant.name?.trim() || variant.color?.trim() || "Unknown Color",
+          color: variant.name?.trim() || variant.color?.trim() || "Unknown Color",
           colorHex: variant.hex || "#000000",
           sizes: variant.sizes || [],
           stock: variant.stock || 0,
-          images: (variant.images || []).filter((img) => img.name?.trim()).map((img) => img.name.trim()),
+          images: (variant.images || [])
+            .filter((img) => img.name?.trim())
+            .map((img) => img.name.trim()),
         };
 
         if (isUpdate && variant._id) {
           variantData._id = variant._id;
         }
 
-        console.log(variantData)
+        console.log(variantData);
 
         return variantData;
       })
@@ -522,13 +455,13 @@ export const mapVariantsToColors = (
           _id: String(img._id ?? existingColor.images.length + imgIndex + 1),
           url: img.url,
           name:
-            img.publicId?.trim() || `image-${existingColor.images.length + imgIndex}`,
+            img.publicId?.trim() ||
+            `image-${existingColor.images.length + imgIndex}`,
           file: undefined,
         }));
         existingColor.images.push(...mappedImages);
       }
     } else {
-
       const mappedImages: ProductImage[] = (variant.images || []).map(
         (img, imgIndex) => ({
           _id: String(img._id ?? imgIndex + 1),
