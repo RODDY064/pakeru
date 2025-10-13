@@ -116,10 +116,6 @@ export default function Nav() {
   }, [isServerInitialized, products?.length, categories?.length]);
 
   useEffect(() => {
-    if (filteritems.length > 0) {
-      loadProducts(true);
-    }
-
     const handleResize = () => {
       if (window.innerWidth < 1000) {
         setIsMobile(true);

@@ -49,9 +49,7 @@ export default function ProductCon() {
         className="w-full h-full flex opacity-0 flex-col flex-none items-center justify-center pt-6 md:px-2 lg:px-8 lg:p-6"
       >
         <motion.div
-          className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out"
-          layout
-        >
+          className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out">
           {products.length === 0 ? (
             <div className="w-full flex flex-col items-center md:col-span-3 xl:col-span-4">
               <div className="w-full flex flex-col items-center ">

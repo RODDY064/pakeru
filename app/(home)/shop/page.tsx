@@ -38,7 +38,7 @@ export default function Product() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await loadProducts(true, 1, 25);
+      // await loadProducts(true, 1, 25);
       await new Promise((res) => setTimeout(res, 500));
       router.refresh();
     } finally {
