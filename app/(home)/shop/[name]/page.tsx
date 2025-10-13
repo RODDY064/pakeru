@@ -68,6 +68,7 @@ export default async function SingleProduct({
   params: Promise<{ name: string }>;
 }) {
   const { name } = await params;
+  const res = await fetchSingleProductServer(name);
 
   return (
     <>
@@ -82,7 +83,7 @@ export default async function SingleProduct({
             />
           </div>
         }>
-        <ProductContainer nameID={name} />
+        <ProductContainer nameID={name} product={res} />
       </Suspense>
     </>
   );

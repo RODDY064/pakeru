@@ -23,13 +23,13 @@ if (typeof window !== "undefined") {
 type SizeTypeId = keyof typeof MEASUREMENT_CONFIG;
 
 
-export default function ProductContainer({ nameID }: { nameID: string }) {
+export default function ProductContainer({ nameID, product }: { nameID: string, product:ProductData }) {
   const stickyRef = useRef<HTMLDivElement>(null);
   const imageDiv = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const imageDivSim = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const {
-    isMobile,
     products,
+    isMobile,
     addToCart,
     openModal,
     closeModal,
@@ -59,11 +59,11 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
   });
 
   useEffect(() => {
-    if (nameID && products.length > 0) {
-      const singleProduct = products.find((item) => item._id === nameID);
+    if (nameID && product) {
+      const singleProduct = product
       setProductData(singleProduct || null);
     }
-  }, [nameID, products]);
+  }, [nameID, product]);
 
   useEffect(() => {
     if (productData) {
@@ -371,7 +371,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
         <div className="w-1/2 h-full bg-[#f2f2f2]" />
         <div className="w-1/2 h-full bg-white" />
       </div>
-      {(cartState === "loading" || cartState === "idle") && (
+      {!product && (
         <div className="w-full flex flex-col items-center pt-36">
           <div className="h-[400px] flex items-center flex-col">
             <Image
@@ -383,7 +383,7 @@ export default function ProductContainer({ nameID }: { nameID: string }) {
           </div>
         </div>
       )}
-      {cartState === "success" && (
+      {product && (
         <div className="w-full min-h-screen flex flex-col md:flex-row  pinCon">
           <div className="w-full md:w-[50%] relative triggerDiv">
             <div
