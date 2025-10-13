@@ -13,6 +13,7 @@ interface StoreProviderProps {
   children: React.ReactNode;
   initialProducts: ProductData[];
   initialCategories: CategoryType[];
+  initialProductTotal?:number,
   Content?: { hero: HeroContent; galleries: GalleryContent } 
 }
 
@@ -20,17 +21,20 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({
   children,
   initialProducts,
   initialCategories,
+  initialProductTotal,
   Content
 }) => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   React.useEffect(() => {
     if (!isInitialized) {
+
+      console.log('intial total', initialProductTotal)
       // Initialize store with server data
-      initializeStore(initialProducts, initialCategories, Content);
+      initializeStore(initialProducts,initialCategories,initialProductTotal,Content);
       setIsInitialized(true);
     }
-  }, [initialProducts, initialCategories, isInitialized]);
+  }, [initialProducts, initialCategories,initialProductTotal,isInitialized]);
 
   return <>{children}</>;
 };

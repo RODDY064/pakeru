@@ -5,12 +5,17 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const urlObj = new URL(request.url); 
+     const searchParams = urlObj.searchParams;
+  
+     console.log([...searchParams.entries()], "initial search params");
    
     searchParams.set('_t', Date.now().toString());
     const queryString = searchParams.toString();
     
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products?${queryString}`;
+
+    console.log(url)
 
     const response = await fetch(url, {
       method: "GET",
@@ -25,6 +30,8 @@ export async function GET(request: NextRequest) {
 
     console.log(response.ok)
     const data = await response.json();
+
+    // console.log(data ,' data')
 
     return new NextResponse(JSON.stringify(data), {
       status: response.status,

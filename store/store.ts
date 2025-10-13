@@ -41,7 +41,8 @@ export type Store = ScrollStore &
   PaginationStore & {
     initializeWithServerData: (
       products: ProductData[],
-      categories: CategoryType[]
+      categories: CategoryType[],
+      productTotal?:number,
     ) => void;
     isServerInitialized: boolean;
   };
@@ -339,11 +340,11 @@ export const useBoundStore = create<Store>()(
       isServerInitialized: false,
 
       // initialization logic
-      initializeWithServerData: (products:ProductData[], categories:CategoryType[]) => {
+      initializeWithServerData: (products:ProductData[],categories:CategoryType[],productTotal) => {
         if (get().isServerInitialized) return;
 
         set((state) => {
-          state.setProducts(products);
+          state.setProducts(products,productTotal);
           state.setCategories(categories);
           state.isServerInitialized = true;
           state.syncCartWithProducts();
@@ -351,7 +352,7 @@ export const useBoundStore = create<Store>()(
         });
 
         console.log(
-          `✅ Store initialized with ${products.length} products and ${categories.length} categories`
+          `✅ Store initialized with ${productTotal} products and ${categories.length} categories and product total`
         );
       },
     })),
@@ -363,6 +364,7 @@ export const useBoundStore = create<Store>()(
 export const initializeStore = async (
   serverProducts?: ProductData[],
   serverCategories?: CategoryType[],
+  productTotal?:number,
   Content?: { hero: HeroContent; galleries: GalleryContent }
 ) => {
   if (typeof window !== "undefined") {
@@ -384,8 +386,7 @@ export const initializeStore = async (
 
       // If server data is provided, use it (this is the preferred path)
       if (serverProducts && serverCategories) {
-        useBoundStore
-          .getState().initializeWithServerData(serverProducts, serverCategories);
+        useBoundStore.getState().initializeWithServerData(serverProducts, serverCategories, productTotal);
       } else {
         // Fallback to client-side loading if no server data
         console.log(

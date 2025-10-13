@@ -31,6 +31,7 @@ export default function Products() {
     loadCategories,
     setSelectedProduct,
     getCategoryNameById,
+    storeProducttotalItems,
   } = useBoundStore();
 
   const { get } = useApiClient();
@@ -58,6 +59,10 @@ export default function Products() {
     dashboardProductErrors.products,
   ]);
 
+  useEffect(()=>{
+    console.log(storeProducttotalItems, 'store total items')
+  },[storeProducttotalItems])
+
   useEffect(() => {
     loadStoreProducts(true, get);
     loadCategories();
@@ -79,22 +84,22 @@ export default function Products() {
   }, [pagination]);
 
   const loadProductForPagination = async (page: number) => {
-    await loadStoreProducts(false, get,page);
+    await loadStoreProducts(false, get,100,page);
   };
 
   useEffect(() => {
     configure({
       dataKey: "storeProducts",
-      loadFunction: loadProductForPagination,
-      size: 50,
+      loadFunction: (page) => loadProductForPagination(pagination.page),
+      size: 25,
     });
   }, []);
 
   useEffect(() => {
     updateFromAPI({
-      total: storeProducts.length,
-      totalPages: storeProducts.length,
-      page: 1,
+      total: storeProducttotalItems,
+      totalPages: storeProducttotalItems,
+      page: pagination.page,
     });
   }, [storeProducts]);
 
@@ -252,7 +257,7 @@ export default function Products() {
     const handleReload = async () => {
     router.refresh();
     setTimeout(() => {
-      loadStoreProducts(true, get);
+      loadStoreProducts(true, get,25),pagination.page;
     }, 150);
   };
   return (

@@ -990,7 +990,7 @@ export const useCartStore: StateCreator<
           );
           state.products = [...state.products, ...newProducts];
           if (result.total !== undefined) {
-            state.totalItems = result.total;
+            state.storeProducttotalItems = result.total;
           }
 
           // Set appropriate success state

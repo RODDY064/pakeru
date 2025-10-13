@@ -106,7 +106,7 @@ export type StoreProductStore = {
   // Pagination
   currentPage: number;
   itemsPerPage: number;
-  totalItems: number;
+  storeProducttotalItems: number;
   totalPages: number;
 
   // Selection and navigation
@@ -120,7 +120,7 @@ export type StoreProductStore = {
   ) => Promise<ProductData | undefined>;
 
   // Data management
-  setProducts: (products: ProductData[]) => void;
+  setProducts: (products: ProductData[], total?:number) => void;
   clearProducts: () => void;
   loadStoreProducts: (
     force?: boolean,
@@ -217,7 +217,7 @@ export const useStoreProductStore: StateCreator<
   },
   currentPage: 1,
   itemsPerPage: 20,
-  totalItems: 0,
+  storeProducttotalItems: 0,
   totalPages: 0,
 
   // Selection and navigation
@@ -272,15 +272,17 @@ export const useStoreProductStore: StateCreator<
     };
   },
 
-  setProducts: (products: ProductData[]) => {
+  setProducts: (products: ProductData[], total) => {
     set((state) => {
+      console.log(total, 'total')
       state.products = products;
       state.storeProducts = products;
       state.cartState = products.length > 0 ? "success" : "idle";
       state.error = null;
+      state.storeProducttotalItems = total ?? products.length
     });
 
-    console.log(`Set ${products.length} products from server data`);
+    console.log(`Set ${total} products from server data`);
   },
 
   // Data management
@@ -290,7 +292,7 @@ export const useStoreProductStore: StateCreator<
         state.storeProducts = [];
         state.filteredStoreProducts = [];
         state.selectedProduct = null;
-        state.totalItems = 0;
+        state.storeProducttotalItems = 0;
         state.totalPages = 0;
       })
     ),
@@ -332,11 +334,9 @@ export const useStoreProductStore: StateCreator<
         query.append("createdAt", createdAt);
       }
 
-      // Add cache-busting timestamp
-      query.append("_t", Date.now().toString());
+      console.log(page,limit, createdAt)
 
-      const result = await apiGet<{ data: ProductData[]; total?: number }>(
-        `/products?${query.toString()}`,
+      const result = await apiGet<{ data: ProductData[]; total?: number, page?:number }>(`/products?${query.toString()}`,
         {
           cache: "no-store",
           next: { revalidate: 0 },
@@ -370,10 +370,10 @@ export const useStoreProductStore: StateCreator<
  
         state.filteredStoreProducts = [...state.storeProducts];
         if (result.total !== undefined) {
-          state.totalItems = result.total;
+          state.storeProducttotalItems = result.total;
         }
         if (force && state.pagination) {
-          state.pagination.page = 1;
+          state.pagination.page = result.page ?? 1;
         }
       })
     );
@@ -661,8 +661,7 @@ export const useStoreProductStore: StateCreator<
     set(
       produce((state: Store) => {
         state.filteredStoreProducts = filtered;
-        state.totalItems = filtered.length;
-        state.totalPages = Math.ceil(filtered.length / state.itemsPerPage);
+        // state.totalPages = Math.ceil(filtered.length / state.itemsPerPage);
       })
     );
   },
@@ -685,7 +684,7 @@ export const useStoreProductStore: StateCreator<
     set(
       produce((state: Store) => {
         state.storeProducts = products;
-        state.totalItems = products.length;
+        state.storeProducttotalItems = products.length;
         state.totalPages = Math.ceil(products.length / state.itemsPerPage);
       })
     );
@@ -709,14 +708,14 @@ export const useStoreProductStore: StateCreator<
 
   getProductStats: () => {
     const products = get().storeProducts;
+    const total = get().storeProducttotalItems
     return {
-      total: products.length,
+      total: total,
       active: products.filter((p) => p.status === "active").length,
       inactive: products.filter((p) => p.status === "inactive").length,
       outOfStock: products.filter((p) => p.status === "out-of-stock").length,
       draft: products.filter((p) => p.status === "draft").length,
-      lowStock: products.filter((p) => p.totalNumber < 10 && p.totalNumber > 0)
-        .length,
+      lowStock: products.filter((p) => p.totalNumber < 10 && p.totalNumber > 0).length,
     };
   },
 });

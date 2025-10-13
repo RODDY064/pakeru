@@ -146,7 +146,8 @@ export default async function RootLayout({
         <SessionProvider>
           <StoreProvider
             Content={content}
-            initialProducts={products}
+            initialProducts={products.products}
+            initialProductTotal={products.total}
             initialCategories={categories}>
             <OrdersWebhookProvider>
               <ToastProvider />

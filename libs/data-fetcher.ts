@@ -7,13 +7,18 @@ import { ProductData } from "@/store/dashbaord/products";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-export async function fetchProductsServer(): Promise<ProductData[]> {
+
+
+export async function fetchProductsServer(): Promise<{
+  products: ProductData[];
+  total: number;
+}> {
   try {
     const response = await fetch(`${BASE_URL}/v1/products?limit=25`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      cache:"no-store",
-      next:{ revalidate: 0}
+      cache: "no-store",
+      next: { revalidate: 0 },
     });
 
     const result = await response.json();
@@ -28,6 +33,8 @@ export async function fetchProductsServer(): Promise<ProductData[]> {
         "Invalid response format: expected { data: ProductData[] }"
       );
     }
+
+    const total = result.total;
 
     // Transform the data
     const products: ProductData[] = result.data.map((product: any) => {
@@ -47,10 +54,53 @@ export async function fetchProductsServer(): Promise<ProductData[]> {
       };
     });
 
-    return products;
+    return { products, total };
   } catch (error) {
     console.error("Failed to fetch products on server:", error);
-    return []; // Return empty array instead of throwing to prevent page crashes
+    return { products:[], total: 0 }; 
+  }
+}
+
+export async function fetchSingleProductServer(id: string): Promise<ProductData> {
+  try {
+    const response = await fetch(`${BASE_URL}/v1/products/${id}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      next: { revalidate: 0 },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch product: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+
+    if (!result || !result.data) {
+      throw new Error("Invalid response format: expected { data: ProductData }");
+    }
+
+    const product = result.data;
+    const firstVariant = product?.variants?.[0];
+
+    const transformedProduct: ProductData = {
+      ...product,
+      id: product._id,
+      colors: product.variants?.map((variant: any) => variant.color) || [],
+      selectedColor: firstVariant?._id || null,
+      mainImage: product.images?.[0]?.url || product.mainImage || "",
+      sizes: firstVariant?.sizes || [],
+      variants:
+        product.variants?.map((variant: any) => ({
+          ...variant,
+          id: variant._id,
+        })) || [],
+    };
+
+    return transformedProduct;
+  } catch (error) {
+    console.error("Failed to fetch product on server:", error);
+    throw error; 
   }
 }
 
@@ -60,7 +110,7 @@ export async function fetchCategoriesServer(): Promise<CategoryType[]> {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       next: { revalidate: 0 },
-      cache: "no-store"
+      cache: "no-store",
     });
 
     const result = await response.json();
@@ -158,7 +208,7 @@ export async function fetchContent(): Promise<
 
 // Combined fetch function for initial data
 export async function fetchInitialData() {
-  const [products, categories] = await Promise.all([
+  const [products, categories ] = await Promise.all([
     fetchProductsServer(),
     fetchCategoriesServer(),
   ]);

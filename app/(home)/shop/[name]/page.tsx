@@ -2,7 +2,7 @@ import ProductContainer from "@/app/ui/productContainer";
 import Image from "next/image";
 import React, { Suspense } from "react";
 import type { Metadata } from "next";
-import { fetchCategoriesServer, fetchProductsServer } from "@/libs/data-fetcher";
+import { fetchCategoriesServer, fetchProductsServer, fetchSingleProductServer } from "@/libs/data-fetcher";
 import { capitalize } from "@/libs/functions";
 
 function extractTextFromHtml(html: string): string {
@@ -26,9 +26,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { name: nameID } = await params;
 
-  const res = await fetchProductsServer();
+  const res = await fetchSingleProductServer(nameID);
   const catRes = await fetchCategoriesServer()
-  const singleProduct = res.find((item) => item._id === nameID);
+  const singleProduct = res
   const catData =  catRes.find((cat)=> cat._id === singleProduct?.category)
   // console.log(catRes,"new data ")
   // console.log(singleProduct, "product")
