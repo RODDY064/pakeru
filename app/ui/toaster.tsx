@@ -72,7 +72,7 @@ function Toast(props: ToastProps & { position?: string }) {
     <div
       className={`
         ${animationClass}  font-avenir inline-block self-start rounded-[26px] shadow-lg 
-        ${variantStyles[variant]} w-full md:max-w-[370px] border-[0.5px]
+        ${variantStyles[variant]} w-fit md:max-w-[370px] border-[0.5px]
         items-center px-3 transition-all duration-300 ${
           description ? "py-3 px-4" : "py-2"
         }
