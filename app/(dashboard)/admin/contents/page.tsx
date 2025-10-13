@@ -14,7 +14,7 @@ export default function Contents() {
     if (shouldRefresh) {
       const fetchData = async () => {
         const content = await fetchContent()
-        initializeStore(undefined, undefined, content)
+        initializeStore(undefined, undefined, 0,content)
       };
       fetchData();
     }
