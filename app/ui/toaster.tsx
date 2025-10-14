@@ -78,14 +78,12 @@ function Toast(props: ToastProps & { position?: string }) {
         }
         toast-item
       `}
-      onClick={() => sonnerToast.dismiss(id)}
-    >
+      onClick={() => sonnerToast.dismiss(id)}>
       <div
         className={`flex flex-1  ${
           description ? "items-start" : " items-center"
         }`}
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
         {variant === "loading" && (
           <div className="mr-1.5">
             <Image

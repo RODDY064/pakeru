@@ -89,12 +89,17 @@ export default function Nav() {
     loadProducts,
     isServerInitialized,
     categories,
+    initializeMenuItems
   } = useBoundStore();
 
   const { data: session, status } = useSession();
   const { get } = useApiClient();
 
   useStoreInitialization();
+
+   useEffect(() => {
+    initializeMenuItems();
+   }, []);
 
   useEffect(() => {
     if (paused) return;

@@ -1,7 +1,6 @@
 import { StateCreator } from "zustand";
 import { Store } from "./store";
 import { ProductData } from "./dashbaord/products";
-import { useApiClient } from "@/libs/useApiClient";
 
 type ModalDisplay = "idle" | "cart" | "menu" | "wardrobe";
 
@@ -24,6 +23,7 @@ export type ModalStore = {
   modalDisplay: ModalDisplay;
   menuItems: MenuItem[];
   isSubBarRendered: boolean;
+  menuLoading: boolean;
 
   // Actions
   openModal: (modalDisplay: ModalDisplay) => void;
@@ -39,18 +39,21 @@ export const useModalStore: StateCreator<
   [],
   ModalStore
 > = (set, get) => ({
-  // Initial state - clean and predictable
+  // --- Initial State ---
   modal: false,
   modalDisplay: "idle",
   menuItems: [],
   isSubBarRendered: false,
+  menuLoading: false,
 
-  // Open modal with specific   modalDisplay type
+  // --- Actions ---
+
   openModal: (modalDisplay) =>
     set((state) => {
       const isOpening = !state.modal;
       state.modal = isOpening;
       state.modalDisplay = modalDisplay;
+      state.menuLoading = false;
 
       if (!isOpening) {
         state.menuItems.forEach((item) => (item.isActive = false));
@@ -58,102 +61,157 @@ export const useModalStore: StateCreator<
       }
     }),
 
-  // Close modal and reset all related state
   closeModal: () =>
     set((state) => {
       state.modal = false;
       state.modalDisplay = "idle";
       state.isSubBarRendered = false;
+      state.menuLoading = false;
 
-      // Deactivate all menu items
       state.menuItems.forEach((item) => {
         item.isActive = false;
       });
 
-      // Clear search state if it exists
       if ("isSearching" in state) {
         state.isSearching = false;
       }
     }),
+toggleMenuItem: (catID: string) =>
+  set((state) => {
+    // Find the item to toggle
+    const targetItem = state.menuItems.find(item => item.category === catID);
+    
+    if (!targetItem) return;
 
-  // Toggle specific menu item, ensuring only one is active
-  toggleMenuItem: (catID) =>
-    set((state) => {
-      let hasActiveItem = false;
+    // If clicking active item - deactivate only that one
+    if (targetItem.isActive) {
+      targetItem.isActive = false;
+      state.isSubBarRendered = false;
+      return;
+    }
 
-      state.menuItems.forEach((item) => {
-        const shouldActivate = item.category === catID && !item.isActive;
-        item.isActive = shouldActivate;
-        if (shouldActivate) hasActiveItem = true;
-      });
+    // Find currently active item
+    const currentlyActive = state.menuItems.find(item => item.isActive);
+  
+    if (currentlyActive && currentlyActive.category !== catID) {
+      currentlyActive.isActive = false;
+    }
+    
+    targetItem.isActive = true;
+    state.isSubBarRendered = true;
+  }),
 
-      state.isSubBarRendered = hasActiveItem;
-    }),
-
-  // Initialize menu items from categories
+  // --- Initialize menu items from categories ---
   initializeMenuItems: async () => {
     const state = get();
+    
+    // Early return if already loading
+    if (state.menuLoading) {
+      console.log("⏳ Menu initialization already in progress...");
+      return;
+    }
+
+    console.log("🚀 Initializing menu items...");
+
+    // Set loading state immediately
+    set((draft) => {
+      draft.menuLoading = true;
+    });
 
     try {
-      if (state.categories.length === 0) {
+      // Load categories if needed
+      if (!state.categories || state.categories.length === 0) {
+        console.log("📦 Loading categories...");
         await state.loadCategories();
       }
 
-      if (state.products.length === 0) {
-        await state.loadProducts();
-      }
-
-      if (!state.categories?.length) {
-        console.warn("No product available for menu initialization");
+      // Get fresh state after categories load
+      const updatedState = get();
+      
+      if (!updatedState.categories || updatedState.categories.length === 0) {
+        console.warn("⚠️ No categories available");
+        set((draft) => {
+          draft.menuLoading = false;
+        });
         return;
       }
 
-      if (!state.categories?.length) {
-        console.warn("No categories available for menu initialization");
+      // Check if already initialized with products
+      const alreadyInitialized =
+        updatedState.menuItems.length > 0 &&
+        updatedState.menuItems.every((item) => item.menuProducts?.length > 0);
+
+      if (alreadyInitialized) {
+        console.log("✅ Menu items already initialized");
+        set((draft) => {
+          draft.menuLoading = false;
+        });
         return;
       }
+
+      // Fetch products per category in parallel
+      const menuData = await Promise.all(
+        updatedState.categories.map(async (category) => {
+          try {
+            const res = await fetch(`/api/products?category=${category._id}`);
+            
+            if (!res.ok) {
+              throw new Error(`Failed to load products for ${category.name}`);
+            }
+            
+            const products = await res.json();
+
+            return {
+              category: category.name,
+              parentCategory: category.parentCategory ?? "",
+              isActive: false,
+              image: category.image,
+              catID: category._id,
+              menuProducts: products?.data ?? [],
+            };
+          } catch (err) {
+            console.error(`❌ Error loading products for ${category.name}:`, err);
+            return {
+              category: category.name,
+              parentCategory: category.parentCategory ?? "",
+              isActive: false,
+              image: category.image,
+              catID: category._id,
+              menuProducts: [],
+            };
+          }
+        })
+      );
 
       set((draft) => {
-        draft.menuItems = state.categories.map((category) => {
-          const categoryProducts = state.products.filter(
-            (product) => product?.category === category._id
-          );
-
-          return {
-            category: category.name,
-            parentCategory: category.parentCategory ?? "",
-            isActive: false,
-            image: category.image,
-            catID: category._id,
-            menuProducts: categoryProducts,
-          };
-        });
+        draft.menuItems = menuData;
+        draft.menuLoading = false;
       });
+
+      console.log("✅ Menu items initialized successfully");
     } catch (error) {
       console.error("Failed to initialize menu items:", error);
+      set((draft) => {
+        draft.menuLoading = false;
+      });
     }
   },
 
-  // Load products for each menu category
   loadMenuProducts: async () => {
     const state = get();
 
     try {
-      // await state.loadCategories();
-
       set((draft) => {
         draft.menuItems.forEach((menuItem, index) => {
           const categoryProducts = state.products.filter(
             (product) => product?.category === menuItem.catID
           );
 
-          console.log(state.menuItems, "menu item");
-
           draft.menuItems[index].menuProducts = categoryProducts;
         });
       });
     } catch (error) {
-      console.error("Failed to load menu products:", error);
+      console.error("❌ Failed to load menu products:", error);
     }
   },
 });

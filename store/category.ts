@@ -69,55 +69,65 @@ export const useCategory: StateCreator<
     });
   },
 
-  // Your existing loadCategories method (now mainly for client-side refresh)
-  loadCategories: async () => {
-    set((state) => {
-      state.isCategoriesLoading = true;
-      state.categoriesError = null;
+loadCategories: async () => {
+  const state = get();
+
+ 
+  if (state.categories && state.categories.length > 0) {
+    console.log("Categories already loaded — skipping fetch.");
+    return;
+  }
+
+  set((draft) => {
+    draft.isCategoriesLoading = true;
+    draft.categoriesError = null;
+  });
+
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    if (!baseUrl) {
+      throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
+    }
+
+    const response = await apiCall("/categories", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
     });
 
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-      if (!baseUrl) {
-        throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
-      }
+    const result = response;
 
-      const response = await apiCall("/categories", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        cache:"no-store"
-      });
-
-      const result = response;
-
-      if (!result || !Array.isArray(result.data)) {
-        throw new Error("Invalid categories response format");
-      }
-
-      const categories: CategoryType[] = result.data.map((item: any) => ({
-        _id: item._id,
-        name: item.name,
-        description: item.description ?? "",
-        parentCategory: item.parentCategory ?? "",
-        createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
-        updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
-        image: item.image ?? "",
-      }));
-
-      // Use the setter method
-      get().setCategories(categories);
-    } catch (error) {
-      console.error("Failed to load categories:", error);
-      set((state) => {
-        state.isCategoriesLoading = false;
-        state.categoriesError =
-          error instanceof Error ? error.message : "Failed to load categories";
-      });
-      throw error;
+    if (!result || !Array.isArray(result.data)) {
+      throw new Error("Invalid categories response format");
     }
-  },
+
+    const categories: CategoryType[] = result.data.map((item: any) => ({
+      _id: item._id,
+      name: item.name,
+      description: item.description ?? "",
+      parentCategory: item.parentCategory ?? "",
+      createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
+      image: item.image ?? "",
+    }));
+
+    // ✅ Use setter to store categories
+    get().setCategories(categories);
+
+  } catch (error) {
+    console.error("Failed to load categories:", error);
+    set((draft) => {
+      draft.isCategoriesLoading = false;
+      draft.categoriesError =
+        error instanceof Error ? error.message : "Failed to load categories";
+    });
+    throw error;
+  } finally {
+    set((draft) => {
+      draft.isCategoriesLoading = false;
+    });
+  }
+},
   // Updated createCategory with toast
   createCategory: async (categoryData: any, post) => {
     const createPromise = (async () => {

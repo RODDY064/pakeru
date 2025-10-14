@@ -150,7 +150,7 @@ useEffect(() => {
             <div className="mt-12 px-4 xl:px-8 w-full flex flex-col items-center text-black home-main transition-all">
               <p className="w-full font-avenir text-lg">Products</p>
               <div className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out mt-10">
-                {(isDesktop ? productsLink.slice(4) : productsLink).map(
+                {(isDesktop ? productsLink.slice(4) : productsLink.slice(0,10)).map(
                   (item) => (
                     <ProductCard
                       key={item._id}

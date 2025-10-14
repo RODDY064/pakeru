@@ -39,10 +39,10 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
     addBookmark,
     isBookmarked,
     setSizeGuild,
+    addProductToStore
   } = useBoundStore();
   const [showButtons, setShowButtons] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [productData, setProductData] = useState<ProductData | null>(null);
   const [colorActive, setColorActive] = useState({ _id: "", name: "" });
   const [sizeSelected, setSizeSelected] = useState<{
     shown: boolean;
@@ -51,24 +51,29 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
 
   // Mobile scroll state
   const [mobileScrollIndex, setMobileScrollIndex] = useState(0);
-
   // Pinch zoom states
   const [pinchZoom, setPinchZoom] = useState({
     show: false,
     currentImageIndex: 0,
   });
 
-  useEffect(() => {
-    if (nameID && product) {
-      const singleProduct = product
-      setProductData(singleProduct || null);
-    }
-  }, [nameID, product]);
 
   useEffect(() => {
-    if (productData) {
-      const activeVariant = productData.variants?.find(
-        (variant) => variant._id === productData.selectedColor
+  if (!product) return;
+  
+  console.log('Syncing product to store:', product._id);
+  addProductToStore(product);
+}, [product?._id, addProductToStore]);
+
+  const currentProduct = useMemo(() => {
+  const storeProduct = products.find(p => p._id === product?._id);
+  return storeProduct || product; 
+}, [products, product?._id]);
+
+  useEffect(() => {
+    if (currentProduct) {
+      const activeVariant = currentProduct.variants?.find(
+        (variant) => variant._id === currentProduct.selectedColor
       );
 
       if (activeVariant) {
@@ -78,7 +83,7 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
         });
       }
     }
-  }, [productData]);
+  }, [currentProduct, ]);
 
   // Reset mobile scroll when color changes
   useEffect(() => {
@@ -256,7 +261,7 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
       sticky.style.top = originalTop;
       sticky.style.transform = "none";
     };
-  }, [colorActive, productData, isMobile]);
+  }, [colorActive, currentProduct, isMobile]);
 
   // buttons ref
   const prevBtnRef = useRef<HTMLButtonElement>(
@@ -288,9 +293,9 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
     openModal("cart");
   };
 
-  const handleSize = (id: string, newSize: string) => {
+  const handleSize = async(id: string, newSize: string) => {
     setSizeSelected({ active: true, shown: false });
-    updateSize(id, newSize);
+    await updateSize(id, newSize);
   };
 
   // Mobile navigation functions
@@ -307,7 +312,7 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
   const goToNextImage = () => {
     if (!imageDiv.current || !isMobile) return;
     const currentImages =
-      productData?.variants.find((variant) => variant._id === colorActive._id)
+      currentProduct?.variants.find((variant) => variant._id === colorActive._id)
         ?.images || [];
     const itemWidth = imageDiv.current.offsetWidth;
     const newIndex = Math.min(currentImages.length - 1, mobileScrollIndex + 1);
@@ -320,7 +325,7 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
   // Get all product images
   const getProductImages = () => {
     const images: { _id: string; publicId: string; url: string }[] = [];
-    const variantImg = productData?.variants.find(
+    const variantImg = currentProduct?.variants.find(
       (variant) => variant._id === colorActive._id
     )?.images;
     if (variantImg) {
@@ -334,12 +339,8 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
     return images;
   };
 
-  const currentImages = useMemo(() => {
-    return (
-      productData?.variants.find((variant) => variant._id === colorActive._id)
-        ?.images || []
-    );
-  }, [productData, colorActive?._id]);
+  const currentImages = useMemo(() => {return (currentProduct?.variants.find((variant) => variant._id === colorActive._id)?.images || []);
+   }, [currentProduct, colorActive?._id]);
 
   function generateSequentialCoolId(mongoId: string) {
     if (!mongoId) return;
@@ -412,7 +413,7 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                       src={img.url}
                       fill
                       className="object-cover select-none"
-                      alt={productData?.name || "Product image"}
+                      alt={currentProduct?.name || "Product image"}
                       onLoad={() => ScrollTrigger.refresh()}
                     />
                   </div>
@@ -494,15 +495,15 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
             <div className="w-full px-6 md:px-8 md:w-[90%] lg:w-[80%] xl:w-[60%]">
               <div className="flex justify-between items-center">
                 <p className="text-black/50 text-sm font-[300] font-avenir">
-                  {generateSequentialCoolId(productData?._id as string)}
+                  {generateSequentialCoolId(currentProduct?._id as string)}
                 </p>
                 <Image
-                  onClick={() => addBookmark(productData as ProductData)}
+                  onClick={() => addBookmark(currentProduct as ProductData)}
                   src={
                     isBookmarked(
-                      productData?._id as string,
-                      productData?.selectedColor,
-                      productData?.selectedSize
+                      currentProduct?._id as string,
+                      currentProduct?.selectedColor,
+                      currentProduct?.selectedSize
                     )
                       ? "/icons/bookmark2.svg"
                       : "/icons/bookmark.svg"
@@ -518,15 +519,15 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                   NEW
                 </p>
                 <p className="font-avenir font-[400] text-lg">
-                  {productData?.name.toLocaleUpperCase()}
+                  {currentProduct?.name.toLocaleUpperCase()}
                 </p>
                 <div className="text-black/50 flex gap-0.5 items-center">
                   <Cedis cedisStyle="pt-[4px]" />
                   <p className="text-black/50 font-avenir font-[400] text-md pt-[7px]">
-                    {productData?.price}
+                    {currentProduct?.price}
                   </p>
                 </div>
-                <ExpandableDescription description={productData?.description as string} />
+                <ExpandableDescription description={currentProduct?.description as string} />
               </div>
               <div className="my-4 mt-10 md:mt-6">
                 <div className="flex items-center gap-2">
@@ -539,21 +540,18 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                   </div>
                 </div>
                 <div className="my-3 grid grid-cols-4 gap-3 md:gap-4 w-fit">
-                  {productData?.variants.map((variant, index) => (
+                  {currentProduct?.variants.map((variant, index) => (
                     <div key={index}>
                       <div
-                        onClick={() =>
-                          updateColor(productData?._id, variant._id)
-                        }
+                        onClick={async() => await updateColor(currentProduct?._id, variant._id)}
                         key={variant._id}
                         className={cn(
                           "size-16 md:w-18 lg:size-20 border border-black/30 rounded-xl cursor-pointer relative overflow-hidden p-[3px]",
                           {
                             "border-2":
-                              variant._id === productData?.selectedColor,
+                              variant._id === currentProduct?.selectedColor,
                           }
-                        )}
-                      >
+                        )}>
                         <div className="w-full h-full relative overflow-hidden rounded-lg">
                           <Image
                             src={variant.images[0].url}
@@ -575,27 +573,26 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                     >
                       SIZE
                     </p>
-                    <p
+                    {currentProduct.category !== "68ea8ee3cf3605764e57a870" &&
+                      <p
                       onClick={setSizeGuild}
-                      className="underline text-sm font-avenir font-[400] underline-offset-4 underline-black/40 text-black/30 cursor-pointer"
-                    >
+                      className="underline text-sm font-avenir font-[400] underline-offset-4 underline-black/40 text-black/30 cursor-pointer">
                       SIZE GUIDE
-                    </p>
+                    </p>}
                   </div>
                   <div className="w-full flex items-center gap-2 md:gap-3 my-4">
-                    {productData?.sizes?.map((item) => (
+                    {currentProduct?.sizes?.map((item) => (
                       <div
-                        onClick={() => handleSize(productData._id, item)}
+                        onClick={async() => await handleSize(currentProduct._id, item)}
                         key={item}
                         className={cn(
                           "w-12 md:w-16 h-10 flex items-center justify-center rounded-[8px] hover:bg-black hover:text-white border-[0.5px] border-black/10 cursor-pointer bg-gray-100",
                           {
                             "bg-black text-white":
-                              item === productData.selectedSize,
+                              item === currentProduct.selectedSize,
                             "border-red-500 bg-red-100": sizeSelected.shown,
                           }
-                        )}
-                      >
+                        )}>
                         <p className="font-avenir text-xs">
                           {item.toUpperCase()}
                         </p>
@@ -604,7 +601,7 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                   </div>
                 </div>
                 <div
-                  onClick={() => handleAdd(productData as ProductData)}
+                  onClick={() => handleAdd(currentProduct as ProductData)}
                   className="mt-10 rounded py-2.5 flex items-center justify-center gap-3 w-full bg-black hover:bg-green-500 hover:border-green-500 border border-black/20 group/add cursor-pointer transition-all"
                 >
                   <p className="font-avenir font-[400] text-sm pt-[4px] text-white">
@@ -621,8 +618,8 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                 </div>
                 <div className="mt-8 w-full pt-10">
                   <ProductCare
-                    care={productData?.productCare}
-                    instructions={productData?.washInstructions}
+                    care={currentProduct?.productCare}
+                    instructions={currentProduct?.washInstructions}
                     onToggle={() => {
                       setTimeout(() => {
                         ScrollTrigger.refresh();
@@ -670,12 +667,12 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                 </div>
               ) : (
                 <>
-                  {(productData
+                  {(currentProduct
                     ? products
                         .filter(
                           (prod) =>
-                            prod.category === productData.category &&
-                            prod._id !== productData._id
+                            prod.category === currentProduct.category &&
+                            prod._id !== currentProduct._id
                         )
                         .slice(0, 10)
                     : []
@@ -692,12 +689,12 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
               )}
             </div>
           </div>
-          {(productData
+          {(currentProduct
             ? products
                 .filter(
                   (prod) =>
-                    prod.category === productData.category &&
-                    prod._id !== productData._id
+                    prod.category === currentProduct.category &&
+                    prod._id !== currentProduct._id
                 )
                 .slice(0, 10)
             : []
@@ -781,14 +778,15 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
           )}
         </div>
       </div>
+      
       <SizeGuild
-        groupName={getGroupName( productData?.sizeType?.clothType?.sizeGuideType)}
+        groupName={getGroupName( currentProduct?.sizeType?.clothType?.sizeGuideType)}
       />
 
       {/* Pinch Zoom Modal */}
       {pinchZoom.show && (
         <PinchZoom
-          title={productData?.name || "Product"}
+          title={currentProduct?.name || "Product"}
           images={getProductImages()}
           show={pinchZoom.show}
           currentIndex={pinchZoom.currentImageIndex}

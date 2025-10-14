@@ -30,11 +30,12 @@ export default function Menu() {
     bookMarks,
     closeModal,
     initializeMenuItems,
+    menuLoading,
   } = useBoundStore();
   const [currentActiveItem, setCurrentActiveItem] = useState<string | null>(
     null
   );
-  const [isTransitioning, setIsTransitioning] = useState(false);
+
   const [contentKey, setContentKey] = useState(0);
   const router = useRouter();
 
@@ -73,11 +74,8 @@ export default function Menu() {
   );
 
   useEffect(() => {
-    const fetchMenuItems = async () => {
-      await initializeMenuItems();
-    };
-    fetchMenuItems();
-  }, [initializeMenuItems]);
+    initializeMenuItems();
+  }, []);
 
   const groupedMenuItems = useMemo(() => {
     const groups: Record<string, MenuItem[]> = {};
@@ -100,12 +98,10 @@ export default function Menu() {
 
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
 
-
-
   const toggleGroup = useCallback((parent: string) => {
     setOpenGroups((prev) => {
       if (prev.has(parent)) {
-        return new Set(); 
+        return new Set();
       }
       return new Set([parent]);
     });
@@ -114,22 +110,13 @@ export default function Menu() {
   const handleItemTransition = useCallback(
     (newActiveTitle: string | null) => {
       if (newActiveTitle !== currentActiveItem) {
-        if (currentActiveItem !== null && newActiveTitle !== null) {
-          setIsTransitioning(true);
-          setTimeout(() => {
-            setCurrentActiveItem(newActiveTitle);
-            setContentKey((prev) => prev + 1);
-            setIsTransitioning(false);
-          }, 150);
-        } else {
-          setCurrentActiveItem(newActiveTitle);
-          setContentKey((prev) => prev + 1);
-          setIsTransitioning(false);
-        }
+        setCurrentActiveItem(newActiveTitle);
       }
     },
     [currentActiveItem]
   );
+
+
 
   const handleMobileMenuClick = useCallback(
     (itemTitle: string) => {
@@ -145,9 +132,9 @@ export default function Menu() {
   );
 
   useEffect(() => {
-    const newActiveTitle = activeMenuItem?.category || null;
-    handleItemTransition(newActiveTitle);
-  }, [activeMenuItem, handleItemTransition]);
+  const newActiveTitle = activeMenuItem?.category || null;
+  handleItemTransition(newActiveTitle);
+}, [activeMenuItem, handleItemTransition]);
 
   const handlePush = (category: string) => {
     router.push(`/shop?category=${category.toLocaleLowerCase()}`);
@@ -166,7 +153,8 @@ export default function Menu() {
           <div
             onClick={() => handlePush(data.category)}
             key={`${data?.image?._id}-img-${data.category}`}
-            className={cn("h-fit cursor-pointer w-full")}>
+            className={cn("h-fit cursor-pointer w-full")}
+          >
             <Link href={`/shop?category=${data.category}`}>
               <div className="w-full h-[30dvh] relative overflow-hidden border-b border-black/20">
                 <Image
@@ -203,13 +191,12 @@ export default function Menu() {
                     className="w-full py-2 px-4 grid grid-flow-col auto-cols-[minmax(300,2fr)] md:auto-cols-[minmax(100,270px)]  pr-20 nav-slider "
                   >
                     <motion.div
-                      key={`${data.category}-products-${contentKey}`}
+                      key={data.category+"hello"}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="flex gap-3 w-full relative "
-                    >
+                      className="flex gap-3 w-full relative">
                       {memoizedProducts.map((product, index) => (
                         <motion.div
                           className="w-full"
@@ -227,7 +214,7 @@ export default function Menu() {
                       ))}
                     </motion.div>
                   </div>
-                </AnimatePresence>       
+                </AnimatePresence>
               </div>
             </>
           )}
@@ -339,6 +326,13 @@ export default function Menu() {
 
   const { data: session } = useSession();
 
+  const handleMenuClick = useCallback(
+    (catID: string) => {
+      toggleMenuItem(catID);
+    },
+    [toggleMenuItem]
+  );
+
   return (
     <AnimatePresence>
       {/* Desktop */}
@@ -352,7 +346,7 @@ export default function Menu() {
       >
         <div className="w-full h-full flex flex-none">
           <div className="w-full flex flex-none flex-col gap-1 pt-[120px] px-9 overflow-y-auto">
-            {menuItems?.length === 0 ? (
+            {menuItems?.length === 0 || menuLoading ? (
               <div className="w-full min-h-[300px] flex items-center justify-center">
                 <div className="flex items-center gap-0">
                   <Image
@@ -417,7 +411,7 @@ export default function Menu() {
                                     "text-black/30": item.isActive,
                                   }
                                 )}
-                                onClick={() => toggleMenuItem(item.category)}
+                                onClick={() => handleMenuClick(item.category)}
                               >
                                 <p className="font-avenir uppercase">
                                   {item.category}
@@ -446,7 +440,7 @@ export default function Menu() {
                     {groupedMenuItems.ungrouped.map((item, index) => (
                       <motion.div
                         variants={list}
-                        onClick={() => toggleMenuItem(item.category)}
+                        onClick={() => handleMenuClick(item.category)}
                         key={`ungrouped-${item.category}-${index}`}
                         className={cn(
                           "font-avenir w-fit text-md hover:text-black/60 cursor-pointer relative text-black z-20 transition-colors duration-200",
@@ -502,19 +496,17 @@ export default function Menu() {
             animate={isSubBarRendered ? "visible" : "hide"}
             initial="hide"
             exit="hide"
-            className="mini-[160%] h-full relative top-0 bg-white flex flex-none border-l border-black/20 "
-          >
+            className="mini-[160%] h-full relative top-0 bg-white flex flex-none border-l border-black/20 ">
             <motion.div variants={menuChild} className="w-full h-full">
               <AnimatePresence mode="wait">
-                {currentActiveItem && !isTransitioning && (
+                {currentActiveItem && (
                   <motion.div
-                    key={`content-${currentActiveItem}-${contentKey}`}
+                   key={currentActiveItem}
                     variants={contentFade}
                     initial="hidden"
                     animate="visible"
                     exit="hidden"
-                    className="w-full h-full"
-                  >
+                    className="w-full h-full">
                     {RenderTAB(currentActiveItem)}
                   </motion.div>
                 )}
@@ -523,7 +515,6 @@ export default function Menu() {
           </motion.div>
         </div>
       </motion.div>
-
       {/* Mobile */}
       <motion.div
         variants={mobileCon}
@@ -670,9 +661,9 @@ export default function Menu() {
           </motion.div>
         </div>
       </motion.div>
-
       {/* mobile nav */}
-      <AnimatePresence mode="wait">
+      <motion.div variants={menuChild} className="w-full h-full">
+         <AnimatePresence mode="wait">
         {showMobileSubMenu && mobileActiveItem && (
           <motion.div
             key={`content-${showMobileSubMenu}-${contentKey}`}
@@ -680,12 +671,12 @@ export default function Menu() {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white"
-          >
+            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white">
             {RenderMobileTAB(mobileActiveItem)}
           </motion.div>
         )}
       </AnimatePresence>
+      </motion.div>
     </AnimatePresence>
   );
 }
