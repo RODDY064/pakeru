@@ -438,7 +438,7 @@ const apiService = {
         }
       );
 
-      // console.log(response, 'order');
+      console.log(response, 'order');
 
      return transformApiOrderToOrdersData(response.order)
     } catch (error) {
@@ -452,6 +452,10 @@ const apiService = {
     get: ReturnType<typeof useApiClient>["get"]
   ): Promise<OrdersData[]> {
     try {
+
+
+      console.log("hello")
+
       const myOrder = "myOrder";
       const endpoint = `/orders/my/${myOrder}`;
 
@@ -466,6 +470,7 @@ const apiService = {
       if (!Array.isArray(orders)) {
         throw new Error("Expected orders array from API");
       }
+      
 
       return transformApiOrdersToOrdersData(orders);
     } catch (error) {

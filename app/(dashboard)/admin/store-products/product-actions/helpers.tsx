@@ -8,7 +8,7 @@ import { ProductChangeDetector } from "./changeDetector";
 
 export class ProductAPIService {
   private static readonly MAX_FILE_SIZE = 1024 * 1024; // 1MB
-  private static readonly MAX_TOTAL_SIZE = 45 * 1024 * 1024; // 45MB
+  private static readonly MAX_TOTAL_SIZE = 10 * 1024 * 1024; // 45MB
 
   static async createProduct(
     data: ProductFormData,

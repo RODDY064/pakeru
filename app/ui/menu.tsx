@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useApiClient } from "@/libs/useApiClient";
+import { debounce } from "lodash";
 
 export default function Menu() {
   const {
@@ -72,6 +73,7 @@ export default function Menu() {
     () => menuItems.find((item) => item.isActive),
     [menuItems]
   );
+  const latestActiveItemRef = useRef<string | null>(null);
 
   useEffect(() => {
     initializeMenuItems();
@@ -107,16 +109,14 @@ export default function Menu() {
     });
   }, []);
 
-  const handleItemTransition = useCallback(
-    (newActiveTitle: string | null) => {
+  const debouncedHandleItemTransition = useCallback(
+    debounce((newActiveTitle: string | null) => {
       if (newActiveTitle !== currentActiveItem) {
         setCurrentActiveItem(newActiveTitle);
       }
-    },
+    }, 100), // 100ms debounce delay
     [currentActiveItem]
   );
-
-
 
   const handleMobileMenuClick = useCallback(
     (itemTitle: string) => {
@@ -132,9 +132,16 @@ export default function Menu() {
   );
 
   useEffect(() => {
-  const newActiveTitle = activeMenuItem?.category || null;
-  handleItemTransition(newActiveTitle);
-}, [activeMenuItem, handleItemTransition]);
+    const newActiveTitle = activeMenuItem?.category || null;
+    latestActiveItemRef.current = newActiveTitle;
+    debouncedHandleItemTransition(newActiveTitle);
+  }, [activeMenuItem, debouncedHandleItemTransition]);
+
+  useEffect(() => {
+    return () => {
+      debouncedHandleItemTransition.cancel();
+    };
+  }, [debouncedHandleItemTransition]);
 
   const handlePush = (category: string) => {
     router.push(`/shop?category=${category.toLocaleLowerCase()}`);
@@ -147,14 +154,21 @@ export default function Menu() {
       [data.menuProducts]
     );
 
+    const productsKey = useMemo(
+      () => data.menuProducts?.map((p) => p._id).join("-") || "empty",
+      [data.menuProducts]
+    );
+
+    const getContentKey = useCallback((category: string) => {
+        return `content-${category}-${contentKey}`},[contentKey]);
+
     return (
       <div className="w-full h-full flex- flex-col ">
         <div className="w-full flex">
           <div
             onClick={() => handlePush(data.category)}
-            key={`${data?.image?._id}-img-${data.category}`}
-            className={cn("h-fit cursor-pointer w-full")}
-          >
+            key={getContentKey(data.category)}
+            className={cn("h-fit cursor-pointer w-full")}>
             <Link href={`/shop?category=${data.category}`}>
               <div className="w-full h-[30dvh] relative overflow-hidden border-b border-black/20">
                 <Image
@@ -191,12 +205,13 @@ export default function Menu() {
                     className="w-full py-2 px-4 grid grid-flow-col auto-cols-[minmax(300,2fr)] md:auto-cols-[minmax(100,270px)]  pr-20 nav-slider "
                   >
                     <motion.div
-                      key={data.category+"hello"}
+                      key={productsKey}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex gap-3 w-full relative">
+                      transition={{ duration: 0.15 }}
+                      className="flex gap-3 w-full relative"
+                    >
                       {memoizedProducts.map((product, index) => (
                         <motion.div
                           className="w-full"
@@ -447,8 +462,7 @@ export default function Menu() {
                           {
                             "text-black/30": item.isActive,
                           }
-                        )}
-                      >
+                        )}>
                         <p className="font-avenir uppercase">{item.category}</p>
                         <motion.div
                           className="w-full h-[1px]"
@@ -496,12 +510,13 @@ export default function Menu() {
             animate={isSubBarRendered ? "visible" : "hide"}
             initial="hide"
             exit="hide"
-            className="mini-[160%] h-full relative top-0 bg-white flex flex-none border-l border-black/20 ">
+            className="mini-[160%] h-full relative top-0 bg-white flex flex-none border-l border-black/20 "
+          >
             <motion.div variants={menuChild} className="w-full h-full">
               <AnimatePresence mode="wait">
                 {currentActiveItem && (
                   <motion.div
-                   key={currentActiveItem}
+                    key={currentActiveItem}
                     variants={contentFade}
                     initial="hidden"
                     animate="visible"
@@ -663,19 +678,19 @@ export default function Menu() {
       </motion.div>
       {/* mobile nav */}
       <motion.div variants={menuChild} className="w-full h-full">
-         <AnimatePresence mode="wait">
-        {showMobileSubMenu && mobileActiveItem && (
-          <motion.div
-            key={`content-${showMobileSubMenu}-${contentKey}`}
-            variants={contentFade}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            className="w-full h-full fixed top-0 pt-32 z-[99] bg-white">
-            {RenderMobileTAB(mobileActiveItem)}
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <AnimatePresence mode="wait">
+          {showMobileSubMenu && mobileActiveItem && (
+            <motion.div
+              key={`content-${showMobileSubMenu}-${contentKey}`}
+              variants={contentFade}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              className="w-full h-full fixed top-0 pt-32 z-[99] bg-white">
+              {RenderMobileTAB(mobileActiveItem)}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );

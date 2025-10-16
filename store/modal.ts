@@ -24,6 +24,8 @@ export type ModalStore = {
   menuItems: MenuItem[];
   isSubBarRendered: boolean;
   menuLoading: boolean;
+  lastToggleTime: number;
+  toggleCooldown: number;
 
   // Actions
   openModal: (modalDisplay: ModalDisplay) => void;
@@ -45,6 +47,8 @@ export const useModalStore: StateCreator<
   menuItems: [],
   isSubBarRendered: false,
   menuLoading: false,
+  lastToggleTime: 0,
+  toggleCooldown: 150,
 
   // --- Actions ---
 
@@ -76,35 +80,67 @@ export const useModalStore: StateCreator<
         state.isSearching = false;
       }
     }),
-toggleMenuItem: (catID: string) =>
-  set((state) => {
-    // Find the item to toggle
-    const targetItem = state.menuItems.find(item => item.category === catID);
-    
-    if (!targetItem) return;
 
-    // If clicking active item - deactivate only that one
-    if (targetItem.isActive) {
-      targetItem.isActive = false;
-      state.isSubBarRendered = false;
+  toggleMenuItem: (catID: string) => {
+    const now = Date.now();
+    const { lastToggleTime, toggleCooldown, menuItems } = get();
+
+    // Prevent rapid toggles within cooldown period
+    if (now - lastToggleTime < toggleCooldown) {
       return;
     }
 
-    // Find currently active item
-    const currentlyActive = state.menuItems.find(item => item.isActive);
-  
-    if (currentlyActive && currentlyActive.category !== catID) {
-      currentlyActive.isActive = false;
-    }
-    
-    targetItem.isActive = true;
-    state.isSubBarRendered = true;
-  }),
+    set((state) => {
+      // Find the item to toggle
+      const targetItem = state.menuItems.find(
+        (item) => item.category === catID
+      );
+
+      if (!targetItem) return state;
+
+      // If clicking active item - deactivate only that one
+      if (targetItem.isActive) {
+        return {
+          ...state,
+          menuItems: state.menuItems.map((item) =>
+            item.category === catID ? { ...item, isActive: false } : item
+          ),
+          isSubBarRendered: false,
+          lastToggleTime: now,
+        };
+      }
+
+      // Find currently active item
+      const currentlyActive = state.menuItems.find((item) => item.isActive);
+
+      // Deactivate current active item if different
+      const updatedItems = state.menuItems.map((item) => {
+        if (
+          currentlyActive &&
+          currentlyActive.category !== catID &&
+          item.category === currentlyActive.category
+        ) {
+          return { ...item, isActive: false };
+        }
+        if (item.category === catID) {
+          return { ...item, isActive: true };
+        }
+        return item;
+      });
+
+      return {
+        ...state,
+        menuItems: updatedItems,
+        isSubBarRendered: true,
+        lastToggleTime: now,
+      };
+    });
+  },
 
   // --- Initialize menu items from categories ---
   initializeMenuItems: async () => {
     const state = get();
-    
+
     // Early return if already loading
     if (state.menuLoading) {
       console.log("⏳ Menu initialization already in progress...");
@@ -127,7 +163,7 @@ toggleMenuItem: (catID: string) =>
 
       // Get fresh state after categories load
       const updatedState = get();
-      
+
       if (!updatedState.categories || updatedState.categories.length === 0) {
         console.warn("⚠️ No categories available");
         set((draft) => {
@@ -154,11 +190,11 @@ toggleMenuItem: (catID: string) =>
         updatedState.categories.map(async (category) => {
           try {
             const res = await fetch(`/api/products?category=${category._id}`);
-            
+
             if (!res.ok) {
               throw new Error(`Failed to load products for ${category.name}`);
             }
-            
+
             const products = await res.json();
 
             return {
@@ -170,7 +206,10 @@ toggleMenuItem: (catID: string) =>
               menuProducts: products?.data ?? [],
             };
           } catch (err) {
-            console.error(`❌ Error loading products for ${category.name}:`, err);
+            console.error(
+              `❌ Error loading products for ${category.name}:`,
+              err
+            );
             return {
               category: category.name,
               parentCategory: category.parentCategory ?? "",

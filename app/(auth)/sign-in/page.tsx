@@ -23,9 +23,7 @@ type SignInSchema = z.infer<typeof SignInType>;
 
 // Form component that uses search params
 function SignInForm() {
-  const [signInState, setSignState] = useState<
-    "loading" | "idle" | "submitted" | "error" | "unverified"
-  >("idle");
+  const [signInState, setSignState] = useState<"loading" | "idle" | "submitted" | "error" | "unverified">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 

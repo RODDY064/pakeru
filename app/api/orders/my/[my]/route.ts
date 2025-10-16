@@ -48,15 +48,19 @@ export async function GET(
     const { my } = await params;
     const token = await extractTokenFromRequest(request);
 
+    console.log(token)
+
     const response = await fetch(`${BASE_URL}/v1/orders/my`, {
       method: "GET",
       headers: getForwardHeaders(request, token),
       cache: "no-store",
     });
 
+    console.log(response)
+
     const data = await response.json();
 
-    // console.log("user order", data);
+    console.log("user order", data);
 
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {
