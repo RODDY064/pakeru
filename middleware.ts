@@ -3,7 +3,7 @@ import { auth } from "./auth";
 import { RateLimiterMemory } from "rate-limiter-flexible";
 
 export const ROUTES = {
-  protected: ["/payment", "/admin", "/account"],
+  protected: ["/payment", "/admin", "/account", "/checkout", "/orders"],
   public: ["/", "/collections", "/products", "/blog", "/about"],
   auth: ["/sign-in", "/sign-up", "/forgot-password", "/reset-password"],
   api: ["/api"],
@@ -61,11 +61,9 @@ const rateLimiters = {
   general: createMemoryLimiter(3000, 15 * 60),
 } as const;
 
-
 function getClientIP(req: NextRequest) {
   return req.headers.get("x-forwarded-for") || "unknown";
 }
-
 
 async function handleRateLimit(
   ip: string,
@@ -111,7 +109,7 @@ async function handleRateLimit(
 const authAttempts = new Map();
 
 export default auth(async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const { pathname, search } = req.nextUrl;
   const ip = getClientIP(req);
   const userAgent = req.headers.get("user-agent") || "";
   const isMobile = /Mobi|iPhone|iPod|Android(?!.*Tablet)/i.test(userAgent);
@@ -141,35 +139,58 @@ export default auth(async function middleware(req: NextRequest) {
   const isAuthRoute = ROUTES.auth.some((route) => pathname.startsWith(route));
   const isAdminRoute = pathname.startsWith("/admin");
 
+  // If authenticated user tries to access auth routes, redirect them
   if (isAuthRoute && session) {
     console.log("Redirecting authenticated user away from auth route");
+    
+    // Check for both 'from' and 'callbackUrl' parameters
+    const from = req.nextUrl.searchParams.get("from");
     const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
-    if (callbackUrl) {
-      return NextResponse.redirect(new URL(callbackUrl, req.url));
+    const redirectUrl = from || callbackUrl;
+    
+    if (redirectUrl) {
+      try {
+        const decodedUrl = decodeURIComponent(redirectUrl);
+        return NextResponse.redirect(new URL(decodedUrl, req.url));
+      } catch (error) {
+        console.error("Invalid redirect URL:", redirectUrl);
+      }
     }
+    
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-  if (isProtectedRoute) {
-    if (!session) {
-      return NextResponse.redirect(new URL("/sign-in", req.url));
+  // If unauthenticated user tries to access protected routes
+  if (isProtectedRoute && !session) {
+    console.log("Redirecting unauthenticated user to sign-in");
+    
+    const url = new URL("/sign-in", req.url);
+    
+    // Capture the full path they were trying to access (pathname + query params)
+    const fullPath = pathname + search;
+    
+    // Only add 'from' parameter if it's not the sign-in page itself
+    if (fullPath !== "/sign-in") {
+      url.searchParams.set("from", encodeURIComponent(fullPath));
     }
+    
+    return NextResponse.redirect(url);
+  }
 
-    if (isAdminRoute) {
-      const userRole = session?.user?.role;
-      console.log("Admin route access - User role:", userRole, "Path:", pathname);
+  if (isProtectedRoute && isAdminRoute) {
+    const userRole = session?.user?.role;
+    console.log("Admin route access - User role:", userRole, "Path:", pathname);
 
-      if (userRole !== "admin") {
-        return new NextResponse(
-          "<h1 style='font-family:sans-serif;text-align:center;margin-top:50%;text-wrap:balance;max-width:600px;margin-left:auto;margin-right:auto;'>Access denied. Admin privileges required.</h1>",
-          { headers: { "Content-Type": "text/html" }, status: 403 }
-        );
-      }
+    if (userRole !== "admin") {
+      return new NextResponse(
+        "<h1 style='font-family:sans-serif;text-align:center;margin-top:50%;text-wrap:balance;max-width:600px;margin-left:auto;margin-right:auto;'>Access denied. Admin privileges required.</h1>",
+        { headers: { "Content-Type": "text/html" }, status: 403 }
+      );
     }
-
+  }
+  if (isProtectedRoute && session) {
     authAttempts.delete(ip);
     console.log("Access granted to protected route:", pathname);
-    return NextResponse.next();
   }
 
   return NextResponse.next();

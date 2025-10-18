@@ -45,60 +45,67 @@ function SignInForm() {
     }
   }, [searchParams, router]);
 
-  const onSubmit: SubmitHandler<SignInSchema> = async (data) => {
-    try {
-      const parseResult = SignInType.safeParse(data);
-      if (!parseResult.success) {
-        setSignState("error");
-        setErrorMessage("Please check your input");
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        setSignState("idle");
-        return;
-      }
-
-      setSignState("loading");
-
-      const response = await signIn("credentials", {
-        redirect: false,
-        username: data.username,
-        password: data.password,
-      });
-
-      if (!response || response.error) {
-        let errorMessage = "Authentication failed";
-        switch (response?.error) {
-          case "CredentialsSignin":
-            errorMessage = "Invalid username or password";
-            break;
-          case "User not found":
-            errorMessage = "User not found";
-            break;
-          case "CallbackRouteError":
-            errorMessage = "Authentication error occurred";
-            break;
-          default:
-            errorMessage = response?.error || "Sign in failed";
-        }
-
-        setSignState("error");
-        setErrorMessage(errorMessage);
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        setSignState("idle");
-        return;
-      }
-
-      setSignState("submitted");
-
-      const from = searchParams.get("from") || "/";
-      router.replace(from);
-    } catch (error: any) {
-      console.log(error,'error')
+ const onSubmit: SubmitHandler<SignInSchema> = async (data) => {
+  try {
+    const parseResult = SignInType.safeParse(data);
+    if (!parseResult.success) {
       setSignState("error");
-      setErrorMessage(error.message || "Sign in failed");
+      setErrorMessage("Please check your input");
       await new Promise((resolve) => setTimeout(resolve, 3000));
       setSignState("idle");
+      return;
     }
-  };
+
+    setSignState("loading");
+
+    const response = await signIn("credentials", {
+      redirect: false,
+      username: data.username,
+      password: data.password,
+    });
+
+    if (!response || response.error) {
+      let errorMessage = "Authentication failed";
+      switch (response?.error) {
+        case "CredentialsSignin":
+          errorMessage = "Invalid username or password";
+          break;
+        case "User not found":
+          errorMessage = "User not found";
+          break;
+        case "CallbackRouteError":
+          errorMessage = "Authentication error occurred";
+          break;
+        default:
+          errorMessage = response?.error || "Sign in failed";
+      }
+
+      setSignState("error");
+      setErrorMessage(errorMessage);
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      setSignState("idle");
+      return;
+    }
+
+    setSignState("submitted");
+
+    // Get the redirect URL from the 'from' parameter
+    const from = searchParams.get("from");
+  
+    const redirectUrl = from ? decodeURIComponent(from) : "/";
+  
+    await new Promise((resolve) => setTimeout(resolve, 100));
+     router.push(redirectUrl);
+    router.refresh();
+    
+  } catch (error: any) {
+    console.log(error, 'error');
+    setSignState("error");
+    setErrorMessage(error.message || "Sign in failed");
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    setSignState("idle");
+  }
+};
 
   const handleGoogleSignIn = async () => {
     try {

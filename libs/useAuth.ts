@@ -25,7 +25,7 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     const { signOut: nextAuthSignOut } = await import("next-auth/react");
-    await nextAuthSignOut({ callbackUrl: "/" });
+    await nextAuthSignOut({ callbackUrl: "/sign-in" });
   }, []);
 
   const isAuthenticated = status === "authenticated" && !!session?.accessToken;
