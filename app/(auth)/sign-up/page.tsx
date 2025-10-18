@@ -129,8 +129,7 @@ function SignUpForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="mt-6 px-[2px] w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%]"
-    >
+      className="mt-6 px-[2px] w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%]">
       <Input
         register={register}
         error={errors}
@@ -179,8 +178,7 @@ function SignUpForm() {
       <div className="my-2">
         <Link
           href="/sign-in"
-          className="cursor-pointer text-blue-500 hover:text-black"
-        >
+          className="cursor-pointer text-blue-500 hover:text-black">
           Already have an account? Sign in
         </Link>
       </div>
@@ -193,8 +191,7 @@ function SignUpForm() {
         type="button"
         onClick={handleGoogleSignIn}
         disabled={isGoogleLoading || signUpState === "loading"}
-        className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black  text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2"
-      >
+        className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black  text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
         <Image src="/icons/google.svg" width={16} height={16} alt="google" />
         <p className="">Google</p>
       </button>
@@ -214,14 +211,12 @@ export default function SigUp() {
       <div className=" w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%] bg-black/10 h-11 mt-6  flex items-center justify-center rounded">
         <Link
           href="/sign-in"
-          className="w-1/2 h-full  cursor-pointer flex items-center justify-center text-black "
-        >
+          className="w-1/2 h-full  cursor-pointer flex items-center justify-center text-black ">
           <p className="text-md">Sign in</p>
         </Link>
         <Link
           href="/sign-up"
-          className="w-1/2 h-full bg-black cursor-pointer flex items-center justify-center rounded-r text-white"
-        >
+          className="w-1/2 h-full bg-black cursor-pointer flex items-center justify-center rounded-r text-white">
           <p className="text-md">Sign up</p>
         </Link>
       </div>
@@ -235,8 +230,7 @@ export default function SigUp() {
               alt="Loading form"
             />
           </div>
-        }
-      >
+        }>
         <SignUpForm />
       </Suspense>
     </div>

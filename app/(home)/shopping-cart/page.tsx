@@ -132,27 +132,6 @@ export default function YourCart() {
           className="md:w-[35%] lg:w-[30%] pt-12 px-6 md:px-3 lg:px-10 w-full flex flex-col items-center totalDiv"
         >
           <div className="w-full">
-            {/* <div className="w-full flex items-center justify-between">
-              <p className="font-avenir font-[400] text-md pt-[5px]">SUBTOTAL</p>
-              <div className="flex gap-0.5 items-center">
-                <Cedis cedisStyle="pt-[4px] opacity-90" />
-                <p className=" font-avenir font-[400] text-md pt-[7px]">
-                  {cartStat?.totalPrice}
-                </p>
-              </div>
-            </div>
-            <div className="w-full flex items-center justify-between mt-1 text-black/50">
-              <p className="font-avenir font-[400] text-md pt-[5px]">DISCOUNT</p>
-              <div className="flex gap-0.5 items-center">
-                <Cedis cedisStyle="pt-[4px] opacity-50" />
-                <p className=" font-avenir text-black/50 font-[400] text-md pt-[6px]">
-                  0.00
-                </p>
-              </div>
-            </div>
-            <p className="text-sm md:text-sm font-avenir font-[300] md:font-[400] my-2 text-black/50">
-              Shipping will be calculated base on your address.
-            </p> */}
             <div className="w-full flex items-center justify-between my-6">
               <p className="font-avenir font-[400] text-md pt-[5px]">TOTAL</p>
               <div className="flex gap-0.5 items-center">
@@ -162,13 +141,13 @@ export default function YourCart() {
                 </p>
               </div>
             </div>
-            <Link href="/payment">
-              <div className="mt-4 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black   border border-black/20  group/add cursor-pointer transition-all">
-                <p className="font-avenir font-[400] text-sm pt-[4px] text-white ">
-                  PROCEED TO CHECHOUT
-                </p>
-              </div>
-            </Link>
+            <div
+              onClick={handlePayment}
+              className="mt-4 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black   border border-black/20  group/add cursor-pointer transition-all">
+              <p className="font-avenir font-[400] text-sm pt-[4px] text-white ">
+                PROCEED TO CHECHOUT
+              </p>
+            </div>
             <div className="px-3 py-4 rounded-md bg-gray-100 my-4">
               <p className="text-sm font-avenir text-black/60 font-[400]">
                 By selecting Procced to checkout button, you confirm that you
@@ -205,7 +184,8 @@ export default function YourCart() {
                     Shipping & Delivery
                   </p>
                   <p className="font-avenir text-sm text-black/50 my-1 ">
-                    Shipment fees are paid by the customer and vary based on delivery distance.
+                    Shipment fees are paid by the customer and vary based on
+                    delivery distance.
                   </p>
                 </div>
               </div>

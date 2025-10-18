@@ -23,6 +23,7 @@ export default function Filter() {
     hasActiveFilters,
     getActiveFilterCount,
     modal,
+    categories,
     loadProducts,
     setFilterCategories,
     getCartIdByName,
@@ -32,14 +33,22 @@ export default function Filter() {
   const [priceMax, setPriceMax] = useState<string>("");
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const contentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [categoriesLoaded, setCategoriesLoaded] = useState<boolean>(false);
   const [heights, setHeights] = useState<{ [key: string]: number }>({});
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const { get } = useApiClient();
+    // Load categories first
+  useEffect(() => {
+    const loadCats = async () => {
+      await setFilterCategories();
+      setCategoriesLoaded(true);
+    };
+    loadCats();
+  }, [setFilterCategories]);
 
   useEffect(() => {
-    setFilterCategories();
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1000);
     };
@@ -60,18 +69,23 @@ export default function Filter() {
     setHeights(newHeights);
   }, [filteritems]);
 
+  // Load filters from URL only after categories are loaded
   useEffect(() => {
-    if (!isInitialized) {
+    if (!isInitialized && categoriesLoaded && categories.length > 0) {
+      console.log("Loading filters from URL with categories:", categories.length);
       loadFiltersFromURL(searchParams);
+      
       const hasParams = Array.from(searchParams.keys()).some(
         (key) => key !== "page" && searchParams.get(key)
       );
 
       if (hasParams) {
+        console.log("Has URL params, loading products...");
         const timer = setTimeout(() => {
           const queries = getFilterQueries();
+          console.log("Filter queries:", queries);
           loadProducts(false, 1, 25, queries);
-        }, 100);
+        }, 200);
 
         return () => clearTimeout(timer);
       }
@@ -79,6 +93,8 @@ export default function Filter() {
       setIsInitialized(true);
     }
   }, [
+    categoriesLoaded,
+    categories.length,
     searchParams,
     loadFiltersFromURL,
     getFilterQueries,
@@ -86,13 +102,15 @@ export default function Filter() {
     isInitialized,
   ]);
 
-  // Subsequent updates: sync URL when filters change
+  // Sync URL when filters change (only after initialization)
   useEffect(() => {
-    if (isInitialized) {
+    if (isInitialized && categoriesLoaded && categories.length > 0) {
       applyFiltersToURL(searchParams, pathname, router);
     }
   }, [
     filteritems,
+    categoriesLoaded,
+    categories.length,
     applyFiltersToURL,
     pathname,
     router,
@@ -130,6 +148,7 @@ export default function Filter() {
 
   const ApplyFilter = () => {
     const queries = getFilterQueries();
+    console.log("Applying filters:", queries);
     loadProducts(true, 1, 25, queries);
     filterState(false);
   };
@@ -189,7 +208,8 @@ export default function Filter() {
                 transition={{ ease: "easeInOut" }}
                 className={cn(
                   "font-avenir text-black md:flex flex-col bg-black/70 h-full  border-black overflow-hidden"
-                )}>
+                )}
+              >
                 <motion.div className="w-full h-full z-50   bg-white border-r-[0.5px] relative">
                   <motion.div className="w-full h-full flex-none overflow-hidden   p-10 items-start">
                     <div className="flex items-center justify-between mb-6">
@@ -223,7 +243,8 @@ export default function Filter() {
                             filt.view ? { height: "auto" } : { height: 50 }
                           }
                           key={filt.name}
-                          className="overflow-hidden border-b border-dashed">
+                          className="overflow-hidden border-b border-dashed"
+                        >
                           <div className="py-4">
                             <div className="w-full flex justify-between items-center">
                               <div className="flex items-center gap-2">
@@ -534,7 +555,7 @@ const mfiltButton = {
   },
   hide: {
     height: "auto",
-    alignItems: "flex-start", 
+    alignItems: "flex-start",
     backgroundColor: "transparent",
     paddingTop: 8,
     transition: {

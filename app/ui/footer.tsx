@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import Input from "./input";
 import { useForm } from "react-hook-form";
 import Submit from "./submit";
@@ -39,8 +39,12 @@ const socailMedia = [
 
 export default function Footer() {
   const { register } = useForm();
-  const { setRouteChange } = useBoundStore();
+  const { setRouteChange, categories } = useBoundStore();
   const router = useRouter();
+
+  const shopCategories = useMemo(() => {
+    return categories?.slice(0, 4) || [];
+  }, [categories]);
 
   return (
     <div className="w-full h-fit px-2 sm:px-4 md:px-8 text-black bg-b py-12 relative">
@@ -51,21 +55,15 @@ export default function Footer() {
             <div className="text-black/70">
               <p className="text-sm md:text-md font-[400] font-avenir">SHOP</p>
               <ul className="mt-3 list-disc ml-4 flex flex-col gap-3">
-                <Link href="/shop?createdAt=newest">
-                  <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                    New Arrivals
-                  </li>
-                </Link>
-                <Link href="/shop">
-                  <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                    Best Sellers
-                  </li>
-                </Link>
-                <Link href="/shop">
-                  <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                    All Products
-                  </li>
-                </Link>
+                {shopCategories.map((category) => (
+                  <Link
+                    key={category._id}
+                    href={`/shop?category=${category.name}`}>
+                    <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
+                      {category.name}
+                    </li>
+                  </Link>
+                ))}
               </ul>
             </div>
 

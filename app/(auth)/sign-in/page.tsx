@@ -122,8 +122,7 @@ function SignInForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="mt-6 px-[2px] w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%]"
-    >
+      className="mt-6 px-[2px] w-[85%] md:w-[40%] lg:w-[35%] xl:w-[30%]">
       <Input
         register={register}
         error={errors}
@@ -167,8 +166,7 @@ function SignInForm() {
         type="button"
         onClick={handleGoogleSignIn}
         disabled={isGoogleLoading || signInState === "loading"}
-        className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2"
-      >
+        className="w-full h-11 border-[0.5px] hover:bg-black/5 transition-all border-black mt-4 rounded font-avenir font-semibold text-black text-md flex items-center justify-center cursor-pointer overflow-hidden gap-2">
         <Image src="/icons/google.svg" width={16} height={16} alt="google" />
         <p>Google</p>
       </button>
@@ -192,10 +190,8 @@ export default function SignIn() {
         >
           <p className="text-md font-medium">Sign in</p>
         </Link>
-        <Link
-          href="/sign-up"
-          className="w-1/2 h-full cursor-pointer flex items-center justify-center text-black"
-        >
+        <Link  href="/sign-up"
+          className="w-1/2 h-full cursor-pointer flex items-center justify-center text-black">
           <p className="text-md font-medium">Sign up</p>
         </Link>
       </div>
@@ -210,8 +206,7 @@ export default function SignIn() {
               alt="Loading form"
             />
           </div>
-        }
-      >
+        }>
         <SignInForm />
       </Suspense>
     </div>

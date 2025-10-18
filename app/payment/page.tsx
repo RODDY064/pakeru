@@ -16,6 +16,7 @@ import { usePaymentProcessing } from "@/libs/paymentFunc";
 import { useAuth } from "@/libs/useAuth";
 import { useSession } from "next-auth/react";
 import Cedis from "../ui/cedis";
+import Select from "../ui/select";
 
 const userDetailsSchema = z.object({
   useremail: z.string().email("Please enter a valid email address"),
@@ -109,7 +110,6 @@ export default function Payment() {
       return;
     }
 
-
     // Process payment with toast feedback
     try {
       await toast.promise(
@@ -128,6 +128,7 @@ export default function Payment() {
           position: "top-right",
         }
       );
+      console.log(data, "payment");
     } catch (error: any) {
       console.error("Payment submission failed:", error);
       setError(error.message || "Payment processing failed. Please try again.");
@@ -194,8 +195,8 @@ export default function Payment() {
               error={errors}
               disabled={true}
             />
-            <div className="w-full flex items-center justify-between mt-4 gap-2">
-              <div className="w-1/2">
+            <div className="w-full flex  flex-col md:flex-row items-center justify-between mt-4 gap-2">
+              <div className="w-full md:w-1/2">
                 <Input
                   type="text"
                   textStyle="md:text-md"
@@ -208,7 +209,7 @@ export default function Payment() {
                   disabled={true}
                 />
               </div>
-              <div className="w-1/2">
+              <div className="w-full md:w-1/2">
                 <Input
                   type="text"
                   textStyle="md:text-md"
@@ -270,7 +271,7 @@ export default function Payment() {
               />
             </div>
             <div className="mt-4">
-              <Input
+              {/* <Input
                 type="text"
                 textStyle="md:text-md"
                 placeH="Ashanti"
@@ -280,6 +281,34 @@ export default function Payment() {
                 image="/icons/world.svg"
                 register={register}
                 error={errors}
+              /> */}
+              <Select
+                textStyle="md:text-md"
+                placeH="Select your region"
+                label="Region"
+                name="region"
+                imageW={24}
+                image="/icons/world.svg"
+                register={register}
+                error={errors}
+                options={[
+                  { value: "greater-accra", label: "Greater Accra" },
+                  { value: "ashanti", label: "Ashanti" },
+                  { value: "central", label: "Central" },
+                  { value: "eastern", label: "Eastern" },
+                  { value: "western", label: "Western" },
+                  { value: "western-north", label: "Western North" },
+                  { value: "volta", label: "Volta" },
+                  { value: "oti", label: "Oti" },
+                  { value: "northern", label: "Northern" },
+                  { value: "north-east", label: "North East" },
+                  { value: "savannah", label: "Savannah" },
+                  { value: "upper-east", label: "Upper East" },
+                  { value: "upper-west", label: "Upper West" },
+                  { value: "bono", label: "Bono" },
+                  { value: "bono-east", label: "Bono East" },
+                  { value: "ahafo", label: "Ahafo" },
+                ]}
               />
             </div>
 
@@ -302,7 +331,8 @@ export default function Payment() {
           disabled={isSubmitting}
           className="bg-black text-white py-4 font-avenir f font-[500] text-lg cursor-pointer mt-6 md:block hidden rounded-md disabled:bg-gray-100 disabled:text-black
             disabled:border-black/10 disabled:border
-           disabled:cursor-not-allowed transition-colors">
+           disabled:cursor-not-allowed transition-colors"
+        >
           {isSubmitting ? (
             <div className="flex items-center gap-2 justify-center">
               <Image
@@ -335,16 +365,12 @@ export default function Payment() {
             <div className="w-full flex items-center justify-between">
               <p className="font-avenir font-[400] text-sm">TOTAL</p>
               <div className="flex gap-0.5 items-center  text-sm  ">
-                <Cedis cedisStyle="pt-[3px] opacity-80" className="pt-[3px]"/>
+                <Cedis cedisStyle="pt-[3px] opacity-80" className="pt-[3px]" />
                 <p className=" font-avenir font-[400]  text-sm   pt-[7px]">
                   {cartStat?.totalPrice?.toFixed(2)}
                 </p>
               </div>
             </div>
-            {/* <div className="w-full flex items-center justify-between mt-1 text-black/50">
-                <p className="font-avenir font-[400] text-sm">SHIPPING</p>
-                <p className="font-avenir font-[400] text-sm">GHS 0.00</p>
-              </div> */}
           </div>
         </div>
         <div className="w-full h-[210px] bg-white  border-[0.5px] border-black/20 rounded-md px-4 py-6 ">
@@ -380,33 +406,11 @@ export default function Payment() {
             </div>
           </div>
         </div>
-        {/* <div className="w-full  h-[200px] bg-white  border-[0.5px] border-black/20 rounded-md px-4 py-6">
-          <div>
-            <p className="font-avenir font-[400] text-sm">DISCOUNT</p>
-            <div className="mt-3">
-              <label className="font-avenir text-md md:text-lg font-medium">
-                Enter your discount code
-              </label>
-              <div className="flex items-center h-10 gap-2">
-                <input
-                  type="text"
-                  placeholder="AHDJ049"
-                  className="mt-1 w-[70%] h-full border border-black/30 rounded flex items-center focus:outline-none focus-within:border-blue-600 p-3"
-                />
-                <div className="w-[30%] h-full bg-black/20 flex border-[0.5px] border-black/30 items-center justify-center rounded cursor-pointer">
-                  <p className="font-avenir font-[500] text-md">Verify</p>
-                </div>
-              </div>
-              <p className="my-3 text-sm font-avenir text-black/50">
-                Discount are applid to the quantity of items being purchased
-              </p>
-            </div>
-          </div>
-        </div> */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-black text-white py-4 flex items-center justify-center md:hidden font-avenir font-[500] text-lg cursor-pointer mt-2 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
+          className="bg-black text-white py-4 flex items-center justify-center md:hidden font-avenir font-[500] text-lg cursor-pointer mt-2 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        >
           {isSubmitting ? (
             <div className="flex items-center gap-2">
               <p>Processing...</p>

@@ -33,45 +33,34 @@ export const useSliderStore: StateCreator<
   slider: [
     {
       _id: 0,
-      title: "BEST SELLING",
+      title: "OVERSHIRT",
       description:
         "The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate. The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate.",
       mainImage: "/categories/couple.webp",
       images: ["/images/img4.png", "/images/img7.png", "/images/im3.png", "/images/nm2.png"],
-       link: "/shop?t-shirts",
+       link: "/shop?category=OVERSHIRT",
       inView: false,
       products: [],
     },
     {
       _id: 1,
-      title: "SHIRTS",
+      title: "ACCESSORIES",
       description:
         "The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate. The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate.",
       mainImage: "/categories/tote bag 5.webp",
       images: ["/images/img4.png", "/images/img7.png", "/images/im3.png", "/images/nm2.png"],
-      link: "/shop?t-shirts",
+      link: "/shop?category=accessories",
       inView: false,
       products: [],
     },
      {
       _id: 2,
-      title: "SHORTS",
+      title: "BOTTOM ESSENTIALS",
       description:
         "The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate. The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate.",
       mainImage: "/categories/fullset.webp",
       images: ["/images/img4.png", "/images/img7.png", "/images/im3.png", "/images/nm2.png"],
-       link: "/shop?t-shirts",
-      inView: false,
-      products: [],
-    },
-    {
-      _id: 3,
-      title: "MARSHING SETS",
-      description:
-        "The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate. The preparation for becoming a great copywriter is a lifestyle. It’s a hunger for knowledge, a curiosity and a desire to participate in life that is broad-based and passionate.",
-      mainImage: "/categories/marching.webp",
-      images: ["/images/img4.png", "/images/img7.png", "/images/im3.png", "/images/nm2.png"],
-      link: "/shop?t-shirts",
+       link: "/shop?category=Bottom Essentials",
       inView: false,
       products: [],
     },

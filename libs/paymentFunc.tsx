@@ -175,9 +175,8 @@ export const usePaymentProcessing = () => {
 
       clearCart()
       // Redirect to payment gateway
-      window.location.href = authUrl;
+      router.push(authUrl)
 
-      
       return { 
         success: true, 
         orderId 
