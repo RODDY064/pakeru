@@ -7,8 +7,6 @@ export async function GET(request: NextRequest) {
   try {
     const urlObj = new URL(request.url); 
      const searchParams = urlObj.searchParams;
-  
-     console.log([...searchParams.entries()], "initial search params");
    
     searchParams.set('_t', Date.now().toString());
     const queryString = searchParams.toString();

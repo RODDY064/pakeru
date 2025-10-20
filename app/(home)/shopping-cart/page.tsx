@@ -10,7 +10,6 @@ import { useBoundStore } from "@/store/store";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -129,8 +128,7 @@ export default function YourCart() {
         </div>
         <div
           ref={totalRef}
-          className="md:w-[35%] lg:w-[30%] pt-12 px-6 md:px-3 lg:px-10 w-full flex flex-col items-center totalDiv"
-        >
+          className="md:w-[35%] lg:w-[30%] pt-12 px-6 md:px-3 lg:px-10 w-full flex flex-col items-center totalDiv">
           <div className="w-full">
             <div className="w-full flex items-center justify-between my-6">
               <p className="font-avenir font-[400] text-md pt-[5px]">TOTAL</p>

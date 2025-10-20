@@ -113,7 +113,7 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
                 </div>
                 <div className="w-full md:w-fit  items-center  justify-between flex gap-5">
                   <p className="text-sm font-avenir font-[400]">SIZE</p>
-                  <p className="text-sm font-avenir font-[400] md:hidden">SM</p>
+                  <p className="text-sm font-avenir font-[400] md:hidden">{cartData.selectedSize}</p>
                   <div className="w-10 md:w-14 h-[1px] bg-black/20 hidden md:flex" />
                   <div className="size-10 lg:w-14 lg:h-10 md:flex hidden items-center justify-center rounded-[8px] border-[0.5px] border-black/10 cursor-pointer bg-gray-100">
                     <p className="font-avenir text-sm">
