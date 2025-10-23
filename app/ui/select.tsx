@@ -61,7 +61,11 @@ export default function Select({
           {...register(name, { required: true })}
           disabled={disabled}
           defaultValue="" 
-          className="w-full h-full px-2 focus:outline-none font-avenir bg-transparent cursor-pointer">
+          className={cn("w-full h-full px-2 focus:outline-none font-avenir bg-transparent cursor-pointer",
+            {
+               "text-black/30": disabled
+            }
+          )}>
           <option  disabled selected>
             {placeH}
           </option>

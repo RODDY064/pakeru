@@ -18,6 +18,7 @@ import { useSession } from "next-auth/react";
 import Cedis from "../ui/cedis";
 import Select from "../ui/select";
 import PhoneInput from "../ui/phoneInput";
+import { isValidPhoneNumber } from "libphonenumber-js";
 
 const userDetailsSchema = z.object({
   useremail: z.string().email("Please enter a valid email address"),
@@ -35,9 +36,26 @@ const userDetailsSchema = z.object({
     .min(1, "Address is required")
     .min(5, "Please provide a detailed address"),
   town: z.string().min(1, "Town is required"),
-  phoneNumber: z
-  .string()
-  .regex(/^\+\d(?:[\d\s]{9,19})$/, "Phone number must start with + and contain only digits and spaces (10–15 digits total)"),
+  countryCode: z.string().min(2, "Country is required"),
+  phoneNumber: z.string().superRefine((val, ctx) => {
+  const parent: any = (ctx as any).parent;
+  const country = parent?.countryCode || "GH";
+
+  const valid = (() => {
+    try {
+      return isValidPhoneNumber(val, country);
+    } catch {
+      return false;
+    }
+  })();
+
+  if (!valid) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Please enter a valid phone number for the selected country",
+    });
+  }
+}),
   landmark: z.string().optional(),
 });
 
@@ -57,9 +75,12 @@ export default function Payment() {
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
+    watch
   } = useForm<UserDetailsForm>({
     resolver: zodResolver(userDetailsSchema),
   });
+
+  const country = watch("countryCode")
 
   const [cartStat, setCartStat] = useState({
     totalPrice: 0,
@@ -80,12 +101,10 @@ export default function Payment() {
     setValue("lastname", session?.user?.lastname as string);
   }, [setValue, session?.user]);
 
-
   const onSubmit = async (data: UserDetailsForm) => {
     // Reset previous errors
     setError("");
 
-    
     // Early validation
     if (cartItems.length === 0) {
       const errorMsg = "Your cart is empty!";
@@ -115,20 +134,22 @@ export default function Payment() {
       await toast.promise(
         processPayment(data, cartItems, cartStat, { accessToken }),
         {
-          loading: "Processing your order...",
+          loading: {
+            title:"Processing your order...",
+            duration:Infinity
+          },
           success: {
             title: "Order Created!",
             description: "Redirecting to secure payment...",
           },
           error: (err: any) => ({
             title: "Payment Failed",
-            description:
-              err.message + "Please check your details and try again.",
+            description: "Please check your details and try again.",
           }),
           position: "top-right",
         }
       );
-      console.log(data, "payment");
+      // console.log(data, "payment");
     } catch (error: any) {
       console.error("Payment submission failed:", error);
       setError(error.message || "Payment processing failed. Please try again.");
@@ -159,6 +180,10 @@ export default function Payment() {
 
     return errors;
   };
+
+  useEffect(()=>{
+    console.log(watch("countryCode"))
+  },[watch("countryCode")])
 
   return (
     <form
@@ -241,12 +266,10 @@ export default function Payment() {
               /> */}
               <PhoneInput
                 register={register}
-                setValue={setValue}
                 label="Phone number"
                 name="phoneNumber"
-                defaultCountry="GH"
                 error={errors}
-                image="/icons/contacts-b.svg"
+                setValue={setValue}
               />
             </div>
             <div className="mt-2">
@@ -287,6 +310,8 @@ export default function Payment() {
                 image="/icons/world.svg"
                 register={register}
                 error={errors}
+                disabled={country !== "GH"}
+              
                 options={[
                   { value: "greater-accra", label: "Greater Accra" },
                   { value: "ashanti", label: "Ashanti" },
