@@ -82,10 +82,6 @@ export default function Payment() {
 
 
   const onSubmit = async (data: UserDetailsForm) => {
-
-    console.log(data)
-
-    return
     // Reset previous errors
     setError("");
 
