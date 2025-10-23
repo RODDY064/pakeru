@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -46,16 +46,10 @@ interface PaymentPayload {
   discountCode: string;
 }
 
-
 export const usePaymentProcessing = () => {
   const router = useRouter();
 
-  const { post, isAuthLoading } = useApiClient({
-    onAuthError: () => {
-      const currentPath = encodeURIComponent(window.location.pathname);
-      router.push(`/sign-in?callbackUrl=${currentPath}`);
-    },
-  });
+  const { post, isAuthLoading } = useApiClient();
 
   const [processingPayment, setProcessingPayment] = useState(false);
   const { clearCart } = useBoundStore();
@@ -123,24 +117,18 @@ export const usePaymentProcessing = () => {
       formData: PaymentData,
       cartItems: CartItemType[],
       cartStats: CartStats | null,
-      options?: {
-        accessToken?: string;
-      }
-    ): Promise<{ success: boolean; orderId?: string; error?: string }> => {
+      options?: { accessToken?: string }
+    ): Promise<{
+      error: string; success: boolean 
+}> => {
       if (processingPayment || isAuthLoading) {
-        return {
-          success: false,
-          error: "Payment already in progress",
-        };
+        throw new Error("Payment already in progress");
       }
 
       // Validate input data
       const validationErrors = validatePaymentData(formData, cartItems, cartStats);
       if (validationErrors.length) {
-        return {
-          success: false,
-          error: validationErrors.join(", "),
-        };
+        throw new Error(validationErrors.join(", "));
       }
 
       setProcessingPayment(true);
@@ -161,49 +149,37 @@ export const usePaymentProcessing = () => {
           throw new Error("Payment gateway error: Missing authorization URL");
         }
 
-       
         clearCart();
+
         console.log(authUrl, "auth url");
 
+        // Redirect safely
         try {
           const isAbsolute = /^https?:\/\//i.test(authUrl);
           if (isAbsolute) {
             window.location.assign(authUrl);
           } else {
-            // internal route
             router.push(authUrl);
           }
-        } catch (navErr) {
+        } catch {
           window.location.assign(authUrl);
         }
 
-        return {
-          success: true,
-        };
+        return { success: true, error:"" };
       } catch (error: any) {
         console.error("Payment processing failed:", error);
 
-        // Handle specific error types
         if (error instanceof AuthError) {
           const currentPath = encodeURIComponent(window.location.pathname);
           router.push(`/sign-in?callbackUrl=${currentPath}`);
-          return {
-            success: false,
-            error: "Please sign-in to continue with payment",
-          };
+          throw new Error("Please sign in to continue with payment");
         }
 
         if (error instanceof ApiError) {
-          return {
-            success: false,
-            error: error.message || "Payment processing failed",
-          };
+          throw new Error(error.message || "Payment processing failed");
         }
 
-        return {
-          success: false,
-          error: "An unexpected error occurred during payment processing",
-        };
+        throw new Error(error.message || "An unexpected error occurred during payment processing");
       } finally {
         setProcessingPayment(false);
       }
@@ -221,25 +197,21 @@ export const usePaymentProcessing = () => {
         requiresAuth?: boolean;
         maxRetries?: number;
       }
-    ): Promise<{ success: boolean; orderId?: string; error?: string }> => {
+    ): Promise<{ success: boolean }> => {
       const maxRetries = options?.maxRetries ?? 2;
 
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
-        const result = await processPayment(formData, cartItems, cartStats, {
-          accessToken: options?.accessToken,
-        });
-
-        if (result.success || attempt === maxRetries) {
-          return result;
-        }
-
-        // Wait before retry (exponential backoff)
-        if (attempt < maxRetries) {
+        try {
+          return await processPayment(formData, cartItems, cartStats, {
+            accessToken: options?.accessToken,
+          });
+        } catch (error) {
+          if (attempt === maxRetries) throw error;
           await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
         }
       }
 
-      return { success: false, error: "Payment failed after multiple attempts" };
+      throw new Error("Payment failed after multiple attempts");
     },
     [processPayment]
   );

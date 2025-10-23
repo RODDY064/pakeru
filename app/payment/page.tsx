@@ -38,24 +38,24 @@ const userDetailsSchema = z.object({
   town: z.string().min(1, "Town is required"),
   countryCode: z.string().min(2, "Country is required"),
   phoneNumber: z.string().superRefine((val, ctx) => {
-  const parent: any = (ctx as any).parent;
-  const country = parent?.countryCode || "GH";
+    const parent: any = (ctx as any).parent;
+    const country = parent?.countryCode || "GH";
 
-  const valid = (() => {
-    try {
-      return isValidPhoneNumber(val, country);
-    } catch {
-      return false;
+    const valid = (() => {
+      try {
+        return isValidPhoneNumber(val, country);
+      } catch {
+        return false;
+      }
+    })();
+
+    if (!valid) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please enter a valid phone number for the selected country",
+      });
     }
-  })();
-
-  if (!valid) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Please enter a valid phone number for the selected country",
-    });
-  }
-}),
+  }),
   landmark: z.string().optional(),
 });
 
@@ -75,12 +75,12 @@ export default function Payment() {
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
-    watch
+    watch,
   } = useForm<UserDetailsForm>({
     resolver: zodResolver(userDetailsSchema),
   });
 
-  const country = watch("countryCode")
+  const country = watch("countryCode");
 
   const [cartStat, setCartStat] = useState({
     totalPrice: 0,
@@ -132,24 +132,28 @@ export default function Payment() {
     // Process payment with toast feedback
     try {
       await toast.promise(
-        processPayment(data, cartItems, cartStat, { accessToken }),
+        (async () => {
+          const result = await processPayment(data, cartItems, cartStat, {
+            accessToken,
+          });
+          if (!result.success)
+            throw new Error(result.error || "Payment failed");
+          return result;
+        })(),
         {
-          loading: {
-            title:"Processing your order...",
-            duration:Infinity
-          },
+          loading: { title: "Processing your order...", duration: Infinity },
           success: {
             title: "Order Created!",
             description: "Redirecting to secure payment...",
           },
           error: (err: any) => ({
             title: "Payment Failed",
-            description: "Please check your details and try again.",
+            description:
+              err.message || "Please check your details and try again.",
           }),
           position: "top-right",
         }
       );
-      // console.log(data, "payment");
     } catch (error: any) {
       console.error("Payment submission failed:", error);
       setError(error.message || "Payment processing failed. Please try again.");
@@ -181,9 +185,9 @@ export default function Payment() {
     return errors;
   };
 
-  useEffect(()=>{
-    console.log(watch("countryCode"))
-  },[watch("countryCode")])
+  useEffect(() => {
+    console.log(watch("countryCode"));
+  }, [watch("countryCode")]);
 
   return (
     <form
@@ -311,7 +315,6 @@ export default function Payment() {
                 register={register}
                 error={errors}
                 disabled={country !== "GH"}
-              
                 options={[
                   { value: "greater-accra", label: "Greater Accra" },
                   { value: "ashanti", label: "Ashanti" },

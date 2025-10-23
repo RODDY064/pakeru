@@ -200,17 +200,19 @@ export const useCartStore: StateCreator<
     );
   },
   addProductToStore: (product) =>
-  set((state) => {
-    const existingIndex = state.products.findIndex(p => p._id === product._id);
-    
-    if (existingIndex === -1) {
-      state.products.push({
-        ...product,
-        selectedColor: product.selectedColor || product.variants[0]?._id,
-        selectedSize: product.selectedSize || product.variants[0]?.sizes[0],
-      });
-    }
-  }),
+    set((state) => {
+      const existingIndex = state.products.findIndex(
+        (p) => p._id === product._id
+      );
+
+      if (existingIndex === -1) {
+        state.products.push({
+          ...product,
+          selectedColor: product.selectedColor || product.variants[0]?._id,
+          selectedSize: product.selectedSize || product.variants[0]?.sizes[0],
+        });
+      }
+    }),
   getBookmarkStats: () => {
     const { bookMarks } = get();
     const categories = new Set<string>();
@@ -433,108 +435,105 @@ export const useCartStore: StateCreator<
         item.quantity = Math.min(quantity, item.selectedVariant.stock);
       }
     }),
- updateColor: (identifier, newColorId) =>
-  
-  set((state) => {
+  updateColor: (identifier, newColorId) =>
+    set((state) => {
+      console.log(identifier, newColorId);
+      const updateSizeIfNeeded = (
+        entity: { selectedSize?: string; sizes?: string[] },
+        newVariant: ProductVariant
+      ) => {
+        const updatedSizes = [...newVariant.sizes];
+        const validSize =
+          entity.selectedSize && updatedSizes.includes(entity.selectedSize)
+            ? entity.selectedSize
+            : undefined;
+        return { ...entity, sizes: updatedSizes, selectedSize: validSize };
+      };
 
-    console.log(identifier, newColorId)
-    const updateSizeIfNeeded = (
-      entity: { selectedSize?: string; sizes?: string[] },
-      newVariant: ProductVariant
-    ) => {
-      const updatedSizes = [...newVariant.sizes];
-      const validSize =
-        entity.selectedSize && updatedSizes.includes(entity.selectedSize)
-          ? entity.selectedSize
-          : undefined;
-      return { ...entity, sizes: updatedSizes, selectedSize: validSize };
-    };
+      console.log(updateSizeIfNeeded, "updated size");
 
-    console.log(updateSizeIfNeeded,'updated size')
-
-    // --- SCENARIO 1: Updating a cart item ---
-    const cartItem = state.cartItems.find(
-      (item) => item.cartItemId === identifier
-    );
-
-    if (cartItem) {
-      const product = state.products.find(
-        (p) => p._id === (cartItem._id ?? cartItem.cartItemId)
-      );
-      const newVariant = product?.variants.find((v) => v._id === newColorId);
-      if (!newVariant) return state;
-
-      const newCartItemId = generateCartItemId(
-        cartItem._id,
-        newColorId,
-        cartItem.selectedSize
+      // --- SCENARIO 1: Updating a cart item ---
+      const cartItem = state.cartItems.find(
+        (item) => item.cartItemId === identifier
       );
 
-      const existingItem = state.cartItems.find(
-        (item) => item.cartItemId === newCartItemId
-      );
+      if (cartItem) {
+        const product = state.products.find(
+          (p) => p._id === (cartItem._id ?? cartItem.cartItemId)
+        );
+        const newVariant = product?.variants.find((v) => v._id === newColorId);
+        if (!newVariant) return state;
 
-      let newCartItems;
+        const newCartItemId = generateCartItemId(
+          cartItem._id,
+          newColorId,
+          cartItem.selectedSize
+        );
 
-      if (existingItem) {
-        // merge quantities if variant already in cart
-        newCartItems = state.cartItems
-          .filter((i) => i.cartItemId !== identifier)
-          .map((i) =>
-            i.cartItemId === newCartItemId
+        const existingItem = state.cartItems.find(
+          (item) => item.cartItemId === newCartItemId
+        );
+
+        let newCartItems;
+
+        if (existingItem) {
+          // merge quantities if variant already in cart
+          newCartItems = state.cartItems
+            .filter((i) => i.cartItemId !== identifier)
+            .map((i) =>
+              i.cartItemId === newCartItemId
+                ? {
+                    ...i,
+                    quantity: Math.min(
+                      i.quantity + cartItem.quantity,
+                      newVariant.stock
+                    ),
+                  }
+                : i
+            );
+        } else {
+          newCartItems = state.cartItems.map((i) =>
+            i.cartItemId === identifier
               ? {
                   ...i,
-                  quantity: Math.min(
-                    i.quantity + cartItem.quantity,
-                    newVariant.stock
-                  ),
+                  cartItemId: newCartItemId,
+                  selectedColor: newColorId,
+                  selectedVariant: newVariant,
+                  quantity: Math.min(i.quantity, newVariant.stock),
+                  ...updateSizeIfNeeded(i, newVariant),
                 }
               : i
           );
-      } else {
-        newCartItems = state.cartItems.map((i) =>
-          i.cartItemId === identifier
+        }
+
+        const newProducts = state.products.map((p) =>
+          p._id === (cartItem._id ?? cartItem.cartItemId)
             ? {
-                ...i,
-                cartItemId: newCartItemId,
+                ...updateSizeIfNeeded(p, newVariant),
                 selectedColor: newColorId,
-                selectedVariant: newVariant,
-                quantity: Math.min(i.quantity, newVariant.stock),
-                ...updateSizeIfNeeded(i, newVariant),
               }
-            : i
+            : p
         );
+
+        return { ...state, cartItems: newCartItems, products: newProducts };
       }
 
-      const newProducts = state.products.map((p) =>
-        p._id === (cartItem._id ?? cartItem.cartItemId)
-          ? {
-              ...updateSizeIfNeeded(p, newVariant),
-              selectedColor: newColorId,
-            }
-          : p
-      );
+      // --- SCENARIO 2: Updating product before adding to cart ---
+      const newProducts = state.products.map((p) => {
+        if (p._id === identifier) {
+          const newVariant = p.variants.find((v) => v._id === newColorId);
+          if (!newVariant) return p;
 
-      return { ...state, cartItems: newCartItems, products: newProducts };
-    }
+          return {
+            ...updateSizeIfNeeded(p, newVariant),
+            selectedColor: newColorId,
+          };
+        }
+        return p;
+      });
 
-    // --- SCENARIO 2: Updating product before adding to cart ---
-    const newProducts = state.products.map((p) => {
-      if (p._id === identifier) {
-        const newVariant = p.variants.find((v) => v._id === newColorId);
-        if (!newVariant) return p;
-
-        return {
-          ...updateSizeIfNeeded(p, newVariant),
-          selectedColor: newColorId,
-        };
-      }
-      return p;
-    });
-
-    return { ...state, products: newProducts };
-  }),
-
+      return { ...state, products: newProducts };
+    }),
 
   // Update size - works both before and after adding to cart
   updateSize: (identifier, newSize) =>
@@ -888,7 +887,13 @@ export const useCartStore: StateCreator<
   loadProducts: async (force, page, limit = 25, filters) => {
     const state = get();
 
-    if (!force && page === undefined && state.products.length !== 0) return;
+    if (force || page === 1 || !filters || Object.keys(filters).length === 0) {
+      set((state) => {
+        state.products = [];
+        state.cartState = "loading";
+        state.error = null;
+      });
+    }
     const isFreshLoad = force || page === 1 || state.products.length === 0;
 
     if (isFreshLoad) {
@@ -1014,28 +1019,29 @@ export const useCartStore: StateCreator<
         }
       );
 
-      // Merge new products with existing ones, avoiding duplicates
       set(
         produce((state: Store) => {
-          // Clear products if force is true or page is 1
-          if (force || page === 1) {
-            state.products = [];
-          }
-          const existingProductIds = new Set(state.products.map((p) => p._id));
-          const newProducts = transformedProducts.filter(
-            (product) => product._id && !existingProductIds.has(product._id)
-          );
-          state.products = [...state.products, ...newProducts];
-          if (result.total !== undefined) {
-            state.storeProducttotalItems = result.total;
+          // 🚀 If it's a fresh or forced load, completely replace products
+          if (
+            force ||
+            page === 1 ||
+            !filters ||
+            Object.keys(filters).length === 0
+          ) {
+            state.products = transformedProducts;
+          } else {
+            // 🔁 Otherwise, append for pagination
+            const existingIds = new Set(state.products.map((p) => p._id));
+            const newOnes = transformedProducts.filter(
+              (p) => !existingIds.has(p._id)
+            );
+            state.products.push(...newOnes);
           }
 
-          // Set appropriate success state
-          if (isFreshLoad) {
-            state.cartState = "success";
-          } else {
-            state.productPaginationState = "success";
-          }
+          state.storeProducttotalItems =
+            result.total ?? state.storeProducttotalItems;
+          if (isFreshLoad) state.cartState = "success";
+          else state.productPaginationState = "success";
         })
       );
 

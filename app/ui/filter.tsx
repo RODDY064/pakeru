@@ -39,7 +39,7 @@ export default function Filter() {
   const router = useRouter();
   const pathname = usePathname();
   const { get } = useApiClient();
-    // Load categories first
+  // Load categories first
   useEffect(() => {
     const loadCats = async () => {
       await setFilterCategories();
@@ -69,38 +69,46 @@ export default function Filter() {
     setHeights(newHeights);
   }, [filteritems]);
 
-  // Load filters from URL only after categories are loaded
-  useEffect(() => {
-    if (!isInitialized && categoriesLoaded && categories.length > 0) {
-      console.log("Loading filters from URL with categories:", categories.length);
-      loadFiltersFromURL(searchParams);
-      
-      const hasParams = Array.from(searchParams.keys()).some(
-        (key) => key !== "page" && searchParams.get(key)
-      );
+useEffect(() => {
+  if (!categoriesLoaded || categories.length === 0) return;
 
-      if (hasParams) {
-        console.log("Has URL params, loading products...");
-        const timer = setTimeout(() => {
-          const queries = getFilterQueries();
-          console.log("Filter queries:", queries);
-          loadProducts(false, 1, 25, queries);
-        }, 200);
+  const hasFilters = searchParams.size > 0;
 
-        return () => clearTimeout(timer);
-      }
+  // Always clear old cached products when route changes
+  useBoundStore.setState((state) => {
+    state.products = [];
+    state.cartState = "loading";
+  });
 
-      setIsInitialized(true);
-    }
-  }, [
-    categoriesLoaded,
-    categories.length,
-    searchParams,
-    loadFiltersFromURL,
-    getFilterQueries,
-    loadProducts,
-    isInitialized,
-  ]);
+  // Decide whether to apply filters or not
+  let queries = {};
+  if (hasFilters) {
+    // Extract filters from URL if present
+    loadFiltersFromURL(searchParams);
+    queries = getFilterQueries();
+    console.log("🔁 Fetching filtered products:", queries);
+  } else {
+    // When there are NO queries, force fetch fresh ALL products
+    console.log("🔁 Fetching all products (no filters)");
+  }
+
+  // Force a fresh load every time the route changes
+  const timer = setTimeout(() => {
+    loadProducts(true, 1, 25, hasFilters ? queries : undefined);
+  }, 100);
+
+  return () => clearTimeout(timer);
+}, [
+  pathname,                 
+  searchParams.toString(),   
+  categoriesLoaded,
+  categories.length,
+  loadFiltersFromURL,
+  getFilterQueries,
+  loadProducts,
+]);
+
+
 
   // Sync URL when filters change (only after initialization)
   useEffect(() => {
