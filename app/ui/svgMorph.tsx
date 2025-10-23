@@ -130,7 +130,7 @@ export default function SVGMorph({
         >
           <div className="text-center absolute z-20 bottom-0 right-0 rounded-4xl w-full h-full flex">
             <div className="relative top-10 left-10">
-              <p className="font-avenir text-xs md:text-lg capitalize">{name}</p>
+              <p className="font-avenir text-xs md:text-lg capitalize w-24 ">{name}</p>
             </div>
             <div className="size-12 absolute z-9 bottom-6 right-8 flex items-center justify-center">
               <Link href={`/collections/${id}`}>
@@ -179,7 +179,7 @@ export default function SVGMorph({
                       }`}
                     >
                       <div className="relative top-0 left-0">
-                        <p className="font-avenir  text-xs md:text-lg capitalize px-3">
+                        <p className="font-avenir  text-xs md:text-lg capitalize px-3 w-24">
                           {Array.isArray(name) ? name[i] : ""}
                         </p>
                       </div>

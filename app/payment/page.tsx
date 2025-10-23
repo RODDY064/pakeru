@@ -17,6 +17,7 @@ import { useAuth } from "@/libs/useAuth";
 import { useSession } from "next-auth/react";
 import Cedis from "../ui/cedis";
 import Select from "../ui/select";
+import PhoneInput from "../ui/phoneInput";
 
 const userDetailsSchema = z.object({
   useremail: z.string().email("Please enter a valid email address"),
@@ -35,11 +36,8 @@ const userDetailsSchema = z.object({
     .min(5, "Please provide a detailed address"),
   town: z.string().min(1, "Town is required"),
   phoneNumber: z
-    .string()
-    .min(1, "Phone number is required")
-    .regex(/^[0-9]+$/, "Phone number must contain only digits")
-    .min(10, "Phone number must be at least 10 digits")
-    .max(15, "Phone number must not exceed 15 digits"),
+  .string()
+  .regex(/^\+\d(?:[\d\s]{9,19})$/, "Phone number must start with + and contain only digits and spaces (10–15 digits total)"),
   landmark: z.string().optional(),
 });
 
@@ -82,7 +80,12 @@ export default function Payment() {
     setValue("lastname", session?.user?.lastname as string);
   }, [setValue, session?.user]);
 
+
   const onSubmit = async (data: UserDetailsForm) => {
+
+    console.log(data)
+
+    return
     // Reset previous errors
     setError("");
 
@@ -206,7 +209,6 @@ export default function Payment() {
                   image="/icons/user.svg"
                   register={register}
                   error={errors}
-                  disabled={true}
                 />
               </div>
               <div className="w-full md:w-1/2">
@@ -219,7 +221,6 @@ export default function Payment() {
                   image="/icons/user.svg"
                   register={register}
                   error={errors}
-                  disabled={true}
                 />
               </div>
             </div>
@@ -231,7 +232,7 @@ export default function Payment() {
           </div>
           <div className="mt-6">
             <div>
-              <Input
+              {/* <Input
                 type="text"
                 textStyle="md:text-md"
                 placeH="055xxxxx95"
@@ -240,6 +241,15 @@ export default function Payment() {
                 image="/icons/contacts-b.svg"
                 register={register}
                 error={errors}
+              /> */}
+              <PhoneInput
+                register={register}
+                setValue={setValue}
+                label="Phone number"
+                name="phoneNumber"
+                defaultCountry="GH"
+                error={errors}
+                image="/icons/contacts-b.svg"
               />
             </div>
             <div className="mt-2">
@@ -271,17 +281,6 @@ export default function Payment() {
               />
             </div>
             <div className="mt-4">
-              {/* <Input
-                type="text"
-                textStyle="md:text-md"
-                placeH="Ashanti"
-                label="Region"
-                name="region"
-                imageW={24}
-                image="/icons/world.svg"
-                register={register}
-                error={errors}
-              /> */}
               <Select
                 textStyle="md:text-md"
                 placeH="Select your region"

@@ -94,7 +94,6 @@ export class AuthService {
     const data = await response.json();
     const expiresAt = this.getTokenExpiration(data.accessToken);
 
-
     return {
       _id: data.user._id,
       email: data.user.email,
@@ -129,8 +128,10 @@ export class AuthService {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.log(errorData)
-      throw new Error(errorData.msg || errorData.message ||
+      console.log(errorData);
+      throw new Error(
+        errorData.msg ||
+          errorData.message ||
           `Google authentication failed: ${response.statusText}`
       );
     }
@@ -203,7 +204,7 @@ declare module "next-auth" {
     username: string;
     firstname: string;
     lastname: string;
-    isAuthProvider?:boolean;
+    isAuthProvider?: boolean;
     role: string;
     accessToken: string;
     refreshToken?: string;
@@ -219,7 +220,7 @@ declare module "next-auth" {
       username: string;
       firstname: string;
       lastname: string;
-      isAuthProvider?:boolean;
+      isAuthProvider?: boolean;
       role: string;
       image?: string;
     };
@@ -242,7 +243,7 @@ declare module "next-auth" {
       username: string;
       firstname: string;
       lastname: string;
-      isAuthProvider?:boolean;
+      isAuthProvider?: boolean;
       role: string;
       image?: string;
     };
@@ -251,16 +252,17 @@ declare module "next-auth" {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  trustHost: true, 
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-       authorization: {
+      authorization: {
         params: {
-          prompt: "consent",
+          prompt: "select_account",
           access_type: "offline",
           response_type: "code",
+          scope: "openid email profile",
         },
       },
     }),
@@ -297,7 +299,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             username: user.email ?? user._id,
             firstname: user.firstname ?? "",
             lastname: user.lastname ?? "",
-            isAuthProvider:user.isAuthProvider?? "",
+            isAuthProvider: user.isAuthProvider ?? "",
             role: user.role ?? "user",
             accessToken: user.accessToken,
             expiresAt: user.expiresAt,
@@ -345,8 +347,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           (user as any).username = googleUser.email;
           (user as any).firstname = googleUser.firstname;
           (user as any).lastname = googleUser.lastname;
-          (user as any).isAuthProvider = googleUser.isAuthProvider,
-          (user as any).role = googleUser.role;
+          ((user as any).isAuthProvider = googleUser.isAuthProvider),
+            ((user as any).role = googleUser.role);
           (user as any).accessToken = googleUser.accessToken;
           (user as any).refreshToken = googleUser.refreshToken;
           (user as any).refreshTokenExpiresAt =
@@ -357,8 +359,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return true;
         } catch (error) {
           console.log("Google sign-in failed:", error);
-          const errorMessage = error instanceof Error  ? error.message
-              : typeof error === "object" && error !== null && "message" in error
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : typeof error === "object" &&
+                error !== null &&
+                "message" in error
               ? (error as any).message
               : "Google sign-in failed";
           return `/sign-in?error=${errorMessage}`;

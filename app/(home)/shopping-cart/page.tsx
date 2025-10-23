@@ -10,6 +10,7 @@ import { useBoundStore } from "@/store/store";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -128,7 +129,8 @@ export default function YourCart() {
         </div>
         <div
           ref={totalRef}
-          className="md:w-[35%] lg:w-[30%] pt-12 px-6 md:px-3 lg:px-10 w-full flex flex-col items-center totalDiv">
+          className="md:w-[35%] lg:w-[30%] pt-12 px-6 md:px-3 lg:px-10 w-full flex flex-col items-center totalDiv"
+        >
           <div className="w-full">
             <div className="w-full flex items-center justify-between my-6">
               <p className="font-avenir font-[400] text-md pt-[5px]">TOTAL</p>
@@ -141,18 +143,21 @@ export default function YourCart() {
             </div>
             <div
               onClick={handlePayment}
-              className="mt-4 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black   border border-black/20  group/add cursor-pointer transition-all">
+              className="mt-4 rounded py-2.5 flex items-center justify-center gap-3 w-full  bg-black   border border-black/20  group/add cursor-pointer transition-all"
+            >
               <p className="font-avenir font-[400] text-sm pt-[4px] text-white ">
-                PROCEED TO CHECHOUT
+                PROCEED TO CHECKOUT
               </p>
             </div>
             <div className="px-3 py-4 rounded-md bg-gray-100 my-4">
               <p className="text-sm font-avenir text-black/60 font-[400]">
                 By selecting Procced to checkout button, you confirm that you
                 have read, understood and accepted our{" "}
-                <span className="underline text-blue-600 underline-offset-4 cursor-pointer">
-                  Terms and Conditions
-                </span>
+                <Link href="/policy">
+                  <span className="underline text-blue-600 underline-offset-4 cursor-pointer">
+                    Terms and Conditions
+                  </span>
+                </Link>
               </p>
             </div>
             <div className="w-full my-10 ">

@@ -41,14 +41,14 @@ export default function ProductOrderCard({
         </div>
       </div>
       <div className="w-full h-[40px] flex gap-2 ">
-        <div className="w-full h-full border border-black/30 rounded-[10px] flex items-center  uppercase justify-center bg-white">
+        <div className="flex-1 border border-black/30 rounded-[10px] flex items-center  uppercase justify-center bg-white">
           <p>{size}</p>
         </div>
-        <div className="w-full h-full border border-black/30 rounded-[10px] flex gap-2 items-center justify-center bg-white">
+        <div className="shrink-0 px-4 h-full border border-black/30 rounded-[10px] flex gap-2 items-center justify-center bg-white">
           <div 
           style={{ backgroundColor: variant?.colorHex, borderColor:variant?.colorHex}}
           className="size-4 border  rounded-full"></div>
-          <p className="font-avenir text-sm text-black pt-[1.5px] uppercase">{variant?.color}</p>
+          <p className="font-avenir text-sm text-nowrap  text-black pt-[1.5px] uppercase">{variant?.color}</p>
         </div>
       </div>
       <div className="w-full h-[40px] flex-shrink-0  border border-black/30 flex items-center justify-center rounded-[10px] bg-white">

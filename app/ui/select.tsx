@@ -60,9 +60,9 @@ export default function Select({
         <select
           {...register(name, { required: true })}
           disabled={disabled}
-          className="w-full h-full px-2 focus:outline-none font-avenir bg-transparent cursor-pointer"
-        >
-          <option value="" disabled selected>
+          defaultValue="" 
+          className="w-full h-full px-2 focus:outline-none font-avenir bg-transparent cursor-pointer">
+          <option  disabled selected>
             {placeH}
           </option>
           {options.map((option) => (

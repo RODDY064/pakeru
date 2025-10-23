@@ -31,7 +31,7 @@ export default function PaymentNav() {
         <div className="flex items-center justify-center gap-2 flex-none">
           <Image src="/icons/call.svg" width={20} height={20} alt="call" />
           <p className="font-avenir font-[400] text-black/60 text-md mt-1">
-            Call us at <span className="pl-1">0599969735</span>
+            Call us at <span className="pl-1">+233 5569 867 61</span>
           </p>
         </div>
       </div>

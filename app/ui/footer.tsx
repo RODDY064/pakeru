@@ -75,7 +75,7 @@ export default function Footer() {
               <ul className="mt-3 list-disc ml-4 flex flex-col gap-2">
                 <Link href="/help">
                   <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
-                    Helps
+                    Help
                   </li>
                 </Link>
                 <Link href="/account?userPage=orders">

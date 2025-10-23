@@ -26,6 +26,7 @@
     "js-base64": "^3.7.8",
     "js-sha256": "^0.11.1",
     "lexical": "^0.33.1",
+    "libphonenumber-js": "^1.12.24",
     "lodash": "^4.17.21",
     "lodash.isequal": "^4.5.0",
     "lottie-react": "^2.4.1",

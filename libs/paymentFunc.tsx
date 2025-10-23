@@ -161,17 +161,10 @@ export const usePaymentProcessing = () => {
           throw new Error("Payment gateway error: Missing authorization URL");
         }
 
-        // Store order reference for tracking
-        const orderId = response.orderId || response.reference;
-        if (orderId) {
-          sessionStorage.setItem("pendingOrderId", orderId);
-          clearCart();
-        }
-
+       
+        clearCart();
         console.log(authUrl, "auth url");
 
-        // Navigate to authorization URL.
-        // For external payment providers do a full page navigation so the browser can leave the app.
         try {
           const isAbsolute = /^https?:\/\//i.test(authUrl);
           if (isAbsolute) {
@@ -181,13 +174,11 @@ export const usePaymentProcessing = () => {
             router.push(authUrl);
           }
         } catch (navErr) {
-          // If router navigation fails, fall back to location assign
           window.location.assign(authUrl);
         }
 
         return {
           success: true,
-          orderId,
         };
       } catch (error: any) {
         console.error("Payment processing failed:", error);
