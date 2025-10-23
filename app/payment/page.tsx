@@ -85,6 +85,7 @@ export default function Payment() {
     // Reset previous errors
     setError("");
 
+    
     // Early validation
     if (cartItems.length === 0) {
       const errorMsg = "Your cart is empty!";
