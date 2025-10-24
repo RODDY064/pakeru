@@ -59,7 +59,9 @@ export const metadata: Metadata = {
     "trendy apparel",
     "fashion forward",
   ],
-
+   verification: {
+    google: "p-98hcZwLB835UQXrRssCwFx5UaLbQTuSH7Y0NS61jk",
+  },
   authors: [{ name: "Pakeru" }],
   creator: "Pakeru",
   publisher: "Pakeru",
