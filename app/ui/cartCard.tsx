@@ -1,6 +1,6 @@
 "use client";
 
-import { CartItemType } from "@/store/cart";
+import { CartItemType, findVariant } from "@/store/cart";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -23,11 +23,11 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
   });
   const [variantImage, setVariantImage] = useState(cartData?.mainImage.url);
 
+  findVariant
+
   useEffect(() => {
     if (cartData) {
-      const activeVariant = cartData.variants?.find(
-        (variant) => variant._id === cartData.selectedColor
-      );
+      const activeVariant = findVariant(cartData, cartData.selectedColor)
       if (activeVariant) {
         setColorName({
           color: activeVariant.color || "",
@@ -45,7 +45,7 @@ export default function CartCard({ cartData }: { cartData: CartItemType }) {
       <div className="w-full md:w-[50%] h-[150px] max-sm:gap-3 md:h-auto  flex flex-none p-2">
         <div className="w-[50%] md:w-full h-full bg-[#f2f2f2] relative">
           <Image
-            src={cartData?.mainImage.url ?? "/images/image-fallback.png"}
+            src={variantImage ?? "/images/image-fallback.png"}
             fill
             className="object-cover"
             alt="hero"

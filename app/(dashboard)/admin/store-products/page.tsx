@@ -31,7 +31,7 @@ export default function Products() {
     loadCategories,
     setSelectedProduct,
     getCategoryNameById,
-    storeProducttotalItems,
+    dashboardProductStats,
   } = useBoundStore();
 
   const { get } = useApiClient();
@@ -59,9 +59,6 @@ export default function Products() {
     dashboardProductErrors.products,
   ]);
 
-  useEffect(()=>{
-    console.log(storeProducttotalItems, 'store total items')
-  },[storeProducttotalItems])
 
   useEffect(() => {
     loadStoreProducts(true, get);
@@ -97,11 +94,11 @@ export default function Products() {
 
   useEffect(() => {
     updateFromAPI({
-      total: storeProducttotalItems,
-      totalPages: storeProducttotalItems,
+      total: dashboardProductStats.total,
+      totalPages: dashboardProductStats.total,
       page: pagination.page,
     });
-  }, [storeProducts]);
+  }, [storeProducts, dashboardProductErrors]);
 
   useEffect(() => {
     const sliceData = slice(filteredStoreProducts);
@@ -116,15 +113,14 @@ export default function Products() {
   ]);
 
   useEffect(() => {
-    const productStats = getProductStats();
 
     setStats([
-      { label: "Total Products", value: productStats.total ?? 0 },
-      { label: "Active Products", value: productStats.active ?? 0 },
-      { label: "Inactive Products", value: productStats.inactive ?? 0 },
-      { label: "Product Out of Stock", value: productStats.outOfStock ?? 0 },
+      { label: "Total Products", value: dashboardProductStats.total ?? 0 },
+      { label: "Active Products", value: dashboardProductStats.activeTotal ?? 0 },
+      { label: "Inactive Products", value:  dashboardProductStats.inactiveTotal ?? 0 },
+      { label: "Product Out of Stock", value:  dashboardProductStats.outOfStock ?? 0 },
     ]);
-  }, [storeProducts,currentPageProducts, filteredStoreProducts]);
+  }, [dashboardProductStats]);
 
   // filtering
 

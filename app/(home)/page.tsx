@@ -5,7 +5,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Image from "next/image";
 import Button from "../ui/button";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { Draggable } from "gsap/Draggable";
@@ -18,6 +18,7 @@ import SliderButton from "../ui/sliderButton";
 import Video from "../ui/bentos";
 import { useGsapSlider } from "@/libs/gsapScroll";
 import { handleNavigation } from "@/libs/navigate";
+import Slider from "../ui/slider";
 
 const easing = cubicBezier(0.37, 0.24, 0.38, 0.99);
 
@@ -69,10 +70,6 @@ const Images = ({
   containerHeight: any;
 }) => {
   const { hero } = useBoundStore();
-
-  useEffect(() => {
-    console.log(hero);
-  }, [hero]);
 
   return (
     <div
@@ -156,200 +153,6 @@ const Images = ({
   );
 };
 
-const Slider = ({ containerHeight }: { containerHeight: any }) => {
-  const sliderRef = useRef<HTMLDivElement | null>(null);
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-  const { slider, setLookAt, scrollAmount } = useBoundStore();
-  const router = useRouter();
-
-  useGSAP(() => {
-    gsap.registerPlugin(Draggable, InertiaPlugin);
-
-    const boxes = gsap.utils.toArray(".card") as HTMLElement[];
-    let activeElement: HTMLElement | null = null;
-
-    const loop = horizontalLoop(boxes, {
-      paused: true,
-      draggable: true,
-      center: true,
-      onChange: (element, index) => {
-        activeElement?.classList.remove("active");
-        element.classList.add("active");
-        activeElement = element;
-      },
-    });
-
-    const draggable = Draggable.get(".hero-slider-div");
-    if (draggable) {
-      draggable.vars.throwResistance = 6000;
-      draggable.vars.dragResistance = 0.4;
-      draggable.vars.edgeResistance = 0.8;
-    }
-
-    const nextBtn = document.querySelector(".next");
-    const prevBtn = document.querySelector(".prev");
-
-    nextBtn?.addEventListener("click", () => {
-      loop.next({ duration: 0.4, ease: "power1.inOut" });
-    });
-    prevBtn?.addEventListener("click", () => {
-      loop.previous({ duration: 0.4, ease: "power1.inOut" });
-    });
-  });
-
-  return (
-    <motion.div
-      animate={{ opacity: 1 }}
-      initial={{ opacity: 0 }}
-      transition={{ duration: 0.6, ease: "easeInOut" }}
-      style={{ maxHeight: containerHeight }}
-      className="w-full h-full mt-10"
-    >
-      <div>
-        <div
-          ref={sliderRef}
-          className="flex gap-1 md:gap-3 overflow-hidden text-white relative hero-slider-div"
-        >
-          {slider?.map((product) => (
-            <div
-              key={product?._id}
-              onClick={() =>
-                router.push(
-                  `/shop?category=${product.title.toLocaleLowerCase()}`
-                )
-              }
-              className={cn(
-                "w-[calc(90vw)] slider-element md:w-[calc(70vw)] card h-[350px]  flex-shrink-0  relative lg:h-[calc(35vw)]  flex-none  flex items-center justify-center overflow-hidden  ",
-                {
-                  "pl-1 md:pl-3 ": product._id === 0,
-                  "border border-black/20 ": product._id !== 0,
-                }
-              )}
-            >
-              {product._id === 0 ? (
-                <div className="w-[calc(90vw)] md:w-[calc(70vw)] h-full relative  overflow-hidden border border-black/10 ">
-                  <motion.div
-                    variants={ImgC}
-                    initial="hide"
-                    whileHover={"show"}
-                    transition={{
-                      type: "spring",
-                      stiffness: 200,
-                      damping: 18,
-                      mass: 0.7,
-                    }}
-                    className="w-full h-full border-black/10 border  group/slider bg-[#f2f2f2] mx-auto relative flex items-center justify-center overflow-hidden will-change-transform preserve-3d backface-hidden"
-                  >
-                    <Image
-                      src={product.mainImage}
-                      alt={product.title}
-                      fill
-                      className="object-cover object-center max-w-xl mx-auto bg-[#f2f2f2]"
-                      priority
-                    />
-                    <div className="w-full h-full flex text-white relative z-10 top-2">
-                      <div className="w-full h-24 flex px-4 pb-8 ">
-                        <motion.div
-                          variants={textMovement}
-                          className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
-                        >
-                          <motion.div
-                            variants={textOverlay}
-                            className="w-full h-full bg-black absolute  text-overlay"
-                          />
-                          <div className="flex gap-2 items-center relative z-20 flex-none">
-                            <div className="size-1.5 bg-black group-hover/slider:bg-white rounded-full" />
-                            <p className="font-avenir font-bold  text-black  group-hover/slider:text-white py-2">
-                              {product.title}
-                            </p>
-                          </div>
-                        </motion.div>
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-              ) : (
-                <motion.div
-                  variants={ImgC}
-                  initial="hide"
-                  whileHover={"show"}
-                  transition={{
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 18,
-                    mass: 0.7,
-                  }}
-                  className="w-full h-full group/slider relative bg-[#f2f2f2] border border-black/10 flex items-center justify-center will-change-transform preserve-3d backface-hidden overflow-hidden "
-                >
-                  <Image
-                    src={product.mainImage}
-                    alt={product.title}
-                    fill
-                    className="object-cover max-w-xl mx-auto bg-[#f2f2f2]"
-                    priority
-                  />
-                  <div className="w-full h-full flex top-2 items-start text-white relative z-10">
-                    <div className="w-full h-24  flex px-4 pb-8">
-                      <motion.div
-                        variants={textMovement}
-                        transition={{ type: "spring" }}
-                        className="relative overflow-hidden px-4 py-[3px] flex items-center justify-center"
-                      >
-                        <motion.div
-                          variants={textOverlay}
-                          className="w-full h-full bg-black absolute text-overlay"
-                        />
-                        <div className="flex gap-2 items-center relative z-20 flex-none">
-                          <div className="size-1.5 bg-black group-hover/slider:bg-white rounded-full" />
-                          <p className="font-avenir font-bold text-black  group-hover/slider:text-white py-1.5">
-                            {product.title}
-                          </p>
-                        </div>
-                      </motion.div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="md:flex items-center justify-center gap-6 md:gap-10 my-10   hidden ">
-        <SliderButton />
-      </div>
-    </motion.div>
-  );
-};
-
-const textOverlay = {
-  show: {
-    clipPath: "circle(150% at 0 100%)",
-  },
-  hide: {
-    clipPath: "circle(0.1% at 0 100%)",
-  },
-};
-
-const textMovement = {
-  show: {
-    x: 15,
-    transition: { stiffness: 150, damping: 16, mass: 0.6 },
-  },
-  hide: {
-    x: 35,
-    transition: { stiffness: 150, damping: 16, mass: 0.6 },
-  },
-};
-
-const ImgC = {
-  show: {
-    scale: 1.05,
-  },
-  hide: {
-    scale: 1,
-  },
-};
-
 const Product = () => {
   const sliderRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const prevBtnRef = useRef<HTMLButtonElement>(
@@ -360,11 +163,11 @@ const Product = () => {
   );
   const cardRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
 
+
   const {
     isStart,
     isEnd,
     currentPage,
-    itemsArray,
     totalPages,
     goToPage,
     reinitialize,
@@ -376,11 +179,20 @@ const Product = () => {
     speed: 0.5,
   });
 
-  const { products, cartState } = useBoundStore();
+  const { products, cartProductState, loadProducts, currentFilters } = useBoundStore();
+
+  useEffect(()=>{
+     loadProducts()
+  },[])
+
+  useEffect(() => {
+  console.log("cartProductState:", cartProductState);
+  console.log("products:", products?.length);
+}, [cartProductState, products]);
+
 
   useEffect(() => {
     if (products && products.length > 0) {
-      console.log("Products loaded, reinitializing slider");
       reinitialize();
     }
   }, [products]);
@@ -394,14 +206,11 @@ const Product = () => {
           "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] place-content-start py-2 md:auto-cols-[minmax(26rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none px-2",
           {
             "auto-cols-[minmax(100%,1fr)]":
-              cartState === "loading" || cartState === "error",
+              cartProductState === "loading" || cartProductState === "error",
           }
         )}
-        style={{ scrollBehavior: "smooth" }}
-      >
-        {cartState === "loading" ||
-        cartState === "error" ||
-        cartState === "idle" ? (
+        style={{ scrollBehavior: "smooth" }}>
+        {(cartProductState === "loading" || cartProductState === "error" || cartProductState === "idle") ? (
           <div className="w-full  h-[400px] md:h-[450px] flex items-center justify-center">
             <div className="flex items-center justify-center gap-1">
               <Image
@@ -443,7 +252,7 @@ const Product = () => {
           ))}
         </div>
       </div>
-      {cartState === "success" && products.length !== 0 && (
+      {cartProductState === "success" && products.length !== 0 && (
         <div className="md:flex items-center justify-center gap-6 md:gap-12 hidden ">
           <button
             ref={prevBtnRef}

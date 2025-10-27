@@ -3,19 +3,28 @@ import Button from "@/app/ui/button";
 import Filter from "@/app/ui/filter";
 import ProductSkeleton from "@/app/ui/product-skeleton";
 import ProductCon from "@/app/ui/productCon";
+import { useFilterPagination } from "@/app/ui/useFilterPage";
 import { useApiClient } from "@/libs/useApiClient";
 import { useBoundStore } from "@/store/store";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { Suspense, useEffect, useState } from "react";
+import React, {
+  Suspense,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 
 export default function Product() {
-  const { cartState, products, loadProducts } = useBoundStore();
+  const { cartProductState, products, loadProducts, isServerInitialized } = useBoundStore();
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [containerHeight, setContainerHeight] = useState("100vh");
-  const { get } = useApiClient();
+
+  const { applyFilters, pagination, productPaginationState, handlePageChange } =
+    useFilterPagination();
 
   useEffect(() => {
     const calculateHeight = () => {
@@ -35,39 +44,39 @@ export default function Product() {
     };
   }, []);
 
-  const handleRefresh = async () => {
+  // Memoize the refresh handler to prevent recreation on every render
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      // await loadProducts(true, 1, 25);
+      await loadProducts(true, 1, 25);
       await new Promise((res) => setTimeout(res, 500));
       router.refresh();
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [loadProducts, router]);
 
-  // Show skeleton only on initial load (when loading and no products exist)
-  const isInitialLoading = (cartState === "loading" || cartState === "idle") && products.length === 0;
+
+  const skeletonItems = useMemo(() => [1, 2, 3, 4], []);
 
   return (
     <Suspense>
       <div
         style={{ minHeight: containerHeight }}
-        className="w-full min-h-screen flex flex-col items-center text-black home-main transition-all"
-      >
+        className="w-full min-h-screen flex flex-col items-center text-black home-main transition-all" >
         <div className="w-full h-full bg-white flex overflow-hidden gap-4 pt-30">
-          {isInitialLoading && (
+          {(cartProductState === "loading" || cartProductState === "idle" ) && (
             <motion.div
               className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out"
               layout
             >
-              {[1, 2, 3, 4].map((item) => (
+              {skeletonItems.map((item) => (
                 <ProductSkeleton type="large" key={item} />
               ))}
             </motion.div>
           )}
 
-          {cartState === "error" && (
+          {cartProductState === "error"  && (
             <div className="w-full h-dvh flex items-center flex-col pt-12 md:pt-24">
               <Image
                 src="/icons/cloth.svg"
@@ -110,12 +119,40 @@ export default function Product() {
             </div>
           )}
 
-          {(cartState === "success" || (products.length > 0 && cartState !== "error")) && (
-            <ProductCon />
+          {cartProductState === "success" && products.length === 0  && (
+            <div className="w-full flex flex-col items-center md:col-span-3 xl:col-span-4">
+              <div className="w-full flex flex-col items-center ">
+                <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-500">
+                  <div className=" mb-4">
+                    <Image
+                      src="/icons/search.svg"
+                      width={32}
+                      height={32}
+                      alt="search"
+                      className="opacity-30"
+                    />
+                  </div>
+                  <p className="font-avenir font-[400] text-lg">
+                    No products found
+                  </p>
+                  <p className="mt-1 font-avenir text-sm text-black/30">
+                    Try a different filtering term
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {products.length > 0 && cartProductState === "success" && (
+            <ProductCon
+              pagination={pagination}
+              productPaginationState={productPaginationState}
+              handlePageChange={handlePageChange}
+            />
           )}
         </div>
       </div>
-      <Filter />
+      <Filter applyFilters={applyFilters} />
     </Suspense>
   );
 }

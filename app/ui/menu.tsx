@@ -18,7 +18,6 @@ import { MenuItem } from "@/store/modal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { useApiClient } from "@/libs/useApiClient";
 import { debounce } from "lodash";
 
 export default function Menu() {
@@ -42,37 +41,12 @@ export default function Menu() {
 
   const [mobileActiveItem, setMobileActiveItem] = useState<string | null>(null);
   const [showMobileSubMenu, setShowMobileSubMenu] = useState(false);
-  const { get } = useApiClient();
-
-  const sliderRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
-  const prevBtnRef = useRef<HTMLButtonElement>(
-    null as unknown as HTMLButtonElement
-  );
-  const nextBtnRef = useRef<HTMLButtonElement>(
-    null as unknown as HTMLButtonElement
-  );
-  const cardRef = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
-
-  const {
-    isStart,
-    isEnd,
-    currentPage,
-    itemsArray,
-    totalPages,
-    goToPage,
-    reinitialize,
-  } = useGsapSlider({
-    sliderRef,
-    prevRef: prevBtnRef,
-    nextRef: nextBtnRef,
-    cardRef,
-    speed: 0.5,
-  });
 
   const activeMenuItem = useMemo(
     () => menuItems.find((item) => item.isActive),
     [menuItems]
   );
+
   const latestActiveItemRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -149,28 +123,38 @@ export default function Menu() {
   };
 
   const MenuRender = React.memo(({ data }: { data: MenuItem }) => {
+    const localSliderRef = useRef<HTMLDivElement>(null);
+    const localPrevRef = useRef<HTMLButtonElement>(null);
+    const localNextRef = useRef<HTMLButtonElement>(null);
+    const localCardRef = useRef<HTMLDivElement>(null);
+
+    const { isStart, isEnd, currentPage, totalPages, goToPage, isInitialized } =
+      useGsapSlider({
+        sliderRef: localSliderRef as React.RefObject<HTMLDivElement>,
+        prevRef: localPrevRef as React.RefObject<HTMLButtonElement>,
+        nextRef: localNextRef  as React.RefObject<HTMLButtonElement>,
+        cardRef: localCardRef  as React.RefObject<HTMLDivElement>,
+        speed: 0.5,
+      });
+
     const memoizedProducts = useMemo(
       () => data.menuProducts || [],
       [data.menuProducts]
     );
 
-    const productsKey = useMemo(
-      () => data.menuProducts?.map((p) => p._id).join("-") || "empty",
-      [data.menuProducts]
-    );
-
-    const getContentKey = useCallback((category: string) => {
-        return `content-${category}-${contentKey}`},[contentKey]);
+    useEffect(()=>{
+      console.log(data.menuProducts, "menu product");
+    }, [data.menuProducts])
 
     return (
-      <div className="w-full h-full flex- flex-col ">
+      <div className="w-full h-full flex flex-col">
         <div className="w-full flex">
           <div
             onClick={() => handlePush(data.category)}
-            key={getContentKey(data.category)}
-            className={cn("h-fit cursor-pointer w-full")}>
+            className={cn("h-fit cursor-pointer w-full")}
+          >
             <Link href={`/shop?category=${data.category}`}>
-              <div className="w-full h-[30dvh] relative overflow-hidden border-b border-black/20">
+              <div className="w-full h-[30dvh] bg-[#f2f2f2] relative overflow-hidden border-b border-black/20">
                 <Image
                   src={data?.image?.url ?? "/images/image-fallback.png"}
                   fill
@@ -186,11 +170,11 @@ export default function Menu() {
           </div>
         </div>
 
-        <div className="border-t h-full  border-black/20">
-          <p className="font-avenir font-[400] text-sm text-black/50 p-6 pb-2">
+        <div className="border-t h-full border-black/20">
+          <p className="font-avenir font-[400] text-sm text-black/50 pt-4 p-6 pb-2">
             PRODUCTS
           </p>
-          {data.menuProducts.length === 0 ? (
+          {memoizedProducts.length === 0 ? (
             <div className="w-full min-h-[300px] flex items-center justify-center">
               <p className="font-avenir text-black/40 text-lg">
                 No product available
@@ -199,37 +183,110 @@ export default function Menu() {
           ) : (
             <>
               <div className="w-full pl-6">
-                <AnimatePresence mode="wait">
+                <div  className="w-full ">
+            
                   <div
-                    ref={sliderRef}
-                    className="w-full py-2 px-4 grid grid-flow-col auto-cols-[minmax(300,2fr)] md:auto-cols-[minmax(100,270px)]  pr-20 nav-slider "
-                  >
-                    <motion.div
-                      key={productsKey}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className="flex gap-3 w-full relative"
-                    >
-                      {memoizedProducts.map((product, index) => (
-                        <motion.div
-                          className="w-full"
-                          key={`${product._id}-${
-                            product.selectedColor || "default"
-                          }-${index}`}
-                        >
-                          <ProductCard
-                            type="small"
-                            productData={product}
-                            cardRef={index === 0 ? cardRef : undefined}
-                            hideDetails={true}
-                          />
-                        </motion.div>
-                      ))}
-                    </motion.div>
+                    ref={localSliderRef}
+                    className=" gap-3 w-full relative overflow-x-auto  py-2 px-4 grid grid-flow-col  pr-20 "
+                    style={{ scrollBehavior: "auto" }} >
+                    {memoizedProducts.map((product, index) => (
+                      <div
+                        className="w-full flex-shrink-0"
+                        key={`${product._id}-${
+                          product.selectedColor || "default"
+                        }-${index}`}>
+                        <ProductCard
+                          type="small"
+                          productData={product}
+                          cardRef={index === 0 ? localCardRef as React.RefObject<HTMLDivElement> : undefined}
+                          cardStyle="mb-2 md:mb-0"
+                          hideDetails={true}
+                        />
+                      </div>
+                    ))}
                   </div>
-                </AnimatePresence>
+                </div>
+
+                {/* Only show controls when initialized */}
+                {isInitialized && totalPages > 1 && (
+                  <>
+                    <div className="flex flex-col items-center">
+                      <div className="w-[80%] md:w-full my-2 flex flex-wrap items-center justify-center gap-1 md:gap-3">
+                        {Array.from({ length: totalPages }, (_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => goToPage(i)}
+                            className={`w-6 h-[5px] md:w-6 md:h-2 rounded-full transition-colors ${
+                              i === currentPage ? "bg-black" : "bg-black/20"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="hidden md:flex items-center justify-center gap-6 md:gap-12">
+                      <button
+                        ref={localPrevRef}
+                        aria-label="Scroll left"
+                        disabled={isStart}
+                        className={cn(
+                          "size-10 hover:bg-black cursor-pointer flex items-center justify-center border rounded-full group/a nav-prev transition-all duration-200",
+                          {
+                            "opacity-0 invisible": isStart,
+                            "opacity-100 visible": !isStart,
+                          }
+                        )}
+                      >
+                        <Image
+                          src="/icons/arrow.svg"
+                          width={18}
+                          height={18}
+                          alt="arrow"
+                          priority
+                          className="rotate-90 group-hover/a:hidden transition-all duration-200"
+                        />
+                        <Image
+                          src="/icons/arrow-w.svg"
+                          width={18}
+                          height={18}
+                          alt="arrow"
+                          priority
+                          className="hidden rotate-90 group-hover/a:flex transition-all duration-200"
+                        />
+                      </button>
+
+                      <button
+                        ref={localNextRef}
+                        aria-label="Scroll right"
+                        disabled={isEnd}
+                        className={cn(
+                          "size-10 hover:bg-black cursor-pointer flex items-center justify-center border rounded-full group/w nav-next transition-all duration-200",
+                          {
+                            "opacity-0 invisible": isEnd,
+                            "opacity-100 visible": !isEnd,
+                          }
+                        )}
+                      >
+                        <Image
+                          src="/icons/arrow.svg"
+                          width={18}
+                          height={18}
+                          alt="arrow"
+                          priority
+                          className="rotate-270 group-hover/w:hidden transition-all duration-200"
+                        />
+                        <Image
+                          src="/icons/arrow-w.svg"
+                          width={18}
+                          height={18}
+                          alt="arrow"
+                          priority
+                          className="hidden rotate-270 group-hover/w:flex transition-all duration-200"
+                        />
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </>
           )}
@@ -269,7 +326,7 @@ export default function Menu() {
             key={`mobile-${data.category}-img`}
             className={cn("w-full h-fit cursor-pointer")}
           >
-            <div className="w-full h-[200px]  relative border border-black/20">
+            <div className="w-full h-[200px] bg-[#f2f2f2] relative border border-black/20">
               <Image
                 src={data?.image?.url ?? "/images/image-fallback.png"}
                 fill
@@ -462,7 +519,8 @@ export default function Menu() {
                           {
                             "text-black/30": item.isActive,
                           }
-                        )}>
+                        )}
+                      >
                         <p className="font-avenir uppercase">{item.category}</p>
                         <motion.div
                           className="w-full h-[1px]"
@@ -521,7 +579,8 @@ export default function Menu() {
                     initial="hidden"
                     animate="visible"
                     exit="hidden"
-                    className="w-full h-full">
+                    className="w-full h-full"
+                  >
                     {RenderTAB(currentActiveItem)}
                   </motion.div>
                 )}
@@ -686,7 +745,8 @@ export default function Menu() {
               initial="hidden"
               animate="visible"
               exit="hidden"
-              className="w-full h-full fixed top-0 pt-32 z-[99] bg-white">
+              className="w-full h-full fixed top-0 pt-32 z-[99] bg-white"
+            >
               {RenderMobileTAB(mobileActiveItem)}
             </motion.div>
           )}

@@ -23,7 +23,6 @@ export const useSearch: StateCreator<
     set((state) => {
       state.search = word;
       
-      // Filter products based on search term
       if (word.trim() === "") {
         state.searchProduct = [];
       } else {
@@ -42,8 +41,7 @@ export const useSearch: StateCreator<
   toggleSearch: () =>
     set((state) => {
       state.isSearching = !state.isSearching;
-      
-      // Clear search results when closing search
+
       if (state.isSearching === false) {
         state.search = "";
         state.searchProduct = [];

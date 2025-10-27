@@ -112,6 +112,7 @@ export default function Nav() {
   }, [paused, ads.length]);
 
   useEffect(() => {
+
     // Only load if server initialization failed and we don't have data
     if (!isServerInitialized && (!products?.length || !categories?.length)) {
       console.log("Server initialization failed, loading data client-side...");

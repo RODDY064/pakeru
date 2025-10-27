@@ -13,7 +13,7 @@ import {
 import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
-import { useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useOrdersWebhook } from "../../hooks/orderWebhooks";
 import { useApiClient } from "@/libs/useApiClient";
@@ -41,41 +41,40 @@ export default function Unfulfilled() {
     updateOrder,
     setOrderTypeFilter,
     unfulfilledFilteredOrders,
-    orderTotalSize,
-    applyOrderFilters
+    UnfulfilledStats,
+    applyOrderFilters,
   } = useBoundStore();
 
-    const [isFilterd, setIsFilterd] = useState(false);
-  
-    useEffect(() => {
-      if (unfulfilledFilteredOrders.length === 0) {
-        setIsFilterd(true);
-      }
-    }, [unfulfilledFilteredOrders]);
-  
+  const [isFilterd, setIsFilterd] = useState(false);
 
-  const orderStats = useMemo(() => computeOrdersStats(unfulfilledFilteredOrders),[unfulfilledOrders,unfulfilledFilteredOrders,orderInView]);
+  useEffect(() => {
+    if (unfulfilledFilteredOrders.length === 0) {
+      setIsFilterd(true);
+    }
+  }, [unfulfilledFilteredOrders]);
+
+  const orderStats = useMemo(
+    () => computeOrdersStats(unfulfilledFilteredOrders),
+    [unfulfilledOrders, unfulfilledFilteredOrders, orderInView]
+  );
 
   const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
 
   const unfulfilledStats = useMemo(() => {
     return [
-      { label: "Total Unfulfilled", value: orderStats.totalOrders ?? 0 },
-      { label: "Pending", value: orderStats.pendingOrders ?? 0 },
+      { label: "Total Unfulfilled", value: UnfulfilledStats.total ?? 0 },
+      { label: "Pending", value: UnfulfilledStats.pending ?? 0 },
     ];
-  }, [orderStats,unfulfilledFilteredOrders]);
+  }, [UnfulfilledStats, unfulfilledOrders]);
 
   const loadOrdersForPagination = async (page: number) => {
-    await loadOrders("unfulfilled", {
-      get,
-      force: false,
-    });
+    await loadOrders("unfulfilled", false, 25,get, page);
   };
 
   useEffect(() => {
     configure({
       dataKey: "unfulfilledFilteredOrders",
-      loadFunction: loadOrdersForPagination,
+      loadFunction: (page) => loadOrdersForPagination(pagination.page),
       size: 25,
     });
 
@@ -84,10 +83,10 @@ export default function Unfulfilled() {
 
   useEffect(() => {
     updateFromAPI({
-      total: orderTotalSize,
+      total: UnfulfilledStats.total,
       page: 1,
     });
-  }, [orderTotalSize]);
+  }, [UnfulfilledStats]);
 
   useEffect(() => {
     const sliceData = slice(unfulfilledFilteredOrders);
@@ -97,14 +96,14 @@ export default function Unfulfilled() {
   const [renderCount, setRenderCount] = React.useState(0);
   useEffect(() => {
     setRenderCount((prev) => prev + 1);
-     applyOrderFilters()
+    applyOrderFilters();
   }, [unfulfilledOrders]);
 
   useEffect(() => {
     const initializeData = async () => {
       try {
         await Promise.all([
-          loadOrders("unfulfilled", { force: true, get }),
+          loadOrders("unfulfilled",true,25, get ),
           loadStoreProducts(),
         ]);
       } catch (error) {
@@ -218,7 +217,7 @@ export default function Unfulfilled() {
         data={currentOrders}
         tableName="Unfulfuilled Orders"
         tabelState={unfulfilledState}
-        reload={() => loadOrders("unfulfilled", { force: true, get })}
+        reload={() => loadOrdersForPagination(pagination.page)}
         columnStyle="py-4"
         dateKey="date"
         columnClick={(order) => handleSelect(order)}
@@ -236,13 +235,12 @@ const Header = () => {
     setDeliveryStatusFilter,
     setPaymentStatusFilter,
     setDateFilter,
-    resetOrdersFilters
+    resetOrdersFilters,
   } = useBoundStore();
 
-   useEffect(()=>{
-      resetOrdersFilters()
-    },[])
-  
+  useEffect(() => {
+    resetOrdersFilters();
+  }, []);
 
   return (
     <>

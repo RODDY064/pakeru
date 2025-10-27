@@ -27,7 +27,7 @@ export type OrdersData = {
     landmark?: string;
     region: string;
     town: string;
-    phoneNumber:string
+    phoneNumber: string;
   };
   items: {
     numOfItems: number;
@@ -86,7 +86,17 @@ export type OrdersStore = {
   userOrders: OrdersData[];
   orderInView: OrdersData | null;
   showOrderModal: boolean;
-  orderTotalSize: number;
+  UnfulfilledStats: {
+    total: number;
+    pending: number;
+  };
+
+  fulfilledStats: {
+    delivered: number;
+    shipped: number;
+    cancelled: number;
+    total: number;
+  };
 
   OrderFilters: OrderFiltersTypes;
 
@@ -128,12 +138,10 @@ export type OrdersStore = {
 
   loadOrders: (
     type: "fulfilled" | "unfulfilled",
-    options?: {
-      force?: boolean;
-      limit?: number;
-      get?: ReturnType<typeof useApiClient>["get"];
-      page?: number;
-    }
+    force?: boolean,
+    limit?: number,
+    get?: ReturnType<typeof useApiClient>["get"],
+    page?: number
   ) => Promise<void>;
   loadOrder: (
     id: string,
@@ -373,23 +381,22 @@ const apiService = {
     get: ReturnType<typeof useApiClient>["get"],
     limit?: number,
     page?: number
-  ): Promise<{ total: number; orders: OrdersData[] }> {
+  ): Promise<{ total: number; orders: OrdersData[]; stats: any }> {
     try {
       const query = new URLSearchParams();
       query.append("fulfilledStatus", type);
       if (limit) query.append("limit", limit.toString());
       if (page) query.append("page", page.toString());
 
-      const response = await get<{ data: OrdersData[]; total: number }>(
-        `/orders?${query.toString()}&t=${Date.now()}`,
-        {
-          requiresAuth: true,
-           cache:"no-store",
-           next:{ revalidate:0 }
-        }
-      );
-
-      // console.log(response, "order response");
+      const response = await get<{
+        data: OrdersData[];
+        total: number;
+        stats: any;
+      }>(`/orders?${query.toString()}&t=${Date.now()}`, {
+        requiresAuth: true,
+        cache: "no-store",
+        next: { revalidate: 0 },
+      });
 
       const orders = response.data;
       if (!Array.isArray(orders)) {
@@ -398,6 +405,7 @@ const apiService = {
 
       return {
         total: response.total,
+        stats: response.stats,
         orders: transformApiOrdersToOrdersData(orders),
       };
     } catch (error) {
@@ -413,7 +421,7 @@ const apiService = {
     try {
       const data = await get<{ data: OrdersData }>(`/orders/id/${id}`, {
         requiresAuth: true,
-         cache:"no-store",
+        cache: "no-store",
       });
       return transformApiOrderToOrdersData(data);
     } catch (error) {
@@ -432,36 +440,36 @@ const apiService = {
 
       console.log(updates, "updates");
 
-      const response = await patch<{ order:OrdersData }>(`/orders/id/${orderId}`, updates,{
+      const response = await patch<{ order: OrdersData }>(
+        `/orders/id/${orderId}`,
+        updates,
+        {
           requiresAuth: true,
-          cache:"no-cache"
+          cache: "no-cache",
         }
       );
 
-      console.log(response, 'order');
+      console.log(response, "order");
 
-     return transformApiOrderToOrdersData(response.order)
+      return transformApiOrderToOrdersData(response.order);
     } catch (error) {
       console.error("Failed to update order:", error);
       throw error;
     }
   },
 
-
   async fetchUserOrders(
     get: ReturnType<typeof useApiClient>["get"]
   ): Promise<OrdersData[]> {
     try {
-
-
-      console.log("hello")
+      console.log("hello");
 
       const myOrder = "myOrder";
       const endpoint = `/orders/my/${myOrder}`;
 
       const response = await get<{ data: OrdersData[] }>(endpoint, {
         requiresAuth: true,
-        cache:"no-store",
+        cache: "no-store",
       });
 
       console.log(response, "user orders response");
@@ -470,7 +478,6 @@ const apiService = {
       if (!Array.isArray(orders)) {
         throw new Error("Expected orders array from API");
       }
-      
 
       return transformApiOrdersToOrdersData(orders);
     } catch (error) {
@@ -493,8 +500,6 @@ export const useOrdersStore: StateCreator<
   userOrders: [],
   orderInView: null,
   showOrderModal: false,
-  orderTotalSize: 0,
-
   OrderFilters: {
     search: "",
     deliveryStatus: "All",
@@ -502,6 +507,18 @@ export const useOrdersStore: StateCreator<
     paymentStatus: "All",
     dateFilter: {},
     sortDate: "descending",
+  },
+
+  UnfulfilledStats: {
+    total: 0,
+    pending: 0,
+  },
+
+  fulfilledStats: {
+    delivered: 0,
+    shipped: 0,
+    cancelled: 0,
+    total: 0,
   },
 
   fulfilledState: "idle",
@@ -639,56 +656,16 @@ export const useOrdersStore: StateCreator<
     });
   },
 
-  // loadOrders: async (type, options = { force: false , page: 1 }) => {
-  //   const { setOrdersState, setOrderError } = get();
-  //   const { force = false, limit = 25, get: apiGet, page } = options;
-
-  //   if (!apiGet) {
-  //     throw new Error("API get function is required");
-  //   }
-
-  //   const currentOrders =
-  //     type === "fulfilled" ? get().fulfilledOrders : get().unfulfilledOrders;
-  //   const currentState =
-  //     type === "fulfilled" ? get().fulfilledState : get().unfulfilledState;
-
-  //   if (!force && currentState === "success" && currentOrders.length > 0 ) {
-  //     return;
-  //   }
-
-  //   setOrdersState(type, "loading");
-
-  //   try {
-  //     const { total, orders: ordersData } = await apiService.fetchOrders(
-  //       type,
-  //       apiGet,
-  //       limit,
-  //       page
-  //     );
-
-  //     set((state) => {
-  //       if (type === "fulfilled") {
-  //         state.fulfilledOrders = ordersData;
-  //       } else {
-  //         state.unfulfilledOrders = ordersData;
-  //       }
-  //       state.orderTotalSize = total;
-  //     });
-
-  //     setOrdersState(type, "success");
-  //     get().applyOrderFilters();
-  //   } catch (error) {
-  //     setOrdersState(type, "failed");
-  //     setOrderError(
-  //       type,
-  //       error instanceof Error ? error.message : `Failed to load ${type} orders`
-  //     );
-  //   }
-  // },
-
-  loadOrders: async (type, options = { force: false, page: 1 }) => {
+  loadOrders: async (
+    type,
+    force = false,
+    limit= 25,
+    apiGet = undefined,
+    page = 1
+  ) => {
     const { setOrdersState, setOrderError } = get();
-    const { force = false, limit = 25, get: apiGet, page } = options;
+
+    console.log(page, "page at order");
 
     if (!apiGet) {
       throw new Error("API get function is required");
@@ -699,7 +676,6 @@ export const useOrdersStore: StateCreator<
     const currentState =
       type === "fulfilled" ? get().fulfilledState : get().unfulfilledState;
 
-  
     if (
       !force &&
       page === 1 &&
@@ -712,12 +688,11 @@ export const useOrdersStore: StateCreator<
     setOrdersState(type, "loading");
 
     try {
-      const { total, orders: ordersData } = await apiService.fetchOrders(
-        type,
-        apiGet,
-        limit,
-        page
-      );
+      const {
+        total,
+        orders: ordersData,
+        stats,
+      } = await apiService.fetchOrders(type, apiGet, limit, page);
 
       set((state) => {
         const existing =
@@ -726,20 +701,26 @@ export const useOrdersStore: StateCreator<
             : state.unfulfilledOrders;
 
         const merged =
-          page === 1 ? ordersData : [
+          page === 1
+            ? ordersData
+            : [
                 ...existing,
                 ...ordersData.filter(
                   (order) => !existing.some((o) => o._id === order._id)
                 ),
-              ]; 
+              ];
 
         if (type === "fulfilled") {
           state.fulfilledOrders = merged;
+          state.fulfilledStats.total = stats.fulfilledOrders ?? 0;
+          state.fulfilledStats.delivered = stats.deliveredOrders ?? 0;
+          state.fulfilledStats.shipped = stats.shippedOrders ?? 0;
+          state.fulfilledStats.cancelled = stats.cancelledOrders ?? 0;
         } else {
           state.unfulfilledOrders = merged;
+          state.UnfulfilledStats.total = stats.unfulfilledOrders ?? 0;
+          state.UnfulfilledStats.pending = stats.pendingOrders ?? 0;
         }
-
-        state.orderTotalSize = total;
       });
 
       setOrdersState(type, "success");
@@ -849,7 +830,7 @@ export const useOrdersStore: StateCreator<
           updates
         );
 
-        console.log(updatedOrder)
+        console.log(updatedOrder);
 
         set((state) => {
           // Helper function to update order in array
@@ -870,7 +851,7 @@ export const useOrdersStore: StateCreator<
           };
 
           // Update in both arrays first
-          let foundInUnfulfilled = updateOrderInArray( state.unfulfilledOrders);
+          let foundInUnfulfilled = updateOrderInArray(state.unfulfilledOrders);
           let foundInFulfilled = updateOrderInArray(state.fulfilledOrders);
 
           // Update orderInView if it matches
@@ -918,14 +899,12 @@ export const useOrdersStore: StateCreator<
       }
     })();
 
-
-
     // Toast notifications
     toast.promise(updatePromise, {
       loading: {
-        title:getLoadingMessage(updates).title,
-        description:getLoadingMessage(updates).description,
-        duration:Infinity
+        title: getLoadingMessage(updates).title,
+        description: getLoadingMessage(updates).description,
+        duration: Infinity,
       },
       success: (updatedOrder) => {
         const orderIdentifier = generateTrimmedId(orderId);

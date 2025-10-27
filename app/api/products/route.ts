@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
     
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products?${queryString}`;
 
-    console.log(url)
 
     const response = await fetch(url, {
       method: "GET",
@@ -26,7 +25,6 @@ export async function GET(request: NextRequest) {
       next: { revalidate: 0 }
     });
 
-    console.log(response.ok)
     const data = await response.json();
 
     // console.log(data ,' data')

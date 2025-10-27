@@ -4,9 +4,10 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/libs/cn";
 import { gsap } from "gsap";
-import { BookmarkType, CartItemType } from "@/store/cart";
+import { BookmarkType, CartItemType, findVariant } from "@/store/cart";
 import { useBoundStore } from "@/store/store";
 import Cedis from "./cedis";
+import { ProductVariant } from "@/store/dashbaord/products";
 
 const colorMap: { [key: number]: string } = {
   1: "bg-black",
@@ -23,7 +24,7 @@ export default function BagCard({
   const { modalDisplay, addBookmarksToCart, removeBookmark } = useBoundStore();
   const imageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [colorName, setColorName] = useState("");
+  const [variantData, setVarientData] = useState<ProductVariant | null>(null);
 
   const updateImageHeight = () => {
     if (imageRef.current && contentRef.current) {
@@ -46,12 +47,9 @@ export default function BagCard({
 
   useEffect(() => {
     if (cartData) {
-      const activeVariant = cartData.variants?.find(
-        (variant) => variant._id === cartData.selectedColor
-      );
-
+      const activeVariant = findVariant(cartData, cartData.selectedColor)
       if (activeVariant) {
-        setColorName(activeVariant.color);
+        setVarientData(activeVariant)
       }
     }
   }, [cartData]);
@@ -61,11 +59,10 @@ export default function BagCard({
       <div className="flex gap-3 items-start">
         <div className="w-[120px] flex-none md:w-[200px] h-[120px] md:h-[220px] rounded-[1px] overflow-hidden mt-[4px] relative border-[0.5px] border-black/10">
           <Image
-            src={
-              cartData.variants[0].images[0].url ?? "/images/image-fallback.png"
+            src={variantData?.images[0].url ?? "/images/image-fallback.png"
             }
             fill
-            className="object-cover"
+            className="object-cover"  
             alt="image"
           />
         </div>
@@ -87,7 +84,7 @@ export default function BagCard({
             </div>
             <p className="text-black/50">|</p>
              <p className="font-avenir text-md font-[400] text-[16px] md:text-md text-black/50   pt-[7px]">
-           {colorName}
+           {variantData?.color}
           </p>
           </div>
           {modalDisplay === "wardrobe" && (

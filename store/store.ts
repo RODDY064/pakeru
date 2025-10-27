@@ -345,15 +345,15 @@ export const useBoundStore = create<Store>()(
 
         set((state) => {
           state.setProducts(products,productTotal);
+          state.setDashProducts(products, productTotal)
           state.setCategories(categories);
           state.isServerInitialized = true;
+          state.cartProductState = products.length > 0 ? "success" : "idle";
           state.syncCartWithProducts();
           state.syncBookmarksWithProducts();
         });
 
-        console.log(
-          `✅ Store initialized with ${productTotal} products and ${categories.length} categories and product total`
-        );
+        console.log(`✅ Store initialized with ${productTotal} products and ${categories.length} categories and product total`);
       },
     })),
     persistOptions
@@ -373,7 +373,7 @@ export const initializeStore = async (
       useBoundStore.persist.rehydrate();
 
       // Wait for rehydration to complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       if (Content?.hero && Content.galleries) {
          
@@ -383,15 +383,13 @@ export const initializeStore = async (
       } else {
         await useBoundStore.getState().fetchContent();
       }
-
       // If server data is provided, use it (this is the preferred path)
-      if (serverProducts && serverCategories) {
-        useBoundStore.getState().initializeWithServerData(serverProducts, serverCategories, productTotal);
+      if (serverProducts || serverCategories) {
+
+        useBoundStore.getState().initializeWithServerData(serverProducts as ProductData[], serverCategories as CategoryType[], productTotal);
       } else {
         // Fallback to client-side loading if no server data
-        console.log(
-          "No server data provided, falling back to client-side loading..."
-        );
+        console.log( "No server data provided, falling back to client-side loading...");
         await useBoundStore.getState().loadProducts?.();
         await useBoundStore.getState().loadCategories?.();
       }

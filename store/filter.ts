@@ -234,7 +234,8 @@ export const useFilterStore: StateCreator<
 
       switch (item.name.toLowerCase()) {
         case "category":
-          queries.category = item.selected as string[]; // Store category IDs
+          // Keep as array of IDs
+          queries.category = item.selected as string[];
           break;
 
         case "sort by":
@@ -253,6 +254,7 @@ export const useFilterStore: StateCreator<
             queries.price = `${priceRange.min ?? 0}-${priceRange.max ?? ""}`;
           }
           break;
+
         case "createdat":
           queries.createdAt = item.selected[0] as string;
           break;
@@ -274,7 +276,7 @@ export const useFilterStore: StateCreator<
     params.delete("category");
     params.delete("sort");
     params.delete("price");
-    params.delete("createdAt"); 
+    params.delete("createdAt");
 
     // Add new filter params
     Object.entries(queries).forEach(([key, value]) => {
@@ -305,7 +307,7 @@ export const useFilterStore: StateCreator<
     const state = get();
     const params = new URLSearchParams(searchParams.toString());
 
-    console.log(params.get("createdAt"), 'created at')
+    console.log("Loading filters from URL:", params.toString());
 
     set((state) => {
       const updatedItems = state.filteritems.map((item) => {
@@ -315,22 +317,19 @@ export const useFilterStore: StateCreator<
           case "category":
             const categoryParam = params.get("category");
             if (categoryParam) {
-              // Map category names from URL to IDs
+              // Split by comma and trim whitespace
               const categoryIds = categoryParam
                 .split(",")
-                .map((name) => {
-                  const category = state.categories.find(
-                    (cat) => cat.name.toLowerCase() === name.toLowerCase()
-                  );
-                  return category ? category._id : null;
-                })
-                .filter((id): id is string => id !== null);
+                .map((id) => id.trim())
+                .filter((id) => id.length > 0);
+
+              console.log("Parsed category IDs from URL:", categoryIds);
               itemCopy.selected = categoryIds;
             }
             break;
 
           case "sort by":
-            const sortParam = params.get("sort");
+            const sortParam = params.get("sort_by");
             if (sortParam) {
               const userFriendlySort = Object.keys(sortMapping).find(
                 (key) => sortMapping[key] === sortParam
@@ -354,9 +353,9 @@ export const useFilterStore: StateCreator<
               itemCopy.content = priceRange;
             }
             break;
-          case "createdat": 
+
+          case "createdat":
             const createdAtParam = params.get("createdAt");
-            console.log(createdAtParam)
             if (createdAtParam) {
               itemCopy.selected = [createdAtParam];
             }

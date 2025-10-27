@@ -58,7 +58,7 @@ export default function Footer() {
                 {shopCategories.map((category) => (
                   <Link
                     key={category._id}
-                    href={`/shop?category=${category.name}`}>
+                    href={`/shop?category=${category._id}`}>
                     <li className="text-sm md:text-md w-fit font-avenir  text-black/50 cursor-pointer hover:text-black/30">
                       {category.name}
                     </li>

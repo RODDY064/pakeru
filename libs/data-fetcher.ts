@@ -7,14 +7,12 @@ import { ProductData } from "@/store/dashbaord/products";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-
-
 export async function fetchProductsServer(): Promise<{
   products: ProductData[];
   total: number;
 }> {
   try {
-    const response = await fetch(`${BASE_URL}/v1/products?limit=25`, {
+    const response = await fetch(`${BASE_URL}/v1/products?limit=24`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
@@ -57,11 +55,13 @@ export async function fetchProductsServer(): Promise<{
     return { products, total };
   } catch (error) {
     console.error("Failed to fetch products on server:", error);
-    return { products:[], total: 0 }; 
+    return { products: [], total: 0 };
   }
 }
 
-export async function fetchSingleProductServer(id: string): Promise<ProductData> {
+export async function fetchSingleProductServer(
+  id: string
+): Promise<ProductData> {
   try {
     const response = await fetch(`${BASE_URL}/v1/products/${id}`, {
       method: "GET",
@@ -77,7 +77,9 @@ export async function fetchSingleProductServer(id: string): Promise<ProductData>
     const result = await response.json();
 
     if (!result || !result.data) {
-      throw new Error("Invalid response format: expected { data: ProductData }");
+      throw new Error(
+        "Invalid response format: expected { data: ProductData }"
+      );
     }
 
     const product = result.data;
@@ -100,7 +102,7 @@ export async function fetchSingleProductServer(id: string): Promise<ProductData>
     return transformedProduct;
   } catch (error) {
     console.error("Failed to fetch product on server:", error);
-    throw error; 
+    throw error;
   }
 }
 
@@ -193,11 +195,14 @@ export async function fetchContent(): Promise<
                 publicId: gallery.image.publicId,
                 url: gallery.image.url,
               },
-              products: gallery.productIds || [],
+              products: Array.isArray(gallery.productIds)
+                ? [...gallery.productIds].reverse()
+                : [],
             }))
           : [],
       },
     };
+
 
     return mappedData;
   } catch (error) {
@@ -208,7 +213,7 @@ export async function fetchContent(): Promise<
 
 // Combined fetch function for initial data
 export async function fetchInitialData() {
-  const [products, categories ] = await Promise.all([
+  const [products, categories] = await Promise.all([
     fetchProductsServer(),
     fetchCategoriesServer(),
   ]);

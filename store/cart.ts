@@ -1,67 +1,67 @@
 import { type StateCreator } from "zustand";
 import { Store } from "./store";
-import { v4 as uuidv4 } from "uuid";
 import { ProductData, ProductVariant } from "./dashbaord/products";
-import { useApiClient } from "@/libs/useApiClient";
 import { produce } from "immer";
 
-// Cart Item with unique identifier for color/size combinations
+// ============================================
+// Types
+// ============================================
+
 export type CartItemType = ProductData & {
   quantity: number;
-  cartItemId: string; // Unique ID for this specific cart item combination
-  selectedVariant?: ProductVariant; // Reference to the selected variant
+  cartItemId: string;
+  selectedVariant?: ProductVariant;
 };
 
-// Bookmark Type - Now properly extends ProductData
 export type BookmarkType = ProductData & {
-  bookmarkId: string; // Unique ID for this specific bookmark combination
-  bookmarkCreatedAt: string; // Renamed to avoid conflict with ProductData.createdAt
-  selectedVariant?: ProductVariant; // Reference to the selected variant
+  bookmarkId: string;
+  bookmarkCreatedAt: string;
+  selectedVariant?: ProductVariant;
 };
 
-// Cart Statistics
 export type CartStats = {
   totalItems: number;
   totalPrice: number;
-  uniqueProducts?: number;
+  uniqueProducts: number;
 };
 
-// Bookmark Statistics
 export type BookmarkStats = {
   totalBookmarks: number;
   uniqueProducts: number;
   categoriesBookmarked: string[];
 };
 
-// Enhanced Cart Store
+export type FilterQueries = {
+  category?: string[];
+  sort_by?: string;
+  price?: string;
+  products?: string[];
+  name?: string;
+  createdAt?: string;
+};
+
 export type CartStore = {
+  // State
   cartItems: CartItemType[];
+  bookMarks: BookmarkType[];
   cartInView: boolean;
   products: ProductData[];
-  cartState: "idle" | "loading" | "success" | "error";
+  cartProductState: "idle" | "loading" | "success" | "error";
   productPaginationState: "idle" | "loading" | "success" | "error";
   error: string | null;
-  bookMarks: BookmarkType[];
+  totalPages: number;
+  currentFilters: FilterQueries | null;
 
-  // Computed getters
+  // Cart - Stats & Queries
   getCartStats: () => CartStats;
-  getBookmarkStats: () => BookmarkStats;
   getCartItem: (
     productId: string,
     colorId?: string,
     size?: string
   ) => CartItemType | undefined;
-  getBookmark: (
-    productId: string,
-    colorId?: string,
-    size?: string
-  ) => BookmarkType | undefined;
   isInCart: (productId: string, colorId?: string, size?: string) => boolean;
-  isBookmarked: (productId: string, colorId?: string, size?: string) => boolean;
-  getBookmarkedProducts: () => BookmarkType[];
 
-  // Actions
-  addProductToStore: (product: ProductData) => void;
+  // Cart - Actions
   setCartInView: (inView?: boolean) => void;
   addToCart: (product: ProductData, quantity?: number) => void;
   removeFromCart: (cartItemId: string) => void;
@@ -71,28 +71,29 @@ export type CartStore = {
   updateQuantity: (cartItemId: string, quantity: number) => void;
   updateSize: (cartItemId: string, newSize: string) => void;
   updateColor: (cartItemId: string, newColorId: string) => void;
+  setProducts: (products: ProductData[], total?: number) => void;
 
-  // Bookmark actions
+  // Bookmarks - Stats & Queries
+  getBookmarkStats: () => BookmarkStats;
+  getBookmark: (
+    productId: string,
+    colorId?: string,
+    size?: string
+  ) => BookmarkType | undefined;
+  isBookmarked: (productId: string, colorId?: string, size?: string) => boolean;
+  getBookmarkedProducts: () => BookmarkType[];
+
+  // Bookmarks - Actions
   addBookmark: (product: ProductData) => void;
   removeBookmark: (bookmarkId: string) => void;
   toggleBookmark: (product: ProductData) => void;
   clearBookmarks: () => void;
-
-  // Bulk operations
   addBookmarksToCart: (bookmarkIds: string[], quantity?: number) => void;
   addAllBookmarksToCart: (quantity?: number) => void;
   removeMultipleBookmarks: (bookmarkIds: string[]) => void;
 
-  // Product management
-  loadProducts: (
-    force?: boolean,
-    page?: number,
-    limit?: number,
-    filters?: FilterQueries
-  ) => Promise<void>;
-  refreshProducts: () => Promise<void>;
-  syncCartWithProducts: () => void;
-  syncBookmarksWithProducts: () => void;
+  // Products - Management
+  addProductToStore: (product: ProductData) => void;
   getProductById: (productId: string) => ProductData | undefined;
   getVariantByColorId: (
     product: ProductData,
@@ -103,61 +104,24 @@ export type CartStore = {
   ) => { id: string; color: string; colorHex?: string }[];
   getAvailableSizesForColor: (productId: string, colorId: string) => string[];
   getVariantStock: (product: ProductData, colorId?: string) => number;
+
+  // Products - Loading & Sync
+  loadProducts: (
+    force?: boolean,
+    page?: number,
+    limit?: number,
+    filters?: FilterQueries
+  ) => Promise<void>;
+  refreshProducts: () => Promise<void>;
+  syncCartWithProducts: () => void;
+  syncBookmarksWithProducts: () => void;
 };
 
-// Helper function to generate unique cart item ID
-const generateCartItemId = (
-  productId: string,
-  colorId?: string,
-  size?: string
-): string => {
-  return `${productId}-${colorId || "default"}-${size || "default"}`;
-};
+// ============================================
+// Constants
+// ============================================
 
-// Helper function to generate unique bookmark ID
-const generateBookmarkId = (
-  productId: string,
-  colorId?: string,
-  size?: string
-): string => {
-  return `bookmark-${productId}-${colorId || "default"}-${size || "default"}`;
-};
-
-// Helper function to validate product before adding to cart
-const validateProduct = (product: ProductData): boolean => {
-  return !!(
-    product._id &&
-    product.name &&
-    product.price >= 0 &&
-    product.totalNumber > 0 &&
-    product.status === "active"
-  );
-};
-
-// Helper function to get variant stock
-const getVariantStock = (product: ProductData, colorId?: string): number => {
-  if (!colorId) {
-    // Return total stock across all variants
-    return product.variants.reduce(
-      (total, variant) => total + variant.stock,
-      0
-    );
-  }
-
-  const variant = product.variants.find((v) => v._id === colorId);
-  return variant ? variant.stock : 0;
-};
-
-interface FilterQueries {
-  category?: string[];
-  sort_by?: string;
-  price?: string;
-  products?: string[];
-  name?: string;
-  createdAt?: string;
-}
-
-const sortMapping: { [key: string]: string } = {
+const SORT_MAPPING: Record<string, string> = {
   "Price: Low to High": "price",
   "Price: High to Low": "-price",
   "Rating: High to Low": "-averageRating,numReviews,stock,-createdAt,price",
@@ -172,22 +136,153 @@ const sortMapping: { [key: string]: string } = {
   "Least Reviews": "numReviews,averageRating,price",
 };
 
-// Enhanced Zustand Store Creator
+const RESET_DELAY_MS = 3000;
+const REQUEST_TIMEOUT_MS = 10000;
+
+// ============================================
+// Helpers - Pure functions
+// ============================================
+
+const createItemId = (
+  productId: string,
+  colorId?: string,
+  size?: string
+): string => {
+  return `${productId}-${colorId || "default"}-${size || "default"}`;
+};
+
+const createBookmarkId = (
+  productId: string,
+  colorId?: string,
+  size?: string
+): string => {
+  return `bookmark-${createItemId(productId, colorId, size)}`;
+};
+
+const isProductValid = (product: ProductData): boolean => {
+  return !!(
+    product._id &&
+    product.name &&
+    product.price >= 0 &&
+    product.totalNumber > 0 &&
+    product.status === "active"
+  );
+};
+
+const getVariantStock = (product: ProductData, colorId?: string): number => {
+  if (!colorId) {
+    return product.variants.reduce((total, v) => total + v.stock, 0);
+  }
+  const variant = product.variants.find((v) => v._id === colorId);
+  return variant?.stock || 0;
+};
+
+export const findVariant = (
+  product: ProductData | undefined,
+  colorId?: string
+): ProductVariant | undefined => {
+  if (!product) return undefined;
+  return product.variants.find((v) => v._id === colorId);
+};
+
+const clampQuantity = (quantity: number, maxStock: number): number => {
+  return Math.max(1, Math.min(quantity, maxStock));
+};
+
+const buildQueryParams = (
+  page?: number,
+  limit?: number,
+  filters?: FilterQueries
+): URLSearchParams => {
+  const query = new URLSearchParams();
+
+  if (page && page > 1) {
+    query.append("page", page.toString());
+  }
+  if (limit) {
+    query.append("limit", limit.toString());
+  }
+
+  if (!filters) return query;
+
+  if (filters.category?.length) {
+    query.append("category", filters.category.join(","));
+  }
+
+  if (filters.name) {
+    query.append("name", filters.name);
+  }
+
+  if (filters.sort_by) {
+    const apiSort = SORT_MAPPING[filters.sort_by] || filters.sort_by;
+    query.append("sort", apiSort);
+  }
+
+  if (filters.price) {
+    const [minPrice, maxPrice] = filters.price.split("-");
+    if (minPrice) query.append("minPrice", minPrice);
+    if (maxPrice) query.append("maxPrice", maxPrice);
+  }
+
+  return query;
+};
+
+const transformProduct = (product: any): ProductData => {
+  const firstVariant = product?.variants?.[0];
+
+  return {
+    ...product,
+    id: product._id,
+    colors: product.variants?.map((v: any) => v.color) || [],
+    selectedColor: firstVariant?._id || null,
+    mainImage: product.images?.[0]?.url || product.mainImage || "",
+    sizes: firstVariant?.sizes || [],
+    variants:
+      product.variants?.map((v: any) => ({
+        ...v,
+        id: v._id,
+      })) || [],
+  };
+};
+
+const mergeProducts = (
+  existing: ProductData[],
+  incoming: ProductData[],
+  shouldReplace: boolean
+): ProductData[] => {
+  if (shouldReplace) return incoming;
+
+  const existingIds = new Set(existing.map((p) => p._id));
+  const newProducts = incoming.filter((p) => p._id && !existingIds.has(p._id));
+
+  return [...existing, ...newProducts];
+};
+
+// ============================================
+// Store Implementation
+// ============================================
+
 export const useCartStore: StateCreator<
   Store,
   [["zustand/persist", unknown], ["zustand/immer", never]],
   [],
   CartStore
 > = (set, get) => ({
+  // State
   cartItems: [],
-  cartInView: false,
-  cartState: "idle",
-  productPaginationState: "idle",
-  products: [],
-  error: null,
   bookMarks: [],
+  cartInView: false,
+  products: [],
+  cartProductState: "loading",
+  productPaginationState: "idle",
+  error: null,
+  totalPages: 0,
+  currentFilters: null,
 
-  // Computed getters
+  // ============================================
+  // Cart - Stats & Queries
+  // ============================================
+
   getCartStats: () => {
     const { cartItems } = get();
     return cartItems.reduce(
@@ -199,137 +294,52 @@ export const useCartStore: StateCreator<
       { totalItems: 0, totalPrice: 0, uniqueProducts: 0 }
     );
   },
-  addProductToStore: (product) =>
-    set((state) => {
-      const existingIndex = state.products.findIndex(
-        (p) => p._id === product._id
-      );
-
-      if (existingIndex === -1) {
-        state.products.push({
-          ...product,
-          selectedColor: product.selectedColor || product.variants[0]?._id,
-          selectedSize: product.selectedSize || product.variants[0]?.sizes[0],
-        });
-      }
-    }),
-  getBookmarkStats: () => {
-    const { bookMarks } = get();
-    const categories = new Set<string>();
-
-    bookMarks.forEach((bookmark) => {
-      categories.add(bookmark.category);
-    });
-
-    return {
-      totalBookmarks: bookMarks.length,
-      uniqueProducts: new Set(bookMarks.map((b) => b._id)).size,
-      categoriesBookmarked: Array.from(categories),
-    };
-  },
 
   getCartItem: (productId, colorId, size) => {
-    const { cartItems } = get();
-    const cartItemId = generateCartItemId(productId, colorId, size);
-    return cartItems.find((item) => item.cartItemId === cartItemId);
-  },
-
-  getBookmark: (productId, colorId, size) => {
-    const { bookMarks } = get();
-    const bookmarkId = generateBookmarkId(productId, colorId, size);
-    return bookMarks.find((bookmark) => bookmark.bookmarkId === bookmarkId);
+    const id = createItemId(productId, colorId, size);
+    return get().cartItems.find((item) => item.cartItemId === id);
   },
 
   isInCart: (productId, colorId, size) => {
     return !!get().getCartItem(productId, colorId, size);
   },
 
-  isBookmarked: (productId, colorId, size) => {
-    return !!get().getBookmark(productId, colorId, size);
-  },
+  // ============================================
+  // Cart - Actions
+  // ============================================
 
-  getBookmarkedProducts: () => {
-    const { bookMarks } = get();
-    return bookMarks;
-  },
-
-  getProductById: (productId) => {
-    const { products } = get();
-    return products.find((product) => product._id === productId);
-  },
-
-  getVariantByColorId: (product, colorId) => {
-    return product.variants.find((variant) => variant._id === colorId);
-  },
-
-  getAvailableColorsForProduct: (productId) => {
-    const { products } = get();
-    const product = products.find((p) => p._id === productId);
-    if (!product) return [];
-
-    return product.variants.map((variant) => ({
-      id: variant._id,
-      color: variant.color,
-      colorHex: variant.colorHex,
-    }));
-  },
-
-  getAvailableSizesForColor: (productId, colorId) => {
-    const { products } = get();
-    const product = products.find((p) => p._id === productId);
-    if (!product) return [];
-
-    const variant = product.variants.find((v) => v._id === colorId);
-    return variant ? variant.sizes : [];
-  },
-
-  getVariantStock: (product, colorId) => {
-    return getVariantStock(product, colorId);
-  },
-
-  // Cart view toggle
   setCartInView: (inView) =>
     set((state) => {
-      state.cartInView = inView !== undefined ? inView : !state.cartInView;
+      state.cartInView = inView ?? !state.cartInView;
     }),
 
-  // Enhanced add to cart with variant-based stock validation
   addToCart: (product, quantity = 1) =>
     set((state) => {
-      // Validation
-      if (!validateProduct(product)) {
-        console.error("Invalid product:", product);
+      if (!isProductValid(product)) {
+        console.error("Invalid product");
         return;
       }
 
       if (quantity <= 0) {
-        console.error("Invalid quantity:", quantity);
+        console.error("Invalid quantity");
         return;
       }
 
-      // Get the selected variant
-      const selectedVariant = product.variants.find(
-        (v) => v._id === product.selectedColor
-      );
-
-      // console.log(selectedVariant);
-      // console.log(product, "product");
-
-      if (!selectedVariant) {
-        console.error("No variant selected or variant not found");
+      const variant = findVariant(product, product.selectedColor);
+      if (!variant) {
+        console.error("Variant not found");
         return;
       }
 
-      // Check if the selected size is available in the variant
       if (
         product.selectedSize &&
-        !selectedVariant.sizes.includes(product.selectedSize)
+        !variant.sizes.includes(product.selectedSize)
       ) {
-        console.error("Selected size not available in this variant");
+        console.error("Size not available in this variant");
         return;
       }
 
-      const cartItemId = generateCartItemId(
+      const cartItemId = createItemId(
         product._id,
         product.selectedColor,
         product.selectedSize
@@ -340,31 +350,22 @@ export const useCartStore: StateCreator<
       );
 
       if (existingItem) {
-        // Check variant stock before increasing quantity
         const newQuantity = existingItem.quantity + quantity;
-        if (newQuantity <= selectedVariant.stock) {
-          existingItem.quantity = newQuantity;
-        } else {
-          console.warn(
-            `Cannot add ${quantity} items. Only ${
-              selectedVariant.stock - existingItem.quantity
-            } left in stock for this variant.`
-          );
-          existingItem.quantity = selectedVariant.stock;
+        existingItem.quantity = clampQuantity(newQuantity, variant.stock);
+
+        if (newQuantity > variant.stock) {
+          console.warn(`Only ${variant.stock} items available`);
         }
       } else {
-        // Check variant stock before adding new item
-        const finalQuantity = Math.min(quantity, selectedVariant.stock);
         state.cartItems.push({
           ...product,
-          quantity: finalQuantity,
+          quantity: clampQuantity(quantity, variant.stock),
           cartItemId,
-          selectedVariant,
+          selectedVariant: variant,
         });
       }
     }),
 
-  // Remove entire cart item
   removeFromCart: (cartItemId) =>
     set((state) => {
       const index = state.cartItems.findIndex(
@@ -375,96 +376,68 @@ export const useCartStore: StateCreator<
       }
     }),
 
-  // Clear entire cart
   clearCart: () =>
     set((state) => {
       state.cartItems = [];
     }),
 
-  // Increase quantity with variant stock validation
   increaseQuantity: (cartItemId) =>
     set((state) => {
-      const item = state.cartItems.find(
-        (item) => item.cartItemId === cartItemId
-      );
+      const item = state.cartItems.find((i) => i.cartItemId === cartItemId);
+      if (!item?.selectedVariant) return;
 
-      if (item && item.selectedVariant) {
-        if (item.quantity < item.selectedVariant.stock) {
-          item.quantity += 1;
-        } else {
-          console.warn(
-            `Cannot increase quantity. Maximum stock (${item.selectedVariant.stock}) reached for this variant.`
-          );
-        }
+      if (item.quantity < item.selectedVariant.stock) {
+        item.quantity += 1;
+      } else {
+        console.warn(`Max stock (${item.selectedVariant.stock}) reached`);
       }
     }),
 
-  // Decrease quantity or remove if zero
   decreaseQuantity: (cartItemId) =>
     set((state) => {
       const index = state.cartItems.findIndex(
         (item) => item.cartItemId === cartItemId
       );
-      if (index !== -1) {
-        const item = state.cartItems[index];
-        if (item.quantity > 1) {
-          item.quantity -= 1;
-        } else {
-          state.cartItems.splice(index, 1);
-        }
+      if (index === -1) return;
+
+      const item = state.cartItems[index];
+      if (item.quantity > 1) {
+        item.quantity -= 1;
+      } else {
+        state.cartItems.splice(index, 1);
       }
     }),
 
-  // Set specific quantity with variant stock validation
   updateQuantity: (cartItemId, quantity) =>
     set((state) => {
+      const index = state.cartItems.findIndex(
+        (item) => item.cartItemId === cartItemId
+      );
+      if (index === -1) return;
+
       if (quantity <= 0) {
-        const index = state.cartItems.findIndex(
-          (item) => item.cartItemId === cartItemId
-        );
-        if (index !== -1) {
-          state.cartItems.splice(index, 1);
-        }
+        state.cartItems.splice(index, 1);
         return;
       }
 
-      const item = state.cartItems.find(
-        (item) => item.cartItemId === cartItemId
-      );
-      if (item && item.selectedVariant) {
-        item.quantity = Math.min(quantity, item.selectedVariant.stock);
+      const item = state.cartItems[index];
+      if (item.selectedVariant) {
+        item.quantity = clampQuantity(quantity, item.selectedVariant.stock);
       }
     }),
+
   updateColor: (identifier, newColorId) =>
     set((state) => {
-      console.log(identifier, newColorId);
-      const updateSizeIfNeeded = (
-        entity: { selectedSize?: string; sizes?: string[] },
-        newVariant: ProductVariant
-      ) => {
-        const updatedSizes = [...newVariant.sizes];
-        const validSize =
-          entity.selectedSize && updatedSizes.includes(entity.selectedSize)
-            ? entity.selectedSize
-            : undefined;
-        return { ...entity, sizes: updatedSizes, selectedSize: validSize };
-      };
-
-      console.log(updateSizeIfNeeded, "updated size");
-
-      // --- SCENARIO 1: Updating a cart item ---
       const cartItem = state.cartItems.find(
         (item) => item.cartItemId === identifier
       );
 
       if (cartItem) {
-        const product = state.products.find(
-          (p) => p._id === (cartItem._id ?? cartItem.cartItemId)
-        );
-        const newVariant = product?.variants.find((v) => v._id === newColorId);
-        if (!newVariant) return state;
+        const product = state.products.find((p) => p._id === cartItem._id);
+        const newVariant = findVariant(product, newColorId);
+        if (!newVariant) return;
 
-        const newCartItemId = generateCartItemId(
+        const newCartItemId = createItemId(
           cartItem._id,
           newColorId,
           cartItem.selectedSize
@@ -474,288 +447,461 @@ export const useCartStore: StateCreator<
           (item) => item.cartItemId === newCartItemId
         );
 
-        let newCartItems;
-
         if (existingItem) {
-          // merge quantities if variant already in cart
-          newCartItems = state.cartItems
-            .filter((i) => i.cartItemId !== identifier)
-            .map((i) =>
-              i.cartItemId === newCartItemId
-                ? {
-                    ...i,
-                    quantity: Math.min(
-                      i.quantity + cartItem.quantity,
-                      newVariant.stock
-                    ),
-                  }
-                : i
-            );
-        } else {
-          newCartItems = state.cartItems.map((i) =>
-            i.cartItemId === identifier
-              ? {
-                  ...i,
-                  cartItemId: newCartItemId,
-                  selectedColor: newColorId,
-                  selectedVariant: newVariant,
-                  quantity: Math.min(i.quantity, newVariant.stock),
-                  ...updateSizeIfNeeded(i, newVariant),
-                }
-              : i
+          existingItem.quantity = clampQuantity(
+            existingItem.quantity + cartItem.quantity,
+            newVariant.stock
           );
+          const index = state.cartItems.findIndex(
+            (item) => item.cartItemId === identifier
+          );
+          state.cartItems.splice(index, 1);
+        } else {
+          cartItem.cartItemId = newCartItemId;
+          cartItem.selectedColor = newColorId;
+          cartItem.selectedVariant = newVariant;
+          cartItem.quantity = clampQuantity(
+            cartItem.quantity,
+            newVariant.stock
+          );
+
+          if (
+            cartItem.selectedSize &&
+            !newVariant.sizes.includes(cartItem.selectedSize)
+          ) {
+            cartItem.selectedSize = newVariant.sizes[0];
+          }
+          cartItem.sizes = newVariant.sizes;
         }
 
-        const newProducts = state.products.map((p) =>
-          p._id === (cartItem._id ?? cartItem.cartItemId)
-            ? {
-                ...updateSizeIfNeeded(p, newVariant),
-                selectedColor: newColorId,
-              }
-            : p
-        );
+        if (product) {
+          product.selectedColor = newColorId;
+          if (
+            product.selectedSize &&
+            !newVariant.sizes.includes(product.selectedSize)
+          ) {
+            product.selectedSize = newVariant.sizes[0];
+          }
+          product.sizes = newVariant.sizes;
+        }
+      } else {
+        const product = state.products.find((p) => p._id === identifier);
+        if (!product) return;
 
-        return { ...state, cartItems: newCartItems, products: newProducts };
+        const newVariant = findVariant(product, newColorId);
+        if (!newVariant) return;
+
+        product.selectedColor = newColorId;
+        if (
+          product.selectedSize &&
+          !newVariant.sizes.includes(product.selectedSize)
+        ) {
+          product.selectedSize = newVariant.sizes[0];
+        }
+        product.sizes = newVariant.sizes;
       }
-
-      // --- SCENARIO 2: Updating product before adding to cart ---
-      const newProducts = state.products.map((p) => {
-        if (p._id === identifier) {
-          const newVariant = p.variants.find((v) => v._id === newColorId);
-          if (!newVariant) return p;
-
-          return {
-            ...updateSizeIfNeeded(p, newVariant),
-            selectedColor: newColorId,
-          };
-        }
-        return p;
-      });
-
-      return { ...state, products: newProducts };
     }),
 
-  // Update size - works both before and after adding to cart
   updateSize: (identifier, newSize) =>
     set((state) => {
-      // Try to find cart item first (for items already in cart)
       const cartItem = state.cartItems.find(
         (item) => item.cartItemId === identifier
       );
 
       if (cartItem) {
-        // SCENARIO 1: Item exists in cart - update cart item + product
         const product = state.products.find((p) => p._id === cartItem._id);
-        const currentVariant = product?.variants.find(
-          (v) => v._id === cartItem.selectedColor
-        );
+        const variant = findVariant(product, cartItem.selectedColor);
 
-        if (!currentVariant || !currentVariant.sizes.includes(newSize)) {
-          console.error(
-            `Size ${newSize} not available for current color variant`
-          );
+        if (!variant?.sizes.includes(newSize)) {
+          console.error(`Size ${newSize} not available`);
           return;
         }
 
-        const newCartItemId = generateCartItemId(
+        const newCartItemId = createItemId(
           cartItem._id,
           cartItem.selectedColor,
           newSize
         );
 
-        // Check if item with new size already exists in cart
         const existingItem = state.cartItems.find(
           (item) => item.cartItemId === newCartItemId
         );
 
         if (existingItem) {
-          // Merge quantities (respecting variant stock)
-          const maxQuantity = Math.min(
+          existingItem.quantity = clampQuantity(
             existingItem.quantity + cartItem.quantity,
-            currentVariant.stock
+            variant.stock
           );
-          existingItem.quantity = maxQuantity;
-
-          // Remove old item
           const index = state.cartItems.findIndex(
             (item) => item.cartItemId === identifier
           );
-          if (index !== -1) {
-            state.cartItems.splice(index, 1);
-          }
+          state.cartItems.splice(index, 1);
         } else {
-          // Update existing cart item
           cartItem.selectedSize = newSize;
           cartItem.cartItemId = newCartItemId;
         }
 
-        // Update corresponding product
         if (product) {
           product.selectedSize = newSize;
         }
       } else {
-        // SCENARIO 2: Update product (before adding to cart)
         const product = state.products.find((p) => p._id === identifier);
-        const currentVariant = product?.variants.find(
-          (v) => v._id === product.selectedColor
-        );
+        if (!product) return;
 
-        if (
-          product &&
-          currentVariant &&
-          currentVariant.sizes.includes(newSize)
-        ) {
+        const variant = findVariant(product, product.selectedColor);
+        if (variant?.sizes.includes(newSize)) {
           product.selectedSize = newSize;
         }
       }
     }),
 
-  // Add bookmark with variant support
+  // ============================================
+  // Bookmarks - Stats & Queries
+  // ============================================
+
+  getBookmarkStats: () => {
+    const { bookMarks } = get();
+    const categories = new Set(bookMarks.map((b) => b.category));
+
+    return {
+      totalBookmarks: bookMarks.length,
+      uniqueProducts: new Set(bookMarks.map((b) => b._id)).size,
+      categoriesBookmarked: Array.from(categories),
+    };
+  },
+
+  setProducts: (products: ProductData[], total) => {
+  set((draft) => {
+    draft.products = products;
+    draft.error = null;
+    console.log("setProducts called:", {
+      productCount: products.length,
+      cartProductState: draft.cartProductState,
+    });
+  });
+},
+
+  getBookmark: (productId, colorId, size) => {
+    const id = createBookmarkId(productId, colorId, size);
+    return get().bookMarks.find((b) => b.bookmarkId === id);
+  },
+
+  isBookmarked: (productId, colorId, size) => {
+    return !!get().getBookmark(productId, colorId, size);
+  },
+
+  getBookmarkedProducts: () => get().bookMarks,
+
+  // ============================================
+  // Bookmarks - Actions
+  // ============================================
+
   addBookmark: (product) =>
     set((state) => {
-      const bookmarkId = generateBookmarkId(
+      const bookmarkId = createBookmarkId(
         product._id,
         product.selectedColor,
         product.selectedSize
       );
 
-      const existingBookmark = state.bookMarks.find(
-        (bookmark) => bookmark.bookmarkId === bookmarkId
-      );
+      const exists = state.bookMarks.some((b) => b.bookmarkId === bookmarkId);
+      if (exists) return;
 
-      if (!existingBookmark) {
-        const selectedVariant = product.variants.find(
-          (v) => v._id === product.selectedColor
-        );
+      const variant = findVariant(product, product.selectedColor);
 
-        const newBookmark: BookmarkType = {
-          ...product, // Include all product properties
-          bookmarkId,
-          bookmarkCreatedAt: new Date().toISOString(),
-          selectedVariant,
-        };
-        state.bookMarks.push(newBookmark);
-      }
+      state.bookMarks.push({
+        ...product,
+        bookmarkId,
+        bookmarkCreatedAt: new Date().toISOString(),
+        selectedVariant: variant,
+      });
     }),
 
-  // Remove bookmark
   removeBookmark: (bookmarkId) =>
     set((state) => {
       const index = state.bookMarks.findIndex(
-        (bookmark) => bookmark.bookmarkId === bookmarkId
+        (b) => b.bookmarkId === bookmarkId
       );
       if (index !== -1) {
         state.bookMarks.splice(index, 1);
       }
     }),
 
-  // Toggle bookmark with variant support
   toggleBookmark: (product) =>
     set((state) => {
-      const bookmarkId = generateBookmarkId(
+      const bookmarkId = createBookmarkId(
         product._id,
         product.selectedColor,
         product.selectedSize
       );
 
-      const existingIndex = state.bookMarks.findIndex(
-        (bookmark) => bookmark.bookmarkId === bookmarkId
+      const index = state.bookMarks.findIndex(
+        (b) => b.bookmarkId === bookmarkId
       );
 
-      if (existingIndex !== -1) {
-        // Remove if exists
-        state.bookMarks.splice(existingIndex, 1);
+      if (index !== -1) {
+        state.bookMarks.splice(index, 1);
       } else {
-        // Add if doesn't exist
-        const selectedVariant = product.variants.find(
-          (v) => v._id === product.selectedColor
-        );
-
-        const newBookmark: BookmarkType = {
-          ...product, // Include all product properties
+        const variant = findVariant(product, product.selectedColor);
+        state.bookMarks.push({
+          ...product,
           bookmarkId,
           bookmarkCreatedAt: new Date().toISOString(),
-          selectedVariant,
-        };
-        state.bookMarks.push(newBookmark);
+          selectedVariant: variant,
+        });
       }
     }),
 
-  // Clear all bookmarks
   clearBookmarks: () =>
     set((state) => {
       state.bookMarks = [];
     }),
 
-  addBookmarksToCart: (bookmarkIds, quantity = 1) => {
-    const state = get();
-    const updatedCartItems = [...state.cartItems];
+  addBookmarksToCart: (bookmarkIds, quantity = 1) =>
+    set((state) => {
+      bookmarkIds.forEach((bookmarkId) => {
+        const bookmark = state.bookMarks.find(
+          (b) => b.bookmarkId === bookmarkId
+        );
+        if (
+          !bookmark ||
+          !isProductValid(bookmark) ||
+          !bookmark.selectedVariant
+        ) {
+          return;
+        }
 
-    bookmarkIds.forEach((bookmarkId) => {
-      const bookmark = state.bookMarks.find((b) => b.bookmarkId === bookmarkId);
-
-      if (bookmark && validateProduct(bookmark) && bookmark.selectedVariant) {
-        const cartItemId = generateCartItemId(
+        const cartItemId = createItemId(
           bookmark._id,
           bookmark.selectedColor,
           bookmark.selectedSize
         );
 
-        const existingItem = updatedCartItems.find(
+        const existingItem = state.cartItems.find(
           (item) => item.cartItemId === cartItemId
         );
 
         if (existingItem) {
-          const newQuantity = existingItem.quantity + quantity;
-          existingItem.quantity = Math.min(
-            newQuantity,
+          existingItem.quantity = clampQuantity(
+            existingItem.quantity + quantity,
             bookmark.selectedVariant.stock
           );
         } else {
-          const finalQuantity = Math.min(
-            quantity,
-            bookmark.selectedVariant.stock
-          );
-          updatedCartItems.push({
+          state.cartItems.push({
             ...bookmark,
-            quantity: finalQuantity,
+            quantity: clampQuantity(quantity, bookmark.selectedVariant.stock),
             cartItemId,
           });
         }
-      }
-    });
+      });
 
-    const updatedBookMarks = state.bookMarks.filter(
-      (b) => !bookmarkIds.includes(b.bookmarkId)
-    );
-
-    set({
-      cartItems: updatedCartItems,
-      bookMarks: updatedBookMarks,
-    });
-  },
-
-  addAllBookmarksToCart: (quantity = 1) => {
-    const allBookmarkIds = get().bookMarks.map((b) => b.bookmarkId);
-    get().addBookmarksToCart(allBookmarkIds, quantity);
-  },
-
-  // Remove multiple bookmarks
-  removeMultipleBookmarks: (bookmarkIds) =>
-    set((state) => {
       state.bookMarks = state.bookMarks.filter(
-        (bookmark) => !bookmarkIds.includes(bookmark.bookmarkId)
+        (b) => !bookmarkIds.includes(b.bookmarkId)
       );
     }),
 
-  // Sync cart with products (updated for variants)
-  syncCartWithProducts: () =>
+  addAllBookmarksToCart: (quantity = 1) => {
+    const allIds = get().bookMarks.map((b) => b.bookmarkId);
+    get().addBookmarksToCart(allIds, quantity);
+  },
+
+  removeMultipleBookmarks: (bookmarkIds) =>
     set((state) => {
-      if (state.products.length === 0 || state.cartItems.length === 0) {
-        return; // Nothing to sync
+      state.bookMarks = state.bookMarks.filter(
+        (b) => !bookmarkIds.includes(b.bookmarkId)
+      );
+    }),
+
+  // ============================================
+  // Products - Management
+  // ============================================
+
+  addProductToStore: (product) =>
+    set((state) => {
+      const exists = state.products.some((p) => p._id === product._id);
+      if (exists) return;
+
+      state.products.push({
+        ...product,
+        selectedColor: product.selectedColor || product.variants[0]?._id,
+        selectedSize: product.selectedSize || product.variants[0]?.sizes[0],
+      });
+    }),
+
+  getProductById: (productId) => {
+    return get().products.find((p) => p._id === productId);
+  },
+
+  getVariantByColorId: (product, colorId) => {
+    return findVariant(product, colorId);
+  },
+
+  getAvailableColorsForProduct: (productId) => {
+    const product = get().products.find((p) => p._id === productId);
+    if (!product) return [];
+
+    return product.variants.map((v) => ({
+      id: v._id,
+      color: v.color,
+      colorHex: v.colorHex,
+    }));
+  },
+
+  getAvailableSizesForColor: (productId, colorId) => {
+    const product = get().products.find((p) => p._id === productId);
+    if (!product) return [];
+
+    const variant = findVariant(product, colorId);
+    return variant?.sizes || [];
+  },
+
+  getVariantStock: (product, colorId) => {
+    return getVariantStock(product, colorId);
+  },
+
+  // ============================================
+  // Products - Loading & Sync
+  // ============================================
+
+  loadProducts: async (force, page = 1, limit = 24, filters) => {
+    const state = get();
+
+    if (state.isServerInitialized) {
+      console.log("Skipping refetch: server already initialized");
+      set((draft) => {
+        draft.isServerInitialized = false;
+      });
+      return;
+    }
+
+    const isPagination = !force && page > 1;
+    const isFiltering = force || (!!filters && page === 1);
+
+    // Prevent concurrent loads
+    if (isFiltering && state.cartProductState === "loading") {
+      console.log("Filter load already in progress, skipping");
+      return;
+    }
+
+    if (isPagination && state.productPaginationState === "loading") {
+      console.log("Pagination already in progress, skipping");
+      return;
+    }
+
+    set((draft) => {
+      if (isFiltering) {
+        draft.cartProductState = "loading";
+        draft.error = null;
+      } else if (isPagination) {
+        draft.productPaginationState = "loading";
+      }
+      draft.currentFilters = filters ?? null;
+    });
+
+    const safetyTimeout = setTimeout(() => {
+      console.error("Load products timed out!");
+      set((draft) => {
+        draft.cartProductState = "error";
+        draft.productPaginationState = "idle";
+        draft.error = "Request timed out";
+      });
+    }, 30000);
+
+    try {
+      state.loadCategories();
+      const query = buildQueryParams(page, limit, filters);
+
+      if (process.env.NODE_ENV === "development") {
+        console.log("Query:", query.toString());
+        console.log("Filters:", filters);
       }
 
-      // Update cart items with fresh product data
+      const response = await fetch(`/api/products?${query.toString()}`, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+
+      clearTimeout(safetyTimeout);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP ${response.status}: ${response.statusText}\n${errorText}`
+        );
+      }
+
+      const result = await response.json();
+
+      if (!result?.data || !Array.isArray(result.data)) {
+        throw new Error("Invalid API response format");
+      }
+
+      const transformedProducts = result.data.map(transformProduct);
+
+      set(
+        produce((state: Store) => {
+          const shouldReplace = !isPagination;
+          state.products = mergeProducts(
+            state.products,
+            transformedProducts,
+            shouldReplace
+          );
+
+          if (result.total !== undefined) {
+            state.totalPages = result.total;
+          }
+
+          if (isFiltering) {
+            state.cartProductState = "success";
+          } else if (isPagination) {
+            state.productPaginationState = "success";
+          }
+        })
+      );
+
+      if (isPagination) {
+        setTimeout(() => {
+          set((draft) => {
+            draft.productPaginationState = "idle";
+          });
+        }, RESET_DELAY_MS);
+      }
+
+      get().syncCartWithProducts();
+      get().syncBookmarksWithProducts();
+    } catch (error) {
+      clearTimeout(safetyTimeout);
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to load products";
+      console.error("Product loading error:", error);
+
+      set((draft) => {
+        draft.error = errorMessage;
+        if (isFiltering) {
+          draft.cartProductState = "error";
+        } else {
+          draft.productPaginationState = "error";
+        }
+      });
+
+      if (isPagination) {
+        setTimeout(() => {
+          set((draft) => {
+            draft.productPaginationState = "idle";
+          });
+        }, RESET_DELAY_MS);
+      }
+    }
+  },
+
+  refreshProducts: async () => {
+    await get().loadProducts(true, 1);
+  },
+
+  syncCartWithProducts: () =>
+    set((state) => {
+      if (state.products.length === 0 || state.cartItems.length === 0) return;
+
       state.cartItems = state.cartItems
         .map((cartItem) => {
           const product = state.products.find((p) => p._id === cartItem._id);
@@ -763,327 +909,79 @@ export const useCartStore: StateCreator<
             console.warn(
               `Product ${cartItem._id} not found, removing from cart`
             );
-            return null; // Will be filtered out
+            return null;
           }
 
-          // Find the variant for the selected color
-          const selectedVariant = product.variants.find(
-            (v) => v._id === cartItem.selectedColor
-          );
-
-          // Check if selected color/size still exists in product variants
-          const isValidColor = !!selectedVariant;
+          const variant = findVariant(product, cartItem.selectedColor);
+          const isValidColor = !!variant;
           const isValidSize =
             !cartItem.selectedSize ||
-            (selectedVariant &&
-              selectedVariant.sizes.includes(cartItem.selectedSize));
+            (variant && variant.sizes.includes(cartItem.selectedSize));
 
           if (!isValidColor || !isValidSize) {
-            console.warn(
-              `Invalid color/size for product ${cartItem._id}, updating cart item`
-            );
-
-            // Use first available variant and size
             const firstVariant = product.variants[0];
-            const newSelectedColor = firstVariant?._id;
-            const newSelectedSize = isValidSize
-              ? cartItem.selectedSize
-              : firstVariant?.sizes[0];
-
             return {
-              ...product, // Fresh product data
-              cartItemId: generateCartItemId(
+              ...product,
+              cartItemId: createItemId(
                 product._id,
-                newSelectedColor,
-                newSelectedSize
+                firstVariant._id,
+                firstVariant.sizes[0]
               ),
-              quantity: Math.min(cartItem.quantity, firstVariant?.stock || 0),
-              selectedColor: newSelectedColor,
-              selectedSize: newSelectedSize,
+              quantity: clampQuantity(cartItem.quantity, firstVariant.stock),
+              selectedColor: firstVariant._id,
+              selectedSize: firstVariant.sizes[0],
               selectedVariant: firstVariant,
             };
           }
 
-          // Merge fresh product data with cart item
           return {
-            ...product, // Fresh product data (price, etc.)
+            ...product,
             cartItemId: cartItem.cartItemId,
-            quantity: Math.min(cartItem.quantity, selectedVariant.stock),
+            quantity: clampQuantity(cartItem.quantity, variant.stock),
             selectedColor: cartItem.selectedColor,
             selectedSize: cartItem.selectedSize,
-            selectedVariant: selectedVariant,
+            selectedVariant: variant,
           };
         })
-        .filter(Boolean) as CartItemType[]; // Remove null items
+        .filter(Boolean) as CartItemType[];
     }),
 
-  // Sync bookmarks with products (updated for variants)
   syncBookmarksWithProducts: () =>
     set((state) => {
-      if (state.products.length === 0 || state.bookMarks.length === 0) {
-        return; // Nothing to sync
-      }
+      if (state.products.length === 0 || state.bookMarks.length === 0) return;
 
-      // Update bookmarks with fresh product data
       state.bookMarks = state.bookMarks
         .map((bookmark) => {
           const product = state.products.find((p) => p._id === bookmark._id);
-
-          if (!product || !product.isActive || product.status !== "active") {
-            console.warn(
-              `Product ${bookmark._id} not found or inactive, removing bookmark`
-            );
-            return null; // Will be filtered out
+          if (!product || product.status !== "active") {
+            console.warn(`Product ${bookmark._id} not available`);
+            return null;
           }
 
-          // Find the variant for the selected color
-          const selectedVariant = product.variants.find(
-            (v) => v._id === bookmark.selectedColor
-          );
-
-          // Check if selected color/size still exists in product variants
-          const isValidColor = !!selectedVariant;
+          const variant = findVariant(product, bookmark.selectedColor);
+          const isValidColor = !!variant;
           const isValidSize =
             !bookmark.selectedSize ||
-            (selectedVariant &&
-              selectedVariant.sizes.includes(bookmark.selectedSize));
+            (variant && variant.sizes.includes(bookmark.selectedSize));
 
-          // Use first available variant and size if current selection is invalid
           const firstVariant = product.variants[0];
-          const newSelectedColor = isValidColor
+          const finalVariant = variant || firstVariant;
+          const finalColor = isValidColor
             ? bookmark.selectedColor
-            : firstVariant?._id;
-          const newSelectedSize = isValidSize
+            : firstVariant._id;
+          const finalSize = isValidSize
             ? bookmark.selectedSize
-            : (selectedVariant || firstVariant)?.sizes[0];
-          const finalVariant = selectedVariant || firstVariant;
+            : finalVariant.sizes[0];
 
-          // Create updated bookmark with fresh product data
-          const updatedBookmark: BookmarkType = {
-            ...product, // Fresh product data
-            bookmarkId: generateBookmarkId(
-              product._id,
-              newSelectedColor,
-              newSelectedSize
-            ),
-            bookmarkCreatedAt: bookmark.bookmarkCreatedAt,
-            selectedColor: newSelectedColor,
-            selectedSize: newSelectedSize,
-            selectedVariant: finalVariant,
-          };
-
-          if (!isValidColor || !isValidSize) {
-            console.warn(
-              `Invalid color/size for bookmark ${bookmark.bookmarkId}, updating bookmark`
-            );
-          }
-
-          return updatedBookmark;
-        })
-        .filter(Boolean) as BookmarkType[]; // Remove null items
-    }),
-
-  //  loadProducts to sync with cart and bookmarks after loading
-  loadProducts: async (force, page, limit = 25, filters) => {
-    const state = get();
-
-    if (force || page === 1 || !filters || Object.keys(filters).length === 0) {
-      set((state) => {
-        state.products = [];
-        state.cartState = "loading";
-        state.error = null;
-      });
-    }
-    const isFreshLoad = force || page === 1 || state.products.length === 0;
-
-    if (isFreshLoad) {
-      set((state) => {
-        state.cartState = "loading";
-        state.error = null;
-      });
-    } else {
-      set((state) => {
-        state.productPaginationState = "loading";
-      });
-    }
-
-    const RESET_DELAY_MS = 3000;
-
-    try {
-      // Build query parameters
-      const query = new URLSearchParams();
-      state.loadCategories();
-
-      query.append("status", "active");
-
-      if (page && page !== 1) {
-        query.append("page", page.toString());
-      }
-
-      if (limit) {
-        query.append("limit", limit.toString());
-      }
-
-      // Add filter parameters
-      if (filters) {
-        if (filters.name) {
-          query.append("name", filters.name);
-        }
-
-        if (filters.createdAt) {
-          query.append("createdAt", filters.createdAt);
-        }
-
-        // Category filter - join multiple categories with comma
-        if (filters?.category && filters.category.length > 0) {
-          query.append("category", filters.category.join(","));
-        }
-
-        if (filters.products && filters.products.length > 0) {
-          query.append("id", filters.products.join(","));
-        }
-
-        // Sort filter - convert to API format
-        if (filters.sort_by) {
-          const apiSortFormat = sortMapping[filters.sort_by] || filters.sort_by;
-          query.append("sort", apiSortFormat);
-        }
-
-        // Price filter
-        if (filters.price) {
-          const [minPrice, maxPrice] = filters.price.split("-");
-
-          if (minPrice) {
-            query.append("minPrice", minPrice);
-          }
-
-          if (maxPrice) {
-            query.append("maxPrice", maxPrice);
-          }
-        }
-      }
-
-      // Store current filters in state for pagination
-      set((state) => {
-        state.currentFilters = filters ?? null;
-      });
-
-      if (process.env.NODE_ENV === "development") {
-        console.log(query.toString(), "Query parameters");
-        console.log(filters, "Applied filters");
-      }
-
-      // Fetch products from API with query parameters
-      const response = await fetch(`/api/products?${query.toString()}`, {
-        cache: "no-cache",
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to fetch products: ${response.statusText}\n${errorText}`
-        );
-      }
-
-      let result: { data: ProductData; total: number };
-      try {
-        result = await response.json();
-      } catch (error) {
-        throw new Error("Failed to parse response JSON");
-      }
-
-      if (!result || !Array.isArray(result.data)) {
-        throw new Error(
-          "Invalid response format: expected { data: ProductData[] }"
-        );
-      }
-
-      // Transform products
-      const transformedProducts: ProductData[] = result.data.map(
-        (product: any) => {
-          const firstVariant = product?.variants?.[0];
           return {
             ...product,
-            id: product._id,
-            colors:
-              product.variants?.map((variant: any) => variant.color) || [],
-            selectedColor: firstVariant?._id || null,
-            mainImage: product.images?.[0]?.url || product.mainImage || "",
-            sizes: firstVariant?.sizes || [],
-            variants:
-              product.variants?.map((variant: any) => ({
-                ...variant,
-                id: variant._id,
-              })) || [],
+            bookmarkId: createBookmarkId(product._id, finalColor, finalSize),
+            bookmarkCreatedAt: bookmark.bookmarkCreatedAt,
+            selectedColor: finalColor,
+            selectedSize: finalSize,
+            selectedVariant: finalVariant,
           };
-        }
-      );
-
-      set(
-        produce((state: Store) => {
-          // 🚀 If it's a fresh or forced load, completely replace products
-          if (
-            force ||
-            page === 1 ||
-            !filters ||
-            Object.keys(filters).length === 0
-          ) {
-            state.products = transformedProducts;
-          } else {
-            // 🔁 Otherwise, append for pagination
-            const existingIds = new Set(state.products.map((p) => p._id));
-            const newOnes = transformedProducts.filter(
-              (p) => !existingIds.has(p._id)
-            );
-            state.products.push(...newOnes);
-          }
-
-          state.storeProducttotalItems =
-            result.total ?? state.storeProducttotalItems;
-          if (isFreshLoad) state.cartState = "success";
-          else state.productPaginationState = "success";
         })
-      );
-
-      if (!isFreshLoad) {
-        setTimeout(() => {
-          set((state) => {
-            state.productPaginationState = "idle";
-          });
-        }, RESET_DELAY_MS);
-      }
-
-      // Sync cart and bookmarks with fresh product data
-      get().syncCartWithProducts();
-      get().syncBookmarksWithProducts();
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
-      console.error("Failed to load products:", error);
-
-      // Only update cartState for fresh loads
-      if (isFreshLoad) {
-        set((state) => {
-          state.cartState = "error";
-          state.error = errorMessage;
-        });
-      } else {
-        set((state) => {
-          state.productPaginationState = "error";
-        });
-
-        setTimeout(() => {
-          set((state) => {
-            state.productPaginationState = "idle";
-          });
-        }, RESET_DELAY_MS);
-
-        console.warn("Pagination fetch failed:", errorMessage);
-      }
-    }
-  },
-
-  refreshProducts: async () => {
-    await get().loadProducts();
-  },
+        .filter(Boolean) as BookmarkType[];
+    }),
 });

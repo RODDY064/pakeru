@@ -3,12 +3,34 @@ import { cn } from "@/libs/cn";
 import { useBoundStore } from "@/store/store";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect } from "react";
 import CartContainer from "./bagContainer";
 import Menu from "./menu";
 
 export default function Modal() {
   const { modal, closeModal, modalDisplay, cartItems } = useBoundStore();
+
+
+  useEffect(() => {
+  const html = document.documentElement;
+
+  const applyLock = () => {
+    const isMobile = window.innerWidth <= 734;
+
+    if (modal && isMobile) {
+      html.classList.add("globalnav-noscroll");
+    } else {
+      html.classList.remove("globalnav-noscroll");
+    }
+  };
+  applyLock();
+  window.addEventListener("resize", applyLock);
+  return () => {
+    html.classList.remove("globalnav-noscroll");
+    window.removeEventListener("resize", applyLock);
+  };
+}, [modal]);
+
 
   return (
     <AnimatePresence>

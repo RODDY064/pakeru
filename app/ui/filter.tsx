@@ -7,8 +7,9 @@ import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
+import { useFilterPagination } from "./useFilterPage";
 
-export default function Filter() {
+export default function Filter({ applyFilters }: { applyFilters: () => void }) {
   const {
     filter,
     filterState,
@@ -17,36 +18,29 @@ export default function Filter() {
     setFilterView,
     setPriceRange,
     getFilterQueries,
-    applyFiltersToURL,
-    loadFiltersFromURL,
-    clearAllSelections,
     hasActiveFilters,
     getActiveFilterCount,
     modal,
-    categories,
-    loadProducts,
-    setFilterCategories,
     getCartIdByName,
+    cartProductState,
+    productPaginationState,
   } = useBoundStore();
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [priceMin, setPriceMin] = useState<string>("");
   const [priceMax, setPriceMax] = useState<string>("");
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const contentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const [categoriesLoaded, setCategoriesLoaded] = useState<boolean>(false);
   const [heights, setHeights] = useState<{ [key: string]: number }>({});
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-  const { get } = useApiClient();
-  // Load categories first
+  const [isApplying, setIsApplying] = useState(false);
+
+  // Track when filters are being applied
   useEffect(() => {
-    const loadCats = async () => {
-      await setFilterCategories();
-      setCategoriesLoaded(true);
-    };
-    loadCats();
-  }, [setFilterCategories]);
+    if (cartProductState === "loading" && isApplying) {
+      // Filter is being applied
+      console.log("Filters are being applied, showing loading...");
+    } else if (cartProductState === "success" && isApplying) {
+      setIsApplying(false);
+    }
+  }, [cartProductState, isApplying]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -68,63 +62,6 @@ export default function Filter() {
     });
     setHeights(newHeights);
   }, [filteritems]);
-
-useEffect(() => {
-  if (!categoriesLoaded || categories.length === 0) return;
-
-  const hasFilters = searchParams.size > 0;
-
-  // Always clear old cached products when route changes
-  useBoundStore.setState((state) => {
-    state.products = [];
-    state.cartState = "loading";
-  });
-
-  // Decide whether to apply filters or not
-  let queries = {};
-  if (hasFilters) {
-    // Extract filters from URL if present
-    loadFiltersFromURL(searchParams);
-    queries = getFilterQueries();
-    console.log("🔁 Fetching filtered products:", queries);
-  } else {
-    // When there are NO queries, force fetch fresh ALL products
-    console.log("🔁 Fetching all products (no filters)");
-  }
-
-  // Force a fresh load every time the route changes
-  const timer = setTimeout(() => {
-    loadProducts(true, 1, 25, hasFilters ? queries : undefined);
-  }, 100);
-
-  return () => clearTimeout(timer);
-}, [
-  pathname,                 
-  searchParams.toString(),   
-  categoriesLoaded,
-  categories.length,
-  loadFiltersFromURL,
-  getFilterQueries,
-  loadProducts,
-]);
-
-
-
-  // Sync URL when filters change (only after initialization)
-  useEffect(() => {
-    if (isInitialized && categoriesLoaded && categories.length > 0) {
-      applyFiltersToURL(searchParams, pathname, router);
-    }
-  }, [
-    filteritems,
-    categoriesLoaded,
-    categories.length,
-    applyFiltersToURL,
-    pathname,
-    router,
-    searchParams,
-    isInitialized,
-  ]);
 
   const handlePriceChange = (type: "min" | "max", value: string) => {
     if (type === "min") {
@@ -154,15 +91,16 @@ useEffect(() => {
     setPriceRange(min, max);
   };
 
-  const ApplyFilter = () => {
-    const queries = getFilterQueries();
-    console.log("Applying filters:", queries);
-    loadProducts(true, 1, 25, queries);
-    filterState(false);
+  const handleApplyFilters = async () => {
+    setIsApplying(true);
+    await applyFilters();
   };
 
   const activeFilterCount = getActiveFilterCount();
   const hasFilters = hasActiveFilters();
+
+  const isFilterLoading = cartProductState === "loading";
+  const isPaginationLoading = productPaginationState === "loading";
 
   const renderPriceInputs = (isMobileView: boolean = false) => (
     <div className="flex flex-col gap-3 font-avenir">
@@ -194,6 +132,22 @@ useEffect(() => {
         </p>
       )}
     </div>
+  );
+
+  const renderApplyButton = (isMobileView = false) => (
+    <button
+      onClick={handleApplyFilters}
+      disabled={isFilterLoading}
+      className={`mt-6 w-full py-3 text-center rounded-full cursor-pointer transition-all ${
+        isFilterLoading
+          ? "bg-gray-400 cursor-not-allowed"
+          : "bg-black hover:bg-gray-800"
+      }`}
+    >
+      <p className="font-avenir text-white text-md">
+        {isFilterLoading ? "Applying..." : "Apply Filters"}
+      </p>
+    </button>
   );
 
   return (
@@ -334,15 +288,7 @@ useEffect(() => {
                         </motion.div>
                       ))}
                     </AnimatePresence>
-
-                    <div
-                      onClick={ApplyFilter}
-                      className="mt-12 w-full py-3 text-center bg-black rounded-full cursor-pointer"
-                    >
-                      <p className="font-avenir text-white text-md">
-                        Apply Filter
-                      </p>
-                    </div>
+                    {renderApplyButton()}
                   </motion.div>
                 </motion.div>
               </motion.div>
@@ -498,14 +444,7 @@ useEffect(() => {
                         </motion.div>
                       ))}
 
-                      <button
-                        onClick={ApplyFilter}
-                        className="mt-6 w-full py-3 text-center bg-black rounded-full cursor-pointer"
-                      >
-                        <p className="font-avenir text-white text-md">
-                          Apply Filters
-                        </p>
-                      </button>
+                      {renderApplyButton()}
                     </motion.div>
                   </motion.div>
                 </motion.div>

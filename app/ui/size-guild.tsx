@@ -379,7 +379,7 @@ const container = {
     },
   },
   close: {
-    x: 900,
+    x: 1000,
     transition: {
       ease: easingShow,
       when: "afterChildren",

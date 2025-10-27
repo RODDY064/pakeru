@@ -103,11 +103,14 @@ export type StoreProductStore = {
   dashboardProductLoading: LoadingState;
   dashboardProductErrors: ErrorState;
 
-  // Pagination
-  currentPage: number;
-  itemsPerPage: number;
-  storeProducttotalItems: number;
-  totalPages: number;
+ dashboardProductStats: {
+  total: number;
+  activeTotal: number;
+  inactiveTotal: number;
+  outOfStock: number;
+};
+
+
 
   // Selection and navigation
   setSelectedProduct: (product: ProductData | null) => void;
@@ -120,7 +123,7 @@ export type StoreProductStore = {
   ) => Promise<ProductData | undefined>;
 
   // Data management
-  setProducts: (products: ProductData[], total?:number) => void;
+  setDashProducts: (products: ProductData[], total?: number) => void;
   clearProducts: () => void;
   loadStoreProducts: (
     force?: boolean,
@@ -140,7 +143,7 @@ export type StoreProductStore = {
   applyStoreProductFilters: () => void;
 
   // Batch operations
-  setStoreProducts: (products: ProductData[]) => void;
+  setStoreProducts: (products: ProductData[], stats: { activeProducts: 28, inactiveProducts: 0, outOfStockProducts: 0 }) => void;
 
   // Computed getters
   getProductsByCategory: (category: string) => ProductData[];
@@ -215,10 +218,15 @@ export const useStoreProductStore: StateCreator<
     product: null,
     general: null,
   },
-  currentPage: 1,
-  itemsPerPage: 20,
-  storeProducttotalItems: 0,
-  totalPages: 0,
+  
+  dashboardProductStats: {
+    total:0,
+    activeTotal:0,
+    inactiveTotal:0,
+    outOfStock:0
+  },
+
+
 
   // Selection and navigation
   setSelectedProduct: (product) =>
@@ -272,19 +280,12 @@ export const useStoreProductStore: StateCreator<
     };
   },
 
-  setProducts: (products: ProductData[], total) => {
-    set((state) => {
-      console.log(total, 'total')
-      state.products = products;
-      state.storeProducts = products;
-      state.cartState = products.length > 0 ? "success" : "idle";
-      state.error = null;
-      state.storeProducttotalItems = total ?? products.length
+  setDashProducts: (products: ProductData[], total) => {
+    set((draft) => {
+      draft.storeProducts = products;
+
     });
-
-    console.log(`Set ${total} products from server data`);
   },
-
   // Data management
   clearProducts: () =>
     set(
@@ -292,12 +293,12 @@ export const useStoreProductStore: StateCreator<
         state.storeProducts = [];
         state.filteredStoreProducts = [];
         state.selectedProduct = null;
-        state.storeProducttotalItems = 0;
+
         state.totalPages = 0;
       })
     ),
 
-  loadStoreProducts: async (force = false, apiGet, limit , page = 1) => {
+  loadStoreProducts: async (force = false, apiGet, limit, page = 1) => {
     const state = get();
     if (!apiGet) {
       throw new Error("API get function is required");
@@ -317,7 +318,6 @@ export const useStoreProductStore: StateCreator<
         typeof window !== "undefined" ? window.location.search : ""
       );
 
-
       const createdAt = urlParams.get("createdAt");
 
       const query = new URLSearchParams();
@@ -334,18 +334,21 @@ export const useStoreProductStore: StateCreator<
         query.append("createdAt", createdAt);
       }
 
-      console.log(page,limit, createdAt)
+      console.log(page, limit, createdAt);
 
-      const result = await apiGet<{ data: ProductData[]; total?: number, page?:number }>(`/products?${query.toString()}`,
-        {
-          cache: "no-store",
-          next: { revalidate: 0 },
-          headers: {
-            "Cache-Control": "no-store, no-cache, must-revalidate",
-            Pragma: "no-cache",
-          },
-        }
-      );
+      const result = await apiGet<{
+        data: ProductData[];
+        total?: number;
+        page?: number;
+        stats:any
+      }>(`/products?${query.toString()}`, {
+        cache: "no-store",
+        next: { revalidate: 0 },
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+          Pragma: "no-cache",
+        },
+      });
 
       if (!result || !Array.isArray(result.data)) {
         throw new Error(
@@ -357,34 +360,42 @@ export const useStoreProductStore: StateCreator<
         transformApiProduct(product)
       );
 
-     set(
-      produce((state: Store) => {
-        if (force) {
-          state.storeProducts = transformedProducts;
-        } else {
-          const mergedMap = new Map<string, ProductData>();
-          state.storeProducts.forEach((p) => mergedMap.set(p._id, p));
-          transformedProducts.forEach((p) => mergedMap.set(p._id, p));
-          state.storeProducts = Array.from(mergedMap.values());
-        }
- 
-        state.filteredStoreProducts = [...state.storeProducts];
-        if (result.total !== undefined) {
-          state.storeProducttotalItems = result.total;
-        }
-        if (force && state.pagination) {
-          state.pagination.page = result.page ?? 1;
-        }
-      })
-    );
+    
+
+      set(
+        produce((state: Store) => {
+          if (force) {
+            state.storeProducts = transformedProducts;
+            state.dashboardProductStats.total = result.total ?? 0;
+            state.dashboardProductStats.activeTotal = result.stats.activeProducts ?? 0;
+            state.dashboardProductStats.inactiveTotal = result.stats.inactiveProducts ?? 0;
+            state.dashboardProductStats.outOfStock = result.stats.outOfStockProducts ?? 0;
+
+          } else {
+            const mergedMap = new Map<string, ProductData>();
+            transformedProducts.forEach((p) => mergedMap.set(p._id, p));
+            state.storeProducts = Array.from(mergedMap.values());
+             state.dashboardProductStats.activeTotal = result.stats.activeProducts ?? 0;
+            state.dashboardProductStats.inactiveTotal = result.stats.inactiveProducts ?? 0;
+            state.dashboardProductStats.outOfStock = result.stats.outOfStockProducts ?? 0;
+          }
+
+          state.filteredStoreProducts = [...state.storeProducts];
+          if (result.total !== undefined) {
+        
+          }
+          if (force && state.pagination) {
+            state.pagination.page = result.page ?? 1;
+          }
+        })
+      );
 
       setTimeout(() => get().applyStoreProductFilters(), 0);
     } catch (error) {
       console.error("Error loading products:", error);
       set(
         produce((state: Store) => {
-          state.dashboardProductErrors.products =
-            error instanceof Error ? error.message : "Failed to load products";
+          state.dashboardProductErrors.products =  error instanceof Error ? error.message : "Failed to load products";
         })
       );
     } finally {
@@ -397,7 +408,6 @@ export const useStoreProductStore: StateCreator<
   },
   loadStoreProduct: async (id) => {
     try {
-
       const existingProduct = get().getProductById(id);
       if (existingProduct) {
         get().setSelectedProduct(existingProduct);
@@ -425,11 +435,11 @@ export const useStoreProductStore: StateCreator<
       );
     } catch (error) {
       console.error("Error loading product:", error);
-      throw error; 
+      throw error;
     }
   },
 
-  // Filtering and search
+  // Filtering and searcharyt
   storeProductFilters: {
     status: "all",
     category: "all",
@@ -673,19 +683,17 @@ export const useStoreProductStore: StateCreator<
           status: "all",
           category: "",
         };
-        state.currentPage = 1;
       })
     );
     get().applyStoreProductFilters();
   },
 
   // Batch operations
-  setStoreProducts: (products) => {
+  setStoreProducts: (products, stats) => {
     set(
       produce((state: Store) => {
         state.storeProducts = products;
-        state.storeProducttotalItems = products.length;
-        state.totalPages = Math.ceil(products.length / state.itemsPerPage);
+
       })
     );
     get().applyStoreProductFilters();
@@ -708,14 +716,15 @@ export const useStoreProductStore: StateCreator<
 
   getProductStats: () => {
     const products = get().storeProducts;
-    const total = get().storeProducttotalItems
+   
     return {
-      total: total,
+      total: 0,
       active: products.filter((p) => p.status === "active").length,
       inactive: products.filter((p) => p.status === "inactive").length,
       outOfStock: products.filter((p) => p.status === "out-of-stock").length,
       draft: products.filter((p) => p.status === "draft").length,
-      lowStock: products.filter((p) => p.totalNumber < 10 && p.totalNumber > 0).length,
+      lowStock: products.filter((p) => p.totalNumber < 10 && p.totalNumber > 0)
+        .length,
     };
   },
 });

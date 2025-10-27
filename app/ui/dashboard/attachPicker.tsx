@@ -21,30 +21,27 @@ export default function AttachPicker({
   const {
     loadProducts,
     loadCategories,
-    products,
+    storeProducts,
     categories,
-    cartState,
     isCategoriesLoading,
+    loadStoreProducts,
+    dashboardProductLoading
   } = useBoundStore();
 
   const [searchTerm, setSearchTerm] = useState("");
   const { get } = useApiClient();
 
   useEffect(() => {
-    if (type === "products") {
-      loadProducts(false, 1, 25, {});
-    } else {
-      loadCategories();
-    }
-  }, [type, loadProducts, loadCategories]);
+      loadProducts(true, 1, 24, {});
+  }, []);
 
   // Pick state dynamically
   const isLoading =
     (type === "products" &&
-      (cartState === "loading" || cartState === "idle")) ||
+      (dashboardProductLoading.products)) ||
     (type === "categories" && isCategoriesLoading);
 
-  const data = type === "products" ? products : categories;
+  const data = type === "products" ? storeProducts  : categories;
 
   // Filter based on search term
   const filteredData = data.filter((item: any) =>

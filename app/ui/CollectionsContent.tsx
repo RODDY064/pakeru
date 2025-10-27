@@ -61,11 +61,11 @@ export default function CollectionsContent({ id }: { id: string }) {
       
       // Load gallery-specific products if they exist, otherwise load all products
       if (galleryFind.products && galleryFind.products.length > 0) {
-        await loadProducts(true, 1, 25, {
+        await loadProducts(true, 1, 24, {
           products: galleryFind.products,
         });
       } else {
-        await loadProducts(true, 1, 25);
+        await loadProducts(true, 1, 24);
       }
       
       setIsLoadingProducts(false);

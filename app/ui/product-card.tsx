@@ -45,6 +45,7 @@ const ProductCard = ({
   const imageSrc = productData?.mainImage?.url ?? "/images/hero-2.png";
   const isCloudinaryImage = imageSrc.includes("cloudinary");
   const productName = productData?.name?.toUpperCase() ?? "Unnamed Product";
+  const calHeight = useCardHeight(type)
 
   // Size configurations for responsive design
   const sizeConfig = {
@@ -63,7 +64,7 @@ const ProductCard = ({
       height: 400,
     },
     small: {
-      container: "w-[200px] h-[250px] md:w-[250px] md:h-[300px]",
+      container: "w-[200px] h-[250px] md:w-[250px] md:h-[250px]",
       details: "w-[200px] md:w-[150px]",
       sizes: "(max-width: 768px) 200px, 250px",
       width: 250,
@@ -73,10 +74,7 @@ const ProductCard = ({
 
   const config = sizeConfig[type];
 
-  // ---
 
-  // Optional: Enhanced ProductCard with manual URL building
-  // Use this if you need more control over transformations
 
 const renderImageWithCustomTransforms = () => {
     if (!isCloudinaryImage) {
@@ -314,13 +312,13 @@ const calculateCardHeight = (type: "small" | "medium" | "large") => {
 
   switch (type) {
     case "large":
-      return Math.min(Math.max(vh * 0.6, 450), 650);
+      return Math.min(Math.max(vh * 0.6, 450), 450);
     // 60% of viewport, but clamp between 450–650px
     case "medium":
       return Math.min(Math.max(vh * 0.45, 350), 500);
     case "small":
     default:
-      return Math.min(Math.max(vh * 0.35, 250), 400);
+      return Math.min(Math.max(vh * 0.35, 200), 300);
   }
 };
 

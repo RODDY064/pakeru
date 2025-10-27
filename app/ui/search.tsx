@@ -8,7 +8,7 @@ import Icon from "./Icon";
 import ProductCard from "./product-card";
 
 export default function Search() {
-  const { isSearching, toggleSearch, search, setNavSearch, searchProduct, cartState } =
+  const { isSearching, toggleSearch, search, setNavSearch, searchProduct } =
     useBoundStore();
   const [localSearch, setLocalSearch] = useState("");
 
@@ -147,8 +147,7 @@ export default function Search() {
         exit="hide"
         className={`fixed top-0 z-[99] w-full bg-white flex flex-col searchModal invisible items-center opacity-0 h-0 left-0 font-avenir overflow-hidden ${
           isSearching ? "pointer-events-auto" : "pointer-events-none"
-        }`}
-      >
+        }`}>
         <div className="w-full flex items-center flex-none justify-between px-4 md:px-24">
           <div className="hidden md:flex" />
           <motion.div variants={logoVariants}>
@@ -167,8 +166,7 @@ export default function Search() {
 
         <motion.div
           variants={searchContainerVariants}
-          className="mt-10 w-full flex items-center flex-col"
-        >
+          className="mt-10 w-full flex items-center flex-col">
           <motion.div
             variants={searchBoxVariants}
             onClick={() => document.getElementById("search-input")?.focus()}
@@ -220,7 +218,7 @@ export default function Search() {
         >
           <div
             className={cn(
-              "w-[90%] xl:w-[80%] h-full pt-5 pb-72 px-2  gap-6  grid md:grid-cols-2 lg:grid-cols-3  overflow-y-scroll searchCon",
+              "w-[90%] xl:w-[80%] h-full pt-5 pb-72 px-2  gap-6  grid md:grid-cols-2 lg:grid-cols-3  overflow-y-auto searchCon",
               {
                 "flex items-center justify-center": searchProduct.length === 0,
               }

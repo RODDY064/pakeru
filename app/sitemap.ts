@@ -74,7 +74,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 async function fetchProductsServer(): Promise<ProductData[]> {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products?limit=25`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/v1/products?limit=24`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },

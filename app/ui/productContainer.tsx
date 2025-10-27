@@ -35,7 +35,7 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
     closeModal,
     updateColor,
     updateSize,
-    cartState,
+    cartProductState,
     addBookmark,
     isBookmarked,
     setSizeGuild,
@@ -646,12 +646,12 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                 "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] py-4 px-4 md:auto-cols-[minmax(26rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none",
                 {
                   "auto-cols-[minmax(100%,1fr)]":
-                    cartState === "loading" || cartState === "error",
+                    cartProductState === "loading" || cartProductState === "error",
                 }
               )}
               style={{ scrollBehavior: "smooth" }}
             >
-              {cartState === "loading" || cartState === "error" ? (
+              {cartProductState === "loading" || cartProductState === "error" ? (
                 <div className="min-w-[300px] h-[400px] flex items-center justify-center">
                   <div className="flex items-center justify-center gap-1">
                     <Image
@@ -719,7 +719,7 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                   ))}
                 </div>
               </div>
-              {cartState === "success" && (
+              {cartProductState === "success" && (
                 <div className="md:flex items-center justify-center gap-6 md:gap-12 hidden mt-2">
                   <button
                     ref={prevBtnRef}

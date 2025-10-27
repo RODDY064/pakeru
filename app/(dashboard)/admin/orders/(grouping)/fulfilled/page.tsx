@@ -23,7 +23,7 @@ import React, {
 
 function FulfilledContent() {
   const { get, patch } = useApiClient();
-  const [fulfilledStats, setFulfilledStats] = useState([
+  const [fulfilledDashStats, setFulfilledDashStats] = useState([
     { label: "Delivered", value: 0 },
     { label: "Shipped", value: 0 },
     { label: "Processing (ready to ship)", value: 0 },
@@ -48,7 +48,7 @@ function FulfilledContent() {
     setOrderTypeFilter,
     fulfilledFilteredOrders,
     orderInView,
-    orderTotalSize,
+    fulfilledStats
   } = useBoundStore();
 
   const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
@@ -56,7 +56,7 @@ function FulfilledContent() {
     const initializeData = async () => {
       try {
         await Promise.all([
-          loadOrders("fulfilled", { force: true, get }),
+          loadOrders("fulfilled",true, 25, get ),
           loadStoreProducts(false, get),
         ]);
       } catch (error) {
@@ -75,45 +75,34 @@ function FulfilledContent() {
   }, [fulfilledFilteredOrders]);
 
   const loadOrdersForPagination = async (page: number) => {
-    await loadOrders("fulfilled", {
-      get,
-      force: false,
-      page,
-    });
+    await loadOrders("fulfilled", true, 25, get, page )
   };
 
   useEffect(() => {
     configure({
       dataKey: "fulfilledFilteredOrders",
-      loadFunction: loadOrdersForPagination,
+      loadFunction: (page)=> loadOrdersForPagination(pagination.page),
       size: 25,
     });
     setOrderTypeFilter("fulfilled");
   }, []);
 
-  const orderStats = useMemo(
-    () => getOrdersStats("fulfilled"),
-    [getOrdersStats, fulfilledFilteredOrders, orderInView]
-  );
+
 
   useEffect(() => {
-    setFulfilledStats([
-      { label: "Delivered", value: orderStats.ordersDelivered ?? 0 },
-      { label: "Shipped", value: orderStats.orderShipped ?? 0 },
-      {
-        label: "Processing (ready to ship)",
-        value: orderStats.pendingOrders ?? 0,
-      },
-      { label: "Cancelled", value: orderStats.cancelledOrders ?? 0 },
+    setFulfilledDashStats([
+      { label: "Delivered", value: fulfilledStats.delivered ?? 0 },
+      { label: "Shipped", value: fulfilledStats.shipped ?? 0 },
+      { label: "Cancelled", value: fulfilledStats.cancelled?? 0 },
     ]);
-  }, [orderStats, fulfilledOrders, fulfilledFilteredOrders]);
+  }, [fulfilledStats, storeProducts]);
 
   useEffect(() => {
     updateFromAPI({
-      total: orderTotalSize,
+      total: fulfilledStats.total,
       page: 1,
     });
-  }, [orderTotalSize]);
+  }, [fulfilledStats]);
 
   useEffect(() => {
     const sliceData = slice(fulfilledFilteredOrders);
@@ -234,7 +223,7 @@ function FulfilledContent() {
         Fulfilled Orders
       </p>
       <div className="mt-2 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
-        {fulfilledStats.map((stat, idx) => (
+        {fulfilledDashStats.map((stat, idx) => (
           <StatCard key={idx} {...stat} />
         ))}
       </div>
@@ -244,7 +233,7 @@ function FulfilledContent() {
         data={currentOrders}
         tableName="Fulfuilled Orders"
         tabelState={fulfilledState}
-        reload={() => loadOrders("fulfilled", { force: true, get })}
+        reload={() => loadOrdersForPagination(pagination.page)}
         columnStyle="py-4"
         dateKey="date"
         columnClick={(order) => handleSelect(order)}

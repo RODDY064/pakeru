@@ -132,9 +132,9 @@ export default function Category({
       const img = new window.Image();
       img.onload = () => {
         console.log(img.width, img.height);
-        // Validate dimensions - must be exactly 1024x1024
-        if (img.width !== 1024 || img.height !== 1024) {
-          setError("Image must be exactly 1024 x 1024 pixels");
+        // Validate dimensions - must be exactly 174x1230
+        if (img.width !== 1740 || img.height !== 1230) {
+          setError("Image must be exactly 1740 x 1230 pixels");
           setFormData((prev) => ({ ...prev, image: null }));
           setImagePreview(null);
           if (fileInputRef.current) {
@@ -456,7 +456,7 @@ export default function Category({
                         Click to upload image
                       </p>
                       <p className="text-xs text-black/40 mt-1">
-                        WebP only, 1024 x 1024 pixels, max 2MB
+                        WebP only, 1740 x 1230 pixels, max 2MB
                       </p>
                     </div>
                   </div>

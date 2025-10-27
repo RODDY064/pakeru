@@ -143,11 +143,11 @@ export const useModalStore: StateCreator<
 
     // Early return if already loading
     if (state.menuLoading) {
-      console.log("⏳ Menu initialization already in progress...");
+      console.log(" Menu initialization already in progress...");
       return;
     }
 
-    console.log("🚀 Initializing menu items...");
+    console.log("Initializing menu items...");
 
     // Set loading state immediately
     set((draft) => {
@@ -157,7 +157,7 @@ export const useModalStore: StateCreator<
     try {
       // Load categories if needed
       if (!state.categories || state.categories.length === 0) {
-        console.log("📦 Loading categories...");
+        console.log("Loading categories...");
         await state.loadCategories();
       }
 
@@ -165,7 +165,7 @@ export const useModalStore: StateCreator<
       const updatedState = get();
 
       if (!updatedState.categories || updatedState.categories.length === 0) {
-        console.warn("⚠️ No categories available");
+        console.warn("No categories available");
         set((draft) => {
           draft.menuLoading = false;
         });
@@ -178,7 +178,7 @@ export const useModalStore: StateCreator<
         updatedState.menuItems.every((item) => item.menuProducts?.length > 0);
 
       if (alreadyInitialized) {
-        console.log("✅ Menu items already initialized");
+        console.log(" Menu items already initialized");
         set((draft) => {
           draft.menuLoading = false;
         });
@@ -206,10 +206,7 @@ export const useModalStore: StateCreator<
               menuProducts: products?.data ?? [],
             };
           } catch (err) {
-            console.error(
-              `❌ Error loading products for ${category.name}:`,
-              err
-            );
+            console.error(`Error loading products for ${category.name}:`,err);
             return {
               category: category.name,
               parentCategory: category.parentCategory ?? "",
@@ -227,7 +224,7 @@ export const useModalStore: StateCreator<
         draft.menuLoading = false;
       });
 
-      console.log("✅ Menu items initialized successfully");
+      console.log("Menu items initialized successfully");
     } catch (error) {
       console.error("Failed to initialize menu items:", error);
       set((draft) => {
@@ -250,7 +247,7 @@ export const useModalStore: StateCreator<
         });
       });
     } catch (error) {
-      console.error("❌ Failed to load menu products:", error);
+      console.error("Failed to load menu products:", error);
     }
   },
 });

@@ -142,3 +142,11 @@ html, body, #__next {
   min-height: 100%;
   width: 100%;
 }
+
+
+html.globalnav-noscroll,
+html.globalnav-noscroll body {
+  overflow: hidden !important;
+  position: relative;
+  height: 100% !important;
+}
