@@ -1,13 +1,10 @@
 "use client";
 
 import { cn } from "@/libs/cn";
-import { useApiClient } from "@/libs/useApiClient";
 import { useBoundStore } from "@/store/store";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
-import { useFilterPagination } from "./useFilterPage";
 
 export default function Filter({ applyFilters }: { applyFilters: () => void }) {
   const {
