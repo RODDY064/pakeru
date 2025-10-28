@@ -22,12 +22,10 @@ export type BookmarkType = ProductData & {
 export type CartStats = {
   totalItems: number;
   totalPrice: number;
-  uniqueProducts: number;
 };
 
 export type BookmarkStats = {
   totalBookmarks: number;
-  uniqueProducts: number;
   categoriesBookmarked: string[];
 };
 
