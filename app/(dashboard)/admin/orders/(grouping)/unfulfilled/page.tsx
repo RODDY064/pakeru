@@ -24,26 +24,25 @@ export default function Unfulfilled() {
 
   const {
     unfulfilledOrders,
-    toggleDateSorting,
     setOrderModal,
     loadOrders,
     showOrderModal,
     unfulfilledState,
-    orderInView,
-    setSingleOrderState,
     setOrderInView,
     loadStoreProducts,
-    storeProducts,
     configure,
     updateFromAPI,
-    slice,
     pagination,
-    updateOrder,
     setOrderTypeFilter,
     unfulfilledFilteredOrders,
-    UnfulfilledStats,
+    unfulfilledStats,
     applyOrderFilters,
+    resetPagination,
   } = useBoundStore();
+
+  useEffect(() => {
+    resetPagination();
+  }, []);
 
   const [isFilterd, setIsFilterd] = useState(false);
 
@@ -53,57 +52,11 @@ export default function Unfulfilled() {
     }
   }, [unfulfilledFilteredOrders]);
 
-  const orderStats = useMemo(
-    () => computeOrdersStats(unfulfilledFilteredOrders),
-    [unfulfilledOrders, unfulfilledFilteredOrders, orderInView]
-  );
-
-  const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
-
-  const unfulfilledStats = useMemo(() => {
-    return [
-      { label: "Total Unfulfilled", value: UnfulfilledStats.total ?? 0 },
-      { label: "Pending", value: UnfulfilledStats.pending ?? 0 },
-    ];
-  }, [UnfulfilledStats, unfulfilledOrders]);
-
-  const loadOrdersForPagination = async (page: number) => {
-    await loadOrders("unfulfilled", false, 25,get, page);
-  };
-
-  useEffect(() => {
-    configure({
-      dataKey: "unfulfilledFilteredOrders",
-      loadFunction: (page) => loadOrdersForPagination(pagination.page),
-      size: 25,
-    });
-
-    setOrderTypeFilter("unfulfilled");
-  }, []);
-
-  useEffect(() => {
-    updateFromAPI({
-      total: UnfulfilledStats.total,
-      page: 1,
-    });
-  }, [UnfulfilledStats]);
-
-  useEffect(() => {
-    const sliceData = slice(unfulfilledFilteredOrders);
-    setCurrentOrders(sliceData);
-  }, [pagination, unfulfilledOrders, unfulfilledFilteredOrders]);
-
-  const [renderCount, setRenderCount] = React.useState(0);
-  useEffect(() => {
-    setRenderCount((prev) => prev + 1);
-    applyOrderFilters();
-  }, [unfulfilledOrders]);
-
   useEffect(() => {
     const initializeData = async () => {
       try {
         await Promise.all([
-          loadOrders("unfulfilled",true,25, get ),
+          loadOrders("unfulfilled", true, 25, get),
           loadStoreProducts(),
         ]);
       } catch (error) {
@@ -113,6 +66,55 @@ export default function Unfulfilled() {
 
     initializeData();
   }, [loadOrders, loadStoreProducts]);
+
+  const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
+
+  const unfulfilledDashStats = useMemo(() => {
+    return [
+      { label: "Total Unfulfilled", value: unfulfilledStats.total ?? 0 },
+      // { label: "Pending", value: UnfulfilledStats.pending ?? 0 },
+    ];
+  }, [unfulfilledStats, unfulfilledOrders]);
+
+  const loadUnOrdersForPagination = useCallback(async () => {
+    await loadOrders("unfulfilled", false, 25, get);
+  }, [loadOrders]);
+
+  useEffect(() => {
+    configure({
+      dataKey: "unfulfilledFilteredOrders",
+      loadFunction: loadUnOrdersForPagination,
+      size: 25,
+    });
+
+    setOrderTypeFilter("unfulfilled");
+  }, []);
+
+  // useEffect(() => {
+  //   console.log(pagination);
+  // }, [pagination]);
+
+  useEffect(() => {
+    updateFromAPI({
+      total: unfulfilledStats.total,
+      totalPages: unfulfilledStats.total,
+      page: pagination.page,
+    });
+  }, [unfulfilledStats, pagination.page]);
+
+  useEffect(() => {
+    setCurrentOrders(unfulfilledFilteredOrders);
+  }, [pagination.page, unfulfilledOrders, unfulfilledFilteredOrders]);
+
+
+
+
+  const [renderCount, setRenderCount] = React.useState(0);
+
+  useEffect(() => {
+    setRenderCount((prev) => prev + 1);
+    applyOrderFilters();
+  }, [unfulfilledOrders]);
 
   const tableColumns = [
     {
@@ -201,13 +203,17 @@ export default function Unfulfilled() {
     [showOrderModal, setOrderInView, setOrderModal]
   );
 
+  const handleReload = useCallback(async () => {
+    await loadOrders("unfulfilled", true, 25, get);
+  }, [loadStoreProducts, get, pagination.page]);
+
   return (
     <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%] pt-4 pb-24  ">
       <p className="font-avenir text-xl font-bold max-sm:px-3">
         Unfulfilled Orders
       </p>
       <div className="mt-2 w-full h-fit bg-white border border-black/15 sm:rounded-2xl grid grid-cols-2 md:flex md:px-4">
-        {unfulfilledStats.map((stat, idx) => (
+        {unfulfilledDashStats.map((stat, idx) => (
           <StatCard key={idx} {...stat} />
         ))}
       </div>
@@ -217,7 +223,7 @@ export default function Unfulfilled() {
         data={currentOrders}
         tableName="Unfulfuilled Orders"
         tabelState={unfulfilledState}
-        reload={() => loadOrdersForPagination(pagination.page)}
+        reload={() => handleReload()}
         columnStyle="py-4"
         dateKey="date"
         columnClick={(order) => handleSelect(order)}

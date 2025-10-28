@@ -1,5 +1,5 @@
 "use client";
-import React, { use, useEffect, useMemo, useState, Suspense } from "react";
+import React, { useEffect,useState, Suspense } from "react";
 import { motion, AnimatePresence, cubicBezier } from "motion/react";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
@@ -19,9 +19,7 @@ function OrderModalContent({ type }: { type: "unfulfilled" | "fulfilled" }) {
     showOrderModal,
     setOrderModal,
     orderInView,
-    setOrderInView,
     loadOrder,
-    loadOrders,
     updateOrder,
     singleOrderState,
     setSingleOrderState,

@@ -129,7 +129,6 @@ export type StoreProductStore = {
     force?: boolean,
     get?: ReturnType<typeof useApiClient>["get"],
     limit?: number,
-    page?: number
   ) => Promise<void>;
   loadStoreProduct: (id: string) => Promise<void>;
 
@@ -298,7 +297,7 @@ export const useStoreProductStore: StateCreator<
       })
     ),
 
-  loadStoreProducts: async (force = false, apiGet, limit, page = 1) => {
+  loadStoreProducts: async (force = false, apiGet, limit) => {
     const state = get();
     if (!apiGet) {
       throw new Error("API get function is required");
@@ -318,11 +317,12 @@ export const useStoreProductStore: StateCreator<
         typeof window !== "undefined" ? window.location.search : ""
       );
 
+      const page = state.pagination.page
       const createdAt = urlParams.get("createdAt");
 
       const query = new URLSearchParams();
 
-      if (page && page !== 1) {
+      if (page && page > 1) {
         query.append("page", page.toString());
       }
 
@@ -334,7 +334,7 @@ export const useStoreProductStore: StateCreator<
         query.append("createdAt", createdAt);
       }
 
-      console.log(page, limit, createdAt);
+  
 
       const result = await apiGet<{
         data: ProductData[];

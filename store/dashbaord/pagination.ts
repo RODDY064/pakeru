@@ -41,7 +41,7 @@ export type PaginationStore = {
   // Data management
   updateFromAPI: (response: APIResponse) => void;
   slice: <T>(data?: T[]) => T[];
-  reset: () => void;
+  resetPagination: () => void;
   
   // Computed getters
   computed: () => PaginationComputed;
@@ -64,7 +64,7 @@ type APIResponse = {
 // Default state
 const initialState: PaginationState = {
   page: 1,
-  size: 10,
+  size: 20,
   total: 0,
   dataKey: "data",
   loadFunction: undefined,
@@ -212,7 +212,7 @@ export const usePaginationStore: StateCreator<
     return sourceData.slice(computed.startIndex, computed.endIndex);
   },
 
-  reset: () => {
+  resetPagination: () => {
     set(produce((state: Store) => {
       state.pagination = { ...initialState };
     }));

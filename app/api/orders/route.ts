@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
-
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -68,6 +67,8 @@ export async function GET(request: NextRequest) {
 
     const queryString = searchParams.toString();
     const url = `${baseUrl}/v1/orders${queryString ? `?${queryString}` : ""}`;
+
+    console.log(queryString, "query");
 
     const response = await fetch(url, {
       method: "GET",
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
 
-    return new NextResponse(JSON.stringify(data), {status: response.status,});
+    return new NextResponse(JSON.stringify(data), { status: response.status });
   } catch (error: any) {
     console.error("Orders POST failed:", error);
     return createErrorResponse(

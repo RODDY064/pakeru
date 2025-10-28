@@ -12,7 +12,7 @@ import {
 import { ProductData } from "@/store/dashbaord/products";
 import { useBoundStore } from "@/store/store";
 import Image from "next/image";
-import { useRouter, } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, {
   Suspense,
   useCallback,
@@ -32,7 +32,6 @@ function FulfilledContent() {
 
   const {
     fulfilledOrders,
-    toggleDateSorting,
     setOrderModal,
     loadOrders,
     showOrderModal,
@@ -42,21 +41,25 @@ function FulfilledContent() {
     storeProducts,
     configure,
     updateFromAPI,
-    slice,
     pagination,
-    getOrdersStats,
     setOrderTypeFilter,
     fulfilledFilteredOrders,
     orderInView,
-    fulfilledStats
+    fulfilledStats,
+    resetPagination,
   } = useBoundStore();
 
+  useEffect(() => {
+    resetPagination();
+  }, []);
+
   const [currentOrders, setCurrentOrders] = useState<OrdersData[]>([]);
+  const router = useRouter();
   useEffect(() => {
     const initializeData = async () => {
       try {
         await Promise.all([
-          loadOrders("fulfilled",true, 25, get ),
+          loadOrders("fulfilled", true, 25, get),
           loadStoreProducts(false, get),
         ]);
       } catch (error) {
@@ -74,40 +77,42 @@ function FulfilledContent() {
     }
   }, [fulfilledFilteredOrders]);
 
-  const loadOrdersForPagination = async (page: number) => {
-    await loadOrders("fulfilled", true, 25, get, page )
-  };
+  const loadOrdersForPagination = useCallback(async () => {
+    await loadOrders("fulfilled", true, 25, get);
+  }, []);
 
   useEffect(() => {
     configure({
       dataKey: "fulfilledFilteredOrders",
-      loadFunction: (page)=> loadOrdersForPagination(pagination.page),
+      loadFunction: (page) => loadOrdersForPagination(),
       size: 25,
     });
     setOrderTypeFilter("fulfilled");
   }, []);
 
-
+  // useEffect(() => {
+  //   console.log(pagination, "pagination");
+  // }, [pagination]);
 
   useEffect(() => {
     setFulfilledDashStats([
+      { label: "Total fulfilled Orders", value: fulfilledStats.total ?? 0 },
       { label: "Delivered", value: fulfilledStats.delivered ?? 0 },
       { label: "Shipped", value: fulfilledStats.shipped ?? 0 },
-      { label: "Cancelled", value: fulfilledStats.cancelled?? 0 },
+      { label: "Cancelled", value: fulfilledStats.cancelled ?? 0 },
     ]);
   }, [fulfilledStats, storeProducts]);
 
   useEffect(() => {
     updateFromAPI({
       total: fulfilledStats.total,
-      page: 1,
+      page: pagination.page,
     });
-  }, [fulfilledStats]);
+  }, [fulfilledStats, pagination.page]);
 
   useEffect(() => {
-    const sliceData = slice(fulfilledFilteredOrders);
-    setCurrentOrders(sliceData);
-  }, [pagination, fulfilledOrders, fulfilledFilteredOrders]);
+    setCurrentOrders(fulfilledFilteredOrders);
+  }, [pagination.page, fulfilledOrders, fulfilledFilteredOrders]);
 
   const handleSelect = useCallback(
     (order: OrdersData) => {
@@ -233,7 +238,7 @@ function FulfilledContent() {
         data={currentOrders}
         tableName="Fulfuilled Orders"
         tabelState={fulfilledState}
-        reload={() => loadOrdersForPagination(pagination.page)}
+        reload={() => loadOrdersForPagination()}
         columnStyle="py-4"
         dateKey="date"
         columnClick={(order) => handleSelect(order)}

@@ -86,7 +86,7 @@ export type OrdersStore = {
   userOrders: OrdersData[];
   orderInView: OrdersData | null;
   showOrderModal: boolean;
-  UnfulfilledStats: {
+  unfulfilledStats: {
     total: number;
     pending: number;
   };
@@ -381,7 +381,7 @@ const apiService = {
     get: ReturnType<typeof useApiClient>["get"],
     limit?: number,
     page?: number
-  ): Promise<{ total: number; orders: OrdersData[]; stats: any }> {
+  ): Promise<{ total: number; orders: OrdersData[]; stats: any, pageData?:number }> {
     try {
       const query = new URLSearchParams();
       query.append("fulfilledStatus", type);
@@ -392,6 +392,7 @@ const apiService = {
         data: OrdersData[];
         total: number;
         stats: any;
+        page?:number
       }>(`/orders?${query.toString()}&t=${Date.now()}`, {
         requiresAuth: true,
         cache: "no-store",
@@ -406,6 +407,7 @@ const apiService = {
       return {
         total: response.total,
         stats: response.stats,
+        pageData:response.page,
         orders: transformApiOrdersToOrdersData(orders),
       };
     } catch (error) {
@@ -462,7 +464,6 @@ const apiService = {
     get: ReturnType<typeof useApiClient>["get"]
   ): Promise<OrdersData[]> {
     try {
-      console.log("hello");
 
       const myOrder = "myOrder";
       const endpoint = `/orders/my/${myOrder}`;
@@ -509,7 +510,7 @@ export const useOrdersStore: StateCreator<
     sortDate: "descending",
   },
 
-  UnfulfilledStats: {
+  unfulfilledStats: {
     total: 0,
     pending: 0,
   },
@@ -660,12 +661,11 @@ export const useOrdersStore: StateCreator<
     type,
     force = false,
     limit= 25,
-    apiGet = undefined,
-    page = 1
+    apiGet = undefined
   ) => {
-    const { setOrdersState, setOrderError } = get();
+    const { setOrdersState, setOrderError, pagination } = get();
+    const page = pagination.page
 
-    console.log(page, "page at order");
 
     if (!apiGet) {
       throw new Error("API get function is required");
@@ -692,35 +692,29 @@ export const useOrdersStore: StateCreator<
         total,
         orders: ordersData,
         stats,
+        pageData
       } = await apiService.fetchOrders(type, apiGet, limit, page);
 
       set((state) => {
-        const existing =
-          type === "fulfilled"
-            ? state.fulfilledOrders
-            : state.unfulfilledOrders;
+      
 
-        const merged =
-          page === 1
-            ? ordersData
-            : [
-                ...existing,
-                ...ordersData.filter(
-                  (order) => !existing.some((o) => o._id === order._id)
-                ),
-              ];
+        console.log(stats, "stats")
 
         if (type === "fulfilled") {
-          state.fulfilledOrders = merged;
+          state.fulfilledOrders = ordersData;
           state.fulfilledStats.total = stats.fulfilledOrders ?? 0;
           state.fulfilledStats.delivered = stats.deliveredOrders ?? 0;
           state.fulfilledStats.shipped = stats.shippedOrders ?? 0;
           state.fulfilledStats.cancelled = stats.cancelledOrders ?? 0;
         } else {
-          state.unfulfilledOrders = merged;
-          state.UnfulfilledStats.total = stats.unfulfilledOrders ?? 0;
-          state.UnfulfilledStats.pending = stats.pendingOrders ?? 0;
+          state.unfulfilledOrders = ordersData;
+          state.unfulfilledStats.total = stats.unfulfilledOrders ?? 0;
+          state.unfulfilledStats.pending = stats.pendingOrders ?? 0;
         }
+
+        if (force && state.pagination) {
+            state.pagination.page = pageData ?? 1;
+          }
       });
 
       setOrdersState(type, "success");

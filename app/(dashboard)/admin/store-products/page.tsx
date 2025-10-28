@@ -11,11 +11,10 @@ import { useBoundStore } from "@/store/store";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export default function Products() {
   const {
-    getProductStats,
     storeProductFilters,
     setStoreProductFilters,
     filteredStoreProducts,
@@ -32,7 +31,10 @@ export default function Products() {
     setSelectedProduct,
     getCategoryNameById,
     dashboardProductStats,
+    resetPagination
   } = useBoundStore();
+
+  useEffect(()=>{ resetPagination() },[])
 
   const { get } = useApiClient();
   const [currentPageProducts, setCurrentPageProducts] = useState<ProductData[]>(
@@ -44,6 +46,8 @@ export default function Products() {
     "idle" | "loading" | "success" | "failed"
   >("idle");
   const [isFilterd, setIsFilterd] = useState(false);
+
+
 
   useEffect(() => {
     if (dashboardProductLoading.products || pagination.isLoading) {
@@ -58,7 +62,6 @@ export default function Products() {
     pagination.isLoading,
     dashboardProductErrors.products,
   ]);
-
 
   useEffect(() => {
     loadStoreProducts(true, get);
@@ -76,18 +79,19 @@ export default function Products() {
     setCategoriesSelect(catNames);
   }, [categories]);
 
-  useEffect(() => {
-    console.log(pagination);
-  }, [pagination]);
+  // useEffect(() => {
+  //   console.log(pagination);
+  // }, [pagination]);
 
-  const loadProductForPagination = async (page: number) => {
-    await loadStoreProducts(false, get,100,page);
-  };
+ const loadProductForPagination = useCallback(async () => {
+  await loadStoreProducts(false, get, 25);
+}, [loadStoreProducts, get]);
+
 
   useEffect(() => {
     configure({
       dataKey: "storeProducts",
-      loadFunction: (page) => loadProductForPagination(pagination.page),
+      loadFunction: loadProductForPagination,
       size: 25,
     });
   }, []);
@@ -98,12 +102,13 @@ export default function Products() {
       totalPages: dashboardProductStats.total,
       page: pagination.page,
     });
-  }, [storeProducts, dashboardProductErrors]);
+  }, [dashboardProductStats.total, pagination.page]);
 
   useEffect(() => {
-    const sliceData = slice(filteredStoreProducts);
-    setCurrentPageProducts(sliceData);
-  }, [pagination, storeProducts, storeProductFilters, filteredStoreProducts]);
+    setCurrentPageProducts(filteredStoreProducts);
+  }, [pagination.page, storeProducts, storeProductFilters, filteredStoreProducts]);
+
+
 
   const [stats, setStats] = useState([
     { label: "Total Products", value: 0 },
@@ -113,12 +118,20 @@ export default function Products() {
   ]);
 
   useEffect(() => {
-
     setStats([
       { label: "Total Products", value: dashboardProductStats.total ?? 0 },
-      { label: "Active Products", value: dashboardProductStats.activeTotal ?? 0 },
-      { label: "Inactive Products", value:  dashboardProductStats.inactiveTotal ?? 0 },
-      { label: "Product Out of Stock", value:  dashboardProductStats.outOfStock ?? 0 },
+      {
+        label: "Active Products",
+        value: dashboardProductStats.activeTotal ?? 0,
+      },
+      {
+        label: "Inactive Products",
+        value: dashboardProductStats.inactiveTotal ?? 0,
+      },
+      {
+        label: "Product Out of Stock",
+        value: dashboardProductStats.outOfStock ?? 0,
+      },
     ]);
   }, [dashboardProductStats]);
 
@@ -250,12 +263,10 @@ export default function Products() {
     );
   };
 
-    const handleReload = async () => {
-    router.refresh();
-    setTimeout(() => {
-      loadStoreProducts(true, get,25),pagination.page;
-    }, 150);
-  };
+  const handleReload = useCallback(async () => {
+    await loadStoreProducts(true, get, 25);
+  }, [loadStoreProducts, get, pagination.page]);
+
   return (
     <div className="min-h-dvh md:h-dvh sm:px-4 xl:px-8   xl:ml-[16%]  pt-4 pb-26 ">
       <div className="flex items-center justify-between max-sm:px-3">
