@@ -1,14 +1,11 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense } from "react";
 import ProductCard from "./product-card";
 import { motion } from "motion/react";
 import { useBoundStore } from "@/store/store";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useApiClient } from "@/libs/useApiClient";
 import Image from "next/image";
-import { useFilterPagination } from "./useFilterPage";
-import { LoadingState } from "@/store/dashbaord/products";
+
 
 export default function ProductCon({
   handlePageChange,
@@ -21,14 +18,7 @@ export default function ProductCon({
 }) {
   const { products } = useBoundStore();
 
-  return (
-    <Suspense
-      fallback={
-        <div className="w-full h-full min-h-300 fixed top-0 left-0 flex flex-col items-center justify-center">
-          <Image src="/icons/loader.svg" width={34} height={34} alt="loader" />
-        </div>
-      }
-    >
+  return ( 
       <motion.div
         animate={{ opacity: 1 }}
         initial={{ opacity: 0 }}
@@ -71,6 +61,5 @@ export default function ProductCon({
           </div>
         </div>
       </motion.div>
-    </Suspense>
   );
 }

@@ -353,7 +353,6 @@ export const useBoundStore = create<Store>()(
           state.syncBookmarksWithProducts();
         });
 
-        console.log(`✅ Store initialized with ${productTotal} products and ${categories.length} categories and product total`);
       },
     })),
     persistOptions

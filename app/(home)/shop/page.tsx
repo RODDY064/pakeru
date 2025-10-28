@@ -18,7 +18,8 @@ import React, {
 } from "react";
 
 export default function Product() {
-  const { cartProductState, products, loadProducts, isServerInitialized } = useBoundStore();
+  const { cartProductState, products, loadProducts, isServerInitialized } =
+    useBoundStore();
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [containerHeight, setContainerHeight] = useState("100vh");
@@ -56,16 +57,21 @@ export default function Product() {
     }
   }, [loadProducts, router]);
 
-
   const skeletonItems = useMemo(() => [1, 2, 3, 4], []);
 
   return (
-    <Suspense>
+    <Suspense
+      fallback={
+        <div className="w-full h-full min-h-300 fixed top-0 left-0 flex flex-col items-center justify-center">
+          <Image src="/icons/loader.svg" width={34} height={34} alt="loader" />
+        </div>
+      }
+    >
       <div
         style={{ minHeight: containerHeight }}
-        className="w-full min-h-screen flex flex-col items-center text-black home-main transition-all" >
+        className="w-full min-h-screen flex flex-col items-center text-black home-main transition-all">
         <div className="w-full h-full bg-white flex overflow-hidden gap-4 pt-30">
-          {(cartProductState === "loading" || cartProductState === "idle" ) && (
+          {(cartProductState === "loading" || cartProductState === "idle") && (
             <motion.div
               className="w-full grid px-8 md:px-0 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-6 transition-all duration-500 ease-in-out"
               layout
@@ -76,7 +82,7 @@ export default function Product() {
             </motion.div>
           )}
 
-          {cartProductState === "error"  && (
+          {cartProductState === "error" && (
             <div className="w-full h-dvh flex items-center flex-col pt-12 md:pt-24">
               <Image
                 src="/icons/cloth.svg"
@@ -119,7 +125,7 @@ export default function Product() {
             </div>
           )}
 
-          {cartProductState === "success" && products.length === 0  && (
+          {cartProductState === "success" && products.length === 0 && (
             <div className="w-full flex flex-col items-center md:col-span-3 xl:col-span-4">
               <div className="w-full flex flex-col items-center ">
                 <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-500">
@@ -132,7 +138,7 @@ export default function Product() {
                       className="opacity-30"
                     />
                   </div>
-                  <p className="font-avenir font-[400] text-lg">
+                  <p className="font-avenir font-normal text-lg">
                     No products found
                   </p>
                   <p className="mt-1 font-avenir text-sm text-black/30">
