@@ -1,9 +1,7 @@
 "use client";
 
-export const revalidate = 0; 
+export const revalidate = 0;
 export const dynamic = "force-dynamic";
-
-
 
 import React, {
   use,
@@ -35,12 +33,12 @@ import Instructions from "@/app/ui/dashboard/instructions";
 import StatusBadge from "@/app/ui/dashboard/statusBadge";
 import { stripHtml } from "@/app/ui/ExpandableDescription";
 import { ProductChangeDetector } from "./changeDetector";
-
+import { toast } from "@/app/ui/toaster";
 
 export type ProductImage = {
   _id: string;
   url: string | ArrayBuffer;
-  publicId?:string,
+  publicId?: string;
   name: string;
   file?: File | Blob;
 };
@@ -91,7 +89,7 @@ function ProductActionsContent() {
     setSelectedProduct,
     loadStoreProduct,
     getCategoryNameById,
-    clothTypes
+    clothTypes,
   } = useBoundStore();
 
   const { patch, post } = useApiClient();
@@ -134,14 +132,16 @@ function ProductActionsContent() {
 
   const populateFormWithProduct = useCallback(
     (product: ProductData) => {
-    
-
       const formData: ProductFormData = {
         name: product.name,
         description: product.description as string,
         price: product.price.toString(),
         totalNumber: product.totalNumber.toString(),
-        status: product.status as | "active" | "inactive" | "out-of-stock"| "draft",
+        status: product.status as
+          | "active"
+          | "inactive"
+          | "out-of-stock"
+          | "draft",
         category: product.category,
         tags: product.tags as string[],
         variants: [],
@@ -234,8 +234,14 @@ function ProductActionsContent() {
       populateFormWithProduct(selectedProduct);
       setLoadingProduct(false);
     }
-  }, [selectedProduct, productID, isInitialized, populateFormWithProduct,clothTypes]);
- 
+  }, [
+    selectedProduct,
+    productID,
+    isInitialized,
+    populateFormWithProduct,
+    clothTypes,
+  ]);
+
   useEffect(() => {
     if (!productID || !loadingProduct) return;
 
@@ -274,345 +280,357 @@ function ProductActionsContent() {
     setValue("category", selectedCategory);
   }, [selectedCategory, setValue]);
 
- const validateProductForm = (
-  data: ProductFormData,
-  variants: ProductColor[]
-): { isValid: boolean; error: string | null } => {
-  // Validate basic required fields
-  if (!data.name || data.name.trim().length < 3) {
-    return {
-      isValid: false,
-      error: "Product name must be at least 3 characters",
-    };
-  }
-
-  if (!data.description || data.description.trim().length < 10) {
-    return {
-      isValid: false,
-      error: "Description must be at least 10 characters",
-    };
-  }
-
-  if (!data.category || data.category.trim().length === 0) {
-    return {
-      isValid: false,
-      error: "Please select a category",
-    };
-  }
-
-  // Validate price
-  if (!data.price || data.price.trim().length === 0) {
-    return {
-      isValid: false,
-      error: "Please enter a price",
-    };
-  }
-
-  const priceNum = parseFloat(String(data.price).replace(/[^\d.]/g, ""));
-  if (isNaN(priceNum) || priceNum <= 0) {
-    return {
-      isValid: false,
-      error: "Please enter a valid price greater than 0",
-    };
-  }
-
-  // Validate total number/stock
-  if (!data.totalNumber || data.totalNumber.trim().length === 0) {
-    return {
-      isValid: false,
-      error: "Please enter total stock number",
-    };
-  }
-
-  const totalNum = parseInt(String(data.totalNumber));
-  if (isNaN(totalNum) || totalNum <= 0) {
-    return {
-      isValid: false,
-      error: "Total stock must be a positive number",
-    };
-  }
-
-  // Validate status
-  const validStatuses = ["active", "inactive", "out-of-stock", "draft"];
-  if (!data.status || !validStatuses.includes(data.status)) {
-    return {
-      isValid: false,
-      error: "Please select a valid product status",
-    };
-  }
-
-  // Validate tags
-  if (!data.tags || data.tags.length === 0) {
-    return {
-      isValid: false,
-      error: "Please add at least one tag",
-    };
-  }
-
-  const validTags = data.tags.filter((tag) => tag && tag.trim().length > 0);
-  if (validTags.length === 0) {
-    return {
-      isValid: false,
-      error: "Please add at least one valid tag",
-    };
-  }
-
-  // Validate product care
-  if (!data.productCare || data.productCare.trim().length < 5) {
-    return {
-      isValid: false,
-      error: "Product care information must be at least 5 characters",
-    };
-  }
-
-  // Validate wash instructions
-  if (!data.washInstructions || data.washInstructions.length === 0) {
-    return {
-      isValid: false,
-      error: "Please add at least one wash instruction",
-    };
-  }
-
-  const validInstructions = data.washInstructions.filter(
-    (instruction) => instruction && instruction.trim().length > 0
-  );
-  if (validInstructions.length === 0) {
-    return {
-      isValid: false,
-      error: "Please add at least one valid wash instruction",
-    };
-  }
-
-  // Validate size type
-  if (!data.sizeType || !data.sizeType.gender || !data.sizeType.clothType) {
-    return {
-      isValid: false,
-      error: "Please select both gender and cloth type",
-    };
-  }
-
-  // Validate variants/colors
-  if (!variants || variants.length === 0) {
-    return {
-      isValid: false,
-      error: "Please add at least one color variant",
-    };
-  }
-
-  // Validate each variant
-  for (let i = 0; i < variants.length; i++) {
-    const variant = variants[i];
-    const variantLabel = variant.name || `Variant ${i + 1}`;
-
-    // Check color name
-    if (!variant.name || variant.name.trim().length === 0) {
+  const validateProductForm = (
+    data: ProductFormData,
+    variants: ProductColor[]
+  ): { isValid: boolean; error: string | null } => {
+    // Validate basic required fields
+    if (!data.name || data.name.trim().length < 3) {
       return {
         isValid: false,
-        error: `${variantLabel}: Color name is required`,
+        error: "Product name must be at least 3 characters",
       };
     }
 
-    // Check hex color
-    if (!variant.hex || !/^#[0-9A-F]{6}$/i.test(variant.hex)) {
+    if (!data.description || data.description.trim().length < 10) {
       return {
         isValid: false,
-        error: `${variantLabel}: Invalid color hex code`,
+        error: "Description must be at least 10 characters",
       };
     }
 
-    // Check stock
-    if (variant.stock === undefined || variant.stock === null) {
+    if (!data.category || data.category.trim().length === 0) {
       return {
         isValid: false,
-        error: `${variantLabel}: Stock quantity is required`,
+        error: "Please select a category",
       };
     }
 
-    if (variant.stock < 0) {
+    // Validate price
+    if (!data.price || data.price.trim().length === 0) {
       return {
         isValid: false,
-        error: `${variantLabel}: Stock cannot be negative`,
+        error: "Please enter a price",
       };
     }
 
-    // Check sizes
-    if (!variant.sizes || variant.sizes.length === 0) {
+    const priceNum = parseFloat(String(data.price).replace(/[^\d.]/g, ""));
+    if (isNaN(priceNum) || priceNum <= 0) {
       return {
         isValid: false,
-        error: `${variantLabel}: At least one size is required`,
+        error: "Please enter a valid price greater than 0",
       };
     }
 
-    const validSizes = variant.sizes.filter((size) => size && size.trim().length > 0);
-    if (validSizes.length === 0) {
+    // Validate total number/stock
+    if (!data.totalNumber || data.totalNumber.trim().length === 0) {
       return {
         isValid: false,
-        error: `${variantLabel}: At least one valid size is required`,
+        error: "Please enter total stock number",
       };
     }
 
-    // Check images
-    if (!variant.images || variant.images.length < 3) {
+    const totalNum = parseInt(String(data.totalNumber));
+    if (isNaN(totalNum) || totalNum <= 0) {
       return {
         isValid: false,
-        error: `${variantLabel}: At least 3 images are required`,
+        error: "Total stock must be a positive number",
       };
     }
 
-    if (variant.images.length > 5) {
+    // Validate status
+    const validStatuses = ["active", "inactive", "out-of-stock", "draft"];
+    if (!data.status || !validStatuses.includes(data.status)) {
       return {
         isValid: false,
-        error: `${variantLabel}: Maximum 5 images allowed`,
+        error: "Please select a valid product status",
       };
     }
 
-    // Validate each image
-    for (let j = 0; j < variant.images.length; j++) {
-      const image = variant.images[j];
-      
-      if (!image.name || image.name.trim().length === 0) {
+    // Validate tags
+    if (!data.tags || data.tags.length === 0) {
+      return {
+        isValid: false,
+        error: "Please add at least one tag",
+      };
+    }
+
+    const validTags = data.tags.filter((tag) => tag && tag.trim().length > 0);
+    if (validTags.length === 0) {
+      return {
+        isValid: false,
+        error: "Please add at least one valid tag",
+      };
+    }
+
+    // Validate product care
+    if (!data.productCare || data.productCare.trim().length < 5) {
+      return {
+        isValid: false,
+        error: "Product care information must be at least 5 characters",
+      };
+    }
+
+    // Validate wash instructions
+    if (!data.washInstructions || data.washInstructions.length === 0) {
+      return {
+        isValid: false,
+        error: "Please add at least one wash instruction",
+      };
+    }
+
+    const validInstructions = data.washInstructions.filter(
+      (instruction) => instruction && instruction.trim().length > 0
+    );
+    if (validInstructions.length === 0) {
+      return {
+        isValid: false,
+        error: "Please add at least one valid wash instruction",
+      };
+    }
+
+    // Validate size type
+    if (!data.sizeType || !data.sizeType.gender || !data.sizeType.clothType) {
+      return {
+        isValid: false,
+        error: "Please select both gender and cloth type",
+      };
+    }
+
+    // Validate variants/colors
+    if (!variants || variants.length === 0) {
+      return {
+        isValid: false,
+        error: "Please add at least one color variant",
+      };
+    }
+
+    // Validate each variant
+    for (let i = 0; i < variants.length; i++) {
+      const variant = variants[i];
+      const variantLabel = variant.name || `Variant ${i + 1}`;
+
+      // Check color name
+      if (!variant.name || variant.name.trim().length === 0) {
         return {
           isValid: false,
-          error: `${variantLabel}: Image ${j + 1} is missing a name`,
+          error: `${variantLabel}: Color name is required`,
         };
       }
 
-      // If it's a new file upload, validate it
-      if (image.file instanceof File || image.file instanceof Blob) {
-        const file = image.file;
-        const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-        const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
-        if (!ALLOWED_TYPES.includes(file.type)) {
-          return {
-            isValid: false,
-            error: `${variantLabel}: Image ${j + 1} must be JPEG, PNG, or WebP`,
-          };
-        }
-
-        if (file.size > MAX_SIZE) {
-          return {
-            isValid: false,
-            error: `${variantLabel}: Image ${j + 1} exceeds 10MB limit`,
-          };
-        }
-      } else if (!image.url) {
-        // If not a file, must have a URL
+      // Check hex color
+      if (!variant.hex || !/^#[0-9A-F]{6}$/i.test(variant.hex)) {
         return {
           isValid: false,
-          error: `${variantLabel}: Image ${j + 1} is missing URL or file`,
+          error: `${variantLabel}: Invalid color hex code`,
         };
       }
+
+      // Check stock
+      if (variant.stock === undefined || variant.stock === null) {
+        return {
+          isValid: false,
+          error: `${variantLabel}: Stock quantity is required`,
+        };
+      }
+
+      if (variant.stock < 0) {
+        return {
+          isValid: false,
+          error: `${variantLabel}: Stock cannot be negative`,
+        };
+      }
+
+      // Check sizes
+      if (!variant.sizes || variant.sizes.length === 0) {
+        return {
+          isValid: false,
+          error: `${variantLabel}: At least one size is required`,
+        };
+      }
+
+      const validSizes = variant.sizes.filter(
+        (size) => size && size.trim().length > 0
+      );
+      if (validSizes.length === 0) {
+        return {
+          isValid: false,
+          error: `${variantLabel}: At least one valid size is required`,
+        };
+      }
+
+      // Check images
+      if (!variant.images || variant.images.length < 3) {
+        return {
+          isValid: false,
+          error: `${variantLabel}: At least 3 images are required`,
+        };
+      }
+
+      if (variant.images.length > 5) {
+        return {
+          isValid: false,
+          error: `${variantLabel}: Maximum 5 images allowed`,
+        };
+      }
+
+      // Validate each image
+      for (let j = 0; j < variant.images.length; j++) {
+        const image = variant.images[j];
+
+        if (!image.name || image.name.trim().length === 0) {
+          return {
+            isValid: false,
+            error: `${variantLabel}: Image ${j + 1} is missing a name`,
+          };
+        }
+
+        // If it's a new file upload, validate it
+        if (image.file instanceof File || image.file instanceof Blob) {
+          const file = image.file;
+          const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+          const ALLOWED_TYPES = [
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp",
+          ];
+
+          if (!ALLOWED_TYPES.includes(file.type)) {
+            return {
+              isValid: false,
+              error: `${variantLabel}: Image ${
+                j + 1
+              } must be JPEG, PNG, or WebP`,
+            };
+          }
+
+          if (file.size > MAX_SIZE) {
+            return {
+              isValid: false,
+              error: `${variantLabel}: Image ${j + 1} exceeds 10MB limit`,
+            };
+          }
+        } else if (!image.url) {
+          // If not a file, must have a URL
+          return {
+            isValid: false,
+            error: `${variantLabel}: Image ${j + 1} is missing URL or file`,
+          };
+        }
+      }
     }
-  }
 
-  // Validate total stock across variants
-  const totalVariantStock = variants.reduce((sum, v) => sum + (v.stock || 0), 0);
-  if (totalVariantStock > totalNum) {
+    // Validate total stock across variants
+    const totalVariantStock = variants.reduce(
+      (sum, v) => sum + (v.stock || 0),
+      0
+    );
+    if (totalVariantStock > totalNum) {
+      return {
+        isValid: false,
+        error: `Total variant stock (${totalVariantStock}) exceeds declared total (${totalNum})`,
+      };
+    }
+
     return {
-      isValid: false,
-      error: `Total variant stock (${totalVariantStock}) exceeds declared total (${totalNum})`,
+      isValid: true,
+      error: null,
     };
-  }
-
-  return {
-    isValid: true,
-    error: null,
   };
-};
 
- 
   const onSubmit = async (data: ProductFormData) => {
-  setSubmitError("");
-  setStocksError("");
-  console.log(data);
+    setSubmitError("");
+    setStocksError("");
+    console.log(data);
 
-  // Validate form
-  const validationError = validateProductForm(data, variants);
-  if (!validationError.isValid) {
-    setSubmitError(validationError.error ?? "");
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  try {
-    if (isEditMode && productID && originalData && originalColors) {
-    
-      const changes = ProductChangeDetector.detectChanges(
-        originalData,
-        originalColors,
-        data,
-        variants
-      );
-
-      // Check if there are any changes
-      if (!changes.hasChanges) {
-        setSubmitError("No changes detected to save");
-        setIsSubmitting(false);
-        setAboutToSubmit(false);
-        return;
-      }
-
-      // Extract removed variant IDs
-      const removedIds = changes.colorChanges.removed.map(v => v._id);
-
-      // Update existing product with removed IDs as query param
-      const result = await ProductAPIService.updateProduct(
-        productID,
-        data,
-        variants,
-        originalData,
-        originalColors,
-        patch,
-        removedIds // Pass removed IDs
-      );
-
-      if (result.message === "No changes to save") {
-        setSubmitError("No changes detected to save");
-        setIsSubmitting(false);
-        setAboutToSubmit(false);
-        return;
-      }
-
-      console.log("✅ Product updated successfully");
-      
-      if (removedIds.length > 0) {
-        console.log(`🗑️ Removed ${removedIds.length} variant(s):`, removedIds);
-      }
-    } else {
-      // Create new product - send all data
-      const result = await ProductAPIService.createProduct(
-        data,
-        variants,
-        post
-      );
-
-      console.log("✅ Product created successfully");
+    // Validate form
+    const validationError = validateProductForm(data, variants);
+    if (!validationError.isValid) {
+      setSubmitError(validationError.error ?? "");
+      return;
     }
 
-    router.push("/admin/store-products");
-  } catch (error) {
-    console.error("💥 Submission error:", error);
-    if (error instanceof Error) {
-      setSubmitError(
-        `Failed to ${isEditMode ? "update" : "create"} product: ${
-          error.message
-        }`
-      );
-    } else {
-      setSubmitError(
-        `Failed to ${
-          isEditMode ? "update" : "create"
-        } product: An unknown error occurred`
-      );
-    }
-  } finally {
-    setIsSubmitting(false);
-    setAboutToSubmit(false);
-  }
-};
+    setIsSubmitting(true);
 
+    try {
+      if (isEditMode && productID && originalData && originalColors) {
+        const changes = ProductChangeDetector.detectChanges(
+          originalData,
+          originalColors,
+          data,
+          variants
+        );
+
+        // Check if there are any changes
+        if (!changes.hasChanges) {
+          setSubmitError("No changes detected to save");
+          setIsSubmitting(false);
+          setAboutToSubmit(false);
+          return;
+        }
+
+        // Extract removed variant IDs
+        const removedIds = changes.colorChanges.removed.map((v) => v._id);
+
+        // Update existing product with removed IDs as query param
+        const result = await ProductAPIService.updateProduct(
+          productID,
+          data,
+          variants,
+          originalData,
+          originalColors,
+          patch,
+          removedIds // Pass removed IDs
+        );
+
+        if (result.message === "No changes to save") {
+          setSubmitError("No changes detected to save");
+          setIsSubmitting(false);
+          setAboutToSubmit(false);
+          return;
+        }
+
+        console.log("✅ Product updated successfully");
+
+        if (removedIds.length > 0) {
+          console.log(
+            `🗑️ Removed ${removedIds.length} variant(s):`,
+            removedIds
+          );
+        }
+      } else {
+        // Create new product - send all data
+        const result = await ProductAPIService.createProduct(
+          data,
+          variants,
+          post
+        );
+
+        console.log("Product created successfully");
+      }
+
+      router.push("/admin/store-products");
+    } catch (error) {
+      console.error("💥 Submission error:", error);
+      if (error instanceof Error) {
+        setSubmitError(
+          `Failed to ${isEditMode ? "update" : "create"} product: ${
+            error.message
+          }`
+        );
+      } else {
+        setSubmitError(
+          `Failed to ${
+            isEditMode ? "update" : "create"
+          } product: An unknown error occurred`
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+      setAboutToSubmit(false);
+    }
+  };
 
   useEffect(() => {
     if (variants) {
@@ -642,6 +660,44 @@ function ProductActionsContent() {
       setOriginalColors(null);
     }
   }, [isEditMode, productID]);
+
+  // special edition
+  const updateEdtion = async (action: boolean) => {
+    try {
+      const update = { isSpecial: action };
+      const updatePromise = (async () => {
+        try {
+          const url = `/products/${productID}`;
+          await patch(url, update, {
+            requiresAuth: true,
+            cache: "no-store",
+            next: { revalidate: 0 },
+            headers: {
+              "Cache-Control": "no-store, no-cache, must-revalidate",
+              Pragma: "no-cache",
+            },
+          });
+        } catch (error) {
+          console.log(error);
+          throw new Error("Fail to update edition");
+        }
+      })();
+
+      toast.promise(updatePromise, {
+        loading: {
+          title: "Updating product...",
+          duration: Infinity,
+        },
+        success: () => ({
+          title: `Product ${productName} edition updated`,
+        }),
+        error: (error) => ({
+          title: `Failed to update ${productName} edition `,
+        }),
+        position: "top-right",
+      });
+    } catch (error) {}
+  };
 
   return (
     <>
@@ -675,6 +731,15 @@ function ProductActionsContent() {
                         ]}
                       />
                     )}
+                    <div className="appearance-none min-w-[90px] flex items-center font-avenir justify-center py-1 px-2 text-sm border border-black/30 rounded-lg font-medium capitaliz gap-3 ">
+                      <p> Special Edition</p>
+                      <input
+                        checked={selectedProduct?.isSpecial??false}
+                        type="checkbox"
+                        onChange={(e) => updateEdtion(e.target.checked)}
+                        className="size-3.5"
+                      />
+                    </div>
                   </div>
                 ) : (
                   <p className="font-avenir text-xl sm:text-2xl font-bold mt-[5px]">
@@ -725,10 +790,11 @@ function ProductActionsContent() {
                         Description
                       </p>
                       <div className="">
-                        <textarea  
-                        {...register("description")}
-                        placeholder="start typing the product description"
-                        className="w-full border min-h-[150px] font-avenir  placeholder:text-black/30 border-black/10 bg-black/5 rounded-2xl mt-2 h-11 p-4 focus:outline-none focus-within:border-black/30"></textarea>
+                        <textarea
+                          {...register("description")}
+                          placeholder="start typing the product description"
+                          className="w-full border min-h-[150px] font-avenir  placeholder:text-black/30 border-black/10 bg-black/5 rounded-2xl mt-2 h-11 p-4 focus:outline-none focus-within:border-black/30"
+                        ></textarea>
                         {errors.description && (
                           <p className="text-red-500 text-sm mt-1">
                             {errors.description.message}

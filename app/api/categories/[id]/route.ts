@@ -6,26 +6,41 @@ export async function PATCH(
 ) {
   try {
     const { id: categoryId } = await params;
-
-    const formData = await request.formData();
+    
+    const contentType = request.headers.get("content-type") || "";
+    const isFormData = contentType.includes("multipart/form-data");
+    
+    // Parse body based on content type
+    const body = isFormData 
+      ? await request.formData()
+      : await request.json();
+    
+    console.log(isFormData ? "FormData received" : body);
+    
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/v1/categories/${categoryId}`;
-
-
-
+    
     const incomingHeaders: Record<string, string> = {};
-    const allowedHeaders = ["authorization", "cookie"];
+    const allowedHeaders = isFormData 
+      ? ["authorization", "cookie"]
+      : ["authorization", "cookie", "content-type"];
+    
     request.headers.forEach((value, key) => {
       if (allowedHeaders.includes(key.toLowerCase())) {
         incomingHeaders[key] = value;
       }
     });
 
-    const response = await fetch(url, {
+    const fetchOptions: RequestInit = {
       method: "PATCH",
-      headers: incomingHeaders,
-      body: formData,
-      cache:"no-store"
-    });
+      headers: isFormData ? incomingHeaders : {
+        ...incomingHeaders,
+        "Content-Type": "application/json",
+      },
+      body: isFormData ? body : JSON.stringify(body),
+      cache: "no-store",
+    };
+
+    const response = await fetch(url, fetchOptions);
 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });

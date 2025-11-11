@@ -22,8 +22,13 @@ if (typeof window !== "undefined") {
 
 type SizeTypeId = keyof typeof MEASUREMENT_CONFIG;
 
-
-export default function ProductContainer({ nameID, product }: { nameID: string, product:ProductData }) {
+export default function ProductContainer({
+  nameID,
+  product,
+}: {
+  nameID: string;
+  product: ProductData;
+}) {
   const stickyRef = useRef<HTMLDivElement>(null);
   const imageDiv = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
   const imageDivSim = useRef<HTMLDivElement>(null as unknown as HTMLDivElement);
@@ -39,7 +44,7 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
     addBookmark,
     isBookmarked,
     setSizeGuild,
-    addProductToStore
+    addProductToStore,
   } = useBoundStore();
   const [showButtons, setShowButtons] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -57,18 +62,17 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
     currentImageIndex: 0,
   });
 
-
   useEffect(() => {
-  if (!product) return;
-  
-  console.log('Syncing product to store:', product._id);
-  addProductToStore(product);
-}, [product?._id, addProductToStore]);
+    if (!product) return;
+
+    console.log("Syncing product to store:", product._id);
+    addProductToStore(product);
+  }, [product?._id, addProductToStore]);
 
   const currentProduct = useMemo(() => {
-  const storeProduct = products.find(p => p._id === product?._id);
-  return storeProduct || product; 
-}, [products, product?._id]);
+    const storeProduct = products.find((p) => p._id === product?._id);
+    return storeProduct || product;
+  }, [products, product?._id]);
 
   useEffect(() => {
     if (currentProduct) {
@@ -83,7 +87,7 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
         });
       }
     }
-  }, [currentProduct, ]);
+  }, [currentProduct]);
 
   // Reset mobile scroll when color changes
   useEffect(() => {
@@ -204,64 +208,71 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
     };
   }, [isMobile]);
 
-  useGSAP(() => {
-    if (isMobile) return;
+ 
 
+  useEffect(() => {
+  if (isMobile) {
+    // Clean up any existing styles when switching to mobile
     const sticky = document.querySelector(".stickyDiv") as HTMLElement;
-    const trigger = document.querySelector(".triggerDiv") as HTMLElement;
+    if (sticky) {
+      sticky.style.position = "";
+      sticky.style.top = "";
+      sticky.style.transform = "";
+    }
+    return;
+  }
 
-    if (!sticky || !trigger) return;
+  const sticky = document.querySelector(".stickyDiv") as HTMLElement;
+  const trigger = document.querySelector(".triggerDiv") as HTMLElement;
 
-    // Store original position
-    const originalPosition = sticky.style.position;
-    const originalTop = sticky.style.top;
+  if (!sticky || !trigger) return;
 
-    ScrollTrigger.create({
-      trigger: trigger,
-      start: "top 10%",
-      end: "bottom bottom",
-      onUpdate: (self) => {
-        const progress = self.progress;
-        const triggerRect = trigger.getBoundingClientRect();
-        const stickyHeight = sticky.offsetHeight;
-        const triggerHeight = trigger.offsetHeight;
+  // Store original position
+  const originalPosition = sticky.style.position;
+  const originalTop = sticky.style.top;
 
-        if (progress === 0) {
-          // Reset to original position
-          sticky.style.position = originalPosition;
-          sticky.style.top = originalTop;
-          sticky.style.transform = "none";
-        } else if (triggerRect.bottom > stickyHeight) {
-          // Pin at top
-          sticky.style.position = "fixed";
-          sticky.style.top = "35px";
-          sticky.style.transform = "none";
-        } else {
-          // Pin at bottom of trigger
-          sticky.style.position = "absolute";
-          sticky.style.top = `${triggerHeight - stickyHeight}px`;
-          sticky.style.transform = "none";
-        }
-      },
-      onLeave: () => {
-        // Ensure proper cleanup when leaving trigger area
-        sticky.style.position = "absolute";
-        sticky.style.top = `${trigger.offsetHeight - sticky.offsetHeight}px`;
-      },
-      onEnterBack: () => {
-        // Smooth re-entry
+  const st = ScrollTrigger.create({
+    trigger: trigger,
+    start: "top 10%",
+    end: "bottom bottom",
+    onUpdate: (self) => {
+      const progress = self.progress;
+      const triggerRect = trigger.getBoundingClientRect();
+      const stickyHeight = sticky.offsetHeight;
+      const triggerHeight = trigger.offsetHeight;
+
+      if (progress === 0) {
+        sticky.style.position = originalPosition;
+        sticky.style.top = originalTop;
+        sticky.style.transform = "none";
+      } else if (triggerRect.bottom > stickyHeight) {
         sticky.style.position = "fixed";
         sticky.style.top = "35px";
-      },
-    });
+        sticky.style.transform = "none";
+      } else {
+        sticky.style.position = "absolute";
+        sticky.style.top = `${triggerHeight - stickyHeight}px`;
+        sticky.style.transform = "none";
+      }
+    },
+    onLeave: () => {
+      sticky.style.position = "absolute";
+      sticky.style.top = `${trigger.offsetHeight - sticky.offsetHeight}px`;
+    },
+    onEnterBack: () => {
+      sticky.style.position = "fixed";
+      sticky.style.top = "35px";
+    },
+  });
 
-    // Cleanup function
-    return () => {
-      sticky.style.position = originalPosition;
-      sticky.style.top = originalTop;
-      sticky.style.transform = "none";
-    };
-  }, [colorActive, currentProduct, isMobile]);
+  // Cleanup function - kill ScrollTrigger and reset styles
+  return () => {
+    st.kill();
+    sticky.style.position = "";
+    sticky.style.top = "";
+    sticky.style.transform = "";
+  };
+}, [colorActive, currentProduct, isMobile]);
 
   // buttons ref
   const prevBtnRef = useRef<HTMLButtonElement>(
@@ -293,7 +304,7 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
     openModal("cart");
   };
 
-  const handleSize = async(id: string, newSize: string) => {
+  const handleSize = async (id: string, newSize: string) => {
     setSizeSelected({ active: true, shown: false });
     await updateSize(id, newSize);
   };
@@ -312,8 +323,9 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
   const goToNextImage = () => {
     if (!imageDiv.current || !isMobile) return;
     const currentImages =
-      currentProduct?.variants.find((variant) => variant._id === colorActive._id)
-        ?.images || [];
+      currentProduct?.variants.find(
+        (variant) => variant._id === colorActive._id
+      )?.images || [];
     const itemWidth = imageDiv.current.offsetWidth;
     const newIndex = Math.min(currentImages.length - 1, mobileScrollIndex + 1);
     imageDiv.current.scrollTo({
@@ -339,8 +351,13 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
     return images;
   };
 
-  const currentImages = useMemo(() => {return (currentProduct?.variants.find((variant) => variant._id === colorActive._id)?.images || []);
-   }, [currentProduct, colorActive?._id]);
+  const currentImages = useMemo(() => {
+    return (
+      currentProduct?.variants.find(
+        (variant) => variant._id === colorActive._id
+      )?.images || []
+    );
+  }, [currentProduct, colorActive?._id]);
 
   function generateSequentialCoolId(mongoId: string) {
     if (!mongoId) return;
@@ -356,15 +373,13 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
   }
 
   const getGroupName = (sizeGuideType?: string): MeasurementGroupName => {
-  if (!sizeGuideType) return MeasurementGroupName.MenShirts;
-  
-  const normalized = sizeGuideType.toLowerCase();
-  const config = MEASUREMENT_CONFIG[normalized as SizeTypeId];
-  
-  return config?.group ?? MeasurementGroupName.MenShirts;
-};
+    if (!sizeGuideType) return MeasurementGroupName.MenShirts;
 
+    const normalized = sizeGuideType.toLowerCase();
+    const config = MEASUREMENT_CONFIG[normalized as SizeTypeId];
 
+    return config?.group ?? MeasurementGroupName.MenShirts;
+  };
 
   return (
     <div className="w-full  flex flex-col items-center text-black bg-white min-h-screen ">
@@ -515,9 +530,20 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                 />
               </div>
               <div className="my-4">
-                <p className="font-avenir text-sm font-[300] text-black/50 my-1">
-                  NEW
-                </p>
+                {currentProduct?.createdAt &&
+                  (() => {
+                    const createdAtDate = new Date(currentProduct.createdAt);
+                    const now = new Date();
+                    const diffDays =
+                      (now.getTime() - createdAtDate.getTime()) /
+                      (1000 * 60 * 60 * 24);
+                    return diffDays < 12 ? (
+                      <p className="font-avenir text-sm font-[300] text-black/50 my-1">
+                        NEW
+                      </p>
+                    ) : null;
+                  })()}
+
                 <p className="font-avenir font-[400] text-lg">
                   {currentProduct?.name.toLocaleUpperCase()}
                 </p>
@@ -527,7 +553,21 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                     {currentProduct?.price}
                   </p>
                 </div>
-                <ExpandableDescription description={currentProduct?.description as string} />
+                {/* special edition */}
+                {currentProduct?.isSpecial && (
+                  <div className="mt-4">
+                    <p className="font-avenir font-[400] text-sm text-black/50">
+                      SPECIAL EDITION
+                    </p>
+                    <p className="font-avenir text-md mt-1 text-green-600">
+                      Limited to {currentProduct?.totalNumber} pieces worldwide.
+                    </p>
+                  </div>
+                )}
+
+                <ExpandableDescription
+                  description={currentProduct?.description as string}
+                />
               </div>
               <div className="my-4 mt-10 md:mt-6">
                 <div className="flex items-center gap-2">
@@ -543,7 +583,9 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                   {currentProduct?.variants.map((variant, index) => (
                     <div key={index}>
                       <div
-                        onClick={async() => await updateColor(currentProduct?._id, variant._id)}
+                        onClick={async () =>
+                          await updateColor(currentProduct?._id, variant._id)
+                        }
                         key={variant._id}
                         className={cn(
                           "size-16 md:w-18 lg:size-20 border border-black/30 rounded-xl cursor-pointer relative overflow-hidden p-[3px]",
@@ -551,7 +593,8 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                             "border-2":
                               variant._id === currentProduct?.selectedColor,
                           }
-                        )}>
+                        )}
+                      >
                         <div className="w-full h-full relative overflow-hidden rounded-lg">
                           <Image
                             src={variant.images[0].url}
@@ -573,17 +616,21 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                     >
                       SIZE
                     </p>
-                    {currentProduct.category !== "68ea8ee3cf3605764e57a870" &&
+                    {currentProduct.category !== "68ea8ee3cf3605764e57a870" && (
                       <p
-                      onClick={setSizeGuild}
-                      className="underline text-sm font-avenir font-[400] underline-offset-4 underline-black/40 text-black/30 cursor-pointer">
-                      SIZE GUIDE
-                    </p>}
+                        onClick={setSizeGuild}
+                        className="underline text-sm font-avenir font-[400] underline-offset-4 underline-black/40 text-black/30 cursor-pointer"
+                      >
+                        SIZE GUIDE
+                      </p>
+                    )}
                   </div>
                   <div className="w-full flex items-center gap-2 md:gap-3 my-4">
                     {currentProduct?.sizes?.map((item) => (
                       <div
-                        onClick={async() => await handleSize(currentProduct._id, item)}
+                        onClick={async () =>
+                          await handleSize(currentProduct._id, item)
+                        }
                         key={item}
                         className={cn(
                           "w-12 md:w-16 h-10 flex items-center justify-center rounded-[8px] hover:bg-black hover:text-white border-[0.5px] border-black/10 cursor-pointer bg-gray-100",
@@ -592,7 +639,8 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                               item === currentProduct.selectedSize,
                             "border-red-500 bg-red-100": sizeSelected.shown,
                           }
-                        )}>
+                        )}
+                      >
                         <p className="font-avenir text-xs">
                           {item.toUpperCase()}
                         </p>
@@ -646,12 +694,14 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
                 "grid grid-flow-col auto-cols-[minmax(16rem,1fr)] py-4 px-4 md:auto-cols-[minmax(26rem,1fr)] productSlider nav-slider gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none",
                 {
                   "auto-cols-[minmax(100%,1fr)]":
-                    cartProductState === "loading" || cartProductState === "error",
+                    cartProductState === "loading" ||
+                    cartProductState === "error",
                 }
               )}
               style={{ scrollBehavior: "smooth" }}
             >
-              {cartProductState === "loading" || cartProductState === "error" ? (
+              {cartProductState === "loading" ||
+              cartProductState === "error" ? (
                 <div className="min-w-[300px] h-[400px] flex items-center justify-center">
                   <div className="flex items-center justify-center gap-1">
                     <Image
@@ -778,9 +828,11 @@ export default function ProductContainer({ nameID, product }: { nameID: string, 
           )}
         </div>
       </div>
-      
+
       <SizeGuild
-        groupName={getGroupName( currentProduct?.sizeType?.clothType?.sizeGuideType)}
+        groupName={getGroupName(
+          currentProduct?.sizeType?.clothType?.sizeGuideType
+        )}
       />
 
       {/* Pinch Zoom Modal */}

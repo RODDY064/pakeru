@@ -127,6 +127,7 @@ export async function fetchCategoriesServer(): Promise<CategoryType[]> {
       name: item.name,
       description: item.description,
       parentCategory: item?.parentCategory,
+      willShow: item?.willShow ?? undefined,
       createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
       updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
     }));

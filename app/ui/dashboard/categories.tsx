@@ -19,6 +19,8 @@ export default function Category({
   setSelectedCategory: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [showForm, setShowForm] = useState(false);
+  const { visibleCategoryMap, setVisibleCategory, updateVisibleCategory, initializeVisibleCategoryMap } =
+    useBoundStore();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [selectedParentCategory, setSelectedParentCategory] = useState("");
@@ -49,6 +51,13 @@ export default function Category({
   useEffect(() => {
     loadCategories();
   }, []);
+
+    useEffect(() => {
+    if (categories.length > 0) {
+      initializeVisibleCategoryMap();
+    }
+  }, [categories, initializeVisibleCategoryMap]);
+
 
   const groupCategories = useMemo(() => {
     const groups: Record<string, CategoryType[]> = {};
@@ -280,6 +289,20 @@ export default function Category({
     setEditingCategoryId(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCheckboxClick = async (parentId: string, catId: string) => {
+    const current = visibleCategoryMap[parentId];
+    const newValue = current === catId ? null : catId;
+
+    setVisibleCategory(parentId, newValue);
+
+    if (newValue) {
+      await updateVisibleCategory(parentId, newValue, patch);
+    } else {
+   
+      await patch(`/categories/${catId}/`, { willShow: false }, { requiresAuth: true });
     }
   };
 
@@ -599,12 +622,27 @@ export default function Category({
                           {items.map((cat, index) => (
                             <div
                               key={cat._id}
-                              className={`w-full min-h-12 p-2 pl-8 flex items-center justify-between hover:bg-black/5 transition-colors ${
+                              className={`w-full min-h-12 p-2 pl-6 flex items-center justify-between hover:bg-black/5 transition-colors ${
                                 index % 2 === 0
                                   ? "bg-black/10"
                                   : " bg-transparent"
                               }`}
                             >
+                              <input
+                                type="checkbox"
+                                className="size-4"
+                                checked={
+                                  visibleCategoryMap[
+                                    cat.parentCategory as string
+                                  ] === cat._id
+                                }
+                                onChange={() =>
+                                  handleCheckboxClick(
+                                    cat.parentCategory as string,
+                                    cat._id
+                                  )
+                                }
+                              />
                               <div className="flex-1 px-4">
                                 <p className="font-medium">{cat.name}</p>
                                 {cat.description && (

@@ -37,14 +37,10 @@ export default function SizeGuild({
 }) {
   const { sizeGuild, setSizeGuild } = useBoundStore();
 
-  console.log(groupName, 'type')
-
   const { key, gender, type } = getMeasurementCategory(groupName);
    const imageSrc = guideImages[key];
 
 
-
-  console.log(imageSrc,'img')
 
   const [selectedCountry, setSelectedCountry] = useState(Sizes[0].country);
   const [selectedSize, setSelectedSize] = useState(() => {

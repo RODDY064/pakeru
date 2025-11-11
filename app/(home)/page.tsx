@@ -185,10 +185,10 @@ const Product = () => {
      loadProducts()
   },[])
 
-  useEffect(() => {
-  console.log("cartProductState:", cartProductState);
-  console.log("products:", products?.length);
-}, [cartProductState, products]);
+//   useEffect(() => {
+//   console.log("cartProductState:", cartProductState);
+//   console.log("products:", products?.length);
+// }, [cartProductState, products]);
 
 
   useEffect(() => {

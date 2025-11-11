@@ -39,6 +39,7 @@ export type ProductData = {
   productCare?: string;
   variants: ProductVariant[];
   totalSize: number;
+  isSpecial?:boolean,
   sizeType?: {
     gender?: "male" | "female" | "unisex";
     clothType?: ClothType;
@@ -181,6 +182,7 @@ const transformApiProduct = (apiProduct: any): ProductData => {
     washInstructions: apiProduct.washInstructions || [],
     productCare: apiProduct.productCare || "",
     sizeType: apiProduct.sizeType || undefined,
+    isSpecial: apiProduct.isSpecial || undefined, 
     seo: {
       title: apiProduct.seo?.title || `${apiProduct.name} | Store`,
       description: apiProduct.seo?.description || apiProduct.description || "",

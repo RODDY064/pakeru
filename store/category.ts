@@ -11,6 +11,7 @@ export type CategoryType = {
   parentCategory: string | null;
   createdAt?: Date;
   updatedAt?: Date;
+  willShow?: boolean;
   image: {
     _id: string;
     publicId: string;
@@ -22,6 +23,7 @@ export type CategoryStore = {
   categories: CategoryType[];
   isCategoriesLoading: boolean;
   categoriesError: string | null;
+  visibleCategoryMap: Record<string, string | null>;
   loadCategories: () => Promise<void>;
   setCategories: (categories: CategoryType[]) => void;
   clearCategoriesError: () => void;
@@ -36,6 +38,15 @@ export type CategoryStore = {
   ) => Promise<void>;
   getProductsWithID: (categoryId: string) => void;
   findCategories: () => void;
+  initializeVisibleCategoryMap: () => void;
+
+  setVisibleCategory: (parentId: string, childId: string | null) => void;
+  updateVisibleCategory: (
+    parentId: string,
+    childId: string,
+    patch: ReturnType<typeof useApiClient>["patch"]
+  ) => Promise<void>;
+
   getCategoryNameById: (categoryId: string) => string | null;
   getCartIdByName: (name: string) => string | null;
   getCategoryById: (categoryId: string) => CategoryType | null;
@@ -51,6 +62,89 @@ export const useCategory: StateCreator<
   categories: [],
   isCategoriesLoading: false,
   categoriesError: null,
+  visibleCategoryMap: {},
+
+  setVisibleCategory: (parentId, childId) => {
+    set((state) => {
+      state.visibleCategoryMap[parentId] = childId;
+    });
+  },
+
+  initializeVisibleCategoryMap: () => {
+    const categories = get().categories;
+    const map: Record<string, string | null> = {};
+
+    categories.forEach((cat) => {
+      // Only record those that are visible
+      if (cat.willShow) {
+        const parent = cat.parentCategory || "root";
+        map[parent] = cat._id;
+      }
+    });
+
+    set((state) => {
+      state.visibleCategoryMap = map;
+    });
+
+    // console.log("Initialized visibleCategoryMap:", map);
+  },
+
+  updateVisibleCategory: async (
+    parentId,
+    childId,
+    patch: ReturnType<typeof useApiClient>["patch"]
+  ) => {
+    console.log("Updating visible category:", { parentId, childId });
+
+    const category = get().getCategoryById(childId);
+    if (!category) throw new Error("Invalid category ID");
+
+    const updatePromise = (async () => {
+      try {
+        // Call backend API to set visible category
+        const response = await patch<{ data: CategoryType }>(
+          `/categories/${childId}`,
+          { willShow: true },
+          {
+            requiresAuth: true,
+            headers: {
+              "Content-type": "application/json",
+            },
+          }
+        );
+
+        set((state) => {
+          // Update visibility map
+          state.visibleCategoryMap[parentId] = childId;
+
+          // Update all categories in this group
+          state.categories = state.categories.map((cat) =>
+            cat._id === childId
+              ? { ...cat, willShow: true }
+              : cat.parentCategory === parentId
+              ? { ...cat, willShow: false }
+              : cat
+          );
+        });
+
+        return response.data;
+      } catch (error) {
+        console.error("Failed to update visible category:", error);
+        throw error;
+      }
+    })();
+
+    await toast.promise(updatePromise, {
+      loading: {
+        title: "Updating visible category...",
+        duration: Infinity,
+      },
+      success: () => ({
+        title: `Category "${category.name}" set as visible`,
+      }),
+      error: "Failed to update visible category.",
+    });
+  },
 
   setCategories: (categories: CategoryType[]) => {
     set((state) => {
@@ -69,65 +163,64 @@ export const useCategory: StateCreator<
     });
   },
 
-loadCategories: async () => {
-  const state = get();
+  loadCategories: async () => {
+    const state = get();
 
- 
-  if (state.categories && state.categories.length > 0) {
-    console.log("Categories already loaded — skipping fetch.");
-    return;
-  }
-
-  set((draft) => {
-    draft.isCategoriesLoading = true;
-    draft.categoriesError = null;
-  });
-
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    if (!baseUrl) {
-      throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
+    if (state.categories && state.categories.length > 0) {
+      console.log("Categories already loaded — skipping fetch.");
+      return;
     }
 
-    const response = await apiCall("/categories", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
+    set((draft) => {
+      draft.isCategoriesLoading = true;
+      draft.categoriesError = null;
     });
 
-    const result = response;
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+      if (!baseUrl) {
+        throw new Error("NEXT_PUBLIC_BASE_URL environment variable is not set");
+      }
 
-    if (!result || !Array.isArray(result.data)) {
-      throw new Error("Invalid categories response format");
+      const response = await apiCall("/categories", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+      });
+
+      const result = response;
+
+      if (!result || !Array.isArray(result.data)) {
+        throw new Error("Invalid categories response format");
+      }
+
+      const categories: CategoryType[] = result.data.map((item: any) => ({
+        _id: item._id,
+        name: item.name,
+        description: item.description ?? "",
+        parentCategory: item.parentCategory ?? "",
+        createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
+        willShow: item.willShow ?? undefined,
+        updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
+        image: item.image ?? "",
+      }));
+
+      // Use setter to store categories
+      get().setCategories(categories);
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+      set((draft) => {
+        draft.isCategoriesLoading = false;
+        draft.categoriesError =
+          error instanceof Error ? error.message : "Failed to load categories";
+      });
+      throw error;
+    } finally {
+      set((draft) => {
+        draft.isCategoriesLoading = false;
+      });
     }
-
-    const categories: CategoryType[] = result.data.map((item: any) => ({
-      _id: item._id,
-      name: item.name,
-      description: item.description ?? "",
-      parentCategory: item.parentCategory ?? "",
-      createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
-      updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
-      image: item.image ?? "",
-    }));
-
-    // ✅ Use setter to store categories
-    get().setCategories(categories);
-
-  } catch (error) {
-    console.error("Failed to load categories:", error);
-    set((draft) => {
-      draft.isCategoriesLoading = false;
-      draft.categoriesError =
-        error instanceof Error ? error.message : "Failed to load categories";
-    });
-    throw error;
-  } finally {
-    set((draft) => {
-      draft.isCategoriesLoading = false;
-    });
-  }
-},
+  },
   // Updated createCategory with toast
   createCategory: async (categoryData: any, post) => {
     const createPromise = (async () => {
@@ -152,6 +245,7 @@ loadCategories: async () => {
           updatedAt: response?.updatedAt
             ? new Date(response?.updatedAt)
             : undefined,
+          willShow: response?.willShow ?? undefined,
           image: response.image ?? "",
         };
 
@@ -190,9 +284,9 @@ loadCategories: async () => {
   // Updated deleteCategory with toast
   updateCategory: async (categoryId: string, body, patch) => {
     console.log("Updating category:", categoryId);
-    
-    if(!patch){
-      throw new Error("Api patch is required")
+
+    if (!patch) {
+      throw new Error("Api patch is required");
     }
 
     const updatePromise = (async () => {
@@ -203,10 +297,14 @@ loadCategories: async () => {
 
       try {
         // Call your PATCH endpoint
-        const response = await patch<{ data:CategoryType }>(`/categories/${categoryId}`, body, {
-          requiresAuth: true,
-          cache:"no-store"
-        });
+        const response = await patch<{ data: CategoryType }>(
+          `/categories/${categoryId}`,
+          body,
+          {
+            requiresAuth: true,
+            cache: "no-store",
+          }
+        );
 
         console.log("Category updated:", response);
 
@@ -218,7 +316,6 @@ loadCategories: async () => {
           state.isCategoriesLoading = false;
           state.error = null;
         });
-
       } catch (error) {
         console.error("Failed to update category:", error);
         set((state) => {

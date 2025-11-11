@@ -39,7 +39,7 @@ export const useSliderStore: StateCreator<
   loadSliderWithCategory: async () => {
     const state = get();
 
-    // Check if slider already populated
+    // Avoid reloading if already set
     if (state.slider.length > 0) {
       console.log("Slider already loaded");
       return;
@@ -50,75 +50,73 @@ export const useSliderStore: StateCreator<
     });
 
     try {
-      // Ensure categories are loaded first
+      // Ensure categories are loaded
       if (state.categories.length === 0) {
         await state.loadCategories();
       }
 
       const categories = get().categories;
 
-      // Group categories by their parent
-      const categoryGroups = new Map<string, CategoryType[]>();
-      const topLevelCategories: CategoryType[] = [];
+      // Group categories by parent
+      const grouped: Record<string, CategoryType[]> = {};
+      const topLevel: CategoryType[] = [];
+
+      console.log(categories)
 
       categories.forEach((cat) => {
-        if (!cat.parentCategory || cat.parentCategory === "") {
-          // This is a top-level category
-          topLevelCategories.push(cat);
+        if (!cat.parentCategory) {
+          topLevel.push(cat);
         } else {
-          // This is a child category - group by parent name
-          if (!categoryGroups.has(cat.parentCategory)) {
-            categoryGroups.set(cat.parentCategory, []);
-          }
-          categoryGroups.get(cat.parentCategory)?.push(cat);
+          if (!grouped[cat.parentCategory]) grouped[cat.parentCategory] = [];
+          grouped[cat.parentCategory].push(cat);
         }
       });
 
-      // Determine which categories to show in slider
-      let slideCandidates: CategoryType[];
+      // Pick only those marked as willShow
+      const visibleFromGroups: CategoryType[] = [];
 
-      if (topLevelCategories.length > 0) {
-        // Use top-level categories if they exist
-        slideCandidates = topLevelCategories;
-        console.log("Using top-level categories for slider:", topLevelCategories.map(c => c.name));
-      } else {
-        // If all categories have parents, use unique parent names
-        const parentNames = Array.from(new Set(
-          categories
-            .map(c => c.parentCategory)
-            .filter(Boolean)
-        ));
+      Object.entries(grouped).forEach(([parent, items]) => {
+        const visible = items.find((c) => c.willShow === true);
+        if (visible) {
+          visibleFromGroups.push(visible);
+        }
+      });
 
-        // Find one category per parent group to represent it
-        slideCandidates = parentNames
-          .map(parentName => {
-            // Get first category in this parent group
-            return categories.find(c => c.parentCategory === parentName);
-          })
-          .filter((cat): cat is CategoryType => cat !== undefined);
+      // Include top-level categories that have willShow = true
+      const visibleTopLevel = topLevel.filter((cat) => cat.willShow === true);
+
+      // Merge both sets
+      const finalVisible: CategoryType[] = [
+        ...visibleTopLevel,
+        ...visibleFromGroups,
+      ];
+
+      if (finalVisible.length === 0) {
+        console.warn("No visible categories found (willShow = true)");
       }
 
-      // Transform into slider format
-      const slides: ImgSlide[] = slideCandidates.map((category) => ({
+      // Transform to slider format
+      const slides: ImgSlide[] = finalVisible.map((category) => ({
         _id: category._id,
         categoryId: category._id,
-        title:  category.name,
+        title: category.name,
         description: category.description || "",
         mainImage: category.image?.url || "/images/image-fallback.png",
-        images: [
-          category.image?.url || "/images/image-fallback.png",
-        ],
-        link: `/shop?category=${(category.parentCategory || category.name).toLowerCase()}`,
+        images: [category.image?.url || "/images/image-fallback.png"],
+        link: `/shop?category=${(
+          category.parentCategory || category.name
+        ).toLowerCase()}`,
         products: [],
         inView: false,
       }));
 
+      // Update store
       set((draft) => {
         draft.slider = slides;
         draft.isSliderLoading = false;
       });
 
-      console.log(`Loaded ${slides.length} slides from categories`);
+      console.log(`Loaded ${slides.length} visible slides`);
     } catch (error) {
       console.error("Failed to load slider with categories:", error);
       set((draft) => {
@@ -126,12 +124,13 @@ export const useSliderStore: StateCreator<
       });
     }
   },
+
   // Toggle slide view state
   setLookAt: (id: string) =>
     set((state) => {
       state.lookAt = !state.lookAt;
       const slide = state.slider.find((s) => s._id === id);
-      
+
       if (slide) {
         slide.inView = !slide.inView;
         state.SlideInview = slide.inView ? slide : null;
