@@ -696,6 +696,7 @@ function ProductActionsContent() {
         }),
         position: "top-right",
       });
+      router.push('/admin/store-products')
     } catch (error) {}
   };
 
