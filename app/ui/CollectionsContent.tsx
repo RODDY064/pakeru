@@ -15,23 +15,9 @@ interface DebounceFunction<T extends (...args: any[]) => void> {
   (...args: Parameters<T>): void;
 }
 
-interface Debounce {
-  <T extends (...args: any[]) => void>(
-    func: T,
-    wait: number
-  ): DebounceFunction<T>;
-}
 
-const debounce: Debounce = (func, wait) => {
-  let timeout: ReturnType<typeof setTimeout>;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
 
 export default function CollectionsContent({ id }: { id: string }) {
-  const [containerHeight, setContainerHeight] = useState("100vh");
   const [productsLink, setProductsLink] = useState<ProductData[]>([]);
   const [activeGallery, setActiveGallery] = useState<GalleryItem>();
   const { galleries, products, loadProducts } = useBoundStore();
@@ -76,6 +62,8 @@ export default function CollectionsContent({ id }: { id: string }) {
 
 useEffect(() => {
   if (!isLoadingProducts) {
+
+   
     // Filter products that match the gallery's product IDs
     if (productLinkIds && productLinkIds.length > 0) {
       const filtered = products.filter(p => productLinkIds.includes(p._id));
@@ -87,18 +75,11 @@ useEffect(() => {
 }, [products, productLinkIds, isLoadingProducts]);
 
 
-  // Calculate container height
-  const calculateHeight = useCallback(
-    debounce(() => {
-      const actualVH = window.innerHeight;
-      setContainerHeight(`${actualVH}px`);
-      document.documentElement.style.setProperty(
-        "--actual-vh",
-        `${actualVH * 0.01}px`
-      );
-    }, 100),
-    []
-  );
+useEffect(() => {
+    console.log("Products Link: ", productLinkIds);
+    console.log("Filtered Products: ", productsLink);
+}, [productLinkIds, productsLink]);
+
 
   // Update card type based on viewport width
 

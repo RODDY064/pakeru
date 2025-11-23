@@ -17,7 +17,7 @@ interface ProductCardProps {
   cardStyle?: string;
   productData: ProductData;
   hideDetails?: boolean;
-  cardSize?:string
+  cardSize?: string;
 }
 
 const ProductCard = ({
@@ -26,7 +26,7 @@ const ProductCard = ({
   cardStyle,
   productData,
   hideDetails = false,
-  cardSize
+  cardSize,
 }: ProductCardProps) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -45,7 +45,7 @@ const ProductCard = ({
   const imageSrc = productData?.mainImage?.url ?? "/images/hero-2.png";
   const isCloudinaryImage = imageSrc.includes("cloudinary");
   const productName = productData?.name?.toUpperCase() ?? "Unnamed Product";
-  const calHeight = useCardHeight(type)
+  const calHeight = useCardHeight(type);
 
   // Size configurations for responsive design
   const sizeConfig = {
@@ -74,9 +74,21 @@ const ProductCard = ({
 
   const config = sizeConfig[type];
 
+  function extractPublicId(url: string): string | null {
+    const afterUpload = url.split("/upload/")[1];
+    if (!afterUpload) return null;
 
+    const clean = afterUpload.split("?")[0];
+    const parts = clean.split("/");
 
-const renderImageWithCustomTransforms = () => {
+    // Filter out version numbers (v1760115016)
+    const withoutVersion = parts.filter((p) => !/^v\d+$/.test(p));
+
+    // Join back WITH the file extension
+    return withoutVersion.join("/");
+  }
+
+  const renderImageWithCustomTransforms = () => {
     if (!isCloudinaryImage) {
       return (
         <Image
@@ -90,7 +102,8 @@ const renderImageWithCustomTransforms = () => {
       );
     }
 
-    const publicId = imageSrc.split("/upload/")[1]?.split(".")[0];
+    const publicId = extractPublicId(imageSrc);
+
     if (!publicId) {
       return (
         <Image
@@ -104,11 +117,13 @@ const renderImageWithCustomTransforms = () => {
       );
     }
 
-    // Type-specific Cloudinary transforms
     const transforms = {
-      large: "c_pad,w_800,h_700,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2",
-      medium: "c_fit,w_800,h_700,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2",
-      small: "c_fit,w_900,h_800,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2"
+      large:
+        "c_pad,w_800,h_700,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2",
+      medium:
+        "c_fit,w_800,h_700,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2",
+      small:
+        "c_fit,w_900,h_800,q_auto,f_webp,dpr_auto,g_center,fl_preserve_transparency,b_rgb:f2f2f2",
     };
 
     const optimizedUrl = buildCloudinaryUrl(publicId, transforms[type]);
@@ -143,7 +158,9 @@ const renderImageWithCustomTransforms = () => {
         whileTap="tap"
         initial="initial"
         className={cn(
-          "relative flex border border-black/5 rounded-sm cursor-pointer transition-shadow duration-300 hover:border hover:z-20 hover:border-black/20",config.container, cardSize
+          "relative flex border border-black/5 rounded-sm cursor-pointer transition-shadow duration-300 hover:border hover:z-20 hover:border-black/20",
+          config.container,
+          cardSize
         )}
       >
         {/* Image Container */}
@@ -226,7 +243,8 @@ const ProductDetails = ({
                 className={cn(
                   "font-avenir font-normal text-black/50 pt-[6px]",
                   textSize
-                )}>
+                )}
+              >
                 {productData?.price?.toFixed(2) ?? "N/A"}
               </p>
             </div>
@@ -268,11 +286,11 @@ const ColorVariants = ({
     {variants?.map((variant) => (
       <button
         key={variant.color}
-
         className={cn(
-          "size-4 md:size-3.5 rounded-full p-0.5 border-2 md:border-[1.5px] border-black cursor-pointer transition-all duration-200",   
+          "size-4 md:size-3.5 rounded-full p-0.5 border-2 md:border-[1.5px] border-black cursor-pointer transition-all duration-200"
         )}
-        aria-label={`Select color ${variant.color}`}>
+        aria-label={`Select color ${variant.color}`}
+      >
         <div
           className="w-full h-full rounded-full border-[0.5px] border-black"
           style={{ backgroundColor: variant.colorHex }}

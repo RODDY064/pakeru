@@ -89,7 +89,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
     group: MeasurementGroupName.MenShirts,
     size: [
       {
-        name: "S",
+        name: "S (EU 46)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 44, valueIn: 17.5 },
           { label: MeasurementLabel.Arms, valueCm: 61, valueIn: 24 },
@@ -99,7 +99,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "M",
+        name: "M (EU 48)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 46, valueIn: 18 },
           { label: MeasurementLabel.Arms, valueCm: 62, valueIn: 24.5 },
@@ -109,7 +109,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "L",
+        name: "L (EU 50)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 48, valueIn: 19 },
           { label: MeasurementLabel.Arms, valueCm: 63, valueIn: 25 },
@@ -119,7 +119,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "XL",
+        name: "XL (EU 52)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 50, valueIn: 19.5 },
           { label: MeasurementLabel.Arms, valueCm: 64, valueIn: 25.5 },
@@ -129,7 +129,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "XXL",
+        name: "XXL (EU 54)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 52, valueIn: 20.5 },
           { label: MeasurementLabel.Arms, valueCm: 65, valueIn: 26 },
@@ -139,7 +139,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "XXXL",
+        name: "XXXL (EU 56)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 54, valueIn: 21 },
           { label: MeasurementLabel.Arms, valueCm: 66, valueIn: 26.5 },
@@ -156,7 +156,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
     group: MeasurementGroupName.MenTops,
     size: [
       {
-        name: "S",
+        name: "S (EU 46)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 43.5, valueIn: 17 },
           { label: MeasurementLabel.Arms, valueCm: 20, valueIn: 7.9 },
@@ -166,7 +166,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "M",
+        name: "M (EU 48)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 45.5, valueIn: 18 },
           { label: MeasurementLabel.Arms, valueCm: 21, valueIn: 8.3 },
@@ -176,7 +176,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "L",
+        name: "L (EU 50)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 47.5, valueIn: 18.5 },
           { label: MeasurementLabel.Arms, valueCm: 21.5, valueIn: 8.5 },
@@ -186,7 +186,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "XL",
+        name: "XL (EU 52)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 49.5, valueIn: 19.5 },
           { label: MeasurementLabel.Arms, valueCm: 22, valueIn: 8.7 },
@@ -196,7 +196,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "XXL",
+        name: "XXL (EU 54)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 51.5, valueIn: 20.5 },
           { label: MeasurementLabel.Arms, valueCm: 22.5, valueIn: 8.9 },
@@ -206,7 +206,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "XXXL",
+        name: "XXXL (EU 56)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 53.5, valueIn: 21 },
           { label: MeasurementLabel.Arms, valueCm: 23, valueIn: 9 },
@@ -221,7 +221,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
     group: MeasurementGroupName.MenOthers,
     size: [
       {
-        name: "S",
+        name: "S (EU 46)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 43.5, valueIn: 17 },
           { label: MeasurementLabel.Arms, valueCm: 20, valueIn: 7.9 },
@@ -231,7 +231,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "M",
+        name: "M (EU 48)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 45.5, valueIn: 18 },
           { label: MeasurementLabel.Arms, valueCm: 21, valueIn: 8.3 },
@@ -241,7 +241,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "L",
+        name: "L (EU 50)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 47.5, valueIn: 18.5 },
           { label: MeasurementLabel.Arms, valueCm: 21.5, valueIn: 8.5 },
@@ -251,7 +251,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "XL",
+        name: "XL (EU 52)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 49.5, valueIn: 19.5 },
           { label: MeasurementLabel.Arms, valueCm: 22, valueIn: 8.7 },
@@ -261,7 +261,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "XXL",
+        name: "XXL (EU 54)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 51.5, valueIn: 20.5 },
           { label: MeasurementLabel.Arms, valueCm: 22.5, valueIn: 8.9 },
@@ -271,7 +271,7 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
         ],
       },
       {
-        name: "XXXL",
+        name: "XXXL (EU 56)",
         measurement: [
           { label: MeasurementLabel.Shoulders, valueCm: 53.5, valueIn: 21 },
           { label: MeasurementLabel.Arms, valueCm: 23, valueIn: 9 },
@@ -287,27 +287,27 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
   {
     group: MeasurementGroupName.MenPants,
     size: [
-      { name: "S", measurement: [
+      { name: "S (EU 46)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 76, valueIn: 30 },
         { label: MeasurementLabel.Hips, valueCm: 92, valueIn: 36 },
       ]},
-      { name: "M", measurement: [
+      { name: "M (EU 48)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 80, valueIn: 31.5 },
         { label: MeasurementLabel.Hips, valueCm: 96, valueIn: 37.8 },
       ]},
-      { name: "L", measurement: [
+      { name: "L (EU 50)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 88, valueIn: 34.5 },
         { label: MeasurementLabel.Hips, valueCm: 104, valueIn: 41 },
       ]},
-      { name: "XL", measurement: [
+      { name: "XL (EU 52)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 92, valueIn: 36 },
         { label: MeasurementLabel.Hips, valueCm: 108, valueIn: 42.5 },
       ]},
-      { name: "XXL", measurement: [
+      { name: "XXL (EU 54)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 96, valueIn: 38 },
         { label: MeasurementLabel.Hips, valueCm: 112, valueIn: 44 },
       ]},
-      { name: "XXXL", measurement: [
+      { name: "XXXL (EU 56)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 100, valueIn: 39.5 },
         { label: MeasurementLabel.Hips, valueCm: 116, valueIn: 45.5 },
       ]},
@@ -318,32 +318,32 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
   {
     group: MeasurementGroupName.WomenTops,
     size: [
-      { name: "S", measurement: [
+      { name: "S (EU 38)", measurement: [
         { label: MeasurementLabel.Chest, valueCm: 90, valueIn: 35.4 },
         { label: MeasurementLabel.Waist, valueCm: 74, valueIn: 29.1 },
         { label: MeasurementLabel.Hips, valueCm: 90, valueIn: 35.4 },
       ]},
-      { name: "M", measurement: [
+      { name: "M (EU 40)", measurement: [
         { label: MeasurementLabel.Chest, valueCm: 94, valueIn: 37 },
         { label: MeasurementLabel.Waist, valueCm: 78, valueIn: 30.7 },
         { label: MeasurementLabel.Hips, valueCm: 96, valueIn: 37.8 },
       ]},
-      { name: "L", measurement: [
+      { name: "L (EU 42)", measurement: [
         { label: MeasurementLabel.Chest, valueCm: 98, valueIn: 38.6 },
         { label: MeasurementLabel.Waist, valueCm: 82, valueIn: 32.3 },
         { label: MeasurementLabel.Hips, valueCm: 100, valueIn: 39.4 },
       ]},
-      { name: "XL", measurement: [
+      { name: "XL (EU 44)", measurement: [
         { label: MeasurementLabel.Chest, valueCm: 102, valueIn: 40.2 },
         { label: MeasurementLabel.Waist, valueCm: 86, valueIn: 33.9 },
         { label: MeasurementLabel.Hips, valueCm: 104, valueIn: 40.9 },
       ]},
-      { name: "XXL", measurement: [
+      { name: "XXL (EU 46)", measurement: [
         { label: MeasurementLabel.Chest, valueCm: 106, valueIn: 41.7 },
         { label: MeasurementLabel.Waist, valueCm: 90, valueIn: 35.4 },
         { label: MeasurementLabel.Hips, valueCm: 108, valueIn: 42.5 },
       ]},
-      { name: "XXXL", measurement: [
+      { name: "XXXL (EU 48)", measurement: [
         { label: MeasurementLabel.Chest, valueCm: 110, valueIn: 43.3 },
         { label: MeasurementLabel.Waist, valueCm: 94, valueIn: 37 },
         { label: MeasurementLabel.Hips, valueCm: 112, valueIn: 44.1 },
@@ -355,27 +355,27 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
   {
     group: MeasurementGroupName.WomenPants,
     size: [
-      { name: "S", measurement: [
+      { name: "S (EU 38)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 70, valueIn: 27.5 },
         { label: MeasurementLabel.Hips, valueCm: 95, valueIn: 37.5 },
       ]},
-      { name: "M", measurement: [
+      { name: "M (EU 40)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 75, valueIn: 29.5 },
         { label: MeasurementLabel.Hips, valueCm: 100, valueIn: 39.5 },
       ]},
-      { name: "L", measurement: [
+      { name: "L (EU 42)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 80, valueIn: 31.5 },
         { label: MeasurementLabel.Hips, valueCm: 105, valueIn: 41.5 },
       ]},
-      { name: "XL", measurement: [
+      { name: "XL (EU 44)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 85, valueIn: 33.5 },
         { label: MeasurementLabel.Hips, valueCm: 110, valueIn: 43.5 },
       ]},
-      { name: "XXL", measurement: [
+      { name: "XXL (EU 46)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 90, valueIn: 35.5 },
         { label: MeasurementLabel.Hips, valueCm: 115, valueIn: 45.5 },
       ]},
-      { name: "XXXL", measurement: [
+      { name: "XXXL (EU 48)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 95, valueIn: 37.5 },
         { label: MeasurementLabel.Hips, valueCm: 120, valueIn: 47.5 },
       ]},
@@ -386,27 +386,27 @@ export const GhanaMeasurementGroups: MeasurementGroup[] = [
   {
     group: MeasurementGroupName.WomenSkirtsShorts,
     size: [
-      { name: "S", measurement: [
+      { name: "S (EU 38)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 70, valueIn: 27.5 },
         { label: MeasurementLabel.Hips, valueCm: 95, valueIn: 37.5 },
       ]},
-      { name: "M", measurement: [
+      { name: "M (EU 40)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 75, valueIn: 29.5 },
         { label: MeasurementLabel.Hips, valueCm: 100, valueIn: 39.5 },
       ]},
-      { name: "L", measurement: [
+      { name: "L (EU 42)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 80, valueIn: 31.5 },
         { label: MeasurementLabel.Hips, valueCm: 105, valueIn: 41.5 },
       ]},
-      { name: "XL", measurement: [
+      { name: "XL (EU 44)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 85, valueIn: 33.5 },
         { label: MeasurementLabel.Hips, valueCm: 110, valueIn: 43.5 },
       ]},
-      { name: "XXL", measurement: [
+      { name: "XXL (EU 46)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 90, valueIn: 35.5 },
         { label: MeasurementLabel.Hips, valueCm: 115, valueIn: 45.5 },
       ]},
-      { name: "XXXL", measurement: [
+      { name: "XXXL (EU 48)", measurement: [
         { label: MeasurementLabel.Waist, valueCm: 95, valueIn: 37.5 },
         { label: MeasurementLabel.Hips, valueCm: 120, valueIn: 47.5 },
       ]},

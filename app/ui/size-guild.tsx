@@ -88,7 +88,7 @@ export default function SizeGuild({
             initial="close"
             exit="close"
             key="desktop"
-            className="w-full lg:w-[50%] xl:w-[45%] h-full bg-white pt-12"
+            className="w-full lg:w-[50%] xl:w-[48%] h-full bg-white pt-12"
           >
             <div className="flex pb-8 items-center justify-between px-10 md:px-12 border-b border-black/20">
               <div className="relative">
