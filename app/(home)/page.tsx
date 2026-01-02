@@ -88,7 +88,7 @@ const Images = ({
               <Image
                 src={
                   hero?.hero[0]?.image?.url?.trim()
-                    ? hero.hero[0].image.url
+                    ? hero.hero[0]?.image?.url
                     : "/images/hero/pakeru desktop hero.webp"
                 }
                 fill
@@ -102,8 +102,8 @@ const Images = ({
               {/* Tablet Hero */}
               <Image
                 src={
-                  hero?.hero[1].image?.url?.trim()
-                    ? hero?.hero[1].image.url
+                  hero?.hero[1]?.image?.url?.trim()
+                    ? hero?.hero[1]?.image?.url
                     : "/images/hero/pakeru tablet hero.webp"
                 }
                 fill
@@ -118,7 +118,7 @@ const Images = ({
               <Image
                 src={
                   hero?.hero[2]?.image?.url?.trim()
-                    ? hero?.hero[2].image.url
+                    ? hero?.hero[2]?.image?.url
                     : "/images/hero/pakeru mobile hero.webp"
                 }
                 fill
